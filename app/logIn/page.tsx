@@ -40,7 +40,7 @@ export default function logIn() {
                 <p className="text-center text-sm gray-700">
                     No Account?{" "}
                     <a
-                        href="/signUp"
+                        href="/signup"
                         className="text-blue-600 hover:underline font-medium"
                     >
                         Sign Up

@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 
-export default function signUp() {
-    const router = useRouter();
-
+export default function SignUp() {
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        router.push("/fillUp");
+        redirect("/fillup");
     }
 
     return (
@@ -59,7 +56,7 @@ export default function signUp() {
                 <p className="text-center text-sm gray-700">
                     Have an Account?{" "}
                     <a
-                        href="/logIn"
+                        href="/login"
                         className="text-blue-600 hover:underline font-medium"
                     >
                         Log In
