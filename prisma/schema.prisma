@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../app/generated/prisma"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+    ADMIN
+    USER
+}
+
+// --------------------------------------------------
+// Log In
+// --------------------------------------------------
+
+model User {
+    id        String   @id @default(cuid())
+    name      String
+    email     String   @unique
+    password  String
+    role      Role     @default(USER)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// --------------------------------------------------
+// Profile
+// --------------------------------------------------
+
+model Profile {
+    id                        String       @id @default(cuid())
+    positionId                String
+    nationalityId             String
+    religionId                String
+    profileImage              String?
+    fullName                  String
+    employeeId                String       @unique
+    gender                    String
+    age                       Int
+    dateOfBirth               DateTime
+    civilStatus               String
+    nationality               Nationality? @relation(fields: [nationalityId], references: [id])
+    religion                  Religion?    @relation(fields: [religionId], references: [id])
+    contactNumber             String
+    email                     String       @unique
+    position                  Position?    @relation(fields: [positionId], references: [id])
+    plantillaNo               String?
+    pagIbigNo                 String?
+    philHealthNo              String?
+    tin                       String?
+    gsisBpNo                  String?
+    dateOfOriginalAppointment DateTime
+    dateOfLatestAppointment   DateTime
+    subjectSpecialization     String?
+    bachelorsDegree           String?
+    postGraduate              String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Position {
+    id       String    @id @default(cuid())
+    name     String    @unique
+    isActive Boolean   @default(true)
+    profiles Profile[]
+}
+
+model Religion {
+    id       String    @id @default(cuid())
+    name     String    @unique
+    isActive Boolean   @default(true)
+    profiles Profile[]
+}
+
+model Nationality {
+    id       String    @id @default(cuid())
+    name     String    @unique
+    isActive Boolean   @default(true)
+    profiles Profile[]
+}
