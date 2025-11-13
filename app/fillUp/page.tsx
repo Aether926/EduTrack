@@ -1,15 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { redirect } from "next/navigation";
 import { useState } from "react";
 
 export default function fillUp() {
-    const router = useRouter();
     const [preview, setPreview] = useState<string | null>(null);
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        router.push("/dashboard");
+        redirect("/dashboard");
     }
 
     function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -34,7 +34,9 @@ export default function fillUp() {
 
                     <div className="mb-4">
                         {preview && (
-                            <img
+                            <Image
+                                width={120}
+                                height={120}
                                 src={preview}
                                 alt="Preview"
                                 className="w-24 h-24 object-cover rounded-full mb-2 border"
@@ -333,7 +335,7 @@ export default function fillUp() {
 
                     <div className="mb-4">
                         <label className="block mb-1 text-gray-700">
-                            Bachelor's Degree
+                            Bachelor`&#39;`s Degree
                         </label>
                         <input
                             type="text"
