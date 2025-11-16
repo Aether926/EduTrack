@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function signUp() {
+export default function SignUp() {
     const router = useRouter();
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

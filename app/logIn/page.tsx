@@ -1,4 +1,4 @@
-export default function logIn() {
+export default function LogIn() {
     return (
         <div className="min-h-screen bg-gray-200 flex items-center justify-center">
             <div className="w-full max-w-sm bg-neutral-300 p-6 rounded-lg shadow">

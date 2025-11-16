@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function fillUp() {
+export default function FillUp() {
     const router = useRouter();
     const [preview, setPreview] = useState<string | null>(null);
 
