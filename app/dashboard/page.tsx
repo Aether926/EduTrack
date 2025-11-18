@@ -18,14 +18,9 @@ import {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
-    DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible } from "@/components/ui/collapsible";
 import DropdownRedirect from "@/components/dropdown-redirect";
 
 // Sidebar items.
@@ -127,7 +122,7 @@ const footer = [
             },
             {
                 title: "Sign Out",
-                path: "test2",
+                path: "logIn",
             },
         ],
     },
@@ -188,31 +183,6 @@ export default function AppSidebar() {
                                         </SidebarMenuItem>
                                     );
                                 })}
-
-                                {/* ---------- Dropdown Example ---------- */}
-                                {/* <Collapsible className="group">
-                                    <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton className="flex items-center justify-between">
-                                            <span>Dropdown Example</span>
-
-                                            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                                        </SidebarMenuButton>
-                                    </CollapsibleTrigger>
-
-                                    <CollapsibleContent>
-                                        <div className="pl-6 flex flex-col gap-0">
-                                            <SidebarMenuButton className="p-0">
-                                                Add
-                                            </SidebarMenuButton>
-                                            <SidebarMenuButton className="p-0">
-                                                Edit
-                                            </SidebarMenuButton>
-                                            <SidebarMenuButton className="p-0">
-                                                Delete
-                                            </SidebarMenuButton>
-                                        </div>
-                                    </CollapsibleContent>
-                                </Collapsible> */}
                             </Collapsible>
                         </SidebarMenu>
                     </SidebarGroupContent>
