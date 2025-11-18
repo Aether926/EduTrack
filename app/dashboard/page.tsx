@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { ChevronDown, MoreHorizontal } from "lucide-react";
 
 import {
