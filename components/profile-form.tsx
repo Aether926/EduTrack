@@ -23,11 +23,12 @@ import { Button } from "./ui/button";
 import { ChevronDownIcon } from "lucide-react";
 import { Calendar } from "./ui/calendar";
 
-export default function ProfileForm({
-    submitHandler,
-}: {
+interface Props {
+    className?: string;
     submitHandler: (e: React.FormEvent<HTMLFormElement>) => void;
-}) {
+}
+
+export default function ProfileForm({ className, submitHandler }: Props) {
     const [preview, setPreview] = useState<string | null>(null);
     const [birthDateOpen, setBirthDateOpen] = useState(false);
     const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
@@ -52,7 +53,7 @@ export default function ProfileForm({
 
     return (
         <form
-            className="my-4 rounded-md p-6 bg-neutral-50"
+            className={`my-4 rounded-md p-6 bg-neutral-50 ${className}`}
             onSubmit={submitHandler}
         >
             <FieldGroup>
