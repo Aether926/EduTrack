@@ -6,7 +6,7 @@ export default function SignUp() {
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        redirect("/fillup");
+        redirect("/fillUp");
     }
 
     return (
@@ -56,7 +56,7 @@ export default function SignUp() {
                 <p className="text-center text-sm gray-700">
                     Have an Account?{" "}
                     <a
-                        href="/login"
+                        href="/logIn"
                         className="text-blue-600 hover:underline font-medium"
                     >
                         Log In

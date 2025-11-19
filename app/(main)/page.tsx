@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { postReligion } from "./actions/religion";
+import { postReligion } from "../actions/religion";
 
 export default function Home() {
     async function fetchData() {

@@ -31,7 +31,7 @@ export default function RootLayout({
             >
                 <SidebarProvider>
                     <AppSidebar />
-                    <main>
+                    <main className="min-w-screen">
                         <SidebarTrigger />
                         {children}
                     </main>
