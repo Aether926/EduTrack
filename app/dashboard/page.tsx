@@ -1,4 +1,6 @@
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { redirect } from "next/navigation";
+
+import { User2, ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 
 import {
     Sidebar,
@@ -9,20 +11,16 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarFooter,
 } from "@/components/ui/sidebar";
 
 import {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
-    DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible } from "@/components/ui/collapsible";
 import DropdownRedirect from "@/components/dropdown-redirect";
 
 // Sidebar items.
@@ -61,25 +59,91 @@ const items = [
             },
         ],
     },
+    {
+        title: "Positions / Designations",
+        children: [
+            {
+                title: "Add",
+                path: "test1",
+            },
+            {
+                title: "Edit",
+                path: "test2",
+            },
+            {
+                title: "Delete",
+                path: "test3",
+            },
+        ],
+    },
+    {
+        title: "Religion",
+        children: [
+            {
+                title: "Add",
+                path: "test1",
+            },
+            {
+                title: "Edit",
+                path: "test2",
+            },
+            {
+                title: "Delete",
+                path: "test3",
+            },
+        ],
+    },
+    {
+        title: "Nationality",
+        children: [
+            {
+                title: "Add",
+                path: "test1",
+            },
+            {
+                title: "Edit",
+                path: "test2",
+            },
+            {
+                title: "Delete",
+                path: "test3",
+            },
+        ],
+    },
+];
+
+// Footer items
+const footer = [
+    {
+        children: [
+            {
+                title: "Account",
+                path: "test1",
+            },
+            {
+                title: "Sign Out",
+                path: "logIn",
+            },
+        ],
+    },
 ];
 
 export default function AppSidebar() {
     return (
         <Sidebar>
-            <SidebarContent>
+            <SidebarContent className="flex flex-col justify-between">
                 <SidebarGroup>
-                    <SidebarGroupLabel className="text-xl">
+                    {/* <SidebarGroupLabel className="text-xl">
                         Application
-                    </SidebarGroupLabel>
+                    </SidebarGroupLabel> */}
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <Collapsible
                                 defaultOpen
                                 className="group/collapsible"
                             >
+                                {/* ---------- Admin Functions ---------- */}
                                 {items.map((item, index) => {
-                                    console.log(item);
-
                                     return (
                                         <SidebarMenuItem key={index}>
                                             <div className="flex items-center justify-between w-full">
@@ -119,186 +183,45 @@ export default function AppSidebar() {
                                         </SidebarMenuItem>
                                     );
                                 })}
-                                {/* ---------- Positions / Designations ---------- */}
-                                <SidebarMenuItem>
-                                    <Collapsible className="group w-full">
-                                        <div className="flex items-center justify-between w-full">
-                                            <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton className="flex-1 justify-between">
-                                                    <span>
-                                                        Positions / Designations
-                                                    </span>
-                                                </SidebarMenuButton>
-                                            </CollapsibleTrigger>
-
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </button>
-                                                </DropdownMenuTrigger>
-
-                                                <DropdownMenuContent
-                                                    side="right"
-                                                    align="start"
-                                                >
-                                                    <DropdownMenuItem>
-                                                        <span>Add</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        <span>Edit</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        <span>Delete</span>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-
-                                        <CollapsibleContent>
-                                            <div className="pl-6 flex flex-col gap-0 mt-1">
-                                                <SidebarMenuButton className="p-0">
-                                                    Add
-                                                </SidebarMenuButton>
-                                                <SidebarMenuButton className="p-0">
-                                                    Edit
-                                                </SidebarMenuButton>
-                                                <SidebarMenuButton className="p-0">
-                                                    Delete
-                                                </SidebarMenuButton>
-                                            </div>
-                                        </CollapsibleContent>
-                                    </Collapsible>
-                                </SidebarMenuItem>
-
-                                {/* ---------- Religion ---------- */}
-                                <SidebarMenuItem>
-                                    <Collapsible className="group w-full">
-                                        <div className="flex items-center justify-between w-full">
-                                            <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton className="flex-1 justify-between">
-                                                    <span>Religion</span>
-                                                </SidebarMenuButton>
-                                            </CollapsibleTrigger>
-
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </button>
-                                                </DropdownMenuTrigger>
-
-                                                <DropdownMenuContent
-                                                    side="right"
-                                                    align="start"
-                                                >
-                                                    <DropdownMenuItem>
-                                                        <span>Add</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        <span>Edit</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        <span>Delete</span>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-
-                                        <CollapsibleContent>
-                                            <div className="pl-6 flex flex-col gap-0 mt-1">
-                                                <SidebarMenuButton className="p-0">
-                                                    Add
-                                                </SidebarMenuButton>
-                                                <SidebarMenuButton className="p-0">
-                                                    Edit
-                                                </SidebarMenuButton>
-                                                <SidebarMenuButton className="p-0">
-                                                    Delete
-                                                </SidebarMenuButton>
-                                            </div>
-                                        </CollapsibleContent>
-                                    </Collapsible>
-                                </SidebarMenuItem>
-
-                                {/* ---------- Nationality ---------- */}
-                                <SidebarMenuItem>
-                                    <Collapsible className="group w-full">
-                                        <div className="flex items-center justify-between w-full">
-                                            <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton className="flex-1 justify-between">
-                                                    <span>Nationality</span>
-                                                </SidebarMenuButton>
-                                            </CollapsibleTrigger>
-
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </button>
-                                                </DropdownMenuTrigger>
-
-                                                <DropdownMenuContent
-                                                    side="right"
-                                                    align="start"
-                                                >
-                                                    <DropdownMenuItem>
-                                                        <span>Add</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        <span>Edit</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        <span>Delete</span>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-
-                                        <CollapsibleContent>
-                                            <div className="pl-6 flex flex-col gap-0 mt-1">
-                                                <SidebarMenuButton className="p-0">
-                                                    Add
-                                                </SidebarMenuButton>
-                                                <SidebarMenuButton className="p-0">
-                                                    Edit
-                                                </SidebarMenuButton>
-                                                <SidebarMenuButton className="p-0">
-                                                    Delete
-                                                </SidebarMenuButton>
-                                            </div>
-                                        </CollapsibleContent>
-                                    </Collapsible>
-                                </SidebarMenuItem>
-
-                                {/* ---------- Dropdown Example ---------- */}
-                                <Collapsible className="group">
-                                    <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton className="flex items-center justify-between">
-                                            <span>Dropdown Example</span>
-
-                                            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                                        </SidebarMenuButton>
-                                    </CollapsibleTrigger>
-
-                                    <CollapsibleContent>
-                                        <div className="pl-6 flex flex-col gap-0">
-                                            <SidebarMenuButton className="p-0">
-                                                Add
-                                            </SidebarMenuButton>
-                                            <SidebarMenuButton className="p-0">
-                                                Edit
-                                            </SidebarMenuButton>
-                                            <SidebarMenuButton className="p-0">
-                                                Delete
-                                            </SidebarMenuButton>
-                                        </div>
-                                    </CollapsibleContent>
-                                </Collapsible>
                             </Collapsible>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+                <SidebarFooter>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <SidebarMenuButton className="flex items-center gap-2 w-full">
+                                        <User2 />
+                                        <span>Username</span>
+                                        <ChevronUp className="ml-auto" />
+                                    </SidebarMenuButton>
+                                </DropdownMenuTrigger>
+
+                                {footer.map((item, index) => (
+                                    <DropdownMenuContent
+                                        key={index}
+                                        side="top"
+                                        align="end"
+                                        className="w-[--radix-popper-anchor-width]"
+                                    >
+                                        {item.children.map(
+                                            (child, childIndex) => (
+                                                <DropdownRedirect
+                                                    key={childIndex}
+                                                    path={child.path}
+                                                >
+                                                    {child.title}
+                                                </DropdownRedirect>
+                                            )
+                                        )}
+                                    </DropdownMenuContent>
+                                ))}
+                            </DropdownMenu>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
             </SidebarContent>
         </Sidebar>
     );
