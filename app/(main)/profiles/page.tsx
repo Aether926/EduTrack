@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ChevronDownIcon } from "lucide-react";
+import { Combobox } from "@/components/combobox";
 
 interface InputFieldProps {
     label: string;
@@ -243,6 +244,17 @@ export default function TeacherProfile() {
 
         return `${years}y ${months}m`;
     };
+
+    const nationalities = [
+        {
+            value: "filipino",
+            label: "Filipino",
+        },
+        {
+            value: "american",
+            label: "American",
+        },
+    ];
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
@@ -477,6 +489,16 @@ export default function TeacherProfile() {
                                         )}
                                     </div>
                                     <div className="space-y-1.5">
+                                        <Combobox
+                                            label="Nationality"
+                                            options={nationalities}
+                                            onChangeValue={(value) =>
+                                                handleInputChange(
+                                                    "nationality",
+                                                    value
+                                                )
+                                            }
+                                        />
                                         <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                             Nationality
                                         </label>
