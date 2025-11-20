@@ -23,42 +23,30 @@ import {
 import { Collapsible } from "@/components/ui/collapsible";
 import DropdownRedirect from "@/components/dropdown-redirect";
 
-// Sidebar items.
+import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+// Sidebar items
 const items = [
     {
-        title: "Profiles",
-        children: [
-            {
-                title: "Add",
-                path: "test1",
-            },
-            {
-                title: "Edit",
-                path: "test2",
-            },
-            {
-                title: "Delete",
-                path: "test3",
-            },
-        ],
+        title: "Home",
+        url: "test1",
+        icon: Home,
     },
     {
-        title: "Training and Seminars",
-        children: [
-            {
-                title: "Add",
-                path: "test1",
-            },
-            {
-                title: "Edit",
-                path: "test2",
-            },
-            {
-                title: "Delete",
-                path: "test3",
-            },
-        ],
+        title: "Profiles",
+        url: "test2",
+        icon: Inbox,
     },
+    {
+        title: "Training/Seminar Records",
+        url: "test3",
+        icon: Calendar,
+    },
+];
+
+// Admin items
+const admin = [
     {
         title: "Positions / Designations",
         children: [
@@ -140,49 +128,70 @@ export default function AppSidebar() {
                         <SidebarMenu>
                             <Collapsible
                                 defaultOpen
-                                className="group/collapsible"
+                                className="group/collapsible flex flex-col gap-2"
                             >
-                                {/* ---------- Admin Functions ---------- */}
-                                {items.map((item, index) => {
-                                    return (
-                                        <SidebarMenuItem key={index}>
-                                            <div className="flex items-center justify-between w-full">
-                                                <SidebarMenuButton className="flex-1 justify-start">
-                                                    {item.title}
-                                                </SidebarMenuButton>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                        asChild
-                                                    >
-                                                        <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </button>
-                                                    </DropdownMenuTrigger>
-
-                                                    <DropdownMenuContent
-                                                        side="right"
-                                                        align="start"
-                                                    >
-                                                        {item.children.map(
-                                                            (child, index) => (
-                                                                <DropdownRedirect
-                                                                    key={index}
-                                                                    path={
-                                                                        child.path
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        child.title
-                                                                    }
-                                                                </DropdownRedirect>
-                                                            )
-                                                        )}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
+                                <SidebarGroup>
+                                    {/* ---------- Sidebar Functions ---------- */}
+                                    {items.map((item) => (
+                                        <SidebarMenuItem key={item.title}>
+                                            <SidebarMenuButton asChild>
+                                                <a href={item.url}>
+                                                    <item.icon />
+                                                    <span>{item.title}</span>
+                                                </a>
+                                            </SidebarMenuButton>
                                         </SidebarMenuItem>
-                                    );
-                                })}
+                                    ))}
+                                </SidebarGroup>
+                                <SidebarGroup>
+                                    <p>Extra Functions</p>
+                                    {/* ---------- Admin Functions ---------- */}
+                                    {admin.map((item, index) => {
+                                        return (
+                                            <SidebarMenuItem key={index}>
+                                                <div className="flex items-center justify-between w-full">
+                                                    <SidebarMenuButton className="flex-1 justify-start">
+                                                        {item.title}
+                                                    </SidebarMenuButton>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+
+                                                        <DropdownMenuContent
+                                                            side="right"
+                                                            align="start"
+                                                        >
+                                                            {item.children.map(
+                                                                (
+                                                                    child,
+                                                                    index
+                                                                ) => (
+                                                                    <DropdownRedirect
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                        path={
+                                                                            child.path
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            child.title
+                                                                        }
+                                                                    </DropdownRedirect>
+                                                                )
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </SidebarMenuItem>
+                                        );
+                                    })}
+                                </SidebarGroup>
                             </Collapsible>
                         </SidebarMenu>
                     </SidebarGroupContent>
@@ -191,13 +200,16 @@ export default function AppSidebar() {
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <SidebarMenuButton className="flex items-center gap-2 w-full">
-                                        <User2 />
-                                        <span>Username</span>
-                                        <ChevronUp className="ml-auto" />
-                                    </SidebarMenuButton>
-                                </DropdownMenuTrigger>
+                                <div className="flex flex-row">
+                                    <DropdownMenuTrigger asChild>
+                                        <SidebarMenuButton className="flex items-center gap-2 w-full">
+                                            <User2 />
+                                            <span>Username</span>
+                                            <ChevronUp className="ml-auto" />
+                                        </SidebarMenuButton>
+                                    </DropdownMenuTrigger>
+                                    <ThemeToggle></ThemeToggle>
+                                </div>
 
                                 {footer.map((item, index) => (
                                     <DropdownMenuContent
@@ -226,3 +238,15 @@ export default function AppSidebar() {
         </Sidebar>
     );
 }
+
+// export function AppSidebar() {
+//     return (
+//         <Sidebar>
+//             <SidebarContent>
+//                 <SidebarGroup>
+//                     <SidebarGroupLabel>Application</SidebarGroupLabel>
+//                 </SidebarGroup>
+//             </SidebarContent>
+//         </Sidebar>
+//     );
+// }

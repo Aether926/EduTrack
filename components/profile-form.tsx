@@ -23,12 +23,15 @@ import { Button } from "./ui/button";
 import { ChevronDownIcon } from "lucide-react";
 import { Calendar } from "./ui/calendar";
 
-interface Props {
+interface ProfileClass {
     className?: string;
     submitHandler: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
-export default function ProfileForm({ className, submitHandler }: Props) {
+export default function ProfileForm({
+    className,
+    submitHandler,
+}: ProfileClass) {
     const [preview, setPreview] = useState<string | null>(null);
     const [birthDateOpen, setBirthDateOpen] = useState(false);
     const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
@@ -53,20 +56,21 @@ export default function ProfileForm({ className, submitHandler }: Props) {
 
     return (
         <form
-            className={`my-4 rounded-md p-6 bg-neutral-50 ${className}`}
+            className={`flex flex-col gap-4 my-4 rounded-md p-6 bg-neutral-50 ${className}`}
             onSubmit={submitHandler}
         >
             <FieldGroup>
                 <FieldSet>
                     <FieldLegend>Profile Picture</FieldLegend>
-                    <Field>
+                    <Field className="flex justify-center items-center">
                         {preview && (
                             <Image
                                 width={120}
                                 height={120}
                                 src={preview}
                                 alt="Preview"
-                                className="w-24 h-24 object-cover rounded-full mb-2 border"
+                                style={{ width: "10rem", height: "10rem" }}
+                                className="flex justify-center object-cover rounded-full mb-2 border border-gray-600"
                             />
                         )}
                         <Label htmlFor="picture">Picture</Label>
@@ -74,6 +78,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="picture"
                             type="file"
                             accept="image/*"
+                            className="bg-white border-gray-600"
                             onChange={previewImage}
                         />
                     </Field>
@@ -86,6 +91,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="full-name"
                             type="text"
                             placeholder="Enter full name"
+                            className="input-css"
                             required
                         />
                     </Field>
@@ -97,14 +103,15 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="employee-teacher-id"
                             type="text"
                             placeholder="Enter full name"
+                            className="bg-white border-gray-600"
                             required
                         />
                     </Field>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 ">
                         <Field>
                             <FieldLabel htmlFor="gender">Gender</FieldLabel>
                             <Select>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-white border-gray-600">
                                     <SelectValue placeholder="Select gender" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -120,7 +127,11 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="age">Age</FieldLabel>
-                            <Input id="age" type="number" />
+                            <Input
+                                className="bg-white border-gray-600"
+                                id="age"
+                                type="number"
+                            />
                         </Field>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -164,7 +175,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                                 Civil Status
                             </FieldLabel>
                             <Select>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-white border-gray-600">
                                     <SelectValue placeholder="Select civil status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -195,6 +206,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="nationality"
                             type="text"
                             placeholder="Enter nationality"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -203,6 +215,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="religion"
                             type="text"
                             placeholder="Enter nationality"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                 </FieldSet>
@@ -216,6 +229,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="contact-number"
                             type="number"
                             placeholder="Enter contact number"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -224,6 +238,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="email"
                             type="email"
                             placeholder="Enter email"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                 </FieldSet>
@@ -235,7 +250,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                                 Position / Designation
                             </FieldLabel>
                             <Select>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-white border-gray-600">
                                     <SelectValue placeholder="Select position/designation" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -277,6 +292,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                                 id="plantilla-number"
                                 type="number"
                                 placeholder="Enter plantilla number"
+                                className="bg-white border-gray-600"
                             />
                         </Field>
                     </div>
@@ -294,6 +310,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="pag-ibig-number"
                             type="number"
                             placeholder="1234-5678-9012"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -307,6 +324,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="philhealth-number"
                             type="number"
                             placeholder="Enter PhilHealth No."
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -320,6 +338,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="tin"
                             type="number"
                             placeholder="Enter TIN No."
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -333,6 +352,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="gsis-bp"
                             type="number"
                             placeholder="Enter GSIS BP No."
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                 </FieldSet>
@@ -425,6 +445,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="subject-of-specialization"
                             type="text"
                             placeholder="Enter specialization"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -435,6 +456,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="subject-of-specialization"
                             type="text"
                             placeholder="Enter Bachelor's Degree"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -448,6 +470,7 @@ export default function ProfileForm({ className, submitHandler }: Props) {
                             id="subject-of-specialization"
                             type="text"
                             placeholder="Enter Post Graduate Degree"
+                            className="bg-white border-gray-600"
                         />
                     </Field>
                 </FieldSet>

@@ -13,7 +13,7 @@ export default function fillUp() {
         <div className="min-h-screen bg-gray-200 flex items-center justify-center">
             <div className="w-full max-w-lg p-6">
                 <ProfileForm
-                    className="bg-orange-400"
+                    className="bg-neutral-300"
                     submitHandler={handleSubmit}
                 />
             </div>
