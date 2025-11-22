@@ -43,7 +43,7 @@ export default function RootLayout({
                     <SidebarProvider>
                         <AppSidebar />
                         <SidebarInset>
-                            <main className="w-full min-h-screen">
+                            <main className="">
                                 <div className="absolute top-2 left-2 z-50">
                                     <SidebarTrigger className="hover:bg-gray-200" />
                                 </div>

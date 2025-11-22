@@ -272,15 +272,15 @@ export default function TeacherProfile() {
     ];
 
     return (
-        <div className="min-w-screen min-h-screen bg-gray-50 space-y-6 dark:bg-gray-950">
+        <div className="min-h-screen bg-gray-50 space-y-6 dark:bg-gray-950">
             {/* ---------- Header Card ---------- */}
-            <Card className="overflow-hidden border-0 rounded-none shadow-lg min-w-screen p-0">
+            <Card className="border-0 rounded-none shadow-lg p-0">
                 <img src="/banner.png" alt="banner" className="w-full h-65" />
 
                 <CardContent className="px-10 py-6">
-                    <div className="flex flex-col justify-between md:flex-row items-start md:items-center -mt-16">
+                    <div className="flex flex-col md:flex-row items-start md:items-center -mt-16">
                         {/* Profile Picture */}
-                        <div className="flex flex-row w-full gap-8 justify-between relative left-10">
+                        <div className="flex flex-row w-full gap-8 relative">
                             {/* Profile and Camera */}
                             <div className="relative">
                                 <div className="w-32 h-32 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
@@ -330,14 +330,14 @@ export default function TeacherProfile() {
                                 </>
                             )}
                             {/* Name and Basic Info */}
-                            <div className="flex flex-col w-full text-left justify-center">
-                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                            <div className="flex flex-col justify-center overflow-hidden">
+                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white whitespace-nowrap text-ellipsis overflow-hidden">
                                     {tempProfileData.name}
                                 </h2>
-                                <p className="w-full sm:max-w-xs md:w-full lg:w-full truncate text-lg text-blue-600 font-semibold">
+                                <p className="text-blue-600 font-semibold whitespace-nowrap text-ellipsis overflow-hidden">
                                     {tempProfileData.position}
                                 </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-nowrap text-ellipsis overflow-hidden">
                                     Employee ID: {tempProfileData.employeeId}
                                 </p>
                             </div>
@@ -377,7 +377,7 @@ export default function TeacherProfile() {
             </Card>
 
             {/* ---------- Main Content Grid ---------- */}
-            <div className="flex flex-row gap-6 w-screen p-4">
+            <div className="flex flex-row justify-center gap-6 p-4">
                 {/* Left Column - Personal & Contact */}
                 <Card className="border-0 shadow-lg">
                     <CardHeader>
