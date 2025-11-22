@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import {
+    SidebarInset,
+    SidebarProvider,
+    SidebarTrigger,
+} from "@/components/ui/sidebar";
+import AppSidebar from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
@@ -38,10 +42,14 @@ export default function RootLayout({
                 >
                     <SidebarProvider>
                         <AppSidebar />
-                        <main className="">
-                            <SidebarTrigger />
-                            {children}
-                        </main>
+                        <SidebarInset>
+                            <main className="w-full min-h-screen">
+                                <div className="absolute top-2 left-2 z-50">
+                                    <SidebarTrigger className="hover:bg-gray-200" />
+                                </div>
+                                {children}
+                            </main>
+                        </SidebarInset>
                     </SidebarProvider>
                 </ThemeProvider>
             </body>
