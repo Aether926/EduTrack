@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTheme } from "next-themes";
 import {
     Camera,
     Edit2,
@@ -62,7 +63,6 @@ const InputField: React.FC<InputFieldProps> = ({
     placeholder = "",
 }) => {
     const isTextarea = type === "textarea";
-    console.log(value);
 
     return (
         <div className="space-y-1.5">
@@ -91,8 +91,8 @@ const InputField: React.FC<InputFieldProps> = ({
                     />
                 )
             ) : (
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded-md text-sm font-medium">
-                    {value || "—"}
+                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                    {value || "–"}
                 </div>
             )}
         </div>
@@ -152,8 +152,8 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
                     </PopoverContent>
                 </Popover>
             ) : (
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded-md text-sm font-medium">
-                    {value ? value.toLocaleDateString() : "—"}
+                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                    {value ? value.toLocaleDateString() : "–"}
                 </div>
             )}
         </div>
@@ -161,10 +161,11 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
 };
 
 export default function TeacherProfile() {
+    const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
     const [profileData, setProfileData] = useState({
-        // Personal Information
         name: "Hu Tao",
         age: "20",
         gender: "Female",
@@ -172,34 +173,28 @@ export default function TeacherProfile() {
         civilStatus: "Single",
         nationality: "Liyuean",
         religion: "Archon",
-
-        // Contact Information
         contactNumber: "+63 912 345 6789",
         address: "Wangsheng Funeral Parlor, Liyue",
         email: "BooTao@gmail.com",
-
-        // Employment Information
         employeeId: "EMP-2020-001234",
         position: "77th Director of the Wangsheng Funeral Parlor",
         plantillaNo: "DECS-ITEM-2020-0456",
-
-        // Government IDs
         pagibigNo: "1234-5678-9012",
         philHealthNo: "12-345678901-2",
         gsisNo: "1234567890123",
         tinNo: "123-456-789-000",
-
-        // Appointment Dates
         dateOfOriginalAppointment: undefined as Date | undefined,
         dateOfLatestAppointment: undefined as Date | undefined,
-
-        // Educational Background
         subjectSpecialization: "Philosophy and Ethics",
         bachelorsDegree: "Funeral Rites Coordinator",
         postGraduate: "Special Consultant",
     });
 
     const [tempProfileData, setTempProfileData] = useState(profileData);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleInputChange = (field: string, value: string) => {
         setTempProfileData({ ...tempProfileData, [field]: value });
@@ -232,7 +227,6 @@ export default function TeacherProfile() {
         const originalDate = new Date(dateValue);
         const today = new Date();
 
-        // Invalid date if it's in the future
         if (originalDate > today) {
             return "Invalid date";
         }
@@ -285,19 +279,25 @@ export default function TeacherProfile() {
         { value: "vietnamese", label: "Vietnamese" },
     ];
 
+    if (!mounted) return null;
+
+    const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
+    const bgImage =
+        theme === "light" ? "border-gray-100" : "border-neutral-900";
+
     return (
-        <div className="min-h-screen bg-gray-50 space-y-6 dark:bg-gray-950">
+        <div className={`min-h-screen ${bgClass} space-y-6`}>
             {/* ---------- Header Card ---------- */}
             <Card className="border-0 rounded-none shadow-lg p-0">
                 <img src="/banner.png" alt="banner" className="w-full h-65" />
 
                 <CardContent className="px-10 py-6">
                     <div className="flex flex-col md:flex-row gap-4 items-end md:items-center -mt-16">
-                        {/* Profile Picture */}
                         <div className="flex flex-row w-full gap-8 relative">
-                            {/* Profile and Camera */}
                             <div className="relative">
-                                <div className="w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
+                                <div
+                                    className={`w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 ${bgImage} rounded-full border-4 overflow-hidden bg-gray-200 dark:bg-gray-800`}
+                                >
                                     {preview ? (
                                         <img
                                             src={preview}
@@ -331,8 +331,6 @@ export default function TeacherProfile() {
                                 )}
                             </div>
 
-                            {/* Camera Button */}
-
                             {isEditing && (
                                 <>
                                     <input
@@ -343,7 +341,6 @@ export default function TeacherProfile() {
                                     />
                                 </>
                             )}
-                            {/* Name and Basic Info */}
                             <div className="flex flex-col justify-center overflow-hidden">
                                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white whitespace-nowrap text-ellipsis overflow-hidden">
                                     {tempProfileData.name}
@@ -356,7 +353,6 @@ export default function TeacherProfile() {
                                 </p>
                             </div>
                         </div>
-                        {/* Edit/Save Buttons */}
                         <div className="flex gap-2 flex-wrap md:flex-nowrap">
                             {isEditing ? (
                                 <>
@@ -400,7 +396,7 @@ export default function TeacherProfile() {
                             <CardTitle>Personal Information</CardTitle>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-6 w-full md:w-100">
                         <div className="space-y-4">
                             <InputField
                                 label="Full Name"
@@ -450,7 +446,7 @@ export default function TeacherProfile() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                        <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
                                             {tempProfileData.gender}
                                         </div>
                                     )}
@@ -463,7 +459,7 @@ export default function TeacherProfile() {
                                 isEditing={isEditing}
                                 onDateChange={handleDateChange}
                             />
-                            <div className="space-y-1.5">
+                            <div className="flex flex-col space-y-1.5">
                                 <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                     Civil Status
                                 </label>
@@ -499,22 +495,31 @@ export default function TeacherProfile() {
                                         </SelectContent>
                                     </Select>
                                 ) : (
-                                    <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                    <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
                                         {tempProfileData.civilStatus}
                                     </div>
                                 )}
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="flex flex-col space-y-1.5">
                                 <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                     Nationality
                                 </label>
-                                <Combobox
-                                    label="Nationality"
-                                    options={nationalities}
-                                    onChangeValue={(value) =>
-                                        handleInputChange("nationality", value)
-                                    }
-                                />
+                                {isEditing ? (
+                                    <Combobox
+                                        label="Nationality"
+                                        options={nationalities}
+                                        onChangeValue={(value) =>
+                                            handleInputChange(
+                                                "nationality",
+                                                value
+                                            )
+                                        }
+                                    />
+                                ) : (
+                                    <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                        {tempProfileData.nationality}
+                                    </div>
+                                )}
                             </div>
                             <InputField
                                 label="Religion"
@@ -569,7 +574,6 @@ export default function TeacherProfile() {
                 </Card>
 
                 {/* ---------- Right Columns ---------- */}
-                {/* Employment Information */}
                 <div className="flex flex-col gap-4">
                     <Card className="flex flex-col border-0 shadow-lg">
                         <CardHeader>
@@ -642,7 +646,7 @@ export default function TeacherProfile() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                        <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
                                             {tempProfileData.position}
                                         </div>
                                     )}
@@ -694,7 +698,7 @@ export default function TeacherProfile() {
                     </Card>
 
                     {/* Government IDs */}
-                    <Card className="border-0 shadow-lg">
+                    <Card className="flex-col border-0 shadow-lg">
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Shield className="text-blue-600" size={20} />
@@ -744,7 +748,7 @@ export default function TeacherProfile() {
                     </Card>
 
                     {/* Educational Background */}
-                    <Card className="border-0 shadow-lg">
+                    <Card className="flex-col border-0 shadow-lg">
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Book className="text-blue-600" size={20} />
@@ -782,7 +786,7 @@ export default function TeacherProfile() {
                     </Card>
 
                     {/* Service Record */}
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
+                    <Card className="flex-col border-0 shadow-lg bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
                         <CardHeader>
                             <CardTitle className="text-white">
                                 Service Record (Current School)
