@@ -227,22 +227,36 @@ export default function TeacherProfile() {
     };
 
     const calculateServiceYears = (dateValue: Date | undefined) => {
-        if (!dateValue) return "—";
+        if (!dateValue) return "–";
+
         const originalDate = new Date(dateValue);
         const today = new Date();
+
+        // Invalid date if it's in the future
+        if (originalDate > today) {
+            return "Invalid date";
+        }
+
         let years = today.getFullYear() - originalDate.getFullYear();
         let months = today.getMonth() - originalDate.getMonth();
-        const days = today.getDate() - originalDate.getDate();
+        let days = today.getDate() - originalDate.getDate();
 
         if (days < 0) {
             months--;
+
+            const lastDayOfPrevMonth = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                0
+            ).getDate();
+            days += lastDayOfPrevMonth;
         }
         if (months < 0) {
             years--;
             months += 12;
         }
 
-        return `${years}y ${months}m`;
+        return `${years}y ${months}m ${days}d`;
     };
 
     const nationalities = [
@@ -278,12 +292,12 @@ export default function TeacherProfile() {
                 <img src="/banner.png" alt="banner" className="w-full h-65" />
 
                 <CardContent className="px-10 py-6">
-                    <div className="flex flex-col md:flex-row items-start md:items-center -mt-16">
+                    <div className="flex flex-col md:flex-row gap-4 items-end md:items-center -mt-16">
                         {/* Profile Picture */}
                         <div className="flex flex-row w-full gap-8 relative">
                             {/* Profile and Camera */}
                             <div className="relative">
-                                <div className="w-32 h-32 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
+                                <div className="w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
                                     {preview ? (
                                         <img
                                             src={preview}
@@ -307,7 +321,7 @@ export default function TeacherProfile() {
                                             onChange={previewImage}
                                             className="absolute inset-0 opacity-0 cursor-pointer rounded-full"
                                         />
-                                        <button className="absolute sm:-bottom-5 md:bottom-5 right-0 bg-blue-600 hover:bg-blue-700 p-2 rounded-lg shadow-lg transition">
+                                        <button className="absolute bottom-2 md:bottom-4 right-0 bg-blue-600 hover:bg-blue-700 p-2 rounded-lg shadow-lg transition">
                                             <Camera
                                                 size={16}
                                                 className="text-white"
@@ -377,7 +391,7 @@ export default function TeacherProfile() {
             </Card>
 
             {/* ---------- Main Content Grid ---------- */}
-            <div className="flex flex-row justify-center gap-6 p-4">
+            <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
                 {/* Left Column - Personal & Contact */}
                 <Card className="border-0 shadow-lg">
                     <CardHeader>

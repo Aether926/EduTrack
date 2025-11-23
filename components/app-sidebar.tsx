@@ -28,7 +28,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const items = [
     {
         title: "Home",
-        url: "test1",
+        url: "dashboard",
         icon: Home,
     },
     {
@@ -104,7 +104,7 @@ const footer = [
         children: [
             {
                 title: "Account",
-                path: "test1",
+                path: "profile",
             },
             {
                 title: "Sign Out",
