@@ -39,7 +39,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-const data: Payment[] = [
+const data: TeacherData[] = [
     {
         employeeid: "a2fs9e1q",
         fullname: "Hu Tao",
@@ -194,7 +194,7 @@ const data: Payment[] = [
     },
 ];
 
-export type Payment = {
+export type TeacherData = {
     employeeid: string;
     fullname: string;
     position: string;
@@ -203,7 +203,7 @@ export type Payment = {
     url: string;
 };
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<TeacherData>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -291,9 +291,7 @@ export const columns: ColumnDef<Payment>[] = [
     {
         id: "actions",
         enableHiding: false,
-        cell: ({ row }) => {
-            const payment = row.original;
-
+        cell: () => {
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -367,8 +365,8 @@ export function DataTable() {
             </div>
             <div className="flex-1">
                 <div className="flex items-center py-2">
-                    <div className="flex flex-row gap-2">
-                        <div className="relative max-w-sm">
+                    <div className="flex flex-row">
+                        <div className="relative max-w-sm pr-2">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                             <Input
                                 placeholder="Filter names..."
