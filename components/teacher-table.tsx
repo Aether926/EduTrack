@@ -39,9 +39,9 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-const data: TeacherData[] = [
+const data: DataSet[] = [
     {
-        employeeid: "a2fs9e1q",
+        employeeid: "EID-2023456711",
         fullname: "Hu Tao",
         position: "Funeral Director",
         contact: "09123456789",
@@ -49,7 +49,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "p9x4k2mj",
+        employeeid: "EID-2021678944",
         fullname: "Jean",
         position: "Acting Grand Master",
         contact: "09123456789",
@@ -57,7 +57,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "u4mq8d0c",
+        employeeid: "EID-2019567328",
         fullname: "Clorinde",
         position: "Champion Duelist",
         contact: "09123456789",
@@ -65,7 +65,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "k3v7z9hp",
+        employeeid: "EID-2024891567",
         fullname: "Raiden Shogun",
         position: "Electro Archon",
         contact: "09123456789",
@@ -73,7 +73,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "t0ne8y2r",
+        employeeid: "EID-2018456792",
         fullname: "Amber",
         position: "Outrider",
         contact: "09123456789",
@@ -81,7 +81,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "f2b6h4st",
+        employeeid: "EID-2022345598",
         fullname: "Yelan",
         position: "Intelligence Agent",
         contact: "09123456789",
@@ -89,7 +89,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "m1cz8q4e",
+        employeeid: "EID-2019786412",
         fullname: "Faruzan",
         position: "Machinist Scholar",
         contact: "09123456789",
@@ -97,7 +97,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "z9w3t6bv",
+        employeeid: "EID-2019235784",
         fullname: "Ayaka",
         position: "Shirasagi Princess",
         contact: "09123456789",
@@ -105,7 +105,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "y7tm1q0s",
+        employeeid: "EID-2023789415",
         fullname: "Skirk",
         position: "Swordmaster Mentor",
         contact: "09123456789",
@@ -113,7 +113,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "b4ka2r6w",
+        employeeid: "EID-2018346791",
         fullname: "Keqing",
         position: "Qixing Yuheng",
         contact: "09123456789",
@@ -121,7 +121,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "q1rb9j3k",
+        employeeid: "EID-2019456123",
         fullname: "Ganyu",
         position: "Qixing Secretary",
         contact: "09123456789",
@@ -129,7 +129,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "d6v0n5lc",
+        employeeid: "EID-2023678942",
         fullname: "Navia",
         position: "Spina di Rosula Leader",
         contact: "09123456789",
@@ -137,7 +137,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "e5pn0w7x",
+        employeeid: "EID-2018135794",
         fullname: "Xianyun",
         position: "Adeptus Advisor",
         contact: "09123456789",
@@ -145,7 +145,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "n3sy1u8d",
+        employeeid: "EID-2023789124",
         fullname: "Citlali",
         position: "Priestess",
         contact: "09123456789",
@@ -153,7 +153,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "h2lm6p4o",
+        employeeid: "EID-2019347856",
         fullname: "Yanfei",
         position: "Legal Advisor",
         contact: "09123456789",
@@ -161,7 +161,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "j8re4c2m",
+        employeeid: "EID-2023124679",
         fullname: "Nilou",
         position: "Star Dancer",
         contact: "09123456789",
@@ -169,7 +169,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "g0as5d9e",
+        employeeid: "EID-2018893457",
         fullname: "Nefer",
         position: "Beast Handler",
         contact: "09123456789",
@@ -177,7 +177,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "s3fq8b1p",
+        employeeid: "EID-2024123589",
         fullname: "Furina",
         position: "Opera Performer",
         contact: "09123456789",
@@ -185,7 +185,7 @@ const data: TeacherData[] = [
         url: "test",
     },
     {
-        employeeid: "v4hp2m0c",
+        employeeid: "EID-2019224578",
         fullname: "Chiori",
         position: "Fashion Designer",
         contact: "09123456789",
@@ -194,7 +194,7 @@ const data: TeacherData[] = [
     },
 ];
 
-export type TeacherData = {
+export type DataSet = {
     employeeid: string;
     fullname: string;
     position: string;
@@ -203,7 +203,7 @@ export type TeacherData = {
     url: string;
 };
 
-export const columns: ColumnDef<TeacherData>[] = [
+export const columns: ColumnDef<DataSet>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -227,6 +227,23 @@ export const columns: ColumnDef<TeacherData>[] = [
         ),
         enableSorting: false,
         enableHiding: false,
+    },
+    {
+        accessorKey: "employeeid",
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === "asc")
+                    }
+                >
+                    Employee Id
+                    <ArrowUpDown />
+                </Button>
+            );
+        },
+        cell: ({ row }) => <div>{row.getValue("employeeid")}</div>,
     },
     {
         accessorKey: "fullname",
@@ -384,7 +401,7 @@ export function DataTable() {
                             />
                         </div>
                         {table.getFilteredSelectedRowModel().rows.length >
-                            0 && (
+                            1 && (
                             <Button className="mr-2 !bg-red-700 !text-white hover:!bg-red-800">
                                 Delete
                             </Button>
