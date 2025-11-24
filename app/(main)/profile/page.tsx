@@ -67,7 +67,7 @@ const InputField: React.FC<InputFieldProps> = ({
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
                 {Icon && <Icon size={14} className="text-blue-600" />}
                 {label}
-                {required && <span className="text-red-500">*</span>}
+                {required}
             </label>
             {isEditing ? (
                 isTextarea ? (
@@ -90,7 +90,7 @@ const InputField: React.FC<InputFieldProps> = ({
                 )
             ) : (
                 <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                    {value || "–"}
+                    {value || "—"}
                 </div>
             )}
         </div>
@@ -121,7 +121,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
                 <Calendar size={14} className="text-blue-600" />
                 {label}
-                {required && <span className="text-red-500">*</span>}
+                {required}
             </label>
             {isEditing ? (
                 <Popover open={open} onOpenChange={setOpen}>
@@ -151,7 +151,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
                 </Popover>
             ) : (
                 <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                    {value ? value.toLocaleDateString() : "–"}
+                    {value ? value.toLocaleDateString() : "—"}
                 </div>
             )}
         </div>
@@ -164,7 +164,10 @@ export default function TeacherProfile() {
     const [isEditing, setIsEditing] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
     const [profileData, setProfileData] = useState({
-        name: "Hu Tao",
+        firstName: "Tao",
+        middleInitial: "",
+        lastName: "Hu",
+        username: "BooTao",
         age: "20",
         gender: "Female",
         dateOfBirth: undefined as Date | undefined,
@@ -220,7 +223,7 @@ export default function TeacherProfile() {
     };
 
     const calculateServiceYears = (dateValue: Date | undefined) => {
-        if (!dateValue) return "–";
+        if (!dateValue) return "—";
 
         const originalDate = new Date(dateValue);
         const today = new Date();
@@ -297,24 +300,44 @@ export default function TeacherProfile() {
             {/* ---------- Main Content Grid ---------- */}
             <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
                 {/* Left Column - Personal & Contact */}
-                <Card className="border-0 shadow-lg">
+                <Card className="border-0 shadow-lg w-full xl:max-w-[500px]">
                     <CardHeader>
                         <div className="flex items-center gap-2">
                             <User className="text-blue-600" size={20} />
                             <CardTitle>Personal Information</CardTitle>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-6 w-full md:w-100">
+                    <CardContent className="space-y-6 w-full">
                         <div className="space-y-4">
                             <InputField
-                                label="Full Name"
-                                value={tempProfileData.name}
-                                field="name"
+                                label="First Name"
+                                value={tempProfileData.firstName}
+                                field="firstName"
                                 icon={User}
                                 isEditing={isEditing}
                                 onInputChange={handleInputChange}
                                 required
                             />
+                            <div className="grid grid-cols-3 gap-3">
+                                <InputField
+                                    label="Middle Initial"
+                                    value={tempProfileData.middleInitial}
+                                    field="middleInitial"
+                                    isEditing={isEditing}
+                                    onInputChange={handleInputChange}
+                                    placeholder="Optional"
+                                />
+                                <div className="col-span-2">
+                                    <InputField
+                                        label="Last Name"
+                                        value={tempProfileData.lastName}
+                                        field="lastName"
+                                        isEditing={isEditing}
+                                        onInputChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <InputField
                                     label="Age"
@@ -482,7 +505,7 @@ export default function TeacherProfile() {
                 </Card>
 
                 {/* ---------- Right Columns ---------- */}
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 w-full xl:max-w-[700px]">
                     <Card className="flex flex-col border-0 shadow-lg">
                         <CardHeader>
                             <div className="flex items-center gap-2">
@@ -494,7 +517,7 @@ export default function TeacherProfile() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <InputField
                                     label="Employee ID"
                                     value={tempProfileData.employeeId}
@@ -511,7 +534,6 @@ export default function TeacherProfile() {
                                             className="text-blue-600"
                                         />
                                         Position/Designation
-                                        <span className="text-red-500">*</span>
                                     </label>
                                     {isEditing ? (
                                         <Select
@@ -554,7 +576,7 @@ export default function TeacherProfile() {
                                             </SelectContent>
                                         </Select>
                                     ) : (
-                                        <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                        <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium break-words">
                                             {tempProfileData.position}
                                         </div>
                                     )}
@@ -581,7 +603,7 @@ export default function TeacherProfile() {
                                     />
                                     Appointment History
                                 </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     <DatePickerField
                                         label="Date of Original Appointment"
                                         value={
@@ -614,7 +636,7 @@ export default function TeacherProfile() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <InputField
                                     label="PAG-IBIG No."
                                     value={tempProfileData.pagibigNo}
@@ -701,32 +723,36 @@ export default function TeacherProfile() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                            <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 mb-4">
+                                <div className="flex flex-col justify-between bg-white/10 backdrop-blur rounded-lg p-4">
                                     <p className="text-sm text-blue-100 mb-2">
                                         Years at This School
                                     </p>
-                                    <p className="text-3xl font-bold">
-                                        {calculateServiceYears(
-                                            tempProfileData.dateOfOriginalAppointment
-                                        )}
-                                    </p>
-                                    <p className="text-xs text-blue-200 mt-2">
-                                        Since joining this school
-                                    </p>
+                                    <div>
+                                        <p className="text-3xl font-bold">
+                                            {calculateServiceYears(
+                                                tempProfileData.dateOfOriginalAppointment
+                                            )}
+                                        </p>
+                                        <p className="text-xs text-blue-200 mt-2">
+                                            Since joining this school
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                                <div className="flex flex-col justify-between bg-white/10 backdrop-blur rounded-lg p-4">
                                     <p className="text-sm text-blue-100 mb-2">
                                         Years in Current Position
                                     </p>
-                                    <p className="text-3xl font-bold">
-                                        {calculateServiceYears(
-                                            tempProfileData.dateOfLatestAppointment
-                                        )}
-                                    </p>
-                                    <p className="text-xs text-blue-200 mt-2">
-                                        Since latest appointment
-                                    </p>
+                                    <div>
+                                        <p className="text-3xl font-bold">
+                                            {calculateServiceYears(
+                                                tempProfileData.dateOfLatestAppointment
+                                            )}
+                                        </p>
+                                        <p className="text-xs text-blue-200 mt-2">
+                                            Since latest appointment
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                             <div className="bg-white/5 backdrop-blur rounded-lg p-3 text-sm">

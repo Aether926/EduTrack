@@ -8,9 +8,11 @@ interface ProfileHeaderProps {
     preview: string | null;
     isEditing: boolean;
     tempProfileData: {
-        name: string;
+        firstName: string;
+        middleInitial: string;
+        lastName: string;
         position: string;
-        employeeId: string;
+        username: string;
     };
     onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSave: () => void;
@@ -32,14 +34,21 @@ export default function ProfileHeader({
     const bgImage =
         theme === "light" ? "border-gray-100" : "border-neutral-900";
 
+    // Helper function to combine name fields
+    const getFullName = () => {
+        const { firstName, middleInitial, lastName } = tempProfileData;
+        const middle = middleInitial ? `${middleInitial}. ` : "";
+        return `${firstName} ${middle}${lastName}`.trim();
+    };
+
     return (
         <Card className="border-0 rounded-none shadow-lg p-0">
             {/* Profile Banner */}
             <img src="/banner.png" alt="banner" className="w-full h-65" />
 
-            <CardContent className="px-10 py-6">
+            <CardContent className="px-4 md:px-10 py-6">
                 <div className="flex flex-col md:flex-row gap-4 items-end md:items-center -mt-16">
-                    <div className="flex flex-col md:flex-row w-full gap-2 md:gap-8 relative">
+                    <div className="flex flex-col md:flex-row w-full gap-2 md:gap-4 lg:gap-8 relative min-w-0">
                         <div className="flex justify-center">
                             <div className="relative w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40">
                                 {/* Profile Picture */}
@@ -86,21 +95,21 @@ export default function ProfileHeader({
                         </div>
 
                         {/* Profile Info */}
-                        <div className="flex flex-col text-center md:text-left justify-center overflow-hidden">
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {tempProfileData.name}
+                        <div className="flex flex-col text-center md:text-left justify-center overflow-hidden min-w-0 flex-1">
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white break-words">
+                                {getFullName()}
                             </h2>
-                            <p className="text-blue-600 font-semibold">
+                            <p className="text-blue-600 font-semibold text-sm md:text-base break-words mt-1">
                                 {tempProfileData.position}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Employee ID: {tempProfileData.employeeId}
+                            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
+                                Username: {tempProfileData.username}
                             </p>
                         </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 flex-wrap md:flex-nowrap">
+                    <div className="flex gap-2 flex-wrap md:flex-nowrap justify-center md:justify-end flex-shrink-0">
                         {isEditing ? (
                             <>
                                 <Button
