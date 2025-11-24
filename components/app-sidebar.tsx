@@ -21,7 +21,7 @@ import {
 import { Collapsible } from "@/components/ui/collapsible";
 import DropdownRedirect from "@/components/dropdown-redirect";
 
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import { Calendar, Home, Inbox } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 // Sidebar items
@@ -33,7 +33,7 @@ const items = [
     },
     {
         title: "Profiles",
-        url: "test2",
+        url: "teacher-profiles",
         icon: Inbox,
     },
     {

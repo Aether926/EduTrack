@@ -1,12 +1,10 @@
 "use client";
 
+import ProfileHeader from "@/components/profile-header";
+
 import React, { useState } from "react";
 import { useTheme } from "next-themes";
 import {
-    Camera,
-    Edit2,
-    Save,
-    X,
     User,
     Mail,
     Phone,
@@ -282,109 +280,19 @@ export default function TeacherProfile() {
     if (!mounted) return null;
 
     const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
-    const bgImage =
-        theme === "light" ? "border-gray-100" : "border-neutral-900";
 
     return (
         <div className={`min-h-screen ${bgClass} space-y-6`}>
             {/* ---------- Header Card ---------- */}
-            <Card className="border-0 rounded-none shadow-lg p-0">
-                <img src="/banner.png" alt="banner" className="w-full h-65" />
-
-                <CardContent className="px-10 py-6">
-                    <div className="flex flex-col md:flex-row gap-4 items-end md:items-center -mt-16">
-                        <div className="flex flex-row w-full gap-8 relative">
-                            <div className="relative">
-                                <div
-                                    className={`w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 ${bgImage} rounded-full border-4 overflow-hidden bg-gray-200 dark:bg-gray-800`}
-                                >
-                                    {preview ? (
-                                        <img
-                                            src={preview}
-                                            alt="Profile"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <User
-                                                size={48}
-                                                className="text-gray-400"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                                {isEditing && (
-                                    <>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={previewImage}
-                                            className="absolute inset-0 opacity-0 cursor-pointer rounded-full"
-                                        />
-                                        <button className="absolute bottom-2 md:bottom-4 right-0 bg-blue-600 hover:bg-blue-700 p-2 rounded-lg shadow-lg transition">
-                                            <Camera
-                                                size={16}
-                                                className="text-white"
-                                            />
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-
-                            {isEditing && (
-                                <>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={previewImage}
-                                        className="absolute inset-0 opacity-0 cursor-pointer rounded-xl"
-                                    />
-                                </>
-                            )}
-                            <div className="flex flex-col justify-center overflow-hidden">
-                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white whitespace-nowrap text-ellipsis overflow-hidden">
-                                    {tempProfileData.name}
-                                </h2>
-                                <p className="text-blue-600 font-semibold whitespace-nowrap text-ellipsis overflow-hidden">
-                                    {tempProfileData.position}
-                                </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-nowrap text-ellipsis overflow-hidden">
-                                    Employee ID: {tempProfileData.employeeId}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex gap-2 flex-wrap md:flex-nowrap">
-                            {isEditing ? (
-                                <>
-                                    <Button
-                                        onClick={handleSave}
-                                        className="gap-2 bg-green-600 hover:bg-green-700"
-                                    >
-                                        <Save size={18} />
-                                        Save
-                                    </Button>
-                                    <Button
-                                        onClick={handleCancel}
-                                        variant="secondary"
-                                        className="gap-2"
-                                    >
-                                        <X size={18} />
-                                        Cancel
-                                    </Button>
-                                </>
-                            ) : (
-                                <Button
-                                    onClick={() => setIsEditing(true)}
-                                    className="gap-2"
-                                >
-                                    <Edit2 size={18} />
-                                    Edit Profile
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <ProfileHeader
+                preview={preview}
+                isEditing={isEditing}
+                tempProfileData={tempProfileData}
+                onImageChange={previewImage}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                onEdit={() => setIsEditing(true)}
+            />
 
             {/* ---------- Main Content Grid ---------- */}
             <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
