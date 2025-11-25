@@ -78,7 +78,7 @@ export default function ProfileForm({
                             id="picture"
                             type="file"
                             accept="image/*"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                             onChange={previewImage}
                         />
                     </Field>
@@ -86,12 +86,37 @@ export default function ProfileForm({
                 <FieldSet>
                     <FieldLegend>Personal Information</FieldLegend>
                     <Field>
-                        <FieldLabel htmlFor="full-name">Full Name</FieldLabel>
+                        <FieldLabel htmlFor="first-name">First Name</FieldLabel>
                         <Input
-                            id="full-name"
+                            id="first-name"
                             type="text"
-                            placeholder="Enter full name"
-                            className="input-css"
+                            placeholder="Enter first name"
+                            className="bg-gray-200 border-gray-600"
+                            required
+                        />
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="middle-inital">
+                            Middle Initial
+                            <span className="text-sm text-gray-600">
+                                (optional)
+                            </span>
+                        </FieldLabel>
+                        <Input
+                            id="middle-initial"
+                            type="text"
+                            placeholder="Enter middle initial"
+                            className="bg-gray-200 border-gray-600"
+                            required
+                        />
+                    </Field>
+                    <Field>
+                        <FieldLabel htmlFor="last-name">Last Name</FieldLabel>
+                        <Input
+                            id="last-name"
+                            type="text"
+                            placeholder="Enter last name"
+                            className="bg-gray-200 border-gray-600"
                             required
                         />
                     </Field>
@@ -102,8 +127,8 @@ export default function ProfileForm({
                         <Input
                             id="employee-teacher-id"
                             type="text"
-                            placeholder="Enter full name"
-                            className="bg-white border-gray-600"
+                            placeholder="Enter your Employee ID"
+                            className="bg-gray-200 border-gray-600"
                             required
                         />
                     </Field>
@@ -128,8 +153,9 @@ export default function ProfileForm({
                         <Field>
                             <FieldLabel htmlFor="age">Age</FieldLabel>
                             <Input
-                                className="bg-white border-gray-600"
                                 id="age"
+                                placeholder="Enter your age"
+                                className="bg-gray-200 border-gray-600"
                                 type="number"
                             />
                         </Field>
@@ -147,6 +173,7 @@ export default function ProfileForm({
                                     <Button
                                         variant="outline"
                                         id="date-of-birth"
+                                        className="flex justify-between bg-gray-200 border-gray-600 text-sm text-gray-500"
                                     >
                                         {birthDate
                                             ? birthDate.toLocaleDateString()
@@ -175,7 +202,7 @@ export default function ProfileForm({
                                 Civil Status
                             </FieldLabel>
                             <Select>
-                                <SelectTrigger className="bg-white border-gray-600">
+                                <SelectTrigger className="bg-gray-200 border-gray-600">
                                     <SelectValue placeholder="Select civil status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -201,21 +228,29 @@ export default function ProfileForm({
                     <Field>
                         <FieldLabel htmlFor="nationality">
                             Nationality
+                            <span className="text-sm text-gray-600">
+                                (optional)
+                            </span>
                         </FieldLabel>
                         <Input
                             id="nationality"
                             type="text"
                             placeholder="Enter nationality"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                     <Field>
-                        <FieldLabel htmlFor="religion">Religion</FieldLabel>
+                        <FieldLabel htmlFor="religion">
+                            Religion
+                            <span className="text-sm text-gray-600">
+                                (optional)
+                            </span>
+                        </FieldLabel>
                         <Input
                             id="religion"
                             type="text"
                             placeholder="Enter nationality"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                 </FieldSet>
@@ -229,7 +264,7 @@ export default function ProfileForm({
                             id="contact-number"
                             type="number"
                             placeholder="Enter contact number"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -238,7 +273,7 @@ export default function ProfileForm({
                             id="email"
                             type="email"
                             placeholder="Enter email"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                 </FieldSet>
@@ -250,7 +285,7 @@ export default function ProfileForm({
                                 Position / Designation
                             </FieldLabel>
                             <Select>
-                                <SelectTrigger className="bg-white border-gray-600">
+                                <SelectTrigger className="bg-gray-200 border-gray-600">
                                     <SelectValue placeholder="Select position/designation" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -284,15 +319,12 @@ export default function ProfileForm({
                         <Field>
                             <FieldLabel htmlFor="plantilla-number">
                                 Plantilla No.
-                                <span className="text-sm text-gray-600">
-                                    (optional)
-                                </span>
                             </FieldLabel>
                             <Input
                                 id="plantilla-number"
                                 type="number"
                                 placeholder="Enter plantilla number"
-                                className="bg-white border-gray-600"
+                                className="bg-gray-200 border-gray-600"
                             />
                         </Field>
                     </div>
@@ -310,7 +342,7 @@ export default function ProfileForm({
                             id="pag-ibig-number"
                             type="number"
                             placeholder="1234-5678-9012"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -324,7 +356,7 @@ export default function ProfileForm({
                             id="philhealth-number"
                             type="number"
                             placeholder="Enter PhilHealth No."
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -338,7 +370,7 @@ export default function ProfileForm({
                             id="tin"
                             type="number"
                             placeholder="Enter TIN No."
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -352,12 +384,17 @@ export default function ProfileForm({
                             id="gsis-bp"
                             type="number"
                             placeholder="Enter GSIS BP No."
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                 </FieldSet>
                 <FieldSet>
-                    <FieldLegend>Appointment Details</FieldLegend>
+                    <FieldLegend>
+                        Appointment Details
+                        <span className="pl-1 text-sm text-gray-600">
+                            (optional)
+                        </span>
+                    </FieldLegend>
                     <div className="grid grid-cols-2 gap-4">
                         <Field>
                             <FieldLabel htmlFor="date-of-appointment">
@@ -445,7 +482,7 @@ export default function ProfileForm({
                             id="subject-of-specialization"
                             type="text"
                             placeholder="Enter specialization"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -456,7 +493,7 @@ export default function ProfileForm({
                             id="subject-of-specialization"
                             type="text"
                             placeholder="Enter Bachelor's Degree"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                     <Field>
@@ -470,7 +507,7 @@ export default function ProfileForm({
                             id="subject-of-specialization"
                             type="text"
                             placeholder="Enter Post Graduate Degree"
-                            className="bg-white border-gray-600"
+                            className="bg-gray-200 border-gray-600"
                         />
                     </Field>
                 </FieldSet>
