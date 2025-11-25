@@ -34,7 +34,7 @@ export default function ProfileHeader({
     const bgImage =
         theme === "light" ? "border-gray-100" : "border-neutral-900";
 
-    // Helper function to combine name fields
+    // Makes the full name
     const getFullName = () => {
         const { firstName, middleInitial, lastName } = tempProfileData;
         const middle = middleInitial ? `${middleInitial}. ` : "";

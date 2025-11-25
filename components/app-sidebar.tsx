@@ -38,7 +38,7 @@ const items = [
     },
     {
         title: "Training / Seminar Records",
-        url: "test3",
+        url: "professional-dev",
         icon: Calendar,
     },
 ];
