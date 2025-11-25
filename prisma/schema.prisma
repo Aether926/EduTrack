@@ -25,13 +25,28 @@ enum Role {
 // --------------------------------------------------
 
 model User {
-    id        String   @id @default(cuid())
-    name      String
-    email     String   @unique
-    password  String
-    role      Role     @default(USER)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String?
+  email     String?   @unique
+  password  String?
+  role      Role      @default(USER)
+  accounts  Account[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  access_token      String?
+  refresh_token     String?
+  expires_at        Int?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
 }
 
 // --------------------------------------------------

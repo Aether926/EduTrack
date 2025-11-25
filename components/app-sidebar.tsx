@@ -33,7 +33,7 @@ const items = [
     },
     {
         title: "Profiles",
-        url: "test2",
+        url: "profile",
         icon: Inbox,
     },
     {
