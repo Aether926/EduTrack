@@ -1,6 +1,7 @@
 "use client";
 
 import ProfileHeader from "@/components/profile-header";
+import ProtectedPage from "@/components/protected-page";
 
 import React, { useState } from "react";
 import { useTheme } from "next-themes";
@@ -285,6 +286,7 @@ export default function TeacherProfile() {
     const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
 
     return (
+        <ProtectedPage>
         <div className={`min-h-screen ${bgClass} space-y-6`}>
             {/* ---------- Header Card ---------- */}
             <ProfileHeader
@@ -769,5 +771,6 @@ export default function TeacherProfile() {
                 </div>
             </div>
         </div>
+        </ProtectedPage>
     );
 }

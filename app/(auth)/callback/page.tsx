@@ -11,7 +11,7 @@ export default function AuthCallback() {
       // get current session (supabase stores it in browser)
       const { data } = await supabase.auth.getSession()
       const session = data.session
-      if (!session) return router.push('/auth/logIn')
+      if (!session) return router.push('/logIn')
 
       const accessToken = session.access_token
 
@@ -25,7 +25,7 @@ export default function AuthCallback() {
       if (res.ok) router.push('/dashboard')
       else {
         console.error(await res.text())
-        router.push('/auth/logIn')
+        router.push('/logIn')
       }
     }
 

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 
@@ -9,19 +9,29 @@ export default function SignUpPage() {
   const [message, setMessage] = useState('')
   const router = useRouter()
 
+  useEffect(() => {
+    async function check() {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        router.push('/dashboard')
+      }
+    }
+    check()
+  }, [router])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${location.origin}/callback` },
     })
     if (error) {
       setMessage(error.message)
       return
     }
     setMessage('Check your email for confirmation!')
-    router.push('/auth/callback')
+    router.push('/callback')
   }
 
   return (

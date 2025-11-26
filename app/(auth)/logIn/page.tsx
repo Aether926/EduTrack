@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 
@@ -8,6 +8,17 @@ export default function LogIn() {
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
   const router = useRouter()
+
+  // block access if already logged in
+  useEffect(() => {
+    async function check() {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        router.push('/dashboard')
+      }
+    }
+    check()
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,7 +33,7 @@ export default function LogIn() {
     }
 
     setMessage('Login successful!')
-    router.push('/dashboard') // redirect after login
+    router.push('/dashboard')
   }
 
   return (
@@ -35,7 +46,7 @@ export default function LogIn() {
             <label className="block mb-1 text-gray-700">Email</label>
             <input
               type="email"
-              className="w-full px-3 py-2 border border-gray-500 rounded focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-3 py-2 border border-gray-500 rounded"
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -46,7 +57,7 @@ export default function LogIn() {
             <label className="block mb-1 text-gray-700">Password</label>
             <input
               type="password"
-              className="w-full px-3 py-2 border border-gray-500 rounded focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-3 py-2 border border-gray-500 rounded"
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -55,7 +66,7 @@ export default function LogIn() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 text-white py-2 rounded"
           >
             Submit
           </button>
@@ -71,7 +82,7 @@ export default function LogIn() {
 
         <p className="text-center text-sm text-gray-700">
           No Account?{' '}
-          <a href="/signUp" className="text-blue-600 hover:underline font-medium">
+          <a href="/signUp" className="text-blue-600">
             Sign Up
           </a>
         </p>
@@ -79,4 +90,3 @@ export default function LogIn() {
     </div>
   )
 }
-
