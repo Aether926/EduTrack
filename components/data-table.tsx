@@ -68,6 +68,12 @@ export function DataTable<T>({
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
+    // Add state for dynamic page size
+    const [currentPageSize, setCurrentPageSize] = React.useState(() => {
+        if (typeof window === "undefined") return pageSize;
+        return getPageSize();
+    });
+
     const handleRowClick = (row: T, event: React.MouseEvent) => {
         if (!getRowUrl) return;
 
@@ -82,6 +88,30 @@ export function DataTable<T>({
         router.push(getRowUrl(row));
     };
 
+    function getPageSize() {
+        if (typeof window === "undefined") return pageSize;
+
+        const width = window.innerWidth;
+
+        // Row limiter depending on screen size
+        if (width < 768) return 6; // sm
+        if (width < 1440) return 7; // md-lg
+        return 12; // xl+
+    }
+
+    // Adds the effect to handle window resize
+    React.useEffect(() => {
+        const handleResize = () => {
+            const newPageSize = getPageSize();
+            if (newPageSize !== currentPageSize) {
+                setCurrentPageSize(newPageSize);
+            }
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [currentPageSize]);
+
     const table = useReactTable({
         data,
         columns,
@@ -95,7 +125,7 @@ export function DataTable<T>({
         onRowSelectionChange: setRowSelection,
         initialState: {
             pagination: {
-                pageSize: pageSize,
+                pageSize: currentPageSize,
             },
         },
         state: {
@@ -105,6 +135,11 @@ export function DataTable<T>({
             rowSelection,
         },
     });
+
+    // Update table page size when currentPageSize changes
+    React.useEffect(() => {
+        table.setPageSize(currentPageSize);
+    }, [currentPageSize, table]);
 
     const selectedRows = table
         .getFilteredSelectedRowModel()
@@ -241,13 +276,13 @@ export function DataTable<T>({
                 </div>
             </div>
             <div className="sticky bottom-0 bg-background border-t py-4 z-10 mt-auto">
-                <div className="flex flex-col md:flex-row gap-2 items-center w-full">
+                <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
                     <div className="text-muted-foreground text-sm mr-auto">
                         {table.getFilteredSelectedRowModel().rows.length} of{" "}
                         {table.getFilteredRowModel().rows.length} row(s)
                         selected.
                     </div>
-                    <div className="md:absolute md:left-1/2 md:-translate-x-1/2">
+                    <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2">
                         <PaginationBar table={table} />
                     </div>
                 </div>
