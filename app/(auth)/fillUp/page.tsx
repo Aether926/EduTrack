@@ -1,12 +1,32 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import ProfileForm from "@/components/profile-form";
-import { redirect } from "next/navigation";
 
-export default function fillUp() {
+export default function FillUp() {
+    const [user, setUser] = useState<any>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        const checkSession = async () => {
+            const { data } = await supabase.auth.getSession();
+            if (!data.session) {
+                router.push("/signin"); // redirect if not logged in
+            } else {
+                setUser(data.session.user);
+            }
+        };
+
+        checkSession();
+    }, [router]);
+
+    if (!user) return <p>Loading...</p>;
+
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        redirect("/dashboard");
+        router.push("/dashboard");
     }
 
     return (
