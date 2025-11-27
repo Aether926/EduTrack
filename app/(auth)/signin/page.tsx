@@ -1,43 +1,41 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
-export default function SignUpPage() {
+export default function LogIn() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const router = useRouter();
 
-    useEffect(() => {
-        async function check() {
-            const { data } = await supabase.auth.getSession();
-            if (data.session) {
-                router.push("/dashboard");
-            }
-        }
-        check();
-    }, [router]);
-
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
+
         if (error) {
             setMessage(error.message);
             return;
         }
-        setMessage("Check your email for confirmation!");
-        router.push("/callback");
+
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+
+        console.log(session);
+
+        setMessage("Login successful!");
+        router.push("/dashboard");
     }
 
     return (
         <div className="min-h-screen bg-gray-200 flex items-center justify-center">
             <div className="w-full max-w-sm bg-neutral-300 p-6 rounded-lg shadow">
                 <h1 className="text-xl font-semibold mb-4 text-gray-800">
-                    Sign Up
+                    Log In
                 </h1>
 
                 <form onSubmit={handleSubmit}>
@@ -47,7 +45,7 @@ export default function SignUpPage() {
                         </label>
                         <input
                             type="email"
-                            className="w-full px-3 py-2 border border-gray-500 rounded focus:outline-none focus:ring focus:ring-blue-300"
+                            className="w-full px-3 py-2 border border-gray-500 rounded"
                             placeholder="Enter email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -60,7 +58,7 @@ export default function SignUpPage() {
                         </label>
                         <input
                             type="password"
-                            className="w-full px-3 py-2 border border-gray-500 rounded focus:outline-none focus:ring focus:ring-blue-300"
+                            className="w-full px-3 py-2 border border-gray-500 rounded"
                             placeholder="Enter password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -69,7 +67,7 @@ export default function SignUpPage() {
 
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+                        className="w-full bg-blue-600 text-white py-2 rounded"
                     >
                         Submit
                     </button>
@@ -88,12 +86,9 @@ export default function SignUpPage() {
                 </div>
 
                 <p className="text-center text-sm text-gray-700">
-                    Have an account?{" "}
-                    <a
-                        href="/signin"
-                        className="text-blue-600 hover:underline font-medium"
-                    >
-                        Log In
+                    No Account?{" "}
+                    <a href="/signUp" className="text-blue-600">
+                        Sign Up
                     </a>
                 </p>
             </div>
