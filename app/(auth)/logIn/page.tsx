@@ -9,16 +9,7 @@ export default function LogIn() {
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  // block access if already logged in
-  useEffect(() => {
-    async function check() {
-      const { data } = await supabase.auth.getSession()
-      if (data.session) {
-        router.push('/dashboard')
-      }
-    }
-    check()
-  }, [router])
+  
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
  
     const profile = await prisma.profile.upsert({
-      where: { supabaseId },
+      where: { id: supabaseId },
       update: { email, name, avatarUrl },
       create: { supabaseId, email, name, avatarUrl }
     })
