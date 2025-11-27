@@ -24,6 +24,8 @@ import DropdownRedirect from "@/components/dropdown-redirect";
 import { Calendar, Home, Inbox } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+import Link from "next/link";
+
 // Sidebar items
 const items = [
     {
@@ -46,22 +48,16 @@ const items = [
 // Admin items
 const admin = [
     {
-        title: "Add Trainings / Seminars",
-        children: [
-            {
-                title: "Add",
-                path: "test1",
-            },
-            {
-                title: "Edit",
-                path: "test2",
-            },
-            {
-                title: "Delete",
-                path: "test3",
-            },
-        ],
+        title: "Account Approval",
+        path: "account-approval",
     },
+    {
+        title: "Add Trainings / Seminars",
+        path: "test1",
+    },
+];
+
+const adminData = [
     {
         title: "Positions / Designations",
         children: [
@@ -144,7 +140,20 @@ export default function AppSidebar() {
                                 <SidebarGroup>
                                     <p>Extra Functions</p>
                                     {/* ---------- Admin Functions ---------- */}
-                                    {admin.map((item, index) => {
+                                    {admin.map((item, index) => (
+                                        <SidebarMenuItem key={index}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                className="flex-1 justify-start"
+                                            >
+                                                <Link href={`/${item.path}`}>
+                                                    {item.title}
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))}
+
+                                    {adminData.map((item, index) => {
                                         return (
                                             <SidebarMenuItem key={index}>
                                                 <div className="flex items-center justify-between w-full">
