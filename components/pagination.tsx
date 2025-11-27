@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/pagination";
 
 interface PaginationBarProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     table: Table<any>;
 }
 
