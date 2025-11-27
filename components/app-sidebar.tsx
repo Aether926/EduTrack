@@ -36,6 +36,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 
 export default function AppSidebar() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
 
