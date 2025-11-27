@@ -11,6 +11,7 @@ import {
     Home,
     Inbox,
 } from "lucide-react";
+
 import {
     Sidebar,
     SidebarContent,
@@ -21,14 +22,18 @@ import {
     SidebarMenuItem,
     SidebarFooter,
 } from "@/components/ui/sidebar";
+
 import {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
+
 import { Collapsible } from "@/components/ui/collapsible";
 import DropdownRedirect from "@/components/dropdown-redirect";
 import { ThemeToggle } from "@/components/theme-toggle";
+
+import Link from "next/link";
 
 export default function AppSidebar() {
     const [user, setUser] = useState<any>(null);
