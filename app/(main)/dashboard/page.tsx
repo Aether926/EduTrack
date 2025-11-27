@@ -1,44 +1,16 @@
-import { redirect } from "next/navigation";
-import SearchBar from "@/components/searchbar";
+'use client'; // make it client component if you want to read session easily
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+import ProtectedPage from "@/components/protected-page";
 
-export default function Home() {
-    return (
-        <div className="flex flex-col gap-5">
-            <SearchBar />
-            <h1>hello world</h1>
-            <div className="flex flex-col">
-                <div className="space-y-4">
-                    <p>Item 1</p>
-                    <p>Item 2</p>
-                    <p>Item 3</p>
-                </div>
+export default function Dashboard() {
 
-                <div className="my-4">
-                    <p>Item 1</p>
-                    <p>Item 2</p>
-                    <p>Item 3</p>
-                </div>
-                <div className="my-4">
-                    <p>Item 1</p>
-                    <p>Item 2</p>
-                    <p>Item 3</p>
-                </div>
-                <div className="my-4">
-                    <p>Item 1</p>
-                    <p>Item 2</p>
-                    <p>Item 3</p>
-                </div>
-                <div className="my-4">
-                    <p>Item 1</p>
-                    <p>Item 2</p>
-                    <p>Item 3</p>
-                </div>
-                <div className="my-4">
-                    <p>Item 1</p>
-                    <p>Item 2</p>
-                    <p>Item 3</p>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    
+    
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-1000">
+    </div>
+    
+  );
 }
