@@ -204,56 +204,94 @@ export default function AppSidebar() {
 
                 <SidebarFooter>
                     <SidebarMenu>
-                        <SidebarMenuItem>
-                            <DropdownMenu>
-                                <div className="flex flex-col w-full items-start gap-1 px-2 py-3">
-                                    <DropdownMenuTrigger asChild>
-                                        <SidebarMenuButton className="flex items-center gap-1 w-full justify-start p-2">
-                                            <User2 className="h-5 w-5" />
-                                            <div className="flex flex-col items-start ml-3">
-                                                <span className="font-semibold text-sm">
-                                                    {user?.email || "Username"}
-                                                </span>
-                                                <span className="text-xs text-gray-500 select-all break-words">
-                                                    {user?.id || "ID"}
-                                                </span>
+                        <SidebarFooter>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <DropdownMenu>
+                                        {/* Wrapper so we can use group-hover for the popup */}
+                                        <div className="relative group flex flex-row w-full items-start gap-1 p-1">
+                                            {/* Hover popup with email + ID */}
+                                            <div
+                                                className="
+                            pointer-events-none
+                            absolute left-2 bottom-12 z-50
+                            w-max max-w-[260px]
+                            rounded-md border bg-popover px-3 py-2
+                            text-xs text-popover-foreground shadow-md
+                            opacity-0 translate-y-1
+                            group-hover:opacity-100 group-hover:translate-y-0
+                            transition-all duration-150
+                        "
+                                            >
+                                                <p className="font-semibold">
+                                                    {user?.user_metadata
+                                                        ?.username ||
+                                                        "Username"}
+                                                </p>
+                                                <p className="break-all">
+                                                    {user?.email ||
+                                                        "email@example.com"}
+                                                </p>
+                                                <p className="break-all text-[10px] text-muted-foreground">
+                                                    {user?.id || "User ID"}
+                                                </p>
                                             </div>
-                                            <ChevronUp className="ml-auto h-4 w-4" />
-                                        </SidebarMenuButton>
-                                    </DropdownMenuTrigger>
-                                    <ThemeToggle />
-                                </div>
 
-                                {footer.map((item, index) => (
-                                    <DropdownMenuContent
-                                        key={index}
-                                        side="top"
-                                        align="end"
-                                        className="w-[--radix-popper-anchor-width]"
-                                    >
-                                        {item.children.map(
-                                            (child, childIndex) =>
-                                                child.title === "Sign Out" ? (
-                                                    <SidebarMenuButton
-                                                        key={childIndex}
-                                                        className="w-full text-left px-2 py-1"
-                                                        onClick={handleSignOut}
-                                                    >
-                                                        {child.title}
-                                                    </SidebarMenuButton>
-                                                ) : (
-                                                    <DropdownRedirect
-                                                        key={childIndex}
-                                                        path={child.path}
-                                                    >
-                                                        {child.title}
-                                                    </DropdownRedirect>
-                                                )
-                                        )}
-                                    </DropdownMenuContent>
-                                ))}
-                            </DropdownMenu>
-                        </SidebarMenuItem>
+                                            {/* Clickable row (only shows username) */}
+                                            <DropdownMenuTrigger asChild>
+                                                <SidebarMenuButton className="flex items-center gap-1 w-full justify-start p-2">
+                                                    <User2 className="h-5 w-5" />
+                                                    <div className="flex flex-col items-start ml-3">
+                                                        <span className="font-semibold text-sm">
+                                                            {user?.user_metadata
+                                                                ?.username ||
+                                                                "Username"}
+                                                        </span>
+                                                    </div>
+                                                    <ChevronUp className="ml-auto h-4 w-4" />
+                                                </SidebarMenuButton>
+                                            </DropdownMenuTrigger>
+
+                                            <ThemeToggle />
+                                        </div>
+
+                                        {footer.map((item, index) => (
+                                            <DropdownMenuContent
+                                                key={index}
+                                                side="top"
+                                                align="end"
+                                                className="w-[--radix-popper-anchor-width]"
+                                            >
+                                                {item.children.map(
+                                                    (child, childIndex) =>
+                                                        child.title ===
+                                                        "Sign Out" ? (
+                                                            <SidebarMenuButton
+                                                                key={childIndex}
+                                                                className="w-full text-left px-2 py-1"
+                                                                onClick={
+                                                                    handleSignOut
+                                                                }
+                                                            >
+                                                                {child.title}
+                                                            </SidebarMenuButton>
+                                                        ) : (
+                                                            <DropdownRedirect
+                                                                key={childIndex}
+                                                                path={
+                                                                    child.path
+                                                                }
+                                                            >
+                                                                {child.title}
+                                                            </DropdownRedirect>
+                                                        )
+                                                )}
+                                            </DropdownMenuContent>
+                                        ))}
+                                    </DropdownMenu>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarFooter>
                     </SidebarMenu>
                 </SidebarFooter>
             </SidebarContent>
