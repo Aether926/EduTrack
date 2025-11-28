@@ -12,61 +12,37 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 
-export type TrainingSeminar = {
-    title: string;
-    level: string;
-    date: string;
-    totalHours: string;
-    sponsor: string;
+export type User = {
+    employeeid: string;
+    fullname: string;
+    position: string;
+    contact: string;
+    email: string;
     url: string;
 };
 
-const userTrainingSeminar: TrainingSeminar[] = [
+// Sample Data
+const userData: User[] = [
     {
-        title: "Vision Burst Mastery",
-        level: "National",
-        date: "2023-07-11",
-        totalHours: "9",
-        sponsor: "Knights of Favonius CIU",
+        employeeid: "EID-2023456711",
+        fullname: "Hu Tao",
+        position: "Funeral Director",
+        contact: "09123456789",
+        email: "hutao@example.com",
         url: "test",
     },
     {
-        title: "Ley Line Diagnostics",
-        level: "International",
-        date: "2023-09-03",
-        totalHours: "11",
-        sponsor: "Sumeru Akademiya – Spantamad",
-        url: "test",
-    },
-    {
-        title: "Adepti Etiquette Basics",
-        level: "Regional",
-        date: "2022-10-22",
-        totalHours: "5",
-        sponsor: "Liyue Qixing",
-        url: "test",
-    },
-    {
-        title: "Electro–Anemo Tactics",
-        level: "National",
-        date: "2023-03-08",
-        totalHours: "7",
-        sponsor: "Tenryou Commission",
-        url: "test",
-    },
-    {
-        title: "Prophecy Interpretation",
-        level: "International",
-        date: "2023-12-01",
-        totalHours: "13",
-        sponsor: "Fontaine Archeo-Institute",
+        employeeid: "EID-2018456792",
+        fullname: "Amber",
+        position: "Outrider",
+        contact: "09123456789",
+        email: "amber@example.com",
         url: "test",
     },
 ];
 
-const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
+const userColumns: ColumnDef<User>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -92,7 +68,7 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: "title",
+        accessorKey: "employeeid",
         header: ({ column }) => (
             <Button
                 variant="ghost"
@@ -100,14 +76,14 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
                     column.toggleSorting(column.getIsSorted() === "asc")
                 }
             >
-                Title
+                Employee Id
                 <ArrowUpDown />
             </Button>
         ),
-        cell: ({ row }) => <div>{row.getValue("title")}</div>,
+        cell: ({ row }) => <div>{row.getValue("employeeid")}</div>,
     },
     {
-        accessorKey: "level",
+        accessorKey: "fullname",
         header: ({ column }) => (
             <Button
                 variant="ghost"
@@ -115,64 +91,48 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
                     column.toggleSorting(column.getIsSorted() === "asc")
                 }
             >
-                Level
+                Full Name
+                <ArrowUpDown />
+            </Button>
+        ),
+        cell: ({ row }) => <div>{row.getValue("fullname")}</div>,
+    },
+    {
+        accessorKey: "position",
+        header: ({ column }) => (
+            <Button
+                variant="ghost"
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === "asc")
+                }
+            >
+                Position
+                <ArrowUpDown />
+            </Button>
+        ),
+        cell: ({ row }) => <div>{row.getValue("position")}</div>,
+    },
+    {
+        accessorKey: "contact",
+        header: () => <div>Contact Number</div>,
+        cell: ({ row }) => <div>{row.getValue("contact")}</div>,
+    },
+    {
+        accessorKey: "email",
+        header: ({ column }) => (
+            <Button
+                variant="ghost"
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === "asc")
+                }
+            >
+                Email
                 <ArrowUpDown />
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("level")}</div>
+            <div className="lowercase">{row.getValue("email")}</div>
         ),
-    },
-    {
-        accessorKey: "date",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === "asc")
-                }
-            >
-                Date
-                <ArrowUpDown />
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("date")}</div>
-        ),
-    },
-    {
-        accessorKey: "totalHours",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === "asc")
-                }
-            >
-                Total Hours
-                <ArrowUpDown />
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <div className="text-center w-full">
-                {row.getValue("totalHours")}
-            </div>
-        ),
-    },
-    {
-        accessorKey: "sponsor",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === "asc")
-                }
-            >
-                Sponsoring Agency
-                <ArrowUpDown />
-            </Button>
-        ),
-        cell: ({ row }) => <div>{row.getValue("sponsor")}</div>,
     },
     {
         id: "actions",
@@ -195,25 +155,23 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
     },
 ];
 
-// Add and Delete Function
-export default function TrainingSeminars() {
-    const router = useRouter();
-
-    const handleAdd = () => {
-        router.push("/training/add");
-        console.log("Add new training/seminar");
+export default function RequestTable() {
+    const handleAdd = (selectedRows: User[]) => {
+        console.log("Accepted:", selectedRows);
+        // Add logic here
     };
 
-    const handleDelete = (selectedRows: TrainingSeminar[]) => {
-        console.log("Deleting:", selectedRows);
+    const handleDelete = (selectedRows: User[]) => {
+        console.log("Denied:", selectedRows);
+        // Delete logic here
     };
 
     return (
         <DataTable
-            data={userTrainingSeminar}
-            columns={trainingSeminarColumns}
-            filterColumn="title"
-            filterPlaceholder="Filter trainings..."
+            data={userData}
+            columns={userColumns}
+            filterColumn="fullname"
+            filterPlaceholder="Filter names..."
             pageSize={8}
             showAddButton={true}
             showDeleteButton={true}

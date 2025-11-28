@@ -41,7 +41,7 @@ interface DataTableProps<T> {
     filterColumn: string;
     filterPlaceholder?: string;
     pageSize?: number;
-    onAddClick?: () => void;
+    onAddClick?: (selectedRows: T[]) => void;
     onDeleteClick?: (selectedRows: T[]) => void;
     showAddButton?: boolean;
     showDeleteButton?: boolean;
@@ -52,7 +52,7 @@ export function DataTable<T>({
     data,
     columns,
     filterColumn,
-    filterPlaceholder = "Filter...",
+    filterPlaceholder = "Filter.",
     pageSize = 8,
     onAddClick,
     onDeleteClick,
@@ -99,7 +99,7 @@ export function DataTable<T>({
         return 12; // xl+
     }
 
-    // Adds the effect to handle window resize
+    // Handle window resize
     React.useEffect(() => {
         const handleResize = () => {
             const newPageSize = getPageSize();
@@ -167,17 +167,23 @@ export function DataTable<T>({
                                 className="max-w-sm pl-10 pr-4 mr-4"
                             />
                         </div>
-                        {showAddButton && onAddClick && (
-                            <Button
-                                onClick={onAddClick}
-                                className="mr-2 !bg-green-700 !text-white hover:!bg-green-800"
-                            >
-                                Add
-                            </Button>
-                        )}
+
+                        {/* Add button: show when at least 1 row is selected */}
+                        {showAddButton &&
+                            onAddClick &&
+                            selectedRows.length >= 1 && (
+                                <Button
+                                    onClick={() => onAddClick(selectedRows)}
+                                    className="mr-2 !bg-green-700 !text-white hover:!bg-green-800"
+                                >
+                                    Add
+                                </Button>
+                            )}
+
+                        {/* Delete button: show when at least 2 rows are selected */}
                         {showDeleteButton &&
                             onDeleteClick &&
-                            selectedRows.length > 1 && (
+                            selectedRows.length >= 2 && (
                                 <Button
                                     onClick={() => onDeleteClick(selectedRows)}
                                     className="mr-2 !bg-red-700 !text-white hover:!bg-red-800"
@@ -186,6 +192,7 @@ export function DataTable<T>({
                                 </Button>
                             )}
                     </div>
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="ml-auto">
@@ -213,6 +220,7 @@ export function DataTable<T>({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
+
                 <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader>
@@ -242,23 +250,40 @@ export function DataTable<T>({
                                         data-state={
                                             row.getIsSelected() && "selected"
                                         }
-                                        onClick={(e) =>
-                                            handleRowClick(row.original, e)
-                                        }
-                                        className={
-                                            getRowUrl
-                                                ? "cursor-pointer hover:bg-muted/50"
-                                                : ""
-                                        }
                                     >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
-                                        ))}
+                                        {row.getVisibleCells().map((cell) => {
+                                            const colId = cell.column.id;
+                                            const isClickable =
+                                                !!getRowUrl &&
+                                                // Url excluding checkbox and menu column
+                                                colId !== "select" &&
+                                                colId !== "actions";
+
+                                            return (
+                                                <TableCell
+                                                    key={cell.id}
+                                                    onClick={(e) => {
+                                                        if (!isClickable)
+                                                            return;
+                                                        handleRowClick(
+                                                            row.original,
+                                                            e
+                                                        );
+                                                    }}
+                                                    className={
+                                                        isClickable
+                                                            ? "cursor-pointer hover:underline"
+                                                            : ""
+                                                    }
+                                                >
+                                                    {flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            );
+                                        })}
                                     </TableRow>
                                 ))
                             ) : (
@@ -275,6 +300,7 @@ export function DataTable<T>({
                     </Table>
                 </div>
             </div>
+
             <div className="sticky bottom-0 bg-background border-t py-4 z-10 mt-auto">
                 <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
                     <div className="text-muted-foreground text-sm mr-auto">

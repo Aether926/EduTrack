@@ -12,7 +12,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 
 export type TrainingSeminar = {
     title: string;
@@ -23,45 +22,46 @@ export type TrainingSeminar = {
     url: string;
 };
 
-const userTrainingSeminar: TrainingSeminar[] = [
+// Sample Data
+const trainingSeminarData: TrainingSeminar[] = [
     {
-        title: "Vision Burst Mastery",
-        level: "National",
-        date: "2023-07-11",
-        totalHours: "9",
-        sponsor: "Knights of Favonius CIU",
-        url: "test",
-    },
-    {
-        title: "Ley Line Diagnostics",
-        level: "International",
-        date: "2023-09-03",
-        totalHours: "11",
-        sponsor: "Sumeru Akademiya – Spantamad",
-        url: "test",
-    },
-    {
-        title: "Adepti Etiquette Basics",
+        title: "Ley Line Reading",
         level: "Regional",
-        date: "2022-10-22",
-        totalHours: "5",
+        date: "2023-07-02",
+        totalHours: "6",
+        sponsor: "Sumeru Akademiya",
+        url: "test",
+    },
+    {
+        title: "Vision Handling Protocols",
+        level: "National",
+        date: "2023-05-19",
+        totalHours: "8",
+        sponsor: "Knights of Favonius",
+        url: "test",
+    },
+    {
+        title: "Adeptal Contract Basics",
+        level: "National",
+        date: "2023-09-13",
+        totalHours: "7",
         sponsor: "Liyue Qixing",
         url: "test",
     },
     {
-        title: "Electro–Anemo Tactics",
-        level: "National",
-        date: "2023-03-08",
-        totalHours: "7",
-        sponsor: "Tenryou Commission",
+        title: "Electro Safety Guidelines",
+        level: "Regional",
+        date: "2023-06-04",
+        totalHours: "5",
+        sponsor: "Inazuma Shogunate",
         url: "test",
     },
     {
-        title: "Prophecy Interpretation",
+        title: "Fonta Technology Primer",
         level: "International",
-        date: "2023-12-01",
-        totalHours: "13",
-        sponsor: "Fontaine Archeo-Institute",
+        date: "2023-11-22",
+        totalHours: "10",
+        sponsor: "Fontaine Research Institute",
         url: "test",
     },
 ];
@@ -195,25 +195,23 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
     },
 ];
 
-// Add and Delete Function
-export default function TrainingSeminars() {
-    const router = useRouter();
-
-    const handleAdd = () => {
-        router.push("/training/add");
-        console.log("Add new training/seminar");
+export default function AddTrainingAndSeminar() {
+    const handleAdd = (selectedRows: TrainingSeminar[]) => {
+        console.log("Added:", selectedRows);
+        // Add logic here
     };
 
     const handleDelete = (selectedRows: TrainingSeminar[]) => {
-        console.log("Deleting:", selectedRows);
+        console.log("Deleted:", selectedRows);
+        // Delete logic here
     };
 
     return (
         <DataTable
-            data={userTrainingSeminar}
+            data={trainingSeminarData}
             columns={trainingSeminarColumns}
-            filterColumn="title"
-            filterPlaceholder="Filter trainings..."
+            filterColumn="fullname"
+            filterPlaceholder="Filter names..."
             pageSize={8}
             showAddButton={true}
             showDeleteButton={true}

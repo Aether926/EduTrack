@@ -66,7 +66,7 @@ export default function AppSidebar() {
         },
         {
             title: "Add Trainings / Seminars",
-            path: "test1",
+            path: "add-training-seminar",
         },
     ];
 
@@ -237,7 +237,6 @@ export default function AppSidebar() {
                                                 </p>
                                             </div>
 
-                                            {/* Clickable row (only shows username) */}
                                             <DropdownMenuTrigger asChild>
                                                 <SidebarMenuButton className="flex items-center gap-1 w-full justify-start p-2">
                                                     <User2 className="h-5 w-5" />
