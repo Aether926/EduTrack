@@ -1,7 +1,8 @@
 "use client";
 
+// --- Imports ---
 import ProfileHeader from "@/components/profile-header";
-import ProtectedPage from "@/components/protected-page";
+
 
 import React, { useState } from "react";
 import { useTheme } from "next-themes";
@@ -15,6 +16,7 @@ import {
     FileText,
     Shield,
     Book,
+    Loader2, 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +37,8 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { ChevronDownIcon } from "lucide-react";
 import { Combobox } from "@/components/combobox";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient"; 
+import { User as SupabaseUser } from '@supabase/supabase-js'; 
 
 interface InputFieldProps {
     label: string;
@@ -49,6 +52,16 @@ interface InputFieldProps {
     required?: boolean;
     placeholder?: string;
 }
+
+interface DatePickerFieldProps {
+    label: string;
+    value: Date | undefined;
+    field: string;
+    isEditing: boolean;
+    onDateChange: (field: string, date: Date | undefined) => void;
+    required?: boolean;
+}
+
 
 const InputField: React.FC<InputFieldProps> = ({
     label,
@@ -69,7 +82,7 @@ const InputField: React.FC<InputFieldProps> = ({
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
                 {Icon && <Icon size={14} className="text-blue-600" />}
                 {label}
-                {required}
+                {required && <span className="text-red-500">*</span>} 
             </label>
             {isEditing ? (
                 isTextarea ? (
@@ -99,14 +112,6 @@ const InputField: React.FC<InputFieldProps> = ({
     );
 };
 
-interface DatePickerFieldProps {
-    label: string;
-    value: Date | undefined;
-    field: string;
-    isEditing: boolean;
-    onDateChange: (field: string, date: Date | undefined) => void;
-    required?: boolean;
-}
 
 const DatePickerField: React.FC<DatePickerFieldProps> = ({
     label,
@@ -123,7 +128,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
                 <Calendar size={14} className="text-blue-600" />
                 {label}
-                {required}
+                {required && <span className="text-red-500">*</span>}
             </label>
             {isEditing ? (
                 <Popover open={open} onOpenChange={setOpen}>
@@ -160,45 +165,96 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
     );
 };
 
+// --- TeacherProfile Component ---
 export default function TeacherProfile() {
     const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false); 
     const [preview, setPreview] = useState<string | null>(null);
-    const [profileData, setProfileData] = useState({
-        firstName: "Tao",
+    const [user, setUser] = useState<SupabaseUser | null>(null); 
+
+    // Initial State structure 
+    const initialProfileState = {
+        firstName: "",
         middleInitial: "",
-        lastName: "Hu",
-        username: "BooTao",
-        age: "20",
-        gender: "Female",
+        lastName: "",
+        username: "",
+        age: "",
+        gender: "Male",
         dateOfBirth: undefined as Date | undefined,
         civilStatus: "Single",
-        nationality: "Liyuean",
-        religion: "Archon",
-        contactNumber: "+63 912 345 6789",
-        address: "Wangsheng Funeral Parlor, Liyue",
-        email: "BooTao@gmail.com",
-        employeeId: "EMP-2020-001234",
-        position: "77th Director of the Wangsheng Funeral Parlor",
-        plantillaNo: "DECS-ITEM-2020-0456",
-        pagibigNo: "1234-5678-9012",
-        philHealthNo: "12-345678901-2",
-        gsisNo: "1234567890123",
-        tinNo: "123-456-789-000",
+        nationality: "filipino",
+        religion: "",
+        contactNumber: "",
+        address: "",
+        email: "",
+        employeeId: "",
+        position: "Teacher I",
+        plantillaNo: "",
+        pagibigNo: "",
+        philHealthNo: "",
+        gsisNo: "",
+        tinNo: "",
         dateOfOriginalAppointment: undefined as Date | undefined,
         dateOfLatestAppointment: undefined as Date | undefined,
-        subjectSpecialization: "Philosophy and Ethics",
-        bachelorsDegree: "Funeral Rites Coordinator",
-        postGraduate: "Special Consultant",
-    });
+        subjectSpecialization: "",
+        bachelorsDegree: "",
+        postGraduate: "",
+    };
 
-    const [tempProfileData, setTempProfileData] = useState(profileData);
+    const [profileData, setProfileData] = useState(initialProfileState);
+    const [tempProfileData, setTempProfileData] = useState(initialProfileState);
 
-    React.useEffect(() => {
-        setMounted(true);
-    }, []);
+    // --- EFFECT: Initialization and User Fetch ---
+   React.useEffect(() => {
+    setMounted(true);
 
+    const fetchUserAndProfile = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+
+        if (user?.id) {
+            let fetchedProfileData = null;
+            
+            // 1. Fetch existing profile data
+            const { data: profileData, error } = await supabase
+                .from("Profile")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+
+            if (profileData && !error) {
+                // Profile exists: Convert date strings back to Date objects
+                fetchedProfileData = {
+                    ...profileData,
+                    dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : undefined,
+                    dateOfOriginalAppointment: profileData.dateOfOriginalAppointment ? new Date(profileData.dateOfOriginalAppointment) : undefined,
+                    dateOfLatestAppointment: profileData.dateOfLatestAppointment ? new Date(profileData.dateOfLatestAppointment) : undefined,
+                };
+            } else {
+                // Profile does not exist: Use initial state
+                // Use a blank profile but include the user ID and Email
+                fetchedProfileData = { ...initialProfileState };
+            }
+
+            // 2. CRITICAL: Inject the live session data (ID and Email)
+            const combinedData = {
+                ...fetchedProfileData,
+                id: user.id,
+                email: user.email || fetchedProfileData.email || "", // <--- INJECTS THE AUTH EMAIL
+            };
+            
+            // 3. Set the state
+            setProfileData(combinedData);
+            setTempProfileData(combinedData);
+        }
+    };
+
+    fetchUserAndProfile();
+}, []);
+
+    // --- HANDLERS ---
     const handleInputChange = (field: string, value: string) => {
         setTempProfileData({ ...tempProfileData, [field]: value });
     };
@@ -206,17 +262,7 @@ export default function TeacherProfile() {
     const handleDateChange = (field: string, date: Date | undefined) => {
         setTempProfileData({ ...tempProfileData, [field]: date });
     };
-
-    const handleSave = () => {
-        setIsEditing(false);
-        setProfileData(tempProfileData);
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        setTempProfileData(profileData);
-    };
-
+    
     const previewImage = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -224,6 +270,70 @@ export default function TeacherProfile() {
         }
     };
 
+    // --- ASYNC SAVE FUNCTION ---
+    const handleSave = async () => {
+        if (isSaving) return;
+        
+        setIsSaving(true);
+        console.log("Attempting to save profile data to Supabase...");
+
+        try {
+            // Get fresh user session
+            const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+
+            if (!currentUser || authError) {
+                // replace with appropriate error handling
+                alert("You must be logged in to save your profile. Please log in again.");
+                setIsSaving(false);
+                return;
+            }
+
+            // Extract dates and prepare data
+            const { dateOfBirth, dateOfOriginalAppointment, dateOfLatestAppointment, ...restOfData } = tempProfileData;
+        
+            const dataToUpdate = {
+                ...restOfData,
+                dateOfBirth: dateOfBirth ? dateOfBirth.toISOString().split('T')[0] : null,
+                dateOfOriginalAppointment: dateOfOriginalAppointment ? dateOfOriginalAppointment.toISOString().split('T')[0] : null,
+                dateOfLatestAppointment: dateOfLatestAppointment ? dateOfLatestAppointment.toISOString().split('T')[0] : null,
+                id: currentUser.id // Link to authenticated user
+            };
+            
+            console.log("Data being saved:", dataToUpdate);
+
+            const { data, error } = await supabase
+                .from("Profile") 
+                .upsert(dataToUpdate) 
+                .select(); 
+
+            if (error) {
+                // add error hadler message here
+                 // temporary console error
+                console.error("Supabase Save Error:", error);
+                alert(`Failed to save profile: ${error.message}`);
+            } else {
+                console.log("Profile saved successfully:", data);
+                setProfileData(tempProfileData);
+                setIsEditing(false); 
+                // add proper success message here
+                alert('Changes saved successfully!');
+            }
+        } catch (e) {
+            // add error hadler message here
+            // temporary console error
+            console.error("Unexpected Save Error:", e);
+            alert("An unexpected error occurred while saving.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setTempProfileData(profileData);
+    };
+    
+    // --- UTILITY FUNCTIONS ---
     const calculateServiceYears = (dateValue: Date | undefined) => {
         if (!dateValue) return "—";
 
@@ -240,7 +350,6 @@ export default function TeacherProfile() {
 
         if (days < 0) {
             months--;
-
             const lastDayOfPrevMonth = new Date(
                 today.getFullYear(),
                 today.getMonth(),
@@ -286,20 +395,9 @@ export default function TeacherProfile() {
 
     const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
 
-    const test = async () => {
-        const {
-            data: { session },
-        } = await supabase.auth.getSession();
-
-        console.log(session);
-    };
-
-    test();
-
     return (
-        <ProtectedPage>
+        
             <div className={`min-h-screen ${bgClass} space-y-6`}>
-                {/* ---------- Header Card ---------- */}
                 <ProfileHeader
                     preview={preview}
                     isEditing={isEditing}
@@ -308,11 +406,10 @@ export default function TeacherProfile() {
                     onSave={handleSave}
                     onCancel={handleCancel}
                     onEdit={() => setIsEditing(true)}
+                   
                 />
 
-                {/* ---------- Main Content Grid ---------- */}
                 <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
-                    {/* Left Column - Personal & Contact */}
                     <Card className="border-0 shadow-lg w-full xl:max-w-[500px]">
                         <CardHeader>
                             <div className="flex items-center gap-2">
@@ -368,25 +465,16 @@ export default function TeacherProfile() {
                                             <Select
                                                 value={tempProfileData.gender}
                                                 onValueChange={(value) =>
-                                                    handleInputChange(
-                                                        "gender",
-                                                        value
-                                                    )
+                                                    handleInputChange("gender", value)
                                                 }
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="Male">
-                                                        Male
-                                                    </SelectItem>
-                                                    <SelectItem value="Female">
-                                                        Female
-                                                    </SelectItem>
-                                                    <SelectItem value="Other">
-                                                        Other
-                                                    </SelectItem>
+                                                    <SelectItem value="Male">Male</SelectItem>
+                                                    <SelectItem value="Female">Female</SelectItem>
+                                                    <SelectItem value="Other">Other</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         ) : (
@@ -411,31 +499,18 @@ export default function TeacherProfile() {
                                         <Select
                                             value={tempProfileData.civilStatus}
                                             onValueChange={(value) =>
-                                                handleInputChange(
-                                                    "civilStatus",
-                                                    value
-                                                )
+                                                handleInputChange("civilStatus", value)
                                             }
                                         >
                                             <SelectTrigger>
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Single">
-                                                    Single
-                                                </SelectItem>
-                                                <SelectItem value="Married">
-                                                    Married
-                                                </SelectItem>
-                                                <SelectItem value="Widowed">
-                                                    Widowed
-                                                </SelectItem>
-                                                <SelectItem value="Separated">
-                                                    Separated
-                                                </SelectItem>
-                                                <SelectItem value="Divorced">
-                                                    Divorced
-                                                </SelectItem>
+                                                <SelectItem value="Single">Single</SelectItem>
+                                                <SelectItem value="Married">Married</SelectItem>
+                                                <SelectItem value="Widowed">Widowed</SelectItem>
+                                                <SelectItem value="Separated">Separated</SelectItem>
+                                                <SelectItem value="Divorced">Divorced</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     ) : (
@@ -452,11 +527,8 @@ export default function TeacherProfile() {
                                         <Combobox
                                             label="Nationality"
                                             options={nationalities}
-                                            onChangeValue={(value) =>
-                                                handleInputChange(
-                                                    "nationality",
-                                                    value
-                                                )
+                                            onChangeValue={(value: string) =>
+                                                handleInputChange("nationality", value)
                                             }
                                         />
                                     ) : (
@@ -478,10 +550,7 @@ export default function TeacherProfile() {
 
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2">
-                                    <Phone
-                                        className="text-blue-600"
-                                        size={20}
-                                    />
+                                    <Phone className="text-blue-600" size={20} />
                                     <h3 className="font-semibold text-gray-900 dark:text-white">
                                         Contact Information
                                     </h3>
@@ -502,9 +571,9 @@ export default function TeacherProfile() {
                                     field="email"
                                     type="email"
                                     icon={Mail}
-                                    isEditing={isEditing}
-                                    onInputChange={handleInputChange}
+                                    isEditing={false}
                                     required
+                                    onInputChange={() => {}}
                                 />
                                 <InputField
                                     label="Address"
@@ -520,18 +589,12 @@ export default function TeacherProfile() {
                         </CardContent>
                     </Card>
 
-                    {/* ---------- Right Columns ---------- */}
                     <div className="flex flex-col gap-4 w-full xl:max-w-[700px]">
                         <Card className="flex flex-col border-0 shadow-lg">
                             <CardHeader>
                                 <div className="flex items-center gap-2">
-                                    <Briefcase
-                                        className="text-blue-600"
-                                        size={20}
-                                    />
-                                    <CardTitle>
-                                        Employment Information
-                                    </CardTitle>
+                                    <Briefcase className="text-blue-600" size={20} />
+                                    <CardTitle>Employment Information</CardTitle>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-6">
@@ -547,50 +610,28 @@ export default function TeacherProfile() {
                                     />
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                                            <Briefcase
-                                                size={14}
-                                                className="text-blue-600"
-                                            />
+                                            <Briefcase size={14} className="text-blue-600" />
                                             Position/Designation
                                         </label>
                                         {isEditing ? (
                                             <Select
                                                 value={tempProfileData.position}
                                                 onValueChange={(value) =>
-                                                    handleInputChange(
-                                                        "position",
-                                                        value
-                                                    )
+                                                    handleInputChange("position", value)
                                                 }
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="Teacher I">
-                                                        Teacher I
-                                                    </SelectItem>
-                                                    <SelectItem value="Teacher II">
-                                                        Teacher II
-                                                    </SelectItem>
-                                                    <SelectItem value="Teacher III">
-                                                        Teacher III
-                                                    </SelectItem>
-                                                    <SelectItem value="Master Teacher I">
-                                                        Master Teacher I
-                                                    </SelectItem>
-                                                    <SelectItem value="Master Teacher II">
-                                                        Master Teacher II
-                                                    </SelectItem>
-                                                    <SelectItem value="Master Teacher III">
-                                                        Master Teacher III
-                                                    </SelectItem>
-                                                    <SelectItem value="Principal">
-                                                        Principal
-                                                    </SelectItem>
-                                                    <SelectItem value="Administrative Staff">
-                                                        Administrative Staff
-                                                    </SelectItem>
+                                                    <SelectItem value="Teacher I">Teacher I</SelectItem>
+                                                    <SelectItem value="Teacher II">Teacher II</SelectItem>
+                                                    <SelectItem value="Teacher III">Teacher III</SelectItem>
+                                                    <SelectItem value="Master Teacher I">Master Teacher I</SelectItem>
+                                                    <SelectItem value="Master Teacher II">Master Teacher II</SelectItem>
+                                                    <SelectItem value="Master Teacher III">Master Teacher III</SelectItem>
+                                                    <SelectItem value="Principal">Principal</SelectItem>
+                                                    <SelectItem value="Administrative Staff">Administrative Staff</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         ) : (
@@ -615,27 +656,20 @@ export default function TeacherProfile() {
 
                                 <div>
                                     <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                                        <Calendar
-                                            size={16}
-                                            className="text-blue-600"
-                                        />
+                                        <Calendar size={16} className="text-blue-600" />
                                         Appointment History
                                     </h4>
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                         <DatePickerField
                                             label="Date of Original Appointment"
-                                            value={
-                                                tempProfileData.dateOfOriginalAppointment
-                                            }
+                                            value={tempProfileData.dateOfOriginalAppointment}
                                             field="dateOfOriginalAppointment"
                                             isEditing={isEditing}
                                             onDateChange={handleDateChange}
                                         />
                                         <DatePickerField
                                             label="Date of Latest Appointment"
-                                            value={
-                                                tempProfileData.dateOfLatestAppointment
-                                            }
+                                            value={tempProfileData.dateOfLatestAppointment}
                                             field="dateOfLatestAppointment"
                                             isEditing={isEditing}
                                             onDateChange={handleDateChange}
@@ -645,17 +679,11 @@ export default function TeacherProfile() {
                             </CardContent>
                         </Card>
 
-                        {/* Government IDs */}
                         <Card className="flex-col border-0 shadow-lg">
                             <CardHeader>
                                 <div className="flex items-center gap-2">
-                                    <Shield
-                                        className="text-blue-600"
-                                        size={20}
-                                    />
-                                    <CardTitle>
-                                        Government IDs & Numbers
-                                    </CardTitle>
+                                    <Shield className="text-blue-600" size={20} />
+                                    <CardTitle>Government IDs & Numbers</CardTitle>
                                 </div>
                             </CardHeader>
                             <CardContent>
@@ -700,22 +728,17 @@ export default function TeacherProfile() {
                             </CardContent>
                         </Card>
 
-                        {/* Educational Background */}
                         <Card className="flex-col border-0 shadow-lg">
                             <CardHeader>
                                 <div className="flex items-center gap-2">
                                     <Book className="text-blue-600" size={20} />
-                                    <CardTitle>
-                                        Educational Background
-                                    </CardTitle>
+                                    <CardTitle>Educational Background</CardTitle>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <InputField
                                     label="Subject Specialization"
-                                    value={
-                                        tempProfileData.subjectSpecialization
-                                    }
+                                    value={tempProfileData.subjectSpecialization}
                                     field="subjectSpecialization"
                                     icon={Book}
                                     isEditing={isEditing}
@@ -742,7 +765,6 @@ export default function TeacherProfile() {
                             </CardContent>
                         </Card>
 
-                        {/* Service Record */}
                         <Card className="flex-col border-0 shadow-lg bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
                             <CardHeader>
                                 <CardTitle className="text-white">
@@ -757,9 +779,7 @@ export default function TeacherProfile() {
                                         </p>
                                         <div>
                                             <p className="text-3xl font-bold">
-                                                {calculateServiceYears(
-                                                    tempProfileData.dateOfOriginalAppointment
-                                                )}
+                                                {calculateServiceYears(tempProfileData.dateOfOriginalAppointment)}
                                             </p>
                                             <p className="text-xs text-blue-200 mt-2">
                                                 Since joining this school
@@ -772,9 +792,7 @@ export default function TeacherProfile() {
                                         </p>
                                         <div>
                                             <p className="text-3xl font-bold">
-                                                {calculateServiceYears(
-                                                    tempProfileData.dateOfLatestAppointment
-                                                )}
+                                                {calculateServiceYears(tempProfileData.dateOfLatestAppointment)}
                                             </p>
                                             <p className="text-xs text-blue-200 mt-2">
                                                 Since latest appointment
@@ -784,13 +802,7 @@ export default function TeacherProfile() {
                                 </div>
                                 <div className="bg-white/5 backdrop-blur rounded-lg p-3 text-sm">
                                     <p className="text-blue-100">
-                                        <span className="font-semibold">
-                                            Note:
-                                        </span>{" "}
-                                        Date of original appointment marks when
-                                        the teacher joined this school. Latest
-                                        appointment updates when promoted within
-                                        the school.
+                                        <span className="font-semibold">Note:</span> Date of original appointment marks when the teacher joined this school. Latest appointment updates when promoted within the school.
                                     </p>
                                 </div>
                             </CardContent>
@@ -798,6 +810,6 @@ export default function TeacherProfile() {
                     </div>
                 </div>
             </div>
-        </ProtectedPage>
+    
     );
 }

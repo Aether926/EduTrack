@@ -39,7 +39,7 @@ export async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     const protectedRoutes = ["/dashboard", "/profile"];
-    const adminRoutes = ["/admin"];
+    const adminRoutes = ["/account-approval"];
 
     const isProtected = protectedRoutes.some((path) =>
         pathname.startsWith(path)
@@ -55,10 +55,12 @@ export async function proxy(req: NextRequest) {
         const { data: profile } = await supabase
             .from("user")
             .select("role")
-            .eq("id", session.user.id)
+            .eq("supabaseID", session.user.id)
             .single();
 
-        if (profile?.role !== "admin") {
+            console.log("profile:", profile, "error:", Error);
+
+        if (profile?.role !== "ADMIN") {
             return NextResponse.redirect(new URL("/unauthorized", req.url));
         }
     }
