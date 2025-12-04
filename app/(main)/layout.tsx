@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
-// 🔑 CRITICAL IMPORT: The component that fixes token synchronization
+
 import SupabaseAuthListener from "@/components/supabase-auth-listener"; 
 
 const geistSans = Geist({
