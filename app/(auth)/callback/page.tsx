@@ -1,36 +1,36 @@
-"use client";
-import { useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-export default function AuthCallback() {
-    const router = useRouter();
+export async function GET(request: Request) {
+    const requestUrl = new URL(request.url);
+    const code = requestUrl.searchParams.get('code');
 
-    useEffect(() => {
-        async function finish() {
-            // get current session (supabase stores it in browser)
-            const { data } = await supabase.auth.getSession();
-            const session = data.session;
-            if (!session) return router.push("/signin");
-
-            const accessToken = session.access_token;
-
-            // send token to server to upsert profile
-            const res = await fetch("/api/auth/sync-profile", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ accessToken }),
-            });
-
-            if (res.ok) router.push("/dashboard");
-            else {
-                console.error(await res.text());
-                router.push("/signin");
+    if (code) {
+        const cookieStore = await cookies();
+        
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll();
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    },
+                },
             }
-        }
+        );
 
-        finish();
-    }, [router]);
+        await supabase.auth.exchangeCodeForSession(code);
 
-    return <p>Finalizing sign in...</p>;
+        await new Promise((resolve) => setTimeout(resolve, 1000)); 
+    }
+
+    // After email is confirmed, redirect to fillup
+    return NextResponse.redirect(new URL('/fillUp', request.url));
 }
