@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
@@ -11,7 +11,8 @@ export default function LogIn() {
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        const { error } = await supabase.auth.signInWithPassword({
+        
+        const { error, data } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
@@ -21,14 +22,25 @@ export default function LogIn() {
             return;
         }
 
-        const {
-            data: { session },
-        } = await supabase.auth.getSession();
+       
+        const { data: profile } = await supabase
+            .from("User")
+            .select("status")
+            .eq("id", data.user.id)
+            .single();
 
-        console.log(session);
-
-        setMessage("Login successful!");
-        router.push("/dashboard");
+        if (!profile) {
+           
+            router.push("/fillUp");
+        } else if (profile.status === "PENDING") {
+           
+            router.push("/pending-approval");
+        } else if (profile.status === "APPROVED") {
+            
+            router.push("/dashboard");
+        } else {
+            setMessage("Your account status is unclear. Please contact support.");
+        }
     }
 
     return (

@@ -1,41 +1,195 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import ProfileForm from "@/components/profile-form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-export default function FillUp() {
+export default function FillUpPage() {
     const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const router = useRouter();
+    
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        middleInitial: "",
+        contactNumber: "",
+    });
 
     useEffect(() => {
-        const checkSession = async () => {
-            const { data } = await supabase.auth.getSession();
-            if (!data.session) {
-                router.push("/signin"); // redirect if not logged in
-            } else {
-                setUser(data.session.user);
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (!user) {
+                router.push("/signin");
+                return;
             }
+            
+        
+            const { data: profile } = await supabase    
+                .from("User")
+                .upsert("*")
+                .eq("id", user.id)
+                .single();
+            
+            if (profile) {
+               
+                router.push("/pending-approval");
+                return;
+            }
+            
+            setUser(user);
+            setLoading(false);
         };
 
-        checkSession();
+        checkUser();
     }, [router]);
 
-    if (!user) return <p>Loading...</p>;
-
-    function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        router.push("/dashboard");
+        setSubmitting(true);
+
+        let success = false;
+
+        try {
+            
+            const { error: userError } = await supabase
+                .from("User")
+                .upsert({
+                    id: user.id,
+                    email: user.email,
+                    role: "TEACHER",
+                    status: "PENDING",
+                });
+
+            if (userError) {
+                alert(`Error creating user: ${userError.message}`);
+                
+                return;
+            }
+
+        
+            const { error: profileError } = await supabase
+                .from("Profile")
+                .upsert({
+                    id: user.id, 
+                    email: user.email,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    middleInitial: formData.middleInitial,
+                    contactNumber: formData.contactNumber,
+                }, { onConflict: "id" }
+            );
+
+            if (profileError) {
+                alert(`Error creating profile: ${profileError.message}`);
+                setSubmitting(false);
+                return;
+            }
+
+            success = true;
+            router.push("/pending-approval");
+        } catch (error) {
+            console.error("Submission error:", error);
+            alert("An error occurred. Please try again.");
+            setSubmitting(false);
+        } finally {
+            if (!success) {
+                setSubmitting(false);
+            }
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+                <p>Loading...</p>
+            </div>
+        );
     }
 
     return (
         <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-            <div className="w-full max-w-lg p-6">
-                <ProfileForm
-                    className="bg-neutral-300"
-                    submitHandler={handleSubmit}
-                />
+            <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow">
+                <h1 className="text-2xl font-bold mb-6 text-gray-800">
+                    Complete Your Profile
+                </h1>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block mb-1 text-gray-700 font-medium">
+                            First Name *
+                        </label>
+                        <Input
+                            type="text"
+                            value={formData.firstName}
+                            onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                            required
+                            placeholder="Enter first name"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block mb-1 text-gray-700 font-medium">
+                            Last Name *
+                        </label>
+                        <Input
+                            type="text"
+                            value={formData.lastName}
+                            onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                            required
+                            placeholder="Enter last name"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block mb-1 text-gray-700 font-medium">
+                            Middle Initial
+                        </label>
+                        <Input
+                            type="text"
+                            maxLength={1}
+                            value={formData.middleInitial}
+                            onChange={(e) => setFormData({...formData, middleInitial: e.target.value.toUpperCase()})}
+                            placeholder="Optional"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block mb-1 text-gray-700 font-medium">
+                            Contact Number *
+                        </label>
+                        <Input
+                            type="tel"
+                            value={formData.contactNumber}
+                            onChange={(e) => setFormData({...formData, contactNumber: e.target.value})}
+                            required
+                            placeholder="+63 XXX XXX XXXX"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block mb-1 text-gray-700 font-medium">
+                            Email (from account)
+                        </label>
+                        <Input
+                            type="email"
+                            value={user?.email || ""}
+                            disabled
+                            className="bg-gray-100"
+                        />
+                    </div>
+
+                    <Button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full"
+                    >
+                        {submitting ? "Submitting..." : "Submit for Approval"}
+                    </Button>
+                </form>
             </div>
         </div>
     );

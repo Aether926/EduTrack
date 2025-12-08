@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
-import ProtectedPage from "@/components/protected-page";
+
 
 export default function Dashboard() {
 
