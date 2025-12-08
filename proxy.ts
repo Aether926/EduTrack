@@ -26,29 +26,34 @@ export async function proxy(req: NextRequest) {
         }
     );
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
     const { pathname } = req.nextUrl;
-
-        
 
     const protectedRoutes = ["/dashboard", "/profile"];
     const adminRoutes = ["/account-approval"];
     const authRequiredRoutes = ["/fillUp", "/pending-approval"];
 
     // Redirect to signin if not authenticated and trying to access protected routes
-    if ([...protectedRoutes, ...adminRoutes, ...authRequiredRoutes].some(path => pathname.startsWith(path)) && !session) {
+    if (
+        [...protectedRoutes, ...adminRoutes, ...authRequiredRoutes].some(
+            (path) => pathname.startsWith(path)
+        ) &&
+        !user
+    ) {
         return NextResponse.redirect(new URL("/signin", req.url));
     }
 
-    if (session) {
+    if (user) {
         const { data: profile } = await supabase
             .from("User")
             .select("role, status")
-            .eq("id", session.user.id)
+            .eq("id", user.id)
             .single();
 
         // Admin route protection
-        if (adminRoutes.some(path => pathname.startsWith(path))) {
+        if (adminRoutes.some((path) => pathname.startsWith(path))) {
             if (profile?.role !== "ADMIN") {
                 return NextResponse.redirect(new URL("/unauthorized", req.url));
             }
@@ -59,13 +64,24 @@ export async function proxy(req: NextRequest) {
             return NextResponse.redirect(new URL("/fillUp", req.url));
         }
 
+        console.log(profile?.status);
+
         // Check if user is pending approval
-        if (profile?.status === "PENDING" && !pathname.startsWith("/pending-approval")) {
-            return NextResponse.redirect(new URL("/pending-approval", req.url));
+        if (
+            profile?.status != "APPROVED" &&
+            !pathname.startsWith(`/status/${profile?.status}`)
+        ) {
+            return NextResponse.redirect(
+                new URL("/status/" + profile?.status, req.url)
+            );
         }
 
         // Approved users trying to access fillup/pending should go to dashboard
-        if (profile?.status === "APPROVED" && (pathname.startsWith("/fillUp") || pathname.startsWith("/pending-approval"))) {
+        if (
+            profile?.status === "APPROVED" &&
+            !pathname.startsWith("/dashboard") && // Add this check
+            (pathname.startsWith("/fillUp") || pathname.startsWith("/status/"))
+        ) {
             return NextResponse.redirect(new URL("/dashboard", req.url));
         }
     }

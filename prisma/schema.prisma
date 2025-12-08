@@ -17,91 +17,53 @@ datasource db {
 
 enum Role {
     ADMIN
-    USER
+    TEACHER
 }
 
 // --------------------------------------------------
 // Log In
 // --------------------------------------------------
-
 model User {
-  id        String    @id @default(cuid())
-  name      String?
-  email     String?   @unique
-  password  String?
-  role      Role      @default(USER)
-  accounts  Account[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  provider          String
-  providerAccountId String
-  access_token      String?
-  refresh_token     String?
-  expires_at        Int?
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([provider, providerAccountId])
+    id        String   @id @default(cuid())
+    name      String?
+    email     String?  @unique
+    role      Role     @default(TEACHER)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    status    String
 }
 
 // --------------------------------------------------
 // Profile
 // --------------------------------------------------
-
 model Profile {
-    id                        String       @id @default(cuid())
-    positionId                String
-    nationalityId             String
-    religionId                String
+    id                        String    @id @default(uuid())
     profileImage              String?
-    fullName                  String
-    employeeId                String       @unique
-    gender                    String
-    age                       Int
-    dateOfBirth               DateTime
-    civilStatus               String
-    nationality               Nationality? @relation(fields: [nationalityId], references: [id])
-    religion                  Religion?    @relation(fields: [religionId], references: [id])
-    contactNumber             String
-    email                     String       @unique
-    position                  Position?    @relation(fields: [positionId], references: [id])
-    plantillaNo               String?
-    pagIbigNo                 String?
-    philHealthNo              String?
-    tin                       String?
-    gsisBpNo                  String?
-    dateOfOriginalAppointment DateTime
-    dateOfLatestAppointment   DateTime
+    firstName                 String?
+    lastName                  String?
+    middleName                String?
+    gender                    String?
+    age                       Int?
+    email                     String?   @unique
+    dateOfBirth               DateTime?
+    civilStatus               String?
+    religion                  String?
+    contactNumber             String    @unique
+    plantillaNo               String?   @unique
+    pagIbigNo                 String?   @unique
+    philHealthNo              String?   @unique
+    tin                       String?   @unique
+    gsisBpNo                  String?   @unique
+    dateOfOriginalAppointment DateTime?
+    dateOfLatestAppointment   DateTime?
     subjectSpecialization     String?
     bachelorsDegree           String?
     postGraduate              String?
+    address                   String?
+    nationality               String?
+    employeeId                String?   @unique
+    position                  String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-}
-
-model Position {
-    id       String    @id @default(cuid())
-    name     String    @unique
-    isActive Boolean   @default(true)
-    profiles Profile[]
-}
-
-model Religion {
-    id       String    @id @default(cuid())
-    name     String    @unique
-    isActive Boolean   @default(true)
-    profiles Profile[]
-}
-
-model Nationality {
-    id       String    @id @default(cuid())
-    name     String    @unique
-    isActive Boolean   @default(true)
-    profiles Profile[]
 }
