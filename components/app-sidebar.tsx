@@ -10,6 +10,7 @@ import {
     Calendar,
     Home,
     Inbox,
+    ChevronLeft,
 } from "lucide-react";
 
 import {
@@ -21,6 +22,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarFooter,
+    SidebarTrigger,
+    useSidebar,
 } from "@/components/ui/sidebar";
 
 import {
@@ -38,18 +41,39 @@ import Link from "next/link";
 export default function AppSidebar() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [user, setUser] = useState<any>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            if (data.session?.user) setUser(data.session.user);
-        });
+        const loadUser = async () => {
+            const { data } = await supabase.auth.getSession();
+
+            const authUser = data.session?.user;
+            if (!authUser) return;
+
+            setUser(authUser);
+
+            // 👇 Fetch role from your "User" table
+            const { data: userRow, error } = await supabase
+                .from("User")
+                .select("role")
+                .eq("id", authUser.id)
+                .single();
+
+            if (!error && userRow) {
+                setUserRole(userRow.role); // e.g. "ADMIN" | "TEACHER"
+            }
+        };
+
+        loadUser();
     }, []);
 
     async function handleSignOut() {
         await supabase.auth.signOut();
         router.push("/signin");
     }
+
+    const { toggleSidebar, setOpen } = useSidebar();
 
     const items = [
         { title: "Home", url: "dashboard", icon: Home },
@@ -61,51 +85,26 @@ export default function AppSidebar() {
         },
     ];
 
-    // Admin items
     const admin = [
-        {
-            title: "Account Approval",
-            path: "account-approval",
-        },
-        {
-            title: "Add Trainings / Seminars",
-            path: "add-training-seminar",
-        },
+        { title: "Account Approval", path: "account-approval" },
+        { title: "Add Trainings / Seminars", path: "add-training-seminar" },
     ];
 
     const adminData = [
         {
             title: "Positions / Designations",
             children: [
-                {
-                    title: "Add",
-                    path: "test1",
-                },
-                {
-                    title: "Edit",
-                    path: "test2",
-                },
-                {
-                    title: "Delete",
-                    path: "test3",
-                },
+                { title: "Add", path: "test1" },
+                { title: "Edit", path: "test2" },
+                { title: "Delete", path: "test3" },
             ],
         },
         {
             title: "Religion",
             children: [
-                {
-                    title: "Add",
-                    path: "test1",
-                },
-                {
-                    title: "Edit",
-                    path: "test2",
-                },
-                {
-                    title: "Delete",
-                    path: "test3",
-                },
+                { title: "Add", path: "test1" },
+                { title: "Edit", path: "test2" },
+                { title: "Delete", path: "test3" },
             ],
         },
     ];
@@ -121,8 +120,20 @@ export default function AppSidebar() {
 
     return (
         <Sidebar>
-            <SidebarContent className="flex flex-col justify-between">
+            <SidebarContent className="relative flex flex-col justify-between">
                 <SidebarGroup>
+                    {/* Mobile-only close button */}
+                    <button
+                        onClick={toggleSidebar}
+                        className="
+        md:hidden
+        right-3 top-3 z-50
+        h-8 w-8 flex items-center justify-center
+        rounded-md hover:bg-accent
+    "
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <Collapsible
@@ -142,64 +153,69 @@ export default function AppSidebar() {
                                     ))}
                                 </SidebarGroup>
 
-                                <SidebarGroup>
-                                    <p>Extra Functions</p>
-                                    {admin.map((item, index) => (
-                                        <SidebarMenuItem key={index}>
-                                            <SidebarMenuButton
-                                                asChild
-                                                className="flex-1 justify-start"
-                                            >
-                                                <Link href={`/${item.path}`}>
-                                                    {item.title}
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
+                                {userRole === "ADMIN" && (
+                                    <SidebarGroup>
+                                        <p>Extra Functions</p>
 
-                                    {adminData.map((item, index) => (
-                                        <SidebarMenuItem key={index}>
-                                            <div className="flex items-center justify-between w-full">
-                                                <SidebarMenuButton className="flex-1 justify-start">
-                                                    {item.title}
+                                        {admin.map((item, index) => (
+                                            <SidebarMenuItem key={index}>
+                                                <SidebarMenuButton
+                                                    asChild
+                                                    className="flex-1 justify-start"
+                                                >
+                                                    <Link
+                                                        href={`/${item.path}`}
+                                                    >
+                                                        {item.title}
+                                                    </Link>
                                                 </SidebarMenuButton>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                        asChild
-                                                    >
-                                                        <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent
-                                                        side="right"
-                                                        align="start"
-                                                    >
-                                                        {item.children.map(
-                                                            (
-                                                                child,
-                                                                childIndex
-                                                            ) => (
-                                                                <DropdownRedirect
-                                                                    key={
-                                                                        childIndex
-                                                                    }
-                                                                    path={
-                                                                        child.path
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        child.title
-                                                                    }
-                                                                </DropdownRedirect>
-                                                            )
-                                                        )}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-                                        </SidebarMenuItem>
-                                    ))}
-                                </SidebarGroup>
+                                            </SidebarMenuItem>
+                                        ))}
+
+                                        {adminData.map((item, index) => (
+                                            <SidebarMenuItem key={index}>
+                                                <div className="flex items-center justify-between w-full">
+                                                    <SidebarMenuButton className="flex-1 justify-start">
+                                                        {item.title}
+                                                    </SidebarMenuButton>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent
+                                                            side="right"
+                                                            align="start"
+                                                        >
+                                                            {item.children.map(
+                                                                (
+                                                                    child,
+                                                                    childIndex
+                                                                ) => (
+                                                                    <DropdownRedirect
+                                                                        key={
+                                                                            childIndex
+                                                                        }
+                                                                        path={
+                                                                            child.path
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            child.title
+                                                                        }
+                                                                    </DropdownRedirect>
+                                                                )
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </SidebarMenuItem>
+                                        ))}
+                                    </SidebarGroup>
+                                )}
                             </Collapsible>
                         </SidebarMenu>
                     </SidebarGroupContent>
@@ -211,20 +227,18 @@ export default function AppSidebar() {
                             <SidebarMenu>
                                 <SidebarMenuItem>
                                     <DropdownMenu>
-                                        {/* Wrapper so we can use group-hover for the popup */}
                                         <div className="relative group flex flex-row w-full items-start gap-1 p-1">
-                                            {/* Hover popup with email + ID */}
                                             <div
                                                 className="
-                            pointer-events-none
-                            absolute left-2 bottom-12 z-50
-                            w-max max-w-[260px]
-                            rounded-md border bg-popover px-3 py-2
-                            text-xs text-popover-foreground shadow-md
-                            opacity-0 translate-y-1
-                            group-hover:opacity-100 group-hover:translate-y-0
-                            transition-all duration-150
-                        "
+                                                    pointer-events-none
+                                                    absolute left-2 bottom-12 z-50
+                                                    w-max max-w-[260px]
+                                                    rounded-md border bg-popover px-3 py-2
+                                                    text-xs text-popover-foreground shadow-md
+                                                    opacity-0 translate-y-1
+                                                    group-hover:opacity-100 group-hover:translate-y-0
+                                                    transition-all duration-150
+                                                "
                                             >
                                                 <p className="font-semibold">
                                                     {user?.user_metadata

@@ -5,12 +5,99 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+// ---------- Name Formatting Helpers ----------
+
+// Remove characters we don't want in a name
+function cleanNameInput(value: string) {
+    // Allow letters (including accented), spaces, hyphen, apostrophe, dot
+    return value.replace(/[^\p{L}' .-]/gu, "");
+}
+
+// Format full name: words, particles, hyphens, apostrophes, suffixes
+function formatName(value: string) {
+    if (!value || !value.trim()) return "";
+
+    // Suffixes we normalize (must be at END of name with comma or standalone)
+    const suffixMap: Record<string, string> = {
+        jr: "Jr.",
+        sr: "Sr.",
+        ii: "II",
+        iii: "III",
+        iv: "IV",
+        v: "V",
+    };
+
+    // Name particles to keep lowercase
+    const particles = [
+        "de",
+        "del",
+        "dela",
+        "la",
+        "las",
+        "los",
+        "van",
+        "von",
+        "da",
+        "di",
+        "y",
+    ];
+
+    // Split and trim extra spaces
+    const parts = value.trim().toLowerCase().split(/\s+/);
+
+    // Handle suffix if last part is jr, sr, ii, iii, iv (with or without dot)
+    let suffix: string | null = null;
+    let coreParts = parts;
+
+    if (parts.length > 1) {
+        const last = parts[parts.length - 1].replace(/[.,]/g, ""); // remove dots and commas
+        if (suffixMap[last]) {
+            suffix = suffixMap[last];
+            coreParts = parts.slice(0, -1);
+        }
+    }
+
+    const formattedCore = coreParts
+        .filter((w) => w !== "")
+        .map((word, index) => {
+            // Keep particles lowercase (but capitalize if first word)
+            if (particles.includes(word) && index > 0) return word;
+
+            // Handle names with apostrophes (O'Brien, D'Angelo)
+            if (word.includes("'")) {
+                return word
+                    .split("'")
+                    .map((part) =>
+                        part ? part[0].toUpperCase() + part.slice(1) : ""
+                    )
+                    .join("'");
+            }
+
+            // Handle hyphenated names (Anna-Marie, Jean-Claude)
+            if (word.includes("-")) {
+                return word
+                    .split("-")
+                    .map((part) =>
+                        part ? part[0].toUpperCase() + part.slice(1) : ""
+                    )
+                    .join("-");
+            }
+
+            // Normal word capitalization
+            return word[0].toUpperCase() + word.slice(1);
+        })
+        .join(" ");
+
+    return suffix ? `${formattedCore} ${suffix}` : formattedCore;
+}
+
 export default function FillUpPage() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const router = useRouter();
-    
+
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -20,26 +107,26 @@ export default function FillUpPage() {
 
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
             if (!user) {
                 router.push("/signin");
                 return;
             }
-            
-        
-            const { data: profile } = await supabase    
+
+            const { data: profile } = await supabase
                 .from("User")
-                .upsert("*")
+                .select("*")
                 .eq("id", user.id)
                 .single();
-            
+
             if (profile) {
-               
                 router.push("/pending-approval");
                 return;
             }
-            
+
             setUser(user);
             setLoading(false);
         };
@@ -54,34 +141,31 @@ export default function FillUpPage() {
         let success = false;
 
         try {
-            
-            const { error: userError } = await supabase
-                .from("User")
-                .upsert({
-                    id: user.id,
-                    email: user.email,
-                    role: "TEACHER",
-                    status: "PENDING",
-                });
+            const { error: userError } = await supabase.from("User").upsert({
+                id: user.id,
+                email: user.email,
+                role: "TEACHER",
+                status: "PENDING",
+            });
 
             if (userError) {
                 alert(`Error creating user: ${userError.message}`);
-                
                 return;
             }
 
-        
             const { error: profileError } = await supabase
                 .from("Profile")
-                .upsert({
-                    id: user.id, 
-                    email: user.email,
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
-                    middleInitial: formData.middleInitial,
-                    contactNumber: formData.contactNumber,
-                }, { onConflict: "id" }
-            );
+                .upsert(
+                    {
+                        id: user.id,
+                        email: user.email,
+                        firstName: formData.firstName,
+                        lastName: formData.lastName,
+                        middleInitial: formData.middleInitial,
+                        contactNumber: formData.contactNumber,
+                    },
+                    { onConflict: "id" }
+                );
 
             if (profileError) {
                 alert(`Error creating profile: ${profileError.message}`);
@@ -116,8 +200,9 @@ export default function FillUpPage() {
                 <h1 className="text-2xl font-bold mb-6 text-gray-800">
                     Complete Your Profile
                 </h1>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* first name */}
                     <div>
                         <label className="block mb-1 text-gray-700 font-medium">
                             First Name *
@@ -125,12 +210,20 @@ export default function FillUpPage() {
                         <Input
                             type="text"
                             value={formData.firstName}
-                            onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                            onChange={(e) => {
+                                const cleaned = cleanNameInput(e.target.value);
+                                const formatted = formatName(cleaned);
+                                setFormData({
+                                    ...formData,
+                                    firstName: formatted,
+                                });
+                            }}
                             required
                             placeholder="Enter first name"
                         />
                     </div>
 
+                    {/* last name*/}
                     <div>
                         <label className="block mb-1 text-gray-700 font-medium">
                             Last Name *
@@ -138,12 +231,20 @@ export default function FillUpPage() {
                         <Input
                             type="text"
                             value={formData.lastName}
-                            onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                            onChange={(e) => {
+                                const cleaned = cleanNameInput(e.target.value);
+                                const formatted = formatName(cleaned);
+                                setFormData({
+                                    ...formData,
+                                    lastName: formatted,
+                                });
+                            }}
                             required
                             placeholder="Enter last name"
                         />
                     </div>
 
+                    {/* middle initial */}
                     <div>
                         <label className="block mb-1 text-gray-700 font-medium">
                             Middle Initial
@@ -152,11 +253,21 @@ export default function FillUpPage() {
                             type="text"
                             maxLength={1}
                             value={formData.middleInitial}
-                            onChange={(e) => setFormData({...formData, middleInitial: e.target.value.toUpperCase()})}
+                            onChange={(e) => {
+                                const onlyLetters = e.target.value.replace(
+                                    /[^a-zA-Z]/g,
+                                    ""
+                                );
+                                setFormData({
+                                    ...formData,
+                                    middleInitial: onlyLetters.toUpperCase(),
+                                });
+                            }}
                             placeholder="Optional"
                         />
                     </div>
 
+                    {/* contact number */}
                     <div>
                         <label className="block mb-1 text-gray-700 font-medium">
                             Contact Number *
@@ -164,12 +275,18 @@ export default function FillUpPage() {
                         <Input
                             type="tel"
                             value={formData.contactNumber}
-                            onChange={(e) => setFormData({...formData, contactNumber: e.target.value})}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    contactNumber: e.target.value,
+                                })
+                            }
                             required
                             placeholder="+63 XXX XXX XXXX"
                         />
                     </div>
 
+                    {/* email display */}
                     <div>
                         <label className="block mb-1 text-gray-700 font-medium">
                             Email (from account)
