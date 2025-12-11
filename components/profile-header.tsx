@@ -37,7 +37,7 @@ export default function ProfileHeader({
     // Makes the full name
     const getFullName = () => {
         const { firstName, middleInitial, lastName } = tempProfileData;
-        const middle = middleInitial ? `${middleInitial}. ` : "";
+        const middle = middleInitial ? `${middleInitial} ` : "";
         return `${firstName} ${middle}${lastName}`.trim();
     };
 

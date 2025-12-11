@@ -77,7 +77,7 @@ export default function AppSidebar() {
 
     const items = [
         { title: "Home", url: "dashboard", icon: Home },
-        { title: "Profiles", url: "teacher-profiles", icon: Inbox },
+        { title: "All Profiles", url: "teacher-profiles", icon: Inbox },
         {
             title: "Training / Seminar Records",
             url: "professional-dev",

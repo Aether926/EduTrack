@@ -1,95 +1,18 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+
+import {
+    cleanNameInput,
+    formatName,
+    cleanMiddleInitial,
+    calculateAge,
+} from "@/app/util/helper";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-// ---------- Name Formatting Helpers ----------
-
-// Remove characters we don't want in a name
-function cleanNameInput(value: string) {
-    // Allow letters (including accented), spaces, hyphen, apostrophe, dot
-    return value.replace(/[^\p{L}' .-]/gu, "");
-}
-
-// Format full name: words, particles, hyphens, apostrophes, suffixes
-function formatName(value: string) {
-    if (!value || !value.trim()) return "";
-
-    // Suffixes we normalize (must be at END of name with comma or standalone)
-    const suffixMap: Record<string, string> = {
-        jr: "Jr.",
-        sr: "Sr.",
-        ii: "II",
-        iii: "III",
-        iv: "IV",
-        v: "V",
-    };
-
-    // Name particles to keep lowercase
-    const particles = [
-        "de",
-        "del",
-        "dela",
-        "la",
-        "las",
-        "los",
-        "van",
-        "von",
-        "da",
-        "di",
-        "y",
-    ];
-
-    // Split and trim extra spaces
-    const parts = value.trim().toLowerCase().split(/\s+/);
-
-    // Handle suffix if last part is jr, sr, ii, iii, iv (with or without dot)
-    let suffix: string | null = null;
-    let coreParts = parts;
-
-    if (parts.length > 1) {
-        const last = parts[parts.length - 1].replace(/[.,]/g, ""); // remove dots and commas
-        if (suffixMap[last]) {
-            suffix = suffixMap[last];
-            coreParts = parts.slice(0, -1);
-        }
-    }
-
-    const formattedCore = coreParts
-        .filter((w) => w !== "")
-        .map((word, index) => {
-            // Keep particles lowercase (but capitalize if first word)
-            if (particles.includes(word) && index > 0) return word;
-
-            // Handle names with apostrophes (O'Brien, D'Angelo)
-            if (word.includes("'")) {
-                return word
-                    .split("'")
-                    .map((part) =>
-                        part ? part[0].toUpperCase() + part.slice(1) : ""
-                    )
-                    .join("'");
-            }
-
-            // Handle hyphenated names (Anna-Marie, Jean-Claude)
-            if (word.includes("-")) {
-                return word
-                    .split("-")
-                    .map((part) =>
-                        part ? part[0].toUpperCase() + part.slice(1) : ""
-                    )
-                    .join("-");
-            }
-
-            // Normal word capitalization
-            return word[0].toUpperCase() + word.slice(1);
-        })
-        .join(" ");
-
-    return suffix ? `${formattedCore} ${suffix}` : formattedCore;
-}
 
 export default function FillUpPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -212,10 +135,16 @@ export default function FillUpPage() {
                             value={formData.firstName}
                             onChange={(e) => {
                                 const cleaned = cleanNameInput(e.target.value);
-                                const formatted = formatName(cleaned);
                                 setFormData({
                                     ...formData,
-                                    firstName: formatted,
+                                    firstName: cleaned, // <-- FIX 1: Don't format while typing
+                                });
+                            }}
+                            onBlur={() => {
+                                // Format only when user finishes typing
+                                setFormData({
+                                    ...formData,
+                                    firstName: formatName(formData.firstName),
                                 });
                             }}
                             required
@@ -223,7 +152,7 @@ export default function FillUpPage() {
                         />
                     </div>
 
-                    {/* last name*/}
+                    {/* last name */}
                     <div>
                         <label className="block mb-1 text-gray-700 font-medium">
                             Last Name *
@@ -233,10 +162,16 @@ export default function FillUpPage() {
                             value={formData.lastName}
                             onChange={(e) => {
                                 const cleaned = cleanNameInput(e.target.value);
-                                const formatted = formatName(cleaned);
                                 setFormData({
                                     ...formData,
-                                    lastName: formatted,
+                                    lastName: cleaned, // <-- FIX 2: Was updating firstName instead of lastName!
+                                });
+                            }}
+                            onBlur={() => {
+                                // Format only when user finishes typing
+                                setFormData({
+                                    ...formData,
+                                    lastName: formatName(formData.lastName),
                                 });
                             }}
                             required
@@ -251,16 +186,15 @@ export default function FillUpPage() {
                         </label>
                         <Input
                             type="text"
-                            maxLength={1}
+                            maxLength={2} // <-- FIX 3: Changed from 1 to 2 to allow the dot
                             value={formData.middleInitial}
                             onChange={(e) => {
-                                const onlyLetters = e.target.value.replace(
-                                    /[^a-zA-Z]/g,
-                                    ""
+                                const cleaned = cleanMiddleInitial(
+                                    e.target.value
                                 );
                                 setFormData({
                                     ...formData,
-                                    middleInitial: onlyLetters.toUpperCase(),
+                                    middleInitial: cleaned,
                                 });
                             }}
                             placeholder="Optional"

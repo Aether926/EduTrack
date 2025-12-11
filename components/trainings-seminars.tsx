@@ -15,53 +15,25 @@ import {
 import { useRouter } from "next/navigation";
 
 export type TrainingSeminar = {
+    type: string;
     title: string;
     level: string;
-    date: string;
+    startDate: string;
+    endDate: string;
     totalHours: string;
     sponsor: string;
     url: string;
 };
 
-const userTrainingSeminar: TrainingSeminar[] = [
+export const userTrainingSeminar: TrainingSeminar[] = [
     {
-        title: "Vision Burst Mastery",
-        level: "National",
-        date: "2023-07-11",
-        totalHours: "9",
-        sponsor: "Knights of Favonius CIU",
-        url: "test",
-    },
-    {
-        title: "Ley Line Diagnostics",
-        level: "International",
-        date: "2023-09-03",
-        totalHours: "11",
-        sponsor: "Sumeru Akademiya – Spantamad",
-        url: "test",
-    },
-    {
-        title: "Adepti Etiquette Basics",
-        level: "Regional",
-        date: "2022-10-22",
-        totalHours: "5",
-        sponsor: "Liyue Qixing",
-        url: "test",
-    },
-    {
-        title: "Electro–Anemo Tactics",
-        level: "National",
-        date: "2023-03-08",
-        totalHours: "7",
-        sponsor: "Tenryou Commission",
-        url: "test",
-    },
-    {
-        title: "Prophecy Interpretation",
-        level: "International",
-        date: "2023-12-01",
-        totalHours: "13",
-        sponsor: "Fontaine Archeo-Institute",
+        type: "Training",
+        title: "School Titling",
+        level: "Division",
+        startDate: "2025-12-3",
+        endDate: "2025-12-5",
+        totalHours: "24",
+        sponsor: "DepEd",
         url: "test",
     },
 ];
@@ -90,6 +62,21 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
         ),
         enableSorting: false,
         enableHiding: false,
+    },
+    {
+        accessorKey: "type",
+        header: ({ column }) => (
+            <Button
+                variant="ghost"
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === "asc")
+                }
+            >
+                Type
+                <ArrowUpDown />
+            </Button>
+        ),
+        cell: ({ row }) => <div>{row.getValue("type")}</div>,
     },
     {
         accessorKey: "title",
@@ -124,7 +111,7 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
         ),
     },
     {
-        accessorKey: "date",
+        accessorKey: "startDate",
         header: ({ column }) => (
             <Button
                 variant="ghost"
@@ -132,12 +119,31 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
                     column.toggleSorting(column.getIsSorted() === "asc")
                 }
             >
-                Date
+                Start Date
                 <ArrowUpDown />
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("date")}</div>
+            <div className="text-center w-full">
+                {row.getValue("startDate")}
+            </div>
+        ),
+    },
+    {
+        accessorKey: "endDate",
+        header: ({ column }) => (
+            <Button
+                variant="ghost"
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === "asc")
+                }
+            >
+                End Date
+                <ArrowUpDown />
+            </Button>
+        ),
+        cell: ({ row }) => (
+            <div className="text-center w-full">{row.getValue("endDate")}</div>
         ),
     },
     {
