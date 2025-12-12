@@ -43,6 +43,25 @@ export default function AppSidebar() {
     const [user, setUser] = useState<any>(null);
     const [userRole, setUserRole] = useState<string | null>(null);
     const router = useRouter();
+    const [displayName, setDisplayName] = useState("User");
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (user) {
+                setDisplayName(
+                    user.user_metadata?.name ||
+                        user.email?.split("@")[0] ||
+                        "User"
+                );
+            }
+        };
+
+        fetchUser();
+    }, []);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -259,9 +278,7 @@ export default function AppSidebar() {
                                                     <User2 className="h-5 w-5" />
                                                     <div className="flex flex-col items-start ml-3">
                                                         <span className="font-semibold text-sm">
-                                                            {user?.user_metadata
-                                                                ?.username ||
-                                                                "Username"}
+                                                            {displayName}
                                                         </span>
                                                     </div>
                                                     <ChevronUp className="ml-auto h-4 w-4" />
