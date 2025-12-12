@@ -160,23 +160,32 @@ export default function Dashboard() {
                         <h2 className="text-xl font-semibold text-foreground mb-4">
                             Quick Actions
                         </h2>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button className="p-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-left">
+                            <a
+                                href="account-approval"
+                                className="block p-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-left"
+                            >
                                 <h3 className="font-medium mb-1">
-                                    Add New Profile
+                                    Review Pending Requests
                                 </h3>
                                 <p className="text-sm opacity-90">
-                                    Create a new teacher or staff profile
+                                    Approve or deny account requests from new
+                                    users
                                 </p>
-                            </button>
-                            <button className="p-4 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity text-left">
+                            </a>
+
+                            <a
+                                href="professional-dev"
+                                className="block p-4 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity text-left"
+                            >
                                 <h3 className="font-medium mb-1">
                                     Add Training / Seminar
                                 </h3>
                                 <p className="text-sm opacity-90">
                                     Record new training or seminar attendance
                                 </p>
-                            </button>
+                            </a>
                         </div>
                     </div>
                 )}
