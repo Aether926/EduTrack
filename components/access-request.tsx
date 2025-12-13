@@ -1,100 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import UserApprovalGrid, { PendingUser } from "@/components/user-approval-grid";
+import { useState } from "react";
+import UserApprovalGrid from "@/components/user-approval-grid";
 import { supabase } from "@/lib/supabaseClient";
+import { UserWithProfile } from "@/lib/user";
 
-export default function AccessRequest() {
-    const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
-    const [rejectedUsers, setRejectedUsers] = useState<PendingUser[]>([]);
-    const [loading, setLoading] = useState(true);
+interface Props {
+    pendingUsers: UserWithProfile[];
+    rejectedUsers: UserWithProfile[];
+}
+
+export default function AccessRequest({ pendingUsers, rejectedUsers }: Props) {
     const [activeTab, setActiveTab] = useState<"pending" | "rejected">(
         "pending"
     );
-
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    const fetchUsers = async () => {
-        setLoading(true);
-
-        const { data: pending } = await supabase
-            .from("User")
-            .select(
-                `
-                id,
-                email,
-                role,
-                status,
-                createdAt
-            `
-            )
-            .eq("status", "PENDING")
-            .order("createdAt", { ascending: false });
-
-        const { data: rejected } = await supabase
-            .from("User")
-            .select(
-                `
-                id,
-                email,
-                role,
-                status,
-                createdAt
-            `
-            )
-            .eq("status", "REJECTED")
-            .order("createdAt", { ascending: false });
-
-        if (pending) {
-            const pendingWithProfiles = await Promise.all(
-                pending.map(async (user) => {
-                    const { data: profile } = await supabase
-                        .from("Profile")
-                        .select(
-                            "firstName, lastName, middleInitial, contactNumber"
-                        )
-                        .eq("id", user.id)
-                        .single();
-
-                    return {
-                        ...user,
-                        firstName: profile?.firstName || "",
-                        lastName: profile?.lastName || "",
-                        middleInitial: profile?.middleInitial || "",
-                        contactNumber: profile?.contactNumber || "",
-                    };
-                })
-            );
-            setPendingUsers(pendingWithProfiles);
-        }
-
-        if (rejected) {
-            const rejectedWithProfiles = await Promise.all(
-                rejected.map(async (user) => {
-                    const { data: profile } = await supabase
-                        .from("Profile")
-                        .select(
-                            "firstName, lastName, middleInitial, contactNumber"
-                        )
-                        .eq("id", user.id)
-                        .single();
-
-                    return {
-                        ...user,
-                        firstName: profile?.firstName || "",
-                        lastName: profile?.lastName || "",
-                        middleInitial: profile?.middleInitial || "",
-                        contactNumber: profile?.contactNumber || "",
-                    };
-                })
-            );
-            setRejectedUsers(rejectedWithProfiles);
-        }
-
-        setLoading(false);
-    };
 
     const handleApprove = async (id: string) => {
         const { error } = await supabase
@@ -108,7 +27,6 @@ export default function AccessRequest() {
         }
 
         alert("User approved successfully! They can now login.");
-        fetchUsers();
     };
 
     const handleReject = async (id: string) => {
@@ -129,7 +47,6 @@ export default function AccessRequest() {
         }
 
         alert("User rejected and moved to archive.");
-        fetchUsers();
     };
 
     const handlePermanentDelete = async (id: string) => {
@@ -160,16 +77,7 @@ export default function AccessRequest() {
         }
 
         alert("User permanently deleted from database.");
-        fetchUsers();
     };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-lg">Loading...</p>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen p-6">
