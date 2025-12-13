@@ -12,28 +12,56 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 
 export type TrainingSeminar = {
-    type: string;
     title: string;
     level: string;
-    startDate: string;
-    endDate: string;
+    date: string;
     totalHours: string;
     sponsor: string;
     url: string;
 };
 
-export const userTrainingSeminar: TrainingSeminar[] = [
+// Sample Data
+const trainingSeminarData: TrainingSeminar[] = [
     {
-        type: "Training",
-        title: "School Titling",
-        level: "Division",
-        startDate: "2025-12-3",
-        endDate: "2025-12-5",
-        totalHours: "24",
-        sponsor: "DepEd",
+        title: "Ley Line Reading",
+        level: "Regional",
+        date: "2023-07-02",
+        totalHours: "6",
+        sponsor: "Sumeru Akademiya",
+        url: "test",
+    },
+    {
+        title: "Vision Handling Protocols",
+        level: "National",
+        date: "2023-05-19",
+        totalHours: "8",
+        sponsor: "Knights of Favonius",
+        url: "test",
+    },
+    {
+        title: "Adeptal Contract Basics",
+        level: "National",
+        date: "2023-09-13",
+        totalHours: "7",
+        sponsor: "Liyue Qixing",
+        url: "test",
+    },
+    {
+        title: "Electro Safety Guidelines",
+        level: "Regional",
+        date: "2023-06-04",
+        totalHours: "5",
+        sponsor: "Inazuma Shogunate",
+        url: "test",
+    },
+    {
+        title: "Fonta Technology Primer",
+        level: "International",
+        date: "2023-11-22",
+        totalHours: "10",
+        sponsor: "Fontaine Research Institute",
         url: "test",
     },
 ];
@@ -62,21 +90,6 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
         ),
         enableSorting: false,
         enableHiding: false,
-    },
-    {
-        accessorKey: "type",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === "asc")
-                }
-            >
-                Type
-                <ArrowUpDown />
-            </Button>
-        ),
-        cell: ({ row }) => <div>{row.getValue("type")}</div>,
     },
     {
         accessorKey: "title",
@@ -111,7 +124,7 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
         ),
     },
     {
-        accessorKey: "startDate",
+        accessorKey: "date",
         header: ({ column }) => (
             <Button
                 variant="ghost"
@@ -119,31 +132,12 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
                     column.toggleSorting(column.getIsSorted() === "asc")
                 }
             >
-                Start Date
+                Date
                 <ArrowUpDown />
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">
-                {row.getValue("startDate")}
-            </div>
-        ),
-    },
-    {
-        accessorKey: "endDate",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === "asc")
-                }
-            >
-                End Date
-                <ArrowUpDown />
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("endDate")}</div>
+            <div className="text-center w-full">{row.getValue("date")}</div>
         ),
     },
     {
@@ -201,25 +195,23 @@ const trainingSeminarColumns: ColumnDef<TrainingSeminar>[] = [
     },
 ];
 
-// Add and Delete Function
-export default function TrainingSeminars() {
-    const router = useRouter();
-
-    const handleAdd = () => {
-        router.push("/training/add");
-        console.log("Add new training/seminar");
+export default function AddTrainingAndSeminar() {
+    const handleAdd = (selectedRows: TrainingSeminar[]) => {
+        console.log("Added:", selectedRows);
+        // Add logic here
     };
 
     const handleDelete = (selectedRows: TrainingSeminar[]) => {
-        console.log("Deleting:", selectedRows);
+        console.log("Deleted:", selectedRows);
+        // Delete logic here
     };
 
     return (
         <DataTable
-            data={userTrainingSeminar}
+            data={trainingSeminarData}
             columns={trainingSeminarColumns}
-            filterColumn="title"
-            filterPlaceholder="Filter trainings..."
+            filterColumn="fullname"
+            filterPlaceholder="Filter names..."
             pageSize={8}
             showAddButton={true}
             showDeleteButton={true}

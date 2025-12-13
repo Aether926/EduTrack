@@ -10,6 +10,7 @@ import {
     Calendar,
     Home,
     Inbox,
+    ChevronLeft,
 } from "lucide-react";
 
 import {
@@ -21,6 +22,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarFooter,
+    SidebarTrigger,
+    useSidebar,
 } from "@/components/ui/sidebar";
 
 import {
@@ -38,12 +41,50 @@ import Link from "next/link";
 export default function AppSidebar() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [user, setUser] = useState<any>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
     const router = useRouter();
+    const [displayName, setDisplayName] = useState("User");
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            if (data.session?.user) setUser(data.session.user);
-        });
+        const fetchUser = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (user) {
+                setDisplayName(
+                    user.user_metadata?.name ||
+                        user.email?.split("@")[0] ||
+                        "User"
+                );
+            }
+        };
+
+        fetchUser();
+    }, []);
+
+    useEffect(() => {
+        const loadUser = async () => {
+            const { data } = await supabase.auth.getSession();
+
+            const authUser = data.session?.user;
+            if (!authUser) return;
+
+            setUser(authUser);
+
+            // 👇 Fetch role from your "User" table
+            const { data: userRow, error } = await supabase
+                .from("User")
+                .select("role")
+                .eq("id", authUser.id)
+                .single();
+
+            if (!error && userRow) {
+                setUserRole(userRow.role); // e.g. "ADMIN" | "TEACHER"
+            }
+        };
+
+        loadUser();
     }, []);
 
     async function handleSignOut() {
@@ -51,9 +92,11 @@ export default function AppSidebar() {
         router.push("/signin");
     }
 
+    const { toggleSidebar, setOpen } = useSidebar();
+
     const items = [
         { title: "Home", url: "dashboard", icon: Home },
-        { title: "Profiles", url: "teacher-profiles", icon: Inbox },
+        { title: "All Profiles", url: "teacher-profiles", icon: Inbox },
         {
             title: "Training / Seminar Records",
             url: "professional-dev",
@@ -61,16 +104,9 @@ export default function AppSidebar() {
         },
     ];
 
-    // Admin items
     const admin = [
-        {
-            title: "Account Approval",
-            path: "account-approval",
-        },
-        {
-            title: "Add Trainings / Seminars",
-            path: "test1",
-        },
+        { title: "Account Approval", path: "account-approval" },
+        { title: "Add Trainings / Seminars", path: "add-training-seminar" },
     ];
 
     const adminData = [
@@ -103,8 +139,20 @@ export default function AppSidebar() {
 
     return (
         <Sidebar>
-            <SidebarContent className="flex flex-col justify-between">
+            <SidebarContent className="relative flex flex-col justify-between">
                 <SidebarGroup>
+                    {/* Mobile-only close button */}
+                    <button
+                        onClick={toggleSidebar}
+                        className="
+        md:hidden
+        right-3 top-3 z-50
+        h-8 w-8 flex items-center justify-center
+        rounded-md hover:bg-accent
+    "
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <Collapsible
@@ -124,64 +172,69 @@ export default function AppSidebar() {
                                     ))}
                                 </SidebarGroup>
 
-                                <SidebarGroup>
-                                    <p>Extra Functions</p>
-                                    {admin.map((item, index) => (
-                                        <SidebarMenuItem key={index}>
-                                            <SidebarMenuButton
-                                                asChild
-                                                className="flex-1 justify-start"
-                                            >
-                                                <Link href={`/${item.path}`}>
-                                                    {item.title}
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
+                                {userRole === "ADMIN" && (
+                                    <SidebarGroup>
+                                        <p>Extra Functions</p>
 
-                                    {adminData.map((item, index) => (
-                                        <SidebarMenuItem key={index}>
-                                            <div className="flex items-center justify-between w-full">
-                                                <SidebarMenuButton className="flex-1 justify-start">
-                                                    {item.title}
+                                        {admin.map((item, index) => (
+                                            <SidebarMenuItem key={index}>
+                                                <SidebarMenuButton
+                                                    asChild
+                                                    className="flex-1 justify-start"
+                                                >
+                                                    <Link
+                                                        href={`/${item.path}`}
+                                                    >
+                                                        {item.title}
+                                                    </Link>
                                                 </SidebarMenuButton>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                        asChild
-                                                    >
-                                                        <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent
-                                                        side="right"
-                                                        align="start"
-                                                    >
-                                                        {item.children.map(
-                                                            (
-                                                                child,
-                                                                childIndex
-                                                            ) => (
-                                                                <DropdownRedirect
-                                                                    key={
-                                                                        childIndex
-                                                                    }
-                                                                    path={
-                                                                        child.path
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        child.title
-                                                                    }
-                                                                </DropdownRedirect>
-                                                            )
-                                                        )}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-                                        </SidebarMenuItem>
-                                    ))}
-                                </SidebarGroup>
+                                            </SidebarMenuItem>
+                                        ))}
+
+                                        {adminData.map((item, index) => (
+                                            <SidebarMenuItem key={index}>
+                                                <div className="flex items-center justify-between w-full">
+                                                    <SidebarMenuButton className="flex-1 justify-start">
+                                                        {item.title}
+                                                    </SidebarMenuButton>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent
+                                                            side="right"
+                                                            align="start"
+                                                        >
+                                                            {item.children.map(
+                                                                (
+                                                                    child,
+                                                                    childIndex
+                                                                ) => (
+                                                                    <DropdownRedirect
+                                                                        key={
+                                                                            childIndex
+                                                                        }
+                                                                        path={
+                                                                            child.path
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            child.title
+                                                                        }
+                                                                    </DropdownRedirect>
+                                                                )
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </SidebarMenuItem>
+                                        ))}
+                                    </SidebarGroup>
+                                )}
                             </Collapsible>
                         </SidebarMenu>
                     </SidebarGroupContent>
@@ -189,56 +242,89 @@ export default function AppSidebar() {
 
                 <SidebarFooter>
                     <SidebarMenu>
-                        <SidebarMenuItem>
-                            <DropdownMenu>
-                                <div className="flex flex-col w-full items-start gap-1 px-2 py-3">
-                                    <DropdownMenuTrigger asChild>
-                                        <SidebarMenuButton className="flex items-center gap-1 w-full justify-start p-2">
-                                            <User2 className="h-5 w-5" />
-                                            <div className="flex flex-col items-start ml-3">
-                                                <span className="font-semibold text-sm">
-                                                    {user?.email || "Username"}
-                                                </span>
-                                                <span className="text-xs text-gray-500 select-all break-words">
-                                                    {user?.id || "ID"}
-                                                </span>
+                        <SidebarFooter>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <DropdownMenu>
+                                        <div className="relative group flex flex-row w-full items-start gap-1 p-1">
+                                            <div
+                                                className="
+                                                    pointer-events-none
+                                                    absolute left-2 bottom-12 z-50
+                                                    w-max max-w-[260px]
+                                                    rounded-md border bg-popover px-3 py-2
+                                                    text-xs text-popover-foreground shadow-md
+                                                    opacity-0 translate-y-1
+                                                    group-hover:opacity-100 group-hover:translate-y-0
+                                                    transition-all duration-150
+                                                "
+                                            >
+                                                <p className="font-semibold">
+                                                    {user?.user_metadata
+                                                        ?.username ||
+                                                        "Username"}
+                                                </p>
+                                                <p className="break-all">
+                                                    {user?.email ||
+                                                        "email@example.com"}
+                                                </p>
+                                                <p className="break-all text-[10px] text-muted-foreground">
+                                                    {user?.id || "User ID"}
+                                                </p>
                                             </div>
-                                            <ChevronUp className="ml-auto h-4 w-4" />
-                                        </SidebarMenuButton>
-                                    </DropdownMenuTrigger>
-                                    <ThemeToggle />
-                                </div>
 
-                                {footer.map((item, index) => (
-                                    <DropdownMenuContent
-                                        key={index}
-                                        side="top"
-                                        align="end"
-                                        className="w-[--radix-popper-anchor-width]"
-                                    >
-                                        {item.children.map(
-                                            (child, childIndex) =>
-                                                child.title === "Sign Out" ? (
-                                                    <SidebarMenuButton
-                                                        key={childIndex}
-                                                        className="w-full text-left px-2 py-1"
-                                                        onClick={handleSignOut}
-                                                    >
-                                                        {child.title}
-                                                    </SidebarMenuButton>
-                                                ) : (
-                                                    <DropdownRedirect
-                                                        key={childIndex}
-                                                        path={child.path}
-                                                    >
-                                                        {child.title}
-                                                    </DropdownRedirect>
-                                                )
-                                        )}
-                                    </DropdownMenuContent>
-                                ))}
-                            </DropdownMenu>
-                        </SidebarMenuItem>
+                                            <DropdownMenuTrigger asChild>
+                                                <SidebarMenuButton className="flex items-center gap-1 w-full justify-start p-2">
+                                                    <User2 className="h-5 w-5" />
+                                                    <div className="flex flex-col items-start ml-3">
+                                                        <span className="font-semibold text-sm">
+                                                            {displayName}
+                                                        </span>
+                                                    </div>
+                                                    <ChevronUp className="ml-auto h-4 w-4" />
+                                                </SidebarMenuButton>
+                                            </DropdownMenuTrigger>
+
+                                            <ThemeToggle />
+                                        </div>
+
+                                        {footer.map((item, index) => (
+                                            <DropdownMenuContent
+                                                key={index}
+                                                side="top"
+                                                align="end"
+                                                className="w-[--radix-popper-anchor-width]"
+                                            >
+                                                {item.children.map(
+                                                    (child, childIndex) =>
+                                                        child.title ===
+                                                        "Sign Out" ? (
+                                                            <SidebarMenuButton
+                                                                key={childIndex}
+                                                                className="w-full text-left px-2 py-1"
+                                                                onClick={
+                                                                    handleSignOut
+                                                                }
+                                                            >
+                                                                {child.title}
+                                                            </SidebarMenuButton>
+                                                        ) : (
+                                                            <DropdownRedirect
+                                                                key={childIndex}
+                                                                path={
+                                                                    child.path
+                                                                }
+                                                            >
+                                                                {child.title}
+                                                            </DropdownRedirect>
+                                                        )
+                                                )}
+                                            </DropdownMenuContent>
+                                        ))}
+                                    </DropdownMenu>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarFooter>
                     </SidebarMenu>
                 </SidebarFooter>
             </SidebarContent>
