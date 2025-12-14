@@ -328,8 +328,8 @@ export default function TrainingHistory({
                             />
                         </div>
 
-                        {/* Delete button: show when at least 1 row selected (custom for history) */}
-                        {canManage && selectedRows.length >= 1 && (
+                        {/* Delete button: show when at least 1 row selected - available for all users */}
+                        {selectedRows.length >= 1 && (
                             <Button
                                 onClick={handleDelete}
                                 className="mr-2 !bg-red-700 !text-white hover:!bg-red-800"
