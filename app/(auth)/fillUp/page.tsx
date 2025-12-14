@@ -137,7 +137,7 @@ export default function FillUpPage() {
                                 const cleaned = cleanNameInput(e.target.value);
                                 setFormData({
                                     ...formData,
-                                    firstName: cleaned, // <-- FIX 1: Don't format while typing
+                                    firstName: cleaned,
                                 });
                             }}
                             onBlur={() => {
@@ -164,7 +164,7 @@ export default function FillUpPage() {
                                 const cleaned = cleanNameInput(e.target.value);
                                 setFormData({
                                     ...formData,
-                                    lastName: cleaned, // <-- FIX 2: Was updating firstName instead of lastName!
+                                    lastName: cleaned,
                                 });
                             }}
                             onBlur={() => {

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import TeacherTable from "@/components/tables/teacher-table";
+import TrainingSeminars from "@/components/tables/trainings-seminars";
 
-export default function TeacherProfilesPage() {
+export default function TrainingSeminarsPage() {
     const [userRole, setUserRole] = useState<"ADMIN" | "TEACHER" | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -45,9 +45,11 @@ export default function TeacherProfilesPage() {
 
     return (
         <div className="w-full p-6">
-            <h1 className="text-3xl font-bold mb-6">Teacher Profiles</h1>
+            <h1 className="text-3xl font-bold mb-6">
+                Manage Trainings and Seminars
+            </h1>
 
-            <TeacherTable role={userRole || "TEACHER"} />
+            <TrainingSeminars role={userRole || "TEACHER"} />
         </div>
     );
 }

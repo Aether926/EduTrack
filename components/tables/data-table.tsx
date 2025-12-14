@@ -1,6 +1,6 @@
 "use client";
 
-import PaginationBar from "./pagination";
+import PaginationBar from "../pagination";
 import { useRouter } from "next/navigation";
 
 import * as React from "react";
@@ -37,7 +37,11 @@ import {
 
 interface DataTableProps<T> {
     data: T[];
-    columns: ColumnDef<T>[];
+    // New structure: columns separated by type
+    selectColumn?: ColumnDef<T>; // Optional checkbox column
+    dataColumns: ColumnDef<T>[]; // Main data columns
+    actionsColumn?: ColumnDef<T>; // Optional actions menu column
+
     filterColumn: string;
     filterPlaceholder?: string;
     pageSize?: number;
@@ -46,11 +50,18 @@ interface DataTableProps<T> {
     showAddButton?: boolean;
     showDeleteButton?: boolean;
     getRowUrl?: (row: T) => string;
+
+    // New props for easier control
+    enableSelection?: boolean;
+    enableActions?: boolean;
+    isAdmin?: boolean; // New prop for admin-only features
 }
 
 export function DataTable<T>({
     data,
-    columns,
+    selectColumn,
+    dataColumns,
+    actionsColumn,
     filterColumn,
     filterPlaceholder = "Filter.",
     pageSize = 8,
@@ -59,6 +70,9 @@ export function DataTable<T>({
     showAddButton = false,
     showDeleteButton = true,
     getRowUrl,
+    enableSelection = true,
+    enableActions = true,
+    isAdmin = false, // Default to non-admin
 }: DataTableProps<T>) {
     const router = useRouter();
     const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -68,11 +82,33 @@ export function DataTable<T>({
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
-    // Add state for dynamic page size
     const [currentPageSize, setCurrentPageSize] = React.useState(() => {
         if (typeof window === "undefined") return pageSize;
         return getPageSize();
     });
+
+    // Build the final columns array based on enabled features
+    const columns = React.useMemo(() => {
+        const cols: ColumnDef<T>[] = [];
+
+        if (enableSelection && selectColumn) {
+            cols.push(selectColumn);
+        }
+
+        cols.push(...dataColumns);
+
+        if (enableActions && actionsColumn) {
+            cols.push(actionsColumn);
+        }
+
+        return cols;
+    }, [
+        enableSelection,
+        selectColumn,
+        dataColumns,
+        enableActions,
+        actionsColumn,
+    ]);
 
     const handleRowClick = (row: T, event: React.MouseEvent) => {
         if (!getRowUrl) return;
@@ -93,13 +129,11 @@ export function DataTable<T>({
 
         const width = window.innerWidth;
 
-        // Row limiter depending on screen size
-        if (width < 768) return 6; // sm
-        if (width < 1440) return 7; // md-lg
-        return 12; // xl+
+        if (width < 768) return 6;
+        if (width < 1440) return 7;
+        return 12;
     }
 
-    // Handle window resize
     React.useEffect(() => {
         const handleResize = () => {
             const newPageSize = getPageSize();
@@ -136,7 +170,6 @@ export function DataTable<T>({
         },
     });
 
-    // Update table page size when currentPageSize changes
     React.useEffect(() => {
         table.setPageSize(currentPageSize);
     }, [currentPageSize, table]);
@@ -168,7 +201,7 @@ export function DataTable<T>({
                             />
                         </div>
 
-                        {/* Add button: show when at least 1 row is selected */}
+                        {/* Add button: show when at least 1 row is selected AND showAddButton is true */}
                         {showAddButton &&
                             onAddClick &&
                             selectedRows.length >= 1 && (
@@ -180,10 +213,11 @@ export function DataTable<T>({
                                 </Button>
                             )}
 
-                        {/* Delete button: show when at least 2 rows are selected */}
+                        {/* Delete button: show when at least 2 rows selected AND showDeleteButton is true AND isAdmin is true */}
                         {showDeleteButton &&
                             onDeleteClick &&
-                            selectedRows.length >= 2 && (
+                            selectedRows.length >= 2 &&
+                            isAdmin && (
                                 <Button
                                     onClick={() => onDeleteClick(selectedRows)}
                                     className="mr-2 !bg-red-700 !text-white hover:!bg-red-800"
@@ -255,7 +289,6 @@ export function DataTable<T>({
                                             const colId = cell.column.id;
                                             const isClickable =
                                                 !!getRowUrl &&
-                                                // Url excluding checkbox and menu column
                                                 colId !== "select" &&
                                                 colId !== "actions";
 

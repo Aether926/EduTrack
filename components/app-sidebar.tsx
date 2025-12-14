@@ -11,6 +11,9 @@ import {
     Home,
     Inbox,
     ChevronLeft,
+    History,
+    Clock,
+    ClipboardList,
 } from "lucide-react";
 
 import {
@@ -98,35 +101,39 @@ export default function AppSidebar() {
         { title: "Home", url: "dashboard", icon: Home },
         { title: "All Profiles", url: "teacher-profiles", icon: Inbox },
         {
-            title: "Training / Seminar Records",
+            title: "Professional Development",
             url: "professional-dev",
-            icon: Calendar,
+            icon: History,
+        },
+        {
+            title: "Training / Seminar Records",
+            url: "trainings-and-seminars",
+            icon: ClipboardList,
         },
     ];
 
     const admin = [
         { title: "Account Approval", path: "account-approval" },
-        { title: "Add Trainings / Seminars", path: "add-training-seminar" },
+        {
+            title: "Manage Trainings / Seminars",
+            path: "manage-training-seminar",
+        },
+        {
+            title: "Manage Positions / Designations",
+            path: "manage-positions-designations",
+        },
     ];
 
-    const adminData = [
-        {
-            title: "Positions / Designations",
-            children: [
-                { title: "Add", path: "test1" },
-                { title: "Edit", path: "test2" },
-                { title: "Delete", path: "test3" },
-            ],
-        },
-        {
-            title: "Religion",
-            children: [
-                { title: "Add", path: "test1" },
-                { title: "Edit", path: "test2" },
-                { title: "Delete", path: "test3" },
-            ],
-        },
-    ];
+    // const adminData = [
+    //     {
+    //         title: "Positions / Designations",
+    //         children: [
+    //             { title: "Add", path: "test1" },
+    //             { title: "Edit", path: "test2" },
+    //             { title: "Delete", path: "test3" },
+    //         ],
+    //     },
+    // ];
 
     const footer = [
         {
@@ -191,7 +198,7 @@ export default function AppSidebar() {
                                             </SidebarMenuItem>
                                         ))}
 
-                                        {adminData.map((item, index) => (
+                                        {/* {adminData.map((item, index) => (
                                             <SidebarMenuItem key={index}>
                                                 <div className="flex items-center justify-between w-full">
                                                     <SidebarMenuButton className="flex-1 justify-start">
@@ -232,7 +239,7 @@ export default function AppSidebar() {
                                                     </DropdownMenu>
                                                 </div>
                                             </SidebarMenuItem>
-                                        ))}
+                                        ))} */}
                                     </SidebarGroup>
                                 )}
                             </Collapsible>

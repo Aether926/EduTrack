@@ -12,10 +12,6 @@ export default function AccessRequest() {
         "pending"
     );
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
     const fetchUsers = async () => {
         setLoading(true);
 
@@ -95,6 +91,10 @@ export default function AccessRequest() {
 
         setLoading(false);
     };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
     const handleApprove = async (id: string) => {
         const { error } = await supabase
