@@ -194,6 +194,15 @@ export default function TeacherProfile() {
     const [isSaving, setIsSaving] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
     const [user, setUser] = useState<SupabaseUser | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const handleRemoveActivity = (item: ActivityItem) => {
+        setActivities((prev) =>
+            prev.filter(
+                (a) => !(a.type === item.type && a.title === item.title)
+            )
+        );
+    };
 
     // Initial State structure
     const initialProfileState = {
@@ -202,7 +211,7 @@ export default function TeacherProfile() {
         lastName: "",
         username: "",
         age: "",
-        gender: "Male",
+        gender: "Other",
         dateOfBirth: undefined as Date | undefined,
         civilStatus: "Single",
         nationality: "Filipino",
@@ -748,144 +757,230 @@ export default function TeacherProfile() {
                         <div className="border-t border-gray-200 dark:border-gray-800"></div>
                     </CardContent>
 
-                    <CardHeader className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-semibold">
-                            Activities
-                        </CardTitle>
+                    <div>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                            <CardTitle className="text-lg font-semibold">
+                                Activities
+                            </CardTitle>
 
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button size="sm" variant="outline">
-                                    Add
-                                </Button>
-                            </DialogTrigger>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button size="sm" variant="outline">
+                                        Add Activity
+                                    </Button>
+                                </DialogTrigger>
 
-                            <DialogContent className="w-full p-6">
-                                <DialogHeader>
-                                    <DialogTitle>
-                                        Select activity to add
-                                    </DialogTitle>
-                                </DialogHeader>
+                                {/* FIXED: Wider dialog with horizontal scroll */}
+                                <DialogContent className="max-w-6xl max-h-[85vh] p-0 gap-0">
+                                    <DialogHeader className="px-6 py-4 border-b">
+                                        <DialogTitle className="text-xl">
+                                            Select activity to add
+                                        </DialogTitle>
+                                    </DialogHeader>
 
-                                <div className="mt-4 rounded-md border">
-                                    <Table>
-                                        <TableHeader>
+                                    {/* Scrollable content area */}
+                                    <div className="overflow-auto px-6 py-4">
+                                        <div className="rounded-md border min-w-[900px]">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-[100px]">
+                                                            Type
+                                                        </TableHead>
+                                                        <TableHead className="w-[180px]">
+                                                            Title
+                                                        </TableHead>
+                                                        <TableHead className="text-center w-[100px]">
+                                                            Level
+                                                        </TableHead>
+                                                        <TableHead className="text-center w-[120px]">
+                                                            Start Date
+                                                        </TableHead>
+                                                        <TableHead className="text-center w-[120px]">
+                                                            End Date
+                                                        </TableHead>
+                                                        <TableHead className="text-center w-[100px]">
+                                                            Total Hours
+                                                        </TableHead>
+                                                        <TableHead className="w-[180px]">
+                                                            Sponsoring Agency
+                                                        </TableHead>
+                                                        <TableHead className="text-right w-[100px]">
+                                                            Actions
+                                                        </TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+
+                                                <TableBody>
+                                                    {availableActivities.length ===
+                                                    0 ? (
+                                                        <TableRow>
+                                                            <TableCell
+                                                                colSpan={8}
+                                                                className="py-8 text-center text-sm text-muted-foreground"
+                                                            >
+                                                                No activities
+                                                                available to
+                                                                add.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : (
+                                                        availableActivities.map(
+                                                            (item, index) => {
+                                                                const isAdded =
+                                                                    activities.some(
+                                                                        (a) =>
+                                                                            a.type ===
+                                                                                item.type &&
+                                                                            a.title ===
+                                                                                item.title
+                                                                    );
+
+                                                                return (
+                                                                    <TableRow
+                                                                        key={`${item.type}-${item.title}-${index}`}
+                                                                    >
+                                                                        <TableCell className="font-medium">
+                                                                            {
+                                                                                item.type
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {
+                                                                                item.title
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell className="text-center">
+                                                                            {
+                                                                                item.level
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell className="text-center">
+                                                                            {
+                                                                                item.startDate
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell className="text-center">
+                                                                            {
+                                                                                item.endDate
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell className="text-center">
+                                                                            {
+                                                                                item.totalHours
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {
+                                                                                item.sponsor
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant={
+                                                                                    isAdded
+                                                                                        ? "secondary"
+                                                                                        : "default"
+                                                                                }
+                                                                                onClick={() =>
+                                                                                    handleAddActivity(
+                                                                                        item
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    isAdded
+                                                                                }
+                                                                                className="min-w-[70px]"
+                                                                            >
+                                                                                {isAdded
+                                                                                    ? "Added"
+                                                                                    : "Add"}
+                                                                            </Button>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                );
+                                                            }
+                                                        )
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer with close button */}
+                                    <div className="px-6 py-4 border-t bg-muted/50 flex justify-end">
+                                        <Button
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Done
+                                        </Button>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </CardHeader>
+
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="text-left text-xs uppercase tracking-wide">
+                                                Type
+                                            </TableHead>
+                                            <TableHead className="text-left text-xs uppercase tracking-wide">
+                                                Title
+                                            </TableHead>
+                                            <TableHead className="text-center text-xs uppercase tracking-wide w-[100px]">
+                                                Actions
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {activities.length === 0 ? (
                                             <TableRow>
-                                                <TableHead>Type</TableHead>
-                                                <TableHead>Title</TableHead>
-                                                <TableHead className="text-center">
-                                                    Level
-                                                </TableHead>
-                                                <TableHead className="text-center">
-                                                    Start Date
-                                                </TableHead>
-                                                <TableHead className="text-center">
-                                                    End Date
-                                                </TableHead>
-                                                <TableHead className="text-center">
-                                                    Total Hours
-                                                </TableHead>
-                                                <TableHead>
-                                                    Sponsoring Agency
-                                                </TableHead>
-
-                                                {/* UPDATED ACTIONS COLUMN */}
-                                                <TableHead className="text-right w-[90px]">
-                                                    Actions
-                                                </TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-
-                                        <TableBody>
-                                            {availableActivities.map((item) => (
-                                                <TableRow
-                                                    key={`${item.type}-${item.title}`}
+                                                <TableCell
+                                                    colSpan={3}
+                                                    className="py-8 text-center text-sm text-muted-foreground"
                                                 >
-                                                    <TableCell>
+                                                    No activities added yet.
+                                                    Click "Add Activity" to get
+                                                    started.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            activities.map((item, index) => (
+                                                <TableRow
+                                                    key={`summary-${item.type}-${item.title}-${index}`}
+                                                >
+                                                    <TableCell className="py-3 text-sm font-medium">
                                                         {item.type}
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="py-3 text-sm">
                                                         {item.title}
                                                     </TableCell>
-                                                    <TableCell className="text-center">
-                                                        {item.level}
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        {item.startDate}
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        {item.endDate}
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        {item.totalHours}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {item.sponsor}
-                                                    </TableCell>
-
-                                                    <TableCell className="text-right">
+                                                    <TableCell className="py-3 text-center">
                                                         <Button
                                                             size="sm"
-                                                            variant="outline"
+                                                            variant="ghost"
                                                             onClick={() =>
-                                                                handleAddActivity(
+                                                                handleRemoveActivity(
                                                                     item
                                                                 )
                                                             }
+                                                            className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                         >
-                                                            Add
+                                                            Remove
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                    </CardHeader>
-
-                    <CardContent>
-                        <div className="rounded-md border border-gray-800 bg-gray-900/60 dark:bg-gray-900/70">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="text-left text-xs uppercase tracking-wide">
-                                            Type
-                                        </TableHead>
-                                        <TableHead className="text-left text-xs uppercase tracking-wide">
-                                            Name
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {activities.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={2}
-                                                className="py-4 text-center text-sm text-muted-foreground"
-                                            >
-                                                No activities added yet.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        activities.map((item) => (
-                                            <TableRow
-                                                key={`summary-${item.type}-${item.title}`}
-                                            >
-                                                <TableCell className="py-2 text-sm">
-                                                    {item.type}
-                                                </TableCell>
-                                                <TableCell className="py-2 text-sm">
-                                                    {item.title}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </div>
                 </Card>
 
                 {/* ---------- Right Block ---------- */}

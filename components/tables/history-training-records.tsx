@@ -59,16 +59,6 @@ const trainingHistoryData: TrainingSeminarHistory[] = [
         sponsor: "DepEd",
         url: "test",
     },
-    {
-        type: "Seminar",
-        title: "Sample Titling",
-        level: "District",
-        startDate: "2025-12-3",
-        endDate: "2025-12-5",
-        totalHours: "24",
-        sponsor: "DepEd",
-        url: "test",
-    },
 ];
 
 // Checkbox column
