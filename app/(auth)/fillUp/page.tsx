@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function FillUpPage() {
     const [user, setUser] = useState<any>(null);
@@ -48,16 +49,28 @@ export default function FillUpPage() {
     }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSubmitting(true);
+    e.preventDefault();
+    setSubmitting(true);
 
-        let success = false;
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.contactNumber.trim()) {
+        toast.error("Please fill in all required fields.");
+        setSubmitting(false);
+        return;
+    }
 
-        try {
-            
+    try {
+     
+        const { data: existingUser } = await supabase
+            .from("User")
+            .select("id, status")
+            .eq("id", user.id)
+            .single();
+
+       
+        if (!existingUser) {
             const { error: userError } = await supabase
                 .from("User")
-                .upsert({
+                .insert({
                     id: user.id,
                     email: user.email,
                     role: "TEACHER",
@@ -65,42 +78,42 @@ export default function FillUpPage() {
                 });
 
             if (userError) {
-                alert(`Error creating user: ${userError.message}`);
-                
-                return;
-            }
-
-        
-            const { error: profileError } = await supabase
-                .from("Profile")
-                .upsert({
-                    id: user.id, 
-                    email: user.email,
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
-                    middleInitial: formData.middleInitial,
-                    contactNumber: formData.contactNumber,
-                }, { onConflict: "id" }
-            );
-
-            if (profileError) {
-                alert(`Error creating profile: ${profileError.message}`);
+                toast.error(`Error creating user: ${userError.message}`);
                 setSubmitting(false);
                 return;
-            }
-
-            success = true;
-            router.push("/pending-approval");
-        } catch (error) {
-            console.error("Submission error:", error);
-            alert("An error occurred. Please try again.");
-            setSubmitting(false);
-        } finally {
-            if (!success) {
-                setSubmitting(false);
             }
         }
-    };
+
+        
+        const { error: profileError } = await supabase
+            .from("Profile")
+            .upsert({
+                id: user.id,
+                email: user.email,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                middleInitial: formData.middleInitial,
+                contactNumber: formData.contactNumber,
+            }, { onConflict: "id" });
+
+        if (profileError) {
+            toast.error(`Error saving profile: ${profileError.message}`);
+            setSubmitting(false);
+            return;
+        }
+
+        
+        if (existingUser?.status === "APPROVED") {
+            router.push("/dashboard");
+        } else {
+            router.push("/pending-approval");
+        }
+    } catch (error) {
+        console.error("Submission error:", error);
+        toast.error("An unexpected error occurred. Please try again.");
+        setSubmitting(false);
+    }
+};
 
     if (loading) {
         return (

@@ -39,6 +39,7 @@ import { ChevronDownIcon } from "lucide-react";
 import { Combobox } from "@/components/combobox";
 import { supabase } from "@/lib/supabaseClient"; 
 import { User as SupabaseUser } from '@supabase/supabase-js'; 
+import { toast } from "sonner";
 
 interface InputFieldProps {
     label: string;
@@ -233,19 +234,18 @@ export default function TeacherProfile() {
                     dateOfLatestAppointment: profileData.dateOfLatestAppointment ? new Date(profileData.dateOfLatestAppointment) : undefined,
                 };
             } else {
-                // Profile does not exist: Use initial state
-                // Use a blank profile but include the user ID and Email
+                
                 fetchedProfileData = { ...initialProfileState };
             }
 
-            // 2. CRITICAL: Inject the live session data (ID and Email)
+           
             const combinedData = {
                 ...fetchedProfileData,
                 id: user.id,
-                email: user.email || fetchedProfileData.email || "", // <--- INJECTS THE AUTH EMAIL
+                email: user.email || fetchedProfileData.email || "",
             };
             
-            // 3. Set the state
+          
             setProfileData(combinedData);
             setTempProfileData(combinedData);
         }
@@ -254,7 +254,7 @@ export default function TeacherProfile() {
     fetchUserAndProfile();
 }, []);
 
-    // --- HANDLERS ---
+  
     const handleInputChange = (field: string, value: string) => {
         setTempProfileData({ ...tempProfileData, [field]: value });
     };
@@ -270,25 +270,33 @@ export default function TeacherProfile() {
         }
     };
 
-    // --- ASYNC SAVE FUNCTION ---
+   
     const handleSave = async () => {
+
+        if (!tempProfileData.firstName.trim() || !tempProfileData.lastName.trim() || !tempProfileData.middleInitial.trim()|| !tempProfileData.contactNumber.trim()) {
+        // replace with appropriate error handling message
+        toast.info("Please fill in all required fields.");
+        setIsSaving(false);
+
+        return;
+    }
+
         if (isSaving) return;
         
         setIsSaving(true);
-        console.log("Attempting to save profile data to Supabase...");
 
         try {
-            // Get fresh user session
+           
             const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
 
             if (!currentUser || authError) {
                 // replace with appropriate error handling
-                alert("You must be logged in to save your profile. Please log in again.");
+                toast.warning("You must be logged in to save your profile. Please log in again.");
                 setIsSaving(false);
                 return;
             }
 
-            // Extract dates and prepare data
+            
             const { dateOfBirth, dateOfOriginalAppointment, dateOfLatestAppointment, ...restOfData } = tempProfileData;
         
             const dataToUpdate = {
@@ -296,7 +304,7 @@ export default function TeacherProfile() {
                 dateOfBirth: dateOfBirth ? dateOfBirth.toISOString().split('T')[0] : null,
                 dateOfOriginalAppointment: dateOfOriginalAppointment ? dateOfOriginalAppointment.toISOString().split('T')[0] : null,
                 dateOfLatestAppointment: dateOfLatestAppointment ? dateOfLatestAppointment.toISOString().split('T')[0] : null,
-                id: currentUser.id // Link to authenticated user
+                id: currentUser.id 
             };
             
             console.log("Data being saved:", dataToUpdate);
@@ -307,22 +315,19 @@ export default function TeacherProfile() {
                 .select(); 
 
             if (error) {
-                // add error hadler message here
-                 // temporary console error
-                console.error("Supabase Save Error:", error);
-                alert(`Failed to save profile: ${error.message}`);
+               
+                
+                toast.error(`Failed to save profile`);
             } else {
-                console.log("Profile saved successfully:", data);
+                
                 setProfileData(tempProfileData);
                 setIsEditing(false); 
-                // add proper success message here
-                alert('Changes saved successfully!');
+               
+                toast.success('Changes saved successfully!');
             }
         } catch (e) {
-            // add error hadler message here
-            // temporary console error
-            console.error("Unexpected Save Error:", e);
-            alert("An unexpected error occurred while saving.");
+            toast.error("Failed to save profile. Please try again.");
+     
         } finally {
             setIsSaving(false);
         }
@@ -333,7 +338,7 @@ export default function TeacherProfile() {
         setTempProfileData(profileData);
     };
     
-    // --- UTILITY FUNCTIONS ---
+    
     const calculateServiceYears = (dateValue: Date | undefined) => {
         if (!dateValue) return "—";
 

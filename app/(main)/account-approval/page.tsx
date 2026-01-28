@@ -6,6 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, Mail, Phone, CheckCircle, XCircle, Archive } from "lucide-react";
+import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 interface PendingUser {
     id: string;
@@ -113,32 +126,27 @@ export default function AccountApproval() {
             .eq("id", id);
 
         if (error) {
-            alert(`Error approving user: ${error.message}`);
+            toast.error(`Error approving user: ${error.message}`);
             return;
         }
 
-        alert("User approved successfully! They can now login.");
+        toast.success("User approved successfully.");
         fetchUsers();
     };
 
     const handleReject = async (id: string) => {
-        const confirmed = confirm(
-            "Are you sure you want to reject this user? They will be moved to the rejected list."
-        );
-
-        if (!confirmed) return;
-
+        
         const { error } = await supabase
             .from("User")
             .update({ status: "REJECTED" })
             .eq("id", id);
 
         if (error) {
-            alert(`Error rejecting user: ${error.message}`);
+            toast.error(`Error rejecting user: ${error.message}`);
             return;
         }
 
-        alert("User rejected and moved to archive.");
+        toast.success("User rejected successfully.");
         fetchUsers();
     };
 
@@ -156,7 +164,7 @@ export default function AccountApproval() {
             .eq("id", id);
 
         if (profileError) {
-            alert(`Error deleting profile: ${profileError.message}`);
+            toast.error(`Error deleting profile: ${profileError.message}`);
             return;
         }
 
@@ -166,11 +174,11 @@ export default function AccountApproval() {
             .eq("id", id);
 
         if (userError) {
-            alert(`Error deleting user: ${userError.message}`);
+            toast.error(`Error deleting user: ${userError.message}`);
             return;
         }
 
-        alert("User permanently deleted from database.");
+        toast.success("User permanently deleted."); 
         fetchUsers();
     };
 
@@ -263,13 +271,31 @@ export default function AccountApproval() {
                                                     <CheckCircle size={16} className="mr-2" />
                                                     Approve
                                                 </Button>
-                                                <Button
-                                                    onClick={() => handleReject(user.id)}
-                                                    variant="destructive"
-                                                >
-                                                    <XCircle size={16} className="mr-2" />
-                                                    Reject
-                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive">
+                                                            <XCircle size={16} className="mr-2" />
+                                                            Reject
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Reject this user?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This user will be moved to the rejected list. You can still approve them later from the archive.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction 
+                                                                onClick={() => handleReject(user.id)}
+                                                                className="bg-red-200 hover:bg-red-200"
+                                                            >
+                                                                Reject User
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -328,14 +354,34 @@ export default function AccountApproval() {
                                                     <CheckCircle size={16} className="mr-2" />
                                                     Approve Anyway
                                                 </Button>
-                                                <Button
-                                                    onClick={() => handlePermanentDelete(user.id)}
-                                                    variant="destructive"
-                                                    className="bg-red-700 hover:bg-red-800"
-                                                >
-                                                    <XCircle size={16} className="mr-2" />
-                                                    Delete Permanently
-                                                </Button>
+                                                 <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button 
+                                                            variant="destructive" 
+                                                            className="bg-red-700 hover:bg-red-800"
+                                                        >
+                                                            <XCircle size={16} className="mr-2" />
+                                                            Delete Permanently
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>⚠️ Permanently delete user?</AlertDialogTitle>
+                                                            <AlertDialogDescription className="text-red-600 font-semibold">
+                                                                This action CANNOT be undone. This will permanently delete the user and their profile from the database.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction 
+                                                                onClick={() => handlePermanentDelete(user.id)}
+                                                                className="bg-red-700 hover:bg-red-800"
+                                                            >
+                                                                Yes, Delete Permanently
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         </CardContent>
                                     </Card>
