@@ -53,9 +53,6 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
     if (adminProfile?.role !== 'ADMIN') {
       return { success: false, error: 'Unauthorized. Only admins can create trainings.' };
     }
-    console.log('🔍 Service role key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    console.log('🔍 Service role key length:', process.env.SUPABASE_SERVICE_ROLE_KEY?.length);
-
     // Use ADMIN CLIENT to bypass RLS
     const adminSupabase = await createAdminClient();
 

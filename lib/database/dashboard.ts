@@ -1,25 +1,34 @@
-import { createClient } from '@/lib/supabase/server';
+// lib/database/dashboard.ts
+import { createClient } from "@/lib/supabase/server";
 
-export async function getDashboardStats() {
+export async function getDashboardStats(userId: string) {
   const supabase = await createClient();
-  
+
   try {
-    // Get total profiles
+    // Total Profiles (global)
     const { count: profileCount } = await supabase
-      .from('Profile')
-      .select('*', { count: 'exact', head: true });
+      .from("Profile")
+      .select("*", { count: "exact", head: true });
 
-    // Get total trainings
+    // Trainings assigned to THIS user (Attendance -> ProfessionalDevelopment)
     const { count: trainingCount } = await supabase
-      .from('ProfessionalDevelopment')
-      .select('*', { count: 'exact', head: true })
-      .eq('type', 'TRAINING');
+      .from("Attendance")
+      .select("id, ProfessionalDevelopment:training_id!inner(type)", {
+        count: "exact",
+        head: true,
+      })
+      .eq("teacher_id", userId)
+      .eq("ProfessionalDevelopment.type", "TRAINING");
 
-    // Get total seminars
+    // Seminars assigned to THIS user
     const { count: seminarCount } = await supabase
-      .from('ProfessionalDevelopment')
-      .select('*', { count: 'exact', head: true })
-      .eq('type', 'SEMINAR');
+      .from("Attendance")
+      .select("id, ProfessionalDevelopment:training_id!inner(type)", {
+        count: "exact",
+        head: true,
+      })
+      .eq("teacher_id", userId)
+      .eq("ProfessionalDevelopment.type", "SEMINAR");
 
     return {
       totalProfiles: profileCount || 0,
@@ -27,11 +36,11 @@ export async function getDashboardStats() {
       totalSeminars: seminarCount || 0,
     };
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
+    console.error("Error fetching dashboard stats:", error);
     return {
       totalProfiles: 0,
       totalTrainings: 0,
       totalSeminars: 0,
     };
-    }
+  }
 }

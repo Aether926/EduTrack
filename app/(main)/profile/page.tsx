@@ -7,7 +7,7 @@ import {
     formatName,
     cleanMiddleInitial,
 } from "@/app/util/helper";
-import { userTrainingSeminar as activityItems } from "@/components/trainings-seminars";
+
 
 import React, { useState } from "react";
 import { useTheme } from "next-themes";

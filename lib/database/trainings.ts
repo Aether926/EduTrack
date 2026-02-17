@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 
 export type MyTrainingSeminarRow = {
-  id: string; // attendance id
-  trainingId: string; // professionalDevelopment id
+  id: string;
+  trainingId: string; 
   type: string;
   title: string;
   level: string;
@@ -31,6 +31,7 @@ type PDRow = {
   sponsoring_agency: string | null;
 };
 
+
 export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
   const supabase = await createClient();
   
@@ -40,7 +41,6 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
 
   if (authError || !user) return [];
 
-  // 1) get attendance rows for this teacher
   const { data: attendance, error: aErr } = await supabase
     .from("Attendance")
     .select("id, training_id, status, created_at")
@@ -57,7 +57,6 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
   const attendanceRows = attendance as AttendanceRow[];
   const trainingIds = Array.from(new Set(attendanceRows.map((r) => r.training_id)));
 
-  // 2) fetch the trainings
   const { data: trainings, error: pErr } = await supabase
     .from("ProfessionalDevelopment")
     .select("id, type, title, level, start_date, end_date, total_hours, sponsoring_agency")
@@ -65,7 +64,7 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
 
   if (pErr) {
     console.error("getMyTrainingSeminars ProfessionalDevelopment error:", pErr.message);
-    // even if PD fails, still return attendance rows with placeholders
+
     return attendanceRows.map((r) => ({
       id: String(r.id),
       trainingId: String(r.training_id),
@@ -83,7 +82,7 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
   const pdMap = new Map<string, PDRow>();
   (trainings as PDRow[] | null)?.forEach((t) => pdMap.set(String(t.id), t));
 
-  // 3) merge
+
   return attendanceRows.map((r) => {
     const pd = pdMap.get(String(r.training_id));
 

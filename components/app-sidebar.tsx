@@ -107,32 +107,16 @@ export default function AppSidebar() {
     const admin = [
         { title: "Account Approval", path: "account-approval" },
         { title: "Trainings / Seminars", path: "add-training-seminar" },
+        { title: "Attendance", path: "proof-review" },
     ];
 
-    const adminData = [
-        {
-            title: "Positions / Designations",
-            children: [
-                { title: "Add", path: "test1" },
-                { title: "Edit", path: "test2" },
-                { title: "Delete", path: "test3" },
-            ],
-        },
-        {
-            title: "Religion",
-            children: [
-                { title: "Add", path: "test1" },
-                { title: "Edit", path: "test2" },
-                { title: "Delete", path: "test3" },
-            ],
-        },
-    ];
+
 
     const footer = [
         {
             children: [
-                { title: "Account", path: "profile" },
-                { title: "Sign Out", path: "logIn" },
+                { title: "Account", path: "/profile" },
+                { title: "Sign Out", path: "/logIn" },
             ],
         },
     ];
@@ -190,56 +174,12 @@ export default function AppSidebar() {
                                                 </SidebarMenuButton>
                                             </SidebarMenuItem>
                                         ))}
-
-                                        {adminData.map((item, index) => (
-                                            <SidebarMenuItem key={index}>
-                                                <div className="flex items-center justify-between w-full">
-                                                    <SidebarMenuButton className="flex-1 justify-start">
-                                                        {item.title}
-                                                    </SidebarMenuButton>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger
-                                                            asChild
-                                                        >
-                                                            <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent">
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                            </button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent
-                                                            side="right"
-                                                            align="start"
-                                                        >
-                                                            {item.children.map(
-                                                                (
-                                                                    child,
-                                                                    childIndex
-                                                                ) => (
-                                                                    <DropdownRedirect
-                                                                        key={
-                                                                            childIndex
-                                                                        }
-                                                                        path={
-                                                                            child.path
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            child.title
-                                                                        }
-                                                                    </DropdownRedirect>
-                                                                )
-                                                            )}
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </SidebarMenuItem>
-                                        ))}
                                     </SidebarGroup>
                                 )}
                             </Collapsible>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-
                 <SidebarFooter>
                     <SidebarMenu>
                         <SidebarFooter>

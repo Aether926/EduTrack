@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "../(main)/globals.css";
+import "@/app/(main)/globals.css";
 import { Toaster } from "sonner";
 import { AlertDialog } from "@radix-ui/react-alert-dialog";
 

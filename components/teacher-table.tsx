@@ -203,18 +203,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                         >
                             View Profile
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => router.push(`/teacher-profiles/${row.original.id}/edit`)}
-                        >
-                            Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            onClick={() => handleSingleDelete(row.original.id)}
-                            className="text-destructive focus:text-destructive"
-                        >
-                            Delete
-                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             ),
