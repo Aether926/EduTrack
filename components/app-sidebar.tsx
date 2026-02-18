@@ -58,7 +58,7 @@ export default function AppSidebar() {
                 setDisplayName(
                     user.user_metadata?.name ||
                         user.email?.split("@")[0] ||
-                        "User"
+                        "User",
                 );
             }
         };
@@ -138,8 +138,8 @@ export default function AppSidebar() {
     const footer = [
         {
             children: [
-                { title: "Account", path: "profile" },
-                { title: "Sign Out", path: "logIn" },
+                { title: "Account", path: "/profile" },
+                { title: "Sign Out", path: "/logIn" },
             ],
         },
     ];
@@ -198,7 +198,7 @@ export default function AppSidebar() {
                                             </SidebarMenuItem>
                                         ))}
 
-                                        {/* {adminData.map((item, index) => (
+                                        {adminData.map((item, index) => (
                                             <SidebarMenuItem key={index}>
                                                 <div className="flex items-center justify-between w-full">
                                                     <SidebarMenuButton className="flex-1 justify-start">
@@ -219,7 +219,7 @@ export default function AppSidebar() {
                                                             {item.children.map(
                                                                 (
                                                                     child,
-                                                                    childIndex
+                                                                    childIndex,
                                                                 ) => (
                                                                     <DropdownRedirect
                                                                         key={
@@ -233,20 +233,19 @@ export default function AppSidebar() {
                                                                             child.title
                                                                         }
                                                                     </DropdownRedirect>
-                                                                )
+                                                                ),
                                                             )}
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
                                             </SidebarMenuItem>
-                                        ))} */}
+                                        ))}
                                     </SidebarGroup>
                                 )}
                             </Collapsible>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-
                 <SidebarFooter>
                     <SidebarMenu>
                         <SidebarFooter>
@@ -324,7 +323,7 @@ export default function AppSidebar() {
                                                             >
                                                                 {child.title}
                                                             </DropdownRedirect>
-                                                        )
+                                                        ),
                                                 )}
                                             </DropdownMenuContent>
                                         ))}

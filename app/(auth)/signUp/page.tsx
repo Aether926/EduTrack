@@ -108,7 +108,7 @@ export default function SignUpPage() {
                             📧 Email Confirmation Sent!
                         </div>
                         <p className="text-gray-700 mb-4">
-                            We've sent a confirmation email to <strong>{email}</strong>
+                            We sent a confirmation email to <strong>{email}</strong>
                         </p>
                         <p className="text-sm text-gray-600">
                             Please check your inbox and click the confirmation link to continue.

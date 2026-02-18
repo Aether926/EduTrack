@@ -59,6 +59,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { toast } from "sonner";
 
 interface InputFieldProps {
     label: string;
@@ -251,7 +252,7 @@ export default function TeacherProfile() {
     const handleAddActivity = (item: ActivityItem) => {
         setActivities((prev) => {
             const exists = prev.some(
-                (a) => a.type === item.type && a.title === item.title
+                (a) => a.type === item.type && a.title === item.title,
             );
             if (exists) return prev;
             return [...prev, item];
@@ -291,7 +292,7 @@ export default function TeacherProfile() {
                         dateOfOriginalAppointment:
                             profileData.dateOfOriginalAppointment
                                 ? new Date(
-                                      profileData.dateOfOriginalAppointment
+                                      profileData.dateOfOriginalAppointment,
                                   )
                                 : undefined,
                         dateOfLatestAppointment:
@@ -346,10 +347,22 @@ export default function TeacherProfile() {
 
     // ---------- Async Save Function ----------
     const handleSave = async () => {
+        if (
+            !tempProfileData.firstName.trim() ||
+            !tempProfileData.lastName.trim() ||
+            !tempProfileData.middleInitial.trim() ||
+            !tempProfileData.contactNumber.trim()
+        ) {
+            // replace with appropriate error handling message
+            toast.info("Please fill in all required fields.");
+            setIsSaving(false);
+
+            return;
+        }
+
         if (isSaving) return;
 
         setIsSaving(true);
-        console.log("Attempting to save profile data to Supabase...");
 
         try {
             // Get fresh user session
@@ -361,7 +374,7 @@ export default function TeacherProfile() {
             if (!currentUser || authError) {
                 // replace with appropriate error handling
                 alert(
-                    "You must be logged in to save your profile. Please log in again."
+                    "You must be logged in to save your profile. Please log in again.",
                 );
                 setIsSaving(false);
                 return;
@@ -402,17 +415,13 @@ export default function TeacherProfile() {
                 console.error("Supabase Save Error:", error);
                 alert(`Failed to save profile: ${error.message}`);
             } else {
-                console.log("Profile saved successfully:", data);
                 setProfileData(tempProfileData);
                 setIsEditing(false);
                 // add proper success message here
                 alert("Changes saved successfully!");
             }
         } catch (e) {
-            // add error hadler message here
-            // temporary console error
-            console.error("Unexpected Save Error:", e);
-            alert("An unexpected error occurred while saving.");
+            toast.error("Failed to save profile. Please try again.");
         } finally {
             setIsSaving(false);
         }
@@ -478,7 +487,7 @@ export default function TeacherProfile() {
             const lastDayOfPrevMonth = new Date(
                 today.getFullYear(),
                 today.getMonth(),
-                0
+                0,
             ).getDate();
             days += lastDayOfPrevMonth;
         }
@@ -528,7 +537,7 @@ export default function TeacherProfile() {
                                         setTempProfileData({
                                             ...tempProfileData,
                                             firstName: formatName(
-                                                tempProfileData.firstName
+                                                tempProfileData.firstName,
                                             ),
                                         });
                                     }
@@ -562,7 +571,7 @@ export default function TeacherProfile() {
                                                 setTempProfileData({
                                                     ...tempProfileData,
                                                     lastName: formatName(
-                                                        tempProfileData.lastName
+                                                        tempProfileData.lastName,
                                                     ),
                                                 });
                                             }
@@ -590,7 +599,7 @@ export default function TeacherProfile() {
                                             onValueChange={(value) =>
                                                 handleInputChange(
                                                     "gender",
-                                                    value
+                                                    value,
                                                 )
                                             }
                                         >
@@ -633,7 +642,7 @@ export default function TeacherProfile() {
                                         onValueChange={(value) =>
                                             handleInputChange(
                                                 "civilStatus",
-                                                value
+                                                value,
                                             )
                                         }
                                     >
@@ -675,7 +684,7 @@ export default function TeacherProfile() {
                                         onChangeValue={(value: string) =>
                                             handleInputChange(
                                                 "nationality",
-                                                value
+                                                value,
                                             )
                                         }
                                     />
@@ -829,7 +838,7 @@ export default function TeacherProfile() {
                                                             variant="outline"
                                                             onClick={() =>
                                                                 handleAddActivity(
-                                                                    item
+                                                                    item,
                                                                 )
                                                             }
                                                         >
@@ -925,7 +934,7 @@ export default function TeacherProfile() {
                                             onValueChange={(value) =>
                                                 handleInputChange(
                                                     "position",
-                                                    value
+                                                    value,
                                                 )
                                             }
                                         >
@@ -1112,7 +1121,7 @@ export default function TeacherProfile() {
                                     <div>
                                         <p className="text-3xl font-bold">
                                             {calculateServiceYears(
-                                                tempProfileData.dateOfOriginalAppointment
+                                                tempProfileData.dateOfOriginalAppointment,
                                             )}
                                         </p>
                                         <p className="text-xs text-blue-200 mt-2">
@@ -1127,7 +1136,7 @@ export default function TeacherProfile() {
                                     <div>
                                         <p className="text-3xl font-bold">
                                             {calculateServiceYears(
-                                                tempProfileData.dateOfLatestAppointment
+                                                tempProfileData.dateOfLatestAppointment,
                                             )}
                                         </p>
                                         <p className="text-xs text-blue-200 mt-2">

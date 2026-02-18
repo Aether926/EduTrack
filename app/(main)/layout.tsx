@@ -10,6 +10,7 @@ import AppSidebar from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import SupabaseAuthListener from "@/components/supabase-auth-listener"; 
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({
                         </SidebarInset>
                     </SidebarProvider>
                 </ThemeProvider>
+                <Toaster position="bottom-right" richColors />
             </body>
         </html>
     );

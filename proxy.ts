@@ -29,13 +29,16 @@ export async function proxy(req: NextRequest) {
     const {
         data: { user },
     } = await supabase.auth.getUser();
+
     const { pathname } = req.nextUrl;
+         if (pathname.startsWith("/qr/")) {
+            return response;
+        }
 
-    const protectedRoutes = ["/dashboard", "/profile"];
-    const adminRoutes = ["/account-approval"];
-    const authRequiredRoutes = ["/fillUp", "/pending-approval"];
+    const protectedRoutes = ["/dashboard", "/profile", "/teacher-profiles"];
+    const adminRoutes = ["/account-approval", "/add-training-seminar", "/proof-review"];
+    const authRequiredRoutes = ["/fillUp", "/status"];
 
-    // Redirect to signin if not authenticated and trying to access protected routes
     if (
         [...protectedRoutes, ...adminRoutes, ...authRequiredRoutes].some(
             (path) => pathname.startsWith(path)
@@ -52,37 +55,36 @@ export async function proxy(req: NextRequest) {
             .eq("id", user.id)
             .single();
 
-        // Admin route protection
         if (adminRoutes.some((path) => pathname.startsWith(path))) {
             if (profile?.role !== "ADMIN") {
-                return NextResponse.redirect(new URL("/unauthorized", req.url));
+                return NextResponse.redirect(new URL("/dashboard", req.url));
             }
         }
 
-        // Check if user needs to complete form
+
         if (!profile && !pathname.startsWith("/fillUp")) {
             return NextResponse.redirect(new URL("/fillUp", req.url));
         }
 
-        console.log(profile?.status);
+    
+        if (profile && profile.status) {
+           
+            if (
+                profile.status !== "APPROVED" &&
+                !pathname.startsWith("/status/")  
+            ) {
+                return NextResponse.redirect(
+                    new URL(`/status/${profile.status}`, req.url)
+                );
+            }
 
-        // Check if user is pending approval
-        if (
-            profile?.status != "APPROVED" &&
-            !pathname.startsWith(`/status/${profile?.status}`)
-        ) {
-            return NextResponse.redirect(
-                new URL("/status/" + profile?.status, req.url)
-            );
-        }
-
-        // Approved users trying to access fillup/pending should go to dashboard
-        if (
-            profile?.status === "APPROVED" &&
-            !pathname.startsWith("/dashboard") && // Add this check
-            (pathname.startsWith("/fillUp") || pathname.startsWith("/status/"))
-        ) {
-            return NextResponse.redirect(new URL("/dashboard", req.url));
+            // Approved users trying to access fillup/pending should go to dashboard
+            if (
+                profile.status === "APPROVED" &&
+                (pathname.startsWith("/fillUp") || pathname.startsWith("/status/"))
+            ) {
+                return NextResponse.redirect(new URL("/dashboard", req.url));
+            }
         }
     }
 
