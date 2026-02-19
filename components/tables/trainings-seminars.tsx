@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "@/components/tables/data-table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -40,32 +40,36 @@ export default function TrainingsSeminars({
         null,
     );
 
-    const columns: ColumnDef<TrainingSeminarRow>[] = useMemo(
+    const selectColumn: ColumnDef<TrainingSeminarRow> = useMemo(
+        () => ({
+            id: "select",
+            header: ({ table }) => (
+                <Checkbox
+                    checked={
+                        table.getIsAllRowsSelected() ||
+                        (table.getIsSomeRowsSelected() && "indeterminate")
+                    }
+                    onCheckedChange={(value) =>
+                        table.toggleAllRowsSelected(!!value)
+                    }
+                    aria-label="Select all"
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        }),
+        [],
+    );
+
+    const dataColumns: ColumnDef<TrainingSeminarRow>[] = useMemo(
         () => [
-            {
-                id: "select",
-                header: ({ table }) => (
-                    <Checkbox
-                        checked={
-                            table.getIsAllRowsSelected() ||
-                            (table.getIsSomeRowsSelected() && "indeterminate")
-                        }
-                        onCheckedChange={(value) =>
-                            table.toggleAllRowsSelected(!!value)
-                        }
-                        aria-label="Select all"
-                    />
-                ),
-                cell: ({ row }) => (
-                    <Checkbox
-                        checked={row.getIsSelected()}
-                        onCheckedChange={(value) => row.toggleSelected(!!value)}
-                        aria-label="Select row"
-                    />
-                ),
-                enableSorting: false,
-                enableHiding: false,
-            },
             {
                 accessorKey: "type",
                 header: ({ column }) => (
@@ -187,57 +191,61 @@ export default function TrainingsSeminars({
                     </div>
                 ),
             },
-            {
-                id: "actions",
-                enableHiding: false,
-                cell: ({ row }) => {
-                    const canUpload =
-                        row.original.status === "ENROLLED" ||
-                        row.original.status === "REJECTED";
-
-                    return (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onSelect={(e) => {
-                                        e.preventDefault();
-                                        setSelectedTrainingId(
-                                            row.original.trainingId,
-                                        );
-                                        setDetailsOpen(true);
-                                    }}
-                                >
-                                    View details
-                                </DropdownMenuItem>
-
-                                <DropdownMenuSeparator />
-
-                                {canUpload ? (
-                                    <DropdownMenuItem asChild>
-                                        <a
-                                            href={`/professional-dev/${row.original.id}/upload-proof`}
-                                        >
-                                            Upload proof
-                                        </a>
-                                    </DropdownMenuItem>
-                                ) : (
-                                    <DropdownMenuItem disabled>
-                                        Upload proof
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    );
-                },
-            },
         ],
+        [],
+    );
+
+    const actionsColumn: ColumnDef<TrainingSeminarRow> = useMemo(
+        () => ({
+            id: "actions",
+            enableHiding: false,
+            cell: ({ row }) => {
+                const canUpload =
+                    row.original.status === "ENROLLED" ||
+                    row.original.status === "REJECTED";
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    setSelectedTrainingId(
+                                        row.original.trainingId,
+                                    );
+                                    setDetailsOpen(true);
+                                }}
+                            >
+                                View details
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            {canUpload ? (
+                                <DropdownMenuItem asChild>
+                                    <a
+                                        href={`/professional-dev/${row.original.id}/upload-proof`}
+                                    >
+                                        Upload proof
+                                    </a>
+                                </DropdownMenuItem>
+                            ) : (
+                                <DropdownMenuItem disabled>
+                                    Upload proof
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
+        }),
         [],
     );
 
@@ -245,7 +253,9 @@ export default function TrainingsSeminars({
         <>
             <DataTable
                 data={data}
-                columns={columns}
+                selectColumn={selectColumn}
+                dataColumns={dataColumns}
+                actionsColumn={actionsColumn}
                 filterColumn="title"
                 filterPlaceholder="Search trainings..."
                 pageSize={10}

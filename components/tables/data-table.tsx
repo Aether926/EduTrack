@@ -37,10 +37,9 @@ import {
 
 interface DataTableProps<T> {
     data: T[];
-    // New structure: columns separated by type
-    selectColumn?: ColumnDef<T>; // Optional checkbox column
-    dataColumns: ColumnDef<T>[]; // Main data columns
-    actionsColumn?: ColumnDef<T>; // Optional actions menu column
+    selectColumn?: ColumnDef<T>;
+    dataColumns: ColumnDef<T>[];
+    actionsColumn?: ColumnDef<T>;
 
     filterColumn: string;
     filterPlaceholder?: string;
@@ -51,10 +50,9 @@ interface DataTableProps<T> {
     showDeleteButton?: boolean;
     getRowUrl?: (row: T) => string;
 
-    // New props for easier control
     enableSelection?: boolean;
     enableActions?: boolean;
-    isAdmin?: boolean; // New prop for admin-only features
+    isAdmin?: boolean;
 }
 
 export function DataTable<T>({
@@ -72,7 +70,7 @@ export function DataTable<T>({
     getRowUrl,
     enableSelection = true,
     enableActions = true,
-    isAdmin = false, // Default to non-admin
+    isAdmin = false,
 }: DataTableProps<T>) {
     const router = useRouter();
     const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -82,12 +80,10 @@ export function DataTable<T>({
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
-    const [currentPageSize, setCurrentPageSize] = React.useState(() => {
-        if (typeof window === "undefined") return pageSize;
-        return getPageSize();
-    });
+    // FIX: Always start with pageSize to avoid server/client mismatch.
+    // The resize useEffect will update it on the client after mount.
+    const [currentPageSize, setCurrentPageSize] = React.useState(pageSize);
 
-    // Build the final columns array based on enabled features
     const columns = React.useMemo(() => {
         const cols: ColumnDef<T>[] = [];
 
@@ -134,6 +130,11 @@ export function DataTable<T>({
         return 12;
     }
 
+    // Set correct page size on first client render
+    React.useEffect(() => {
+        setCurrentPageSize(getPageSize());
+    }, []);
+
     React.useEffect(() => {
         const handleResize = () => {
             const newPageSize = getPageSize();
@@ -174,9 +175,10 @@ export function DataTable<T>({
         table.setPageSize(currentPageSize);
     }, [currentPageSize, table]);
 
-    const selectedRows = table
-        .getFilteredSelectedRowModel()
-        .rows.map((row) => row.original);
+    // FIX: Safe access in case table model isn't ready yet
+    const selectedRows =
+        table.getFilteredSelectedRowModel()?.rows?.map((row) => row.original) ??
+        [];
 
     return (
         <div className="w-full min-h-screen flex flex-col">
@@ -201,7 +203,6 @@ export function DataTable<T>({
                             />
                         </div>
 
-                        {/* Add button: show when at least 1 row is selected AND showAddButton is true */}
                         {showAddButton &&
                             onAddClick &&
                             selectedRows.length >= 1 && (
@@ -213,7 +214,6 @@ export function DataTable<T>({
                                 </Button>
                             )}
 
-                        {/* Delete button: show when at least 2 rows selected AND showDeleteButton is true AND isAdmin is true */}
                         {showDeleteButton &&
                             onDeleteClick &&
                             selectedRows.length >= 2 &&
@@ -268,7 +268,7 @@ export function DataTable<T>({
                                                     : flexRender(
                                                           header.column
                                                               .columnDef.header,
-                                                          header.getContext()
+                                                          header.getContext(),
                                                       )}
                                             </TableHead>
                                         );
@@ -300,7 +300,7 @@ export function DataTable<T>({
                                                             return;
                                                         handleRowClick(
                                                             row.original,
-                                                            e
+                                                            e,
                                                         );
                                                     }}
                                                     className={
@@ -312,7 +312,7 @@ export function DataTable<T>({
                                                     {flexRender(
                                                         cell.column.columnDef
                                                             .cell,
-                                                        cell.getContext()
+                                                        cell.getContext(),
                                                     )}
                                                 </TableCell>
                                             );
@@ -337,8 +337,8 @@ export function DataTable<T>({
             <div className="sticky bottom-0 bg-background border-t py-4 z-10 mt-auto">
                 <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
                     <div className="text-muted-foreground text-sm mr-auto">
-                        {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                        {table.getFilteredRowModel().rows.length} row(s)
+                        {table.getFilteredSelectedRowModel()?.rows?.length ?? 0}{" "}
+                        of {table.getFilteredRowModel().rows.length} row(s)
                         selected.
                     </div>
                     <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2">

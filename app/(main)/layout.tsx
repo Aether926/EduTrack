@@ -9,7 +9,7 @@ import {
 import AppSidebar from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import SupabaseAuthListener from "@/components/supabase-auth-listener"; 
+import SupabaseAuthListener from "@/components/supabase-auth-listener";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -36,6 +36,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                suppressHydrationWarning
             >
                 <ThemeProvider
                     attribute="class"
@@ -43,9 +44,8 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
-                   
-                    <SupabaseAuthListener /> 
-                    
+                    <SupabaseAuthListener />
+
                     <SidebarProvider>
                         <AppSidebar />
                         <SidebarInset>

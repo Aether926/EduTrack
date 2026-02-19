@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import TeacherTable from "@/components/teacher-table";
+import TeacherTable from "@/components/tables/teacher-table";
 import { TeacherTableRow } from "@/lib/user";
 
 export default function TeacherProfilesPage() {

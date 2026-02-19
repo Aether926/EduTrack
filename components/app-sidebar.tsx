@@ -124,16 +124,16 @@ export default function AppSidebar() {
         },
     ];
 
-    // const adminData = [
-    //     {
-    //         title: "Positions / Designations",
-    //         children: [
-    //             { title: "Add", path: "test1" },
-    //             { title: "Edit", path: "test2" },
-    //             { title: "Delete", path: "test3" },
-    //         ],
-    //     },
-    // ];
+    const adminData = [
+        {
+            title: "Positions / Designations",
+            children: [
+                { title: "Add", path: "test1" },
+                { title: "Edit", path: "test2" },
+                { title: "Delete", path: "test3" },
+            ],
+        },
+    ];
 
     const footer = [
         {
