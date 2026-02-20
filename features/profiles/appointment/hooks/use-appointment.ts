@@ -1,0 +1,79 @@
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
+import {
+  submitAppointmentRequest,
+  fetchLastAppointmentRequest,
+  fetchAppointmentHistory,
+} from "@/features/profiles/appointment/actions/appointment-action";
+import type {
+  AppointmentChangeRequest,
+  AppointmentHistory,
+  AppointmentRequestForm,
+} from "@/features/profiles/appointment/types/appointment";
+
+export function useAppointment(teacherId: string) {
+  const [submitting, setSubmitting] = useState(false);
+  const [lastRequest, setLastRequest] = useState<AppointmentChangeRequest | null>(null);
+  const [history, setHistory] = useState<AppointmentHistory[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const hasPendingRequest = lastRequest?.status === "PENDING";
+
+ const loadData = useCallback(async () => {
+  if (!teacherId) return;
+  console.log(">>> loadData called with teacherId:", teacherId);
+  setLoading(true);
+  const [last, hist] = await Promise.all([
+    fetchLastAppointmentRequest(teacherId),
+    fetchAppointmentHistory(teacherId),
+  ]);
+  console.log(">>> last:", last);
+  console.log(">>> hist:", hist);
+  setLastRequest(last);
+  setHistory(hist ?? []);
+  setLoading(false);
+}, [teacherId]);
+
+    const submitRequest = async (form: AppointmentRequestForm) => {
+    console.log(">>> submitRequest called with teacherId:", teacherId);
+    if (!form.position.trim()) {
+      toast.info("Please select a position.");
+      return false;
+    }
+    if (!form.appointment_type) {
+      toast.info("Please select an appointment type.");
+      return false;
+    }
+    if (!form.start_date) {
+      toast.info("Please provide a start date.");
+      return false;
+    }
+    if (!form.remarks?.trim()) {
+      toast.info("Please provide a reason/remarks.");
+      return false;
+    }
+
+    setSubmitting(true);
+    try {
+      await submitAppointmentRequest(teacherId, form);
+      toast.success("Appointment request submitted. Awaiting admin approval.");
+      await loadData();
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to submit request.");
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return {
+    submitting,
+    lastRequest,
+    history,
+    loading,
+    hasPendingRequest,
+    loadData,
+    submitRequest,
+  };
+}

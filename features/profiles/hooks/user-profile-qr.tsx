@@ -106,10 +106,10 @@ export function useProfileQr({ expiryDays = 30, cooldownMs = 60_000 }: UseProfil
       setQrToken(token);
       setQrGeneratedAt(new Date());
       startCooldown();
-      toast.success("qr generated");
+      toast.success("QR code generated");
       return token;
     } catch {
-      toast.error("failed to generate qr");
+      toast.error("Failed to generate qr");
       return null;
     } finally {
       setQrLoading(false);
@@ -118,7 +118,7 @@ export function useProfileQr({ expiryDays = 30, cooldownMs = 60_000 }: UseProfil
 
   const copyQrLink = async () => {
     if (!qrToken) {
-      toast.error("generate qr first");
+      toast.error("Generate qr first");
       return;
     }
 

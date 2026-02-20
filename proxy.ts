@@ -3,96 +3,131 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function proxy(req: NextRequest) {
-    let response = NextResponse.next({ request: req });
+  let response = NextResponse.next({ request: req });
 
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return req.cookies.getAll();
-                },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value }) =>
-                        req.cookies.set(name, value)
-                    );
-                    response = NextResponse.next({ request: req });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options)
-                    );
-                },
-            },
-        }
-    );
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-
-    const { pathname } = req.nextUrl;
-         if (pathname.startsWith("/qr/")) {
-            return response;
-        }
-
-    const protectedRoutes = ["/dashboard", "/profile", "/teacher-profiles"];
-    const adminRoutes = ["/account-approval", "/add-training-seminar", "/proof-review"];
-    const authRequiredRoutes = ["/fillUp", "/status"];
-
-    if (
-        [...protectedRoutes, ...adminRoutes, ...authRequiredRoutes].some(
-            (path) => pathname.startsWith(path)
-        ) &&
-        !user
-    ) {
-        return NextResponse.redirect(new URL("/signin", req.url));
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          response = NextResponse.next({ request: req });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
     }
+  );
 
-    if (user) {
-        const { data: profile } = await supabase
-            .from("User")
-            .select("role, status")
-            .eq("id", user.id)
-            .single();
+  const { pathname } = req.nextUrl;
+  const { data: { user } } = await supabase.auth.getUser();
 
-        if (adminRoutes.some((path) => pathname.startsWith(path))) {
-            if (profile?.role !== "ADMIN") {
-                return NextResponse.redirect(new URL("/dashboard", req.url));
-            }
-        }
+  // fully public routes (REMOVE "/status")
+  const publicRoutes = ["/qr/"];
+  if (publicRoutes.some((p) => pathname.startsWith(p))) return response;
 
+  // STATUS: always resolve based on real DB status
+  if (pathname.startsWith("/status")) {
+  if (!user) return NextResponse.redirect(new URL("/signin", req.url));
 
-        if (!profile && !pathname.startsWith("/fillUp")) {
-            return NextResponse.redirect(new URL("/fillUp", req.url));
-        }
+  const { data: urow, error } = await supabase
+    .from("User")
+    .select("status")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    
-        if (profile && profile.status) {
-           
-            if (
-                profile.status !== "APPROVED" &&
-                !pathname.startsWith("/status/")  
-            ) {
-                return NextResponse.redirect(
-                    new URL(`/status/${profile.status}`, req.url)
-                );
-            }
+    if (error) return NextResponse.redirect(new URL("/signin", req.url));
+    if (!urow) return NextResponse.redirect(new URL("/fillUp", req.url));
 
-            // Approved users trying to access fillup/pending should go to dashboard
-            if (
-                profile.status === "APPROVED" &&
-                (pathname.startsWith("/fillUp") || pathname.startsWith("/status/"))
-            ) {
-                return NextResponse.redirect(new URL("/dashboard", req.url));
-            }
-        }
+    const target =
+      urow.status === "APPROVED" ? "/dashboard" : `/status/${urow.status}`;
+    if (pathname === target) return response;
+
+    return NextResponse.redirect(new URL(target, req.url));
+  }
+
+  // auth pages (do NOT include /fillUp here)
+  const authRoutes = ["/signin", "/signUp"];
+  if (authRoutes.some((p) => pathname.startsWith(p))) {
+    if (!user) return response;
+
+    const { data: urow } = await supabase
+      .from("User")
+      .select("role,status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!urow) return NextResponse.redirect(new URL("/fillUp", req.url));
+    if (urow.status !== "APPROVED")
+      return NextResponse.redirect(new URL(`/status/${urow.status}`, req.url));
+
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  // fillUp: must be accessible when logged in but NO User row yet
+  if (pathname.startsWith("/fillUp")) {
+    if (!user) return NextResponse.redirect(new URL("/signin", req.url));
+
+    const { data: urow, error } = await supabase
+      .from("User")
+      .select("status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // if query fails, don't loop. let page load and show error UI
+    if (error) return response;
+
+    // if already has a row, stop them from using fillUp again
+    if (urow) {
+      if (urow.status !== "APPROVED")
+        return NextResponse.redirect(new URL(`/status/${urow.status}`, req.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     return response;
+  }
+
+  const protectedRoutes = ["/dashboard", "/profile", "/teacher-profiles"];
+  const adminRoutes = ["/account-approval", "/add-training-seminar", "/proof-review"];
+
+  // if route needs login
+  if ([...protectedRoutes, ...adminRoutes].some((p) => pathname.startsWith(p)) && !user) {
+    return NextResponse.redirect(new URL("/signin", req.url));
+  }
+
+  if (user) {
+    const { data: urow, error } = await supabase
+      .from("User")
+      .select("role,status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) return NextResponse.redirect(new URL("/signin", req.url));
+    if (!urow) return NextResponse.redirect(new URL("/fillUp", req.url));
+
+    if (adminRoutes.some((p) => pathname.startsWith(p)) && urow.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    if (urow.status !== "APPROVED") {
+      const target = `/status/${urow.status}`;
+
+    if (!pathname.startsWith("/status") && pathname !== target) {
+        return NextResponse.redirect(new URL(target, req.url));
+      }
+}
+  }
+
+  return response;
 }
 
 export const config = {
-    matcher: [
-        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|signin|signUp|unauthorized).*)",
-    ],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

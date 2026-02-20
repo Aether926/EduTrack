@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/database/assignments.ts
 import { createAdminClient } from "@/lib/supabase/server";
 import type { TeacherTableRow, ProfessionalDevelopment } from "@/lib/user";
@@ -34,7 +35,6 @@ export async function getProfessionalDevelopmentAdmin(id: string) {
     .single();
 
   if (error) {
-    console.error("Error fetching professional development:", error);
     return null;
   }
   
@@ -50,7 +50,6 @@ export async function getAssignedTeacherIds(trainingId: string) {
     .eq("training_id", trainingId);
 
   if (error) {
-    console.error("Error fetching assigned teachers:", error);
     return [];
   }
   
@@ -65,7 +64,7 @@ export async function getTeachersForPicker(): Promise<TeacherTableRow[]> {
   try {
     console.log("🔍 Fetching approved teachers...");
 
-    // 1) Get approved teachers
+    // 1) Get approved teachers (IDs)
     const { data: users, error: userErr } = await supabase
       .from("User")
       .select("id, email")
@@ -73,77 +72,66 @@ export async function getTeachersForPicker(): Promise<TeacherTableRow[]> {
       .eq("status", "APPROVED");
 
     if (userErr) {
-      console.error("❌ Error fetching users:", userErr);
       return [];
     }
 
-    if (!users || users.length === 0) {
-      console.log("⚠️ No approved teachers found");
-      return [];
-    }
+    const teacherUsers = (users ?? []) as { id: string; email: string | null }[];
+    if (teacherUsers.length === 0) return [];
 
-    console.log("✅ Found", users.length, "approved teachers");
+    const teacherIds = teacherUsers.map((u) => u.id);
 
-    const teacherUsers = users as UserRow[];
-    const emails = teacherUsers
-      .map((u) => u.email)
-      .filter((e): e is string => !!e);
-
-    if (emails.length === 0) {
-      console.log("⚠️ No teacher emails found");
-      return [];
-    }
-
-    console.log("🔍 Fetching profiles for", emails.length, "emails");
-
-    // 2) Fetch profiles using CAMELCASE column names
+    // 2) Fetch Profile rows by teacher id
     const { data: profiles, error: profErr } = await supabase
       .from("Profile")
-      .select("id, employeeId, firstName, lastName, middleInitial, contactNumber, email, profileImage, position")
-      .in("email", emails)
-      .order("lastName", { ascending: true });
+      .select("id, firstName, lastName, middleInitial, contactNumber, email, profileImage")
+      .in("id", teacherIds);
 
     if (profErr) {
-      console.error("❌ Error fetching profiles:", profErr);
       return [];
     }
 
-    if (!profiles || profiles.length === 0) {
-      console.log("⚠️ No profiles found");
+    // 3) Fetch ProfileHR rows by teacher id (employeeId + position)
+    const { data: hrs, error: hrErr } = await supabase
+      .from("ProfileHR")
+      .select("id, employeeId, position")
+      .in("id", teacherIds);
+
+    if (hrErr) {
       return [];
     }
 
-    console.log("✅ Found", profiles.length, "profiles");
+    const profileById = new Map<string, any>();
+    for (const p of profiles ?? []) profileById.set(p.id, p);
 
-    // 3) Map email -> user id
-    const emailToUserId = new Map<string, string>();
+    const hrById = new Map<string, any>();
+    for (const h of hrs ?? []) hrById.set(h.id, h);
+
+    // email from Profile if exists, else fallback from User table
+    const emailById = new Map<string, string>();
     for (const u of teacherUsers) {
-      if (u.email) emailToUserId.set(u.email, u.id);
+      if (u.email) emailById.set(u.id, u.email);
     }
 
-    // 4) Transform to TeacherTableRow
-    const result = (profiles as ProfileRow[])
-      .filter((p) => !!p.email && emailToUserId.has(p.email))
-      .map((p) => {
-        const userId = emailToUserId.get(p.email!)!;
+    const result: TeacherTableRow[] = teacherIds.map((id) => {
+      const p = profileById.get(id) ?? {};
+      const h = hrById.get(id) ?? {};
 
-        return {
-          id: userId,
-          employeeid: p.employeeId ?? "N/A",
-          fullname: `${p.firstName ?? ""} ${p.middleInitial ? p.middleInitial + '. ' : ''}${p.lastName ?? ""}`.trim(),
-          position: p.position ?? "N/A",
-          contact: p.contactNumber ?? "N/A",
-          email: p.email ?? "",
-          profileImage: p.profileImage ?? null,
-          status: "APPROVED",
-        };
-      });
+      const fullname = `${p.firstName ?? ""} ${p.middleInitial ? p.middleInitial + ". " : ""}${p.lastName ?? ""}`.trim();
 
-    console.log("✅ Returning", result.length, "teachers");
+      return {
+        id,
+        employeeid: h.employeeId ?? "N/A",
+        fullname: fullname || "N/A",
+        position: h.position ?? "N/A",
+        contact: p.contactNumber ?? "N/A",
+        email: p.email ?? emailById.get(id) ?? "",
+        profileImage: p.profileImage ?? null,
+        status: "APPROVED",
+      };
+    });
+
     return result;
-
   } catch (error) {
-    console.error("💥 Unexpected error:", error);
     return [];
   }
 }

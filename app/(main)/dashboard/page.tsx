@@ -1,6 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getDashboardStats } from "@/lib/database/dashboard";
-import { getDashboardActivity } from "@/lib/database/activity";
+import { ActivityRow } from "@/lib/database/activity";
+
 import { getMyUpcomingEvents } from "@/lib/database/calendar";
 
 import ActivityFeed from "@/features/dashboard/component/activity-feed";
@@ -27,11 +29,38 @@ export default async function DashboardScreen() {
     auth.user.email?.split("@")[0] ||
     "User";
 
-  const [stats, activity, events] = await Promise.all([
-    getDashboardStats(auth.user.id), 
-    getDashboardActivity(12),
+  const [stats, events] = await Promise.all([
+    getDashboardStats(auth.user.id),
     getMyUpcomingEvents(),
   ]);
+
+  const db = userRole === "ADMIN" ? createAdminClient() : supabase;
+
+  const activityQuery = db
+    .from("ActivityLog")
+    .select("id, created_at, action, message, meta, target_user_id, actor_id, entity_type, entity_id")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (userRole !== "ADMIN") {
+    activityQuery.eq("target_user_id", auth.user.id);
+
+  }
+
+  const { data: activityRows } = await activityQuery;
+
+  const activity: ActivityRow[] =
+    (activityRows ?? []).map((r: any) => ({
+      id: r.id,
+      created_at: r.created_at,
+      action: r.action,
+      message: r.message ?? "activity updated",
+      meta: r.meta ?? null,
+      actor_id: r.actor_id ?? null,
+      target_user_id: r.target_user_id,
+      entity_type: r.entity_type ?? null,
+      entity_id: r.entity_id ?? null,
+    })) ?? [];
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
@@ -130,8 +159,9 @@ export default async function DashboardScreen() {
               </div>
             )}
 
-            {/* Activity Feed */}
-            <ActivityFeed rows={activity} role={userRole} />
+            {/* ✅ Activity Feed */}
+            <ActivityFeed rows={activity} role={userRole} viewerId={auth.user.id} />
+
           </div>
 
           {/* RIGHT */}
