@@ -13,6 +13,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function FillUpPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,13 +93,14 @@ export default function FillUpPage() {
         try {
             const { error: userError } = await supabase.from("User").upsert({
                 id: user.id,
+                auth_id: user.id,
                 email: user.email,
                 role: "TEACHER",
                 status: "PENDING",
             });
 
             if (userError) {
-                alert(`Error creating user: ${userError.message}`);
+                toast(`Error creating user: ${userError.message}`);
                 return;
             }
 
@@ -117,16 +119,18 @@ export default function FillUpPage() {
                 );
 
             if (profileError) {
-                alert(`Error creating profile: ${profileError.message}`);
+                toast(`Error creating profile: ${profileError.message}`);
                 setSubmitting(false);
                 return;
             }
+
+            await supabase.rpc("ensure_profile_hr_exists", { p_user_id: user.id });
 
             success = true;
             router.push("/pending-approval");
         } catch (error) {
             console.error("Submission error:", error);
-            alert("An error occurred. Please try again.");
+            toast("An error occurred. Please try again.");
             setSubmitting(false);
         } finally {
             if (!success) {

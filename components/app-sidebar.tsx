@@ -1,5 +1,5 @@
 "use client";
-
+import { NotificationPopover } from "@/features/notifications/components/notification-popover";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
@@ -114,6 +114,12 @@ export default function AppSidebar() {
 
     const admin = [
         { title: "Account Approval", path: "account-approval" },
+        { title: "Trainings / Seminars", path: "add-training-seminar" },
+        { title: "Attendance", path: "proof-review" },
+        { title: "Manage Users", path: "admin-actions" },
+    ];
+
+
         {
             title: "Manage Trainings / Seminars",
             path: "manage-training-seminar",
@@ -290,7 +296,7 @@ export default function AppSidebar() {
                                                     <ChevronUp className="ml-auto h-4 w-4" />
                                                 </SidebarMenuButton>
                                             </DropdownMenuTrigger>
-
+                                            <NotificationPopover />
                                             <ThemeToggle />
                                         </div>
 

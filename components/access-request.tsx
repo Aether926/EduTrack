@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import UserApprovalGrid, { PendingUser } from "@/components/user-approval-grid";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 export default function AccessRequest() {
     const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
@@ -15,84 +16,83 @@ export default function AccessRequest() {
     const fetchUsers = async () => {
         setLoading(true);
 
-        const { data: pending } = await supabase
+        const {
+            data: pending,
+            error: pendingError,
+        } = await supabase
             .from("User")
-            .select(
-                `
-                id,
-                email,
-                role,
-                status,
-                createdAt
-            `
-            )
+            .select("id, email, role, status, created_at")
             .eq("status", "PENDING")
-            .order("createdAt", { ascending: false });
+            .order("created_at", { ascending: false });
 
-        const { data: rejected } = await supabase
-            .from("User")
-            .select(
-                `
-                id,
-                email,
-                role,
-                status,
-                createdAt
-            `
-            )
-            .eq("status", "REJECTED")
-            .order("createdAt", { ascending: false });
-
-        if (pending) {
+        if (pendingError) {
+            console.error("pendingError:", pendingError);
+            setPendingUsers([]);
+        } else {
             const pendingWithProfiles = await Promise.all(
-                pending.map(async (user) => {
-                    const { data: profile } = await supabase
-                        .from("Profile")
-                        .select(
-                            "firstName, lastName, middleInitial, contactNumber"
-                        )
-                        .eq("id", user.id)
-                        .single();
+            (pending ?? []).map(async (u) => {
+                const { data: profile, error: profileError } = await supabase
+                .from("Profile")
+                .select("firstName, lastName, middleInitial, contactNumber")
+                .eq("id", u.id)
+                .single();
 
-                    return {
-                        ...user,
-                        firstName: profile?.firstName || "",
-                        lastName: profile?.lastName || "",
-                        middleInitial: profile?.middleInitial || "",
-                        contactNumber: profile?.contactNumber || "",
-                    };
-                })
+                if (profileError) console.error("profileError:", profileError);
+
+                return {
+                ...u,
+                createdAt: u.created_at, // normalize for your UI type
+                firstName: profile?.firstName || "",
+                lastName: profile?.lastName || "",
+                middleInitial: profile?.middleInitial || "",
+                contactNumber: profile?.contactNumber || "",
+                };
+            })
             );
-            setPendingUsers(pendingWithProfiles);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setPendingUsers(pendingWithProfiles as any);
         }
 
-        if (rejected) {
-            const rejectedWithProfiles = await Promise.all(
-                rejected.map(async (user) => {
-                    const { data: profile } = await supabase
-                        .from("Profile")
-                        .select(
-                            "firstName, lastName, middleInitial, contactNumber"
-                        )
-                        .eq("id", user.id)
-                        .single();
+        const { data: rejected, error: rejectedError } = await supabase
+            .from("User")
+            .select("id, email, role, status, created_at")
+            .eq("status", "REJECTED")
+            .order("created_at", { ascending: false });
 
-                    return {
-                        ...user,
-                        firstName: profile?.firstName || "",
-                        lastName: profile?.lastName || "",
-                        middleInitial: profile?.middleInitial || "",
-                        contactNumber: profile?.contactNumber || "",
-                    };
-                })
+        if (rejectedError) {
+            console.error("rejectedError:", rejectedError);
+            setRejectedUsers([]);
+        } else {
+            const rejectedWithProfiles = await Promise.all(
+            (rejected ?? []).map(async (u) => {
+                const { data: profile } = await supabase
+                .from("Profile")
+                .select("firstName, lastName, middleInitial, contactNumber")
+                .eq("id", u.id)
+                .single();
+
+                return {
+                ...u,
+                createdAt: u.created_at,
+                firstName: profile?.firstName || "",
+                lastName: profile?.lastName || "",
+                middleInitial: profile?.middleInitial || "",
+                contactNumber: profile?.contactNumber || "",
+                };
+            })
             );
-            setRejectedUsers(rejectedWithProfiles);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setRejectedUsers(rejectedWithProfiles as any);
         }
 
         setLoading(false);
-    };
+        };
+
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchUsers();
     }, []);
 
@@ -103,11 +103,11 @@ export default function AccessRequest() {
             .eq("id", id);
 
         if (error) {
-            alert(`Error approving user: ${error.message}`);
+            toast.error(`Error approving user: ${error.message}`);
             return;
         }
 
-        alert("User approved successfully! They can now login.");
+        toast.success("User approved successfully! They can now login.");
         fetchUsers();
     };
 
@@ -124,11 +124,11 @@ export default function AccessRequest() {
             .eq("id", id);
 
         if (error) {
-            alert(`Error rejecting user: ${error.message}`);
+            toast(`Error rejecting user: ${error.message}`);
             return;
         }
 
-        alert("User rejected and moved to archive.");
+        toast("User rejected and moved to archive.");
         fetchUsers();
     };
 
@@ -145,7 +145,7 @@ export default function AccessRequest() {
             .eq("id", id);
 
         if (profileError) {
-            alert(`Error deleting profile: ${profileError.message}`);
+            toast(`Error deleting profile: ${profileError.message}`);
             return;
         }
 
@@ -155,11 +155,11 @@ export default function AccessRequest() {
             .eq("id", id);
 
         if (userError) {
-            alert(`Error deleting user: ${userError.message}`);
+            toast(`Error deleting user: ${userError.message}`);
             return;
         }
 
-        alert("User permanently deleted from database.");
+        toast("User permanently deleted from database.");
         fetchUsers();
     };
 
