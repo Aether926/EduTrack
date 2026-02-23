@@ -62,9 +62,7 @@ export async function getTeachersForPicker(): Promise<TeacherTableRow[]> {
   const supabase = createAdminClient();
 
   try {
-    console.log("🔍 Fetching approved teachers...");
 
-    // 1) Get approved teachers (IDs)
     const { data: users, error: userErr } = await supabase
       .from("User")
       .select("id, email")

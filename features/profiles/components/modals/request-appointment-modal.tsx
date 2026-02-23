@@ -27,8 +27,10 @@ function DatePickerField(props: {
   onChange: (val: string) => void;
   required?: boolean;
   optional?: boolean;
+  minDate?: string;
+  disabled?: boolean;
 }) {
-  const { label, value, onChange, required, optional } = props;
+  const { label, value, onChange, required, optional, minDate, disabled } = props;
   const [open, setOpen] = useState(false);
   const dateValue = value ? new Date(value) : undefined;
   return (
@@ -38,9 +40,9 @@ function DatePickerField(props: {
         {required && <span className="text-red-500 ml-1">*</span>}
         {optional && <span className="text-gray-400 font-normal ml-1">(optional)</span>}
       </label>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open && !disabled} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-start text-left font-normal">
+          <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={disabled}>
             {dateValue ? dateValue.toLocaleDateString() : "Select date"}
             <ChevronDownIcon className="ml-auto h-4 w-4" />
           </Button>
@@ -50,6 +52,7 @@ function DatePickerField(props: {
             mode="single"
             selected={dateValue}
             captionLayout="dropdown"
+            disabled={(date) => minDate ? date < new Date(minDate) : false}
             onSelect={(date) => {
               onChange(date ? date.toISOString().split("T")[0] : "");
               setOpen(false);
@@ -161,13 +164,23 @@ export function RequestAppointmentModal(props: {
               <DatePickerField
                 label="Start Date"
                 value={form.start_date}
-                onChange={set("start_date")}
+                onChange={(d) => {
+                  set("start_date")(d);
+
+                  // if end date becomes invalid, clear it
+                  if (form.end_date && d && form.end_date < d) {
+                    set("end_date")("");
+                  }
+                }}
                 required
               />
+
               <DatePickerField
                 label="End Date"
                 value={form.end_date}
                 onChange={set("end_date")}
+                minDate={form.start_date}              
+                disabled={!form.start_date}          
                 optional
               />
             </div>

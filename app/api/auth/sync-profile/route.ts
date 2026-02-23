@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ profile })
   } catch (err) {
-    console.error(err)
+    toast.error(err)
     return NextResponse.json({ error: 'server error' }, { status: 500 })
   }
 }

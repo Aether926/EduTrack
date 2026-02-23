@@ -182,7 +182,7 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
         }
       }
     } catch (error) {
-      console.error("Error:", error);
+      toast.error("Error:", error);
       toast.error("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);

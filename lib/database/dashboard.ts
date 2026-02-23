@@ -36,7 +36,7 @@ export async function getDashboardStats(userId: string) {
       totalSeminars: seminarCount || 0,
     };
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
+    toast.error("Error fetching dashboard stats:", error);
     return {
       totalProfiles: 0,
       totalTrainings: 0,

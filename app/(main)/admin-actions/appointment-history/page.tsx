@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function AppointmentHistoryPage() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  if (!auth.user) redirect("/signin");
 
   const { data: viewer } = await supabase
     .from("User")

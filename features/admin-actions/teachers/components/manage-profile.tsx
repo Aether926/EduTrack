@@ -94,10 +94,13 @@ function DateField(props: {
   value: string | null;
   isEditing: boolean;
   onChange: (val: string | null) => void;
+  minDate?: string | null;
+  disabled?: boolean;
 }) {
-  const { label, value, isEditing, onChange } = props;
+  const { label, value, isEditing, onChange, minDate, disabled } = props;
   const [open, setOpen] = useState(false);
   const dateValue = value ? new Date(value) : undefined;
+  const minDateValue = minDate ? new Date(minDate) : undefined;
 
   return (
     <div className="space-y-1.5">
@@ -108,7 +111,7 @@ function DateField(props: {
       {isEditing ? (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-start text-left font-normal">
+            <Button variant="outline" disabled={disabled} className="w-full justify-start text-left font-normal">
               {dateValue ? dateValue.toLocaleDateString() : "Select date"}
               <ChevronDownIcon className="ml-auto h-4 w-4" />
             </Button>
@@ -118,6 +121,7 @@ function DateField(props: {
               mode="single"
               selected={dateValue}
               captionLayout="dropdown"
+              disabled={(date) => minDateValue ? date < minDateValue : false}
               onSelect={(date) => {
                 onChange(date ? date.toISOString().split("T")[0] : null);
                 setOpen(false);
@@ -500,12 +504,19 @@ export default function AdminTeacherManage(props: {
                     label="Original Appointment"
                     value={fields.dateOfOriginalAppointment}
                     isEditing={isEditing}
-                    onChange={(v) => handleChange("dateOfOriginalAppointment", v)}
+                    onChange={(v) => {
+                      handleChange("dateOfOriginalAppointment", v);
+                      if (fields.dateOfLatestAppointment && v && fields.dateOfLatestAppointment < v) {
+                        handleChange("dateOfLatestAppointment", null);
+                      }
+                    }}
                   />
                   <DateField
                     label="Latest Appointment"
                     value={fields.dateOfLatestAppointment}
                     isEditing={isEditing}
+                    minDate={fields.dateOfOriginalAppointment}   // 👈 block before original
+                    disabled={!fields.dateOfOriginalAppointment} // optional UX
                     onChange={(v) => handleChange("dateOfLatestAppointment", v)}
                   />
                 </div>

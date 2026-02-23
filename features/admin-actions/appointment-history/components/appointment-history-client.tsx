@@ -134,11 +134,6 @@ export function AppointmentHistoryClient(props: {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-center">
           <Combobox
-            label="Filter by teacher"
-            options={teacherOptions}
-            onChangeValue={setSelectedTeacher}
-          />
-          <Combobox
             label="Filter by type"
             options={typeOptions}
             onChangeValue={setSelectedType}
@@ -148,16 +143,12 @@ export function AppointmentHistoryClient(props: {
               variant="ghost"
               size="sm"
               onClick={() => {
-                setSelectedTeacher("");
                 setSelectedType("");
               }}
             >
               Clear filters
             </Button>
           )}
-          <span className="text-xs text-muted-foreground ml-auto">
-            {tableData.length} of {rows.length} records
-          </span>
         </div>
 
         {/* Table */}
@@ -173,7 +164,6 @@ export function AppointmentHistoryClient(props: {
       <AddAppointmentModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        teachers={teachers}
         onSuccess={() => router.refresh()}
       />
     </main>

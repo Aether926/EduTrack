@@ -29,10 +29,13 @@ function DatePickerField(props: {
   onChange: (val: string) => void;
   required?: boolean;
   optional?: boolean;
+  minDate?: string;
+  disabled?: boolean;
 }) {
-  const { label, value, onChange, required, optional } = props;
+  const { label, value, onChange, required, optional, minDate, disabled } = props;
   const [open, setOpen] = useState(false);
   const dateValue = value ? new Date(value) : undefined;
+  const minDateObj = minDate ? new Date(minDate) : undefined;
 
   return (
     <div className="space-y-1.5">
@@ -43,7 +46,7 @@ function DatePickerField(props: {
       </label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-start text-left font-normal">
+          <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={disabled}>
             {dateValue ? dateValue.toLocaleDateString() : "Select date"}
             <ChevronDownIcon className="ml-auto h-4 w-4" />
           </Button>
@@ -53,6 +56,7 @@ function DatePickerField(props: {
             mode="single"
             selected={dateValue}
             captionLayout="dropdown"
+            disabled={(d) => d > new Date() || (minDateObj ? d < minDateObj : false)}
             onSelect={(date) => {
               onChange(date ? date.toISOString().split("T")[0] : "");
               setOpen(false);
@@ -178,15 +182,23 @@ export function RequestHRChangeModal(props: {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <DatePickerField
-              label="Original Appointment"
-              value={form.dateOfOriginalAppointment}
-              onChange={set("dateOfOriginalAppointment")}
-            />
-            <DatePickerField
-              label="Latest Appointment"
-              value={form.dateOfLatestAppointment}
-              onChange={set("dateOfLatestAppointment")}
-            />
+            label="Original Appointment"
+            value={form.dateOfOriginalAppointment}
+            onChange={(d) => {
+              set("dateOfOriginalAppointment")(d);
+              if (form.dateOfLatestAppointment && d && form.dateOfLatestAppointment < d) {
+                set("dateOfLatestAppointment")("");
+              }
+            }}
+          />
+
+          <DatePickerField
+            label="Latest Appointment"
+            value={form.dateOfLatestAppointment}
+            minDate={form.dateOfOriginalAppointment}
+            disabled={!form.dateOfOriginalAppointment}
+            onChange={set("dateOfLatestAppointment")}
+          />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">

@@ -18,14 +18,15 @@ import {
 import PdViewModal from "@/components/pd-view-modal";
 
 export type TrainingSeminarRow = {
-  id: string; // Attendance.id
-  trainingId: string; // ProfessionalDevelopment.id
+  id: string;
+  trainingId: string; 
   type: string;
   title: string;
   level: string;
   startDate: string;
   endDate: string;
   totalHours: string;
+  approvedHours: string | null;
   sponsor: string;
   status: string;
 };
@@ -122,20 +123,33 @@ export default function TrainingsSeminars({ data }: { data: TrainingSeminarRow[]
           <div className="text-center w-full">{row.getValue("endDate") as string}</div>
         ),
       },
-      {
-        accessorKey: "totalHours",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Total Hours <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="text-center w-full">{row.getValue("totalHours") as string}</div>
-        ),
+     {
+  accessorKey: "totalHours",
+  header: ({ column }) => (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    >
+      Completed Hours <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+      ),
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const approvedHours = row.original.approvedHours;
+        const totalHours = row.getValue("totalHours") as string;
+        const isApproved = status === "APPROVED";
+
+        return (
+          <div className="text-center w-full">
+            {isApproved && approvedHours ? (
+              <span className="text-green-600 font-medium">{approvedHours}h</span>
+            ) : (
+              <span className="text-muted-foreground">{totalHours}h</span>
+            )}
+          </div>
+        );
       },
+    },
       {
         accessorKey: "sponsor",
         header: ({ column }) => (

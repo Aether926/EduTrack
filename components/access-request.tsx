@@ -26,7 +26,7 @@ export default function AccessRequest() {
             .order("created_at", { ascending: false });
 
         if (pendingError) {
-            console.error("pendingError:", pendingError);
+            toast.error("pendingError:", pendingError);
             setPendingUsers([]);
         } else {
             const pendingWithProfiles = await Promise.all(
@@ -37,7 +37,7 @@ export default function AccessRequest() {
                 .eq("id", u.id)
                 .single();
 
-                if (profileError) console.error("profileError:", profileError);
+                if (profileError) toast.error("profileError:", profileError);
 
                 return {
                 ...u,
@@ -61,7 +61,7 @@ export default function AccessRequest() {
             .order("created_at", { ascending: false });
 
         if (rejectedError) {
-            console.error("rejectedError:", rejectedError);
+            toast.error("rejectedError:", rejectedError);
             setRejectedUsers([]);
         } else {
             const rejectedWithProfiles = await Promise.all(

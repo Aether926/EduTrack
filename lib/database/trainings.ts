@@ -1,14 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
+import { toast } from "sonner";
 
 export type MyTrainingSeminarRow = {
   id: string;
-  trainingId: string; 
+  trainingId: string;
   type: string;
   title: string;
   level: string;
   startDate: string;
   endDate: string;
   totalHours: string;
+  approvedHours: string | null; // ← add
   sponsor: string;
   status: string;
 };
@@ -18,6 +20,7 @@ type AttendanceRow = {
   training_id: string;
   status: string;
   created_at: string;
+  approved_hours: number | null; // ← add
 };
 
 type PDRow = {
@@ -31,24 +34,21 @@ type PDRow = {
   sponsoring_agency: string | null;
 };
 
-
 export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
   const supabase = await createClient();
-  
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
   const user = authData.user;
-
   if (authError || !user) return [];
 
   const { data: attendance, error: aErr } = await supabase
     .from("Attendance")
-    .select("id, training_id, status, created_at")
+    .select("id, training_id, status, created_at, approved_hours") 
     .eq("teacher_id", user.id)
     .order("created_at", { ascending: false });
 
   if (aErr) {
-    console.error("getMyTrainingSeminars Attendance error:", aErr.message);
+    toast.error("getMyTrainingSeminars Attendance error");
     return [];
   }
 
@@ -63,8 +63,7 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
     .in("id", trainingIds);
 
   if (pErr) {
-    console.error("getMyTrainingSeminars ProfessionalDevelopment error:", pErr.message);
-
+    toast.error("Unexpected error");
     return attendanceRows.map((r) => ({
       id: String(r.id),
       trainingId: String(r.training_id),
@@ -74,6 +73,7 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
       startDate: "",
       endDate: "",
       totalHours: "",
+      approvedHours: null,
       sponsor: "",
       status: r.status ?? "",
     }));
@@ -82,10 +82,8 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
   const pdMap = new Map<string, PDRow>();
   (trainings as PDRow[] | null)?.forEach((t) => pdMap.set(String(t.id), t));
 
-
   return attendanceRows.map((r) => {
     const pd = pdMap.get(String(r.training_id));
-
     return {
       id: String(r.id),
       trainingId: String(r.training_id),
@@ -95,6 +93,7 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
       startDate: pd?.start_date ?? "",
       endDate: pd?.end_date ?? "",
       totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
+      approvedHours: r.approved_hours != null ? String(r.approved_hours) : null, // ← add
       sponsor: pd?.sponsoring_agency ?? "",
       status: r.status ?? "",
     };

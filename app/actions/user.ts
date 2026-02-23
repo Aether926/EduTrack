@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { toast } from 'sonner';
 
 export async function deleteTeacher(userId: string) {
   const supabase = await createClient();
@@ -31,7 +32,7 @@ export async function deleteTeacher(userId: string) {
       .eq('id', userId);
 
     if (error) {
-      console.error('Error deleting teacher:', error);
+      toast.error('Error deleting teacher');
       return { success: false, error: error.message };
     }
 
@@ -47,7 +48,7 @@ export async function deleteTeacher(userId: string) {
     revalidatePath('/teacher-profiles');
     return { success: true };
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -79,7 +80,7 @@ export async function deleteMultipleTeachers(userIds: string[]) {
       .in('id', userIds);
 
     if (error) {
-      console.error('Error deleting teachers:', error);
+      toast.error('Error deleting teachers');
       return { success: false, error: error.message };
     }
 
@@ -94,7 +95,7 @@ export async function deleteMultipleTeachers(userIds: string[]) {
     revalidatePath('/teacher-profiles');
     return { success: true, count: userIds.length };
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }

@@ -21,21 +21,18 @@ export function useAppointment(teacherId: string) {
 
  const loadData = useCallback(async () => {
   if (!teacherId) return;
-  console.log(">>> loadData called with teacherId:", teacherId);
   setLoading(true);
   const [last, hist] = await Promise.all([
     fetchLastAppointmentRequest(teacherId),
     fetchAppointmentHistory(teacherId),
   ]);
-  console.log(">>> last:", last);
-  console.log(">>> hist:", hist);
   setLastRequest(last);
   setHistory(hist ?? []);
   setLoading(false);
 }, [teacherId]);
 
     const submitRequest = async (form: AppointmentRequestForm) => {
-    console.log(">>> submitRequest called with teacherId:", teacherId);
+    toast.success(">>> submitRequest called with teacherId:" + teacherId);
     if (!form.position.trim()) {
       toast.info("Please select a position.");
       return false;

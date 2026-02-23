@@ -22,7 +22,11 @@ function Field(props: {
       </label>
 
       {isEditing ? (
-        <Input value={value} onChange={(e) => onInputChange(field, e.target.value)} placeholder={placeholder || ""} />
+        <Input
+          value={value}
+          onChange={(e) => onInputChange(field, e.target.value)}
+          placeholder={placeholder || "(optional)"}
+        />
       ) : (
         <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
           {value || "—"}
@@ -48,13 +52,76 @@ export default function GovernmentIDsCard(props: {
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-6">
+
+        {/* ── Existing IDs ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Field label="PAG-IBIG No." value={data.pagibigNo} field="pagibigNo" isEditing={isEditing} onInputChange={onInputChange} placeholder="(optional)" />
-          <Field label="PhilHealth No." value={data.philHealthNo} field="philHealthNo" isEditing={isEditing} onInputChange={onInputChange} placeholder="(optional)" />
-          <Field label="GSIS No." value={data.gsisNo} field="gsisNo" isEditing={isEditing} onInputChange={onInputChange} placeholder="(optional)" />
-          <Field label="TIN No." value={data.tinNo} field="tinNo" isEditing={isEditing} onInputChange={onInputChange} placeholder="(optional)" />
+          <Field
+            label="PAG-IBIG No."
+            value={data.pagibigNo}
+            field="pagibigNo"
+            isEditing={isEditing}
+            onInputChange={onInputChange}
+          />
+          <Field
+            label="PhilHealth No."
+            value={data.philHealthNo}
+            field="philHealthNo"
+            isEditing={isEditing}
+            onInputChange={onInputChange}
+          />
+          <Field
+            label="GSIS No."
+            value={data.gsisNo}
+            field="gsisNo"
+            isEditing={isEditing}
+            onInputChange={onInputChange}
+          />
+          <Field
+            label="TIN No."
+            value={data.tinNo}
+            field="tinNo"
+            isEditing={isEditing}
+            onInputChange={onInputChange}
+          />
         </div>
+
+        {/* ── NEW: Additional PDS IDs (CS Form 212) ── */}
+        <div>
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Field
+              label="SSS No."
+              value={data.sssNo ?? ""}
+              field="sssNo"
+              isEditing={isEditing}
+              onInputChange={onInputChange}
+            />
+            <Field
+              label="UMID No."
+              value={data.umidNo ?? ""}
+              field="umidNo"
+              isEditing={isEditing}
+              onInputChange={onInputChange}
+            />
+            <Field
+              label="PhilSys No. (PSN)"
+              value={data.philSysNo ?? ""}
+              field="philSysNo"
+              isEditing={isEditing}
+              onInputChange={onInputChange}
+            />
+            <Field
+              label="Agency Employee No."
+              value={data.agencyEmployeeNo ?? ""}
+              field="agencyEmployeeNo"
+              isEditing={isEditing}
+              onInputChange={onInputChange}
+            />
+          </div>
+        </div>
+
       </CardContent>
     </Card>
   );

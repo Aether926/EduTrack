@@ -1,19 +1,21 @@
-import { getPendingProofs } from "@/lib/database/proof-review";
-import ProofReviewClient from "./proof-review-client";
+import { getPendingProofs } from "@/features/proof-review/lib/queries";
+import ProofReviewTable from "@/features/proof-review/components/proof-review-table";
 
-export const dynamic = "force-dynamic"; // avoids stale cache
+export const dynamic = "force-dynamic";
 
 export default async function ProofReviewPage() {
   const rows = await getPendingProofs();
 
   return (
-    <div className="p-6 space-y-4">
-      <div>
-        <div className="text-3xl font-bold">Proof Review</div>
-        <div className="text-sm opacity-70">Submissions waiting for approval</div>
+    <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">
+      <div className="space-y-1">
+        <h1 className="text-xl font-semibold tracking-tight">Proof Review</h1>
+        <p className="text-sm text-muted-foreground">
+          Submissions waiting for approval.
+        </p>
       </div>
 
-      <ProofReviewClient rows={rows} />
+      <ProofReviewTable rows={rows} />
     </div>
   );
 }

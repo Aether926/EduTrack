@@ -13,13 +13,13 @@ export async function getAllProfessionalDevelopment() {
       
 
     if (error) {
-      console.error( 'Error fetching professional development:', error);
+      toast.error( 'Error fetching professional development:', error);
       return [];
     }
 
     return data as ProfessionalDevelopment[];
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error:', error);
     return [];
   }
 }
@@ -35,13 +35,13 @@ export async function getTrainings() {
       .order('start_date', { ascending: false });
 
     if (error) {
-      console.error('Error fetching trainings:', error);
+      toast.error('Error fetching trainings:', error);
       return [];
     }
 
     return data as ProfessionalDevelopment[];
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error:', error);
     return [];
   }
 }
@@ -57,13 +57,13 @@ export async function getSeminars() {
       .order('start_date', { ascending: false });
 
     if (error) {
-      console.error('Error fetching seminars:', error);
+      toast.error('Error fetching seminars:', error);
       return [];
     }
 
     return data as ProfessionalDevelopment[];
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error:', error);
     return [];
   }
 }
@@ -79,13 +79,13 @@ export async function getProfessionalDevelopmentById(id: string) {
       .single();
 
     if (error) {
-      console.error('Error fetching professional development:', error);
+      toast.error('Error fetching professional development:', error);
       return null;
     }
 
     return data as ProfessionalDevelopment;
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error:', error);
     return null;
   }
 }

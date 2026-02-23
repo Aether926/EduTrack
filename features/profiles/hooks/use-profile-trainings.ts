@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { TrainingRow } from "@/features/profiles/types/trainings";
+import { toast } from "sonner";
 
 export function useProfileTrainings() {
   const [trainings, setTrainings] = useState<TrainingRow[]>([]);
@@ -11,12 +12,12 @@ export function useProfileTrainings() {
 
     const { data: attendanceRows, error: aErr } = await supabase
       .from("Attendance")
-      .select("id, training_id, status, result, proof_url, proof_path, created_at")
+      .select("id, training_id, status, result, proof_url, proof_path, created_at, approved_hours")
       .eq("teacher_id", teacherId)
       .order("created_at", { ascending: false });
 
     if (aErr) {
-      console.error("Attendance fetch error:", aErr);
+      toast.error("Attendance fetch error" );
       setTrainings([]);
       setTrainingsLoading(false);
       return;
@@ -30,6 +31,7 @@ export function useProfileTrainings() {
       proof_url: string | null;
       proof_path: string | null;
       created_at: string;
+      approved_hours: number | null;
     }>;
 
     if (attendance.length === 0) {
@@ -46,7 +48,7 @@ export function useProfileTrainings() {
       .in("id", trainingIds);
 
     if (pdErr) {
-      console.error("ProfessionalDevelopment fetch error:", pdErr);
+      toast.error("ProfessionalDevelopment fetch error");
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,6 +69,7 @@ export function useProfileTrainings() {
         startDate: pd?.start_date ?? "",
         endDate: pd?.end_date ?? "",
         totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
+        approvedHours: a.approved_hours != null ? String(a.approved_hours) : null,
         sponsor: pd?.sponsoring_agency ?? "",
 
         status: a.status ?? "",

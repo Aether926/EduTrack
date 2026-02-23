@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminQueuePage() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  if (!auth.user) redirect("/signin");
 
   const { data: viewer } = await supabase
     .from("User")
@@ -55,10 +55,29 @@ export default async function AdminQueuePage() {
     teacher: apptProfileMap.get(r.teacher_id) ?? null,
   }));
 
+  // fetch Responsibility requests
+  const { data: respRequests } = await admin
+    .from("ResponsibilityChangeRequest")
+    .select("*")
+    .order("requested_at", { ascending: false });
+
+  const respTeacherIds = [...new Set((respRequests ?? []).map((r) => r.teacher_id))];
+  const { data: respProfiles } = await admin
+    .from("Profile")
+    .select("id, firstName, lastName, email")
+    .in("id", respTeacherIds.length ? respTeacherIds : ["__none__"]);
+
+  const respProfileMap = new Map((respProfiles ?? []).map((p) => [p.id, p]));
+  const mergedResp = (respRequests ?? []).map((r) => ({
+    ...r,
+    teacher: respProfileMap.get(r.teacher_id) ?? null,
+  }));
+
   return (
     <HRQueueClient
       hrRequests={mergedHR}
       apptRequests={mergedAppt}
+      respRequests={mergedResp}
     />
   );
 }

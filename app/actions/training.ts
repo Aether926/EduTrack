@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { CreateProfessionalDevelopmentInput } from '@/lib/user';
+import { toast } from 'sonner';
 
 type UpdatePayload = {
   id: string;
@@ -75,7 +76,7 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
       .single();
 
     if (trainingError) {
-      console.error('Error creating training:', trainingError);
+      toast.error('Error creating training');
       return { success: false, error: trainingError.message };
     }
 
@@ -106,7 +107,7 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
     
     return { success: true, data: training };
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error creating training');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -140,7 +141,7 @@ export async function deleteProfessionalDevelopment(id: string) {
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting:', error);
+      toast.error('Error deleting');
       return { success: false, error: error.message };
     }
 
@@ -156,7 +157,7 @@ export async function deleteProfessionalDevelopment(id: string) {
     
     return { success: true };
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -190,7 +191,7 @@ export async function deleteMultipleProfessionalDevelopment(ids: string[]) {
       .in('id', ids);
 
     if (error) {
-      console.error('Error deleting:', error);
+      toast.error('Error deleting');
       return { success: false, error: error.message };
     }
 
@@ -206,7 +207,7 @@ export async function deleteMultipleProfessionalDevelopment(ids: string[]) {
     
     return { success: true, count: ids.length };
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }

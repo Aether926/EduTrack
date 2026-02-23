@@ -1,223 +1,342 @@
-'use client';
+"use client";
 
-import { DataTable } from "@/components/data-table";
-import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import type { TeacherTableRow } from "@/lib/user";
+
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpDown, Search, X, UserRound, ChevronRight } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { deleteTeacher, deleteMultipleTeachers } from "@/app/actions/user";
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { TeacherTableRow } from '@/lib/user';
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface TeacherTableProps {
   data: TeacherTableRow[];
 }
 
 export default function TeacherTable({ data }: TeacherTableProps) {
-    const router = useRouter();
+  const router = useRouter();
 
-    const handleDelete = async (selectedRows: TeacherTableRow[]) => {
-        if (selectedRows.length === 0) return;
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
 
-        const confirmed = confirm(
-            `Are you sure you want to delete ${selectedRows.length} teacher(s)? This action cannot be undone.`
-        );
+  const columns = useMemo<ColumnDef<TeacherTableRow>[]>(
+    () => [
+      {
+        accessorKey: "employeeid",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-2"
+          >
+            Employee ID <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-mono text-xs text-muted-foreground">
+            {row.getValue("employeeid")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "fullname",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-2"
+          >
+            Name <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const fullname = row.getValue("fullname") as string;
+          const profileImage = row.original.profileImage;
+          const position = row.original.position;
+          const contact = row.original.contact;
 
-        if (!confirmed) return;
+          return (
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarImage src={profileImage || undefined} />
+                <AvatarFallback>
+                  {fullname
+                    .split(" ")
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase() || <UserRound className="h-4 w-4" />}
+                </AvatarFallback>
+              </Avatar>
 
-        const userIds = selectedRows.map(row => row.id);
-        
-        const result = await deleteMultipleTeachers(userIds);
+              <div className="min-w-0">
+                <div className="truncate font-medium">{fullname}</div>
 
-        if (result.success) {
-            toast.success(`Successfully deleted ${result.count} teacher(s)`);
-            router.refresh();
-        } else {
-            toast.error(result.error || 'Failed to delete teachers');
-        }
-    };
+                {/* mobile: show position + contact under name */}
+                <div className="md:hidden mt-1 space-y-0.5">
+                  <div className="truncate text-xs text-muted-foreground">
+                    {position || "N/A"}
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground font-mono">
+                    {contact || "N/A"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "position",
+        header: "Position",
+        cell: ({ row }) => (
+          <div className="max-w-[260px] truncate text-sm text-muted-foreground">
+            {row.getValue("position")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "contact",
+        header: "Contact Number",
+        cell: ({ row }) => (
+          <div className="font-mono text-xs text-muted-foreground">
+            {row.getValue("contact")}
+          </div>
+        ),
+      },
+      {
+        id: "view",
+        header: "",
+        enableSorting: false,
+        cell: () => (
+          <div className="flex items-center justify-end gap-2 text-muted-foreground">
+            <span className="hidden md:inline text-xs">View profile</span>
+            <ChevronRight className="h-4 w-4" />
+          </div>
+        ),
+      },
+    ],
+    []
+  );
 
-    const handleSingleDelete = async (userId: string) => {
-        const confirmed = confirm(
-            'Are you sure you want to delete this teacher? This action cannot be undone.'
-        );
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting, globalFilter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const v = String(filterValue ?? "").toLowerCase().trim();
+      if (!v) return true;
 
-        if (!confirmed) return;
+      const full = String(row.original.fullname ?? "").toLowerCase();
+      const emp = String(row.original.employeeid ?? "").toLowerCase();
+      const pos = String(row.original.position ?? "").toLowerCase();
+      const contact = String(row.original.contact ?? "").toLowerCase();
 
-        const result = await deleteTeacher(userId);
+      return (
+        full.includes(v) ||
+        emp.includes(v) ||
+        pos.includes(v) ||
+        contact.includes(v)
+      );
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(), // filter BEFORE pagination
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: { pageSize: 10 },
+    },
+  });
 
-        if (result.success) {
-            toast.success('Teacher deleted successfully');
-            router.refresh();
-        } else {
-            toast.error(result.error || 'Failed to delete teacher');
-        }
-    };
+  // when searching, jump back to page 1 so you don't check other pages
+  useEffect(() => {
+    table.setPageIndex(0);
+  }, [globalFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const teacherColumns: ColumnDef<TeacherTableRow>[] = [
-        {
-            id: "select",
-            header: ({ table }) => (
-                <Checkbox
-                    checked={
-                        table.getIsAllRowsSelected() ||
-                        (table.getIsSomeRowsSelected() && "indeterminate")
-                    }
-                    onCheckedChange={(value) =>
-                        table.toggleAllRowsSelected(!!value)
-                    }
-                    aria-label="Select all"
+  const filteredCount = table.getFilteredRowModel().rows.length;
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageCount = table.getPageCount();
+
+  return (
+    <Card className="min-w-0">
+      <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-1">
+          <CardTitle className="text-base">Teachers</CardTitle>
+          <CardDescription>
+            {filteredCount} result{filteredCount === 1 ? "" : "s"} • 10 per page
+          </CardDescription>
+        </div>
+
+        {/* Desktop search */}
+        <div className="hidden md:block w-[320px]">
+          <Input
+            value={globalFilter ?? ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Search name, id, position, contact..."
+          />
+        </div>
+
+        {/* Mobile search icon -> expand */}
+        <div className="flex md:hidden items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSearchOpen((v) => !v)}
+            aria-label="Search"
+          >
+            {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+          </Button>
+
+          <AnimatePresence initial={false}>
+            {searchOpen ? (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "240px", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="overflow-hidden"
+              >
+                <Input
+                  value={globalFilter ?? ""}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  placeholder="Search..."
+                  className="h-9"
                 />
-            ),
-            cell: ({ row }) => (
-                <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    aria-label="Select row"
-                />
-            ),
-            enableSorting: false,
-            enableHiding: false,
-        },
-        {
-            accessorKey: "employeeid",
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Employee ID
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <div className="font-mono text-sm">
-                    {row.getValue("employeeid")}
-                </div>
-            ),
-        },
-        {
-            accessorKey: "fullname",
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Full Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => {
-                const fullname = row.getValue("fullname") as string;
-                const profileImage = row.original.profileImage;
-                
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={profileImage || undefined} />
-                            <AvatarFallback>
-                                {fullname.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{fullname}</span>
-                    </div>
-                );
-            },
-        },
-        {
-            accessorKey: "position",
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Position
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <div className="max-w-[200px]">
-                    {row.getValue("position")}
-                </div>
-            ),
-        },
-        {
-            accessorKey: "contact",
-            header: () => <div>Contact Number</div>,
-            cell: ({ row }) => (
-                <div className="font-mono text-sm">
-                    {row.getValue("contact")}
-                </div>
-            ),
-        },
-        {
-            accessorKey: "email",
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === "asc")
-                    }
-                >
-                    Email
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <div className="lowercase text-sm">
-                    {row.getValue("email")}
-                </div>
-            ),
-        },
-        {
-            id: "actions",
-            enableHiding: false,
-            cell: ({ row }) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            onClick={() => router.push(`/teacher-profiles/${row.original.id}`)}
-                        >
-                            View Profile
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ),
-        },
-    ];
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
+      </CardHeader>
 
-    return (
-        <DataTable
-            data={data}
-            columns={teacherColumns}
-            filterColumn="fullname"
-            filterPlaceholder="Search teachers by name..."
-            pageSize={10}
-            showDeleteButton={true}
-            onDeleteClick={handleDelete}
-        />
-    );
+      <CardContent className="pt-0">
+        <div className="rounded-md border overflow-hidden">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((hg) => (
+                <TableRow key={hg.id}>
+                  {hg.headers.map((header) => {
+                    const colId = header.column.id;
+
+                    // hide position/contact on small screens (shown under name)
+                    const hideOnSmall =
+                      colId === "position" || colId === "contact"
+                        ? "hidden md:table-cell"
+                        : "";
+
+                    // keep the view column narrow
+                    const viewCol = colId === "view" ? "w-[1%]" : "";
+
+                    return (
+                      <TableHead key={header.id} className={`${hideOnSmall} ${viewCol}`}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row, idx) => (
+                  <motion.tr
+                    key={row.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.16, delay: Math.min(idx * 0.01, 0.15) }}
+                    className="border-b last:border-b-0 cursor-pointer hover:bg-accent/40"
+                    onClick={() => router.push(`/teacher-profiles/${row.original.id}`)}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const colId = cell.column.id;
+                      const hideOnSmall =
+                        colId === "position" || colId === "contact"
+                          ? "hidden md:table-cell"
+                          : "";
+
+                      return (
+                        <TableCell key={cell.id} className={hideOnSmall}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      );
+                    })}
+                  </motion.tr>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="text-xs text-muted-foreground">
+            Page {pageIndex + 1} of {pageCount}
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

@@ -15,6 +15,8 @@ const ACTION_LABELS: Record<string, string> = {
   ASSIGNED_TO_TRAINING: "Assigned to training",
   PROOF_APPROVED: "Proof submission approved",
   PROOF_REJECTED: "Proof submission rejected",
+  COMPLIANCE_AT_RISK: "Training Compliance At Risk",
+COMPLIANCE_NON_COMPLIANT: "Training Non-Compliant",
 };
 
 function timeAgo(dateStr: string) {
@@ -89,11 +91,6 @@ export function NotificationPopover() {
                     {n.message && (
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                         {n.message}
-                      </p>
-                    )}
-                    {n.meta?.note && (
-                      <p className="text-xs text-muted-foreground mt-0.5 italic">
-                        Note: {String(n.meta.note)}
                       </p>
                     )}
                   </div>
