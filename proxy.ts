@@ -27,19 +27,33 @@ export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const { data: { user } } = await supabase.auth.getUser();
 
-  // fully public routes (REMOVE "/status")
-  const publicRoutes = ["/qr/"];
+  // ── Stale session cleanup ─────────────────────────────────────────────────
+  // Skip cleanup on auth-related routes so sign in/out flow isn't interrupted
+  const skipCleanup = ["/signin", "/signUp", "/forgot-password", "/reset-password", "/auth/callback"];
+  if (!user && !skipCleanup.some((p) => pathname.startsWith(p))) {
+    const hasStaleSession = req.cookies.getAll().some(({ name }) => name.startsWith("sb-"));
+    if (hasStaleSession) {
+      const cleanResponse = NextResponse.redirect(new URL("/signin", req.url));
+      req.cookies.getAll().forEach(({ name }) => {
+        if (name.startsWith("sb-")) cleanResponse.cookies.delete(name);
+      });
+      return cleanResponse;
+    }
+  }
+
+  // fully public routes
+  const publicRoutes = ["/qr/", "/reset-password"];
   if (publicRoutes.some((p) => pathname.startsWith(p))) return response;
 
   // STATUS: always resolve based on real DB status
   if (pathname.startsWith("/status")) {
-  if (!user) return NextResponse.redirect(new URL("/signin", req.url));
+    if (!user) return NextResponse.redirect(new URL("/signin", req.url));
 
-  const { data: urow, error } = await supabase
-    .from("User")
-    .select("status")
-    .eq("id", user.id)
-    .maybeSingle();
+    const { data: urow, error } = await supabase
+      .from("User")
+      .select("status")
+      .eq("id", user.id)
+      .maybeSingle();
 
     if (error) return NextResponse.redirect(new URL("/signin", req.url));
     if (!urow) return NextResponse.redirect(new URL("/fillUp", req.url));
@@ -51,8 +65,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL(target, req.url));
   }
 
-  // auth pages (do NOT include /fillUp here)
-  const authRoutes = ["/signin", "/signUp"];
+  const authRoutes = ["/signin", "/signUp", "/forgot-password"];
   if (authRoutes.some((p) => pathname.startsWith(p))) {
     if (!user) return response;
 
@@ -79,10 +92,8 @@ export async function proxy(req: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    // if query fails, don't loop. let page load and show error UI
     if (error) return response;
 
-    // if already has a row, stop them from using fillUp again
     if (urow) {
       if (urow.status !== "APPROVED")
         return NextResponse.redirect(new URL(`/status/${urow.status}`, req.url));
@@ -92,8 +103,8 @@ export async function proxy(req: NextRequest) {
     return response;
   }
 
-  const protectedRoutes = ["/dashboard", "/profile", "/teacher-profiles"];
-  const adminRoutes = ["/account-approval", "/add-training-seminar", "/proof-review"];
+  const protectedRoutes = ["/dashboard", "/profile", "/teacher-profiles", "/responsibilities", "/compliance", "/documents", "/settings"];
+  const adminRoutes = ["/account-approval", "/add-training-seminar", "/proof-review", "/admin-actions"];
 
   // if route needs login
   if ([...protectedRoutes, ...adminRoutes].some((p) => pathname.startsWith(p)) && !user) {
@@ -116,11 +127,10 @@ export async function proxy(req: NextRequest) {
 
     if (urow.status !== "APPROVED") {
       const target = `/status/${urow.status}`;
-
-    if (!pathname.startsWith("/status") && pathname !== target) {
+      if (!pathname.startsWith("/status") && pathname !== target) {
         return NextResponse.redirect(new URL(target, req.url));
       }
-}
+    }
   }
 
   return response;

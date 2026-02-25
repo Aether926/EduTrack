@@ -300,7 +300,6 @@ export function DataTable<T>({
                     </Table>
                 </div>
             </div>
-
             <div className="sticky bottom-0 bg-background border-t py-4 z-10 mt-auto">
                 <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
                     <div className="text-muted-foreground text-sm mr-auto">

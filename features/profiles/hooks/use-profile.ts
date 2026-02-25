@@ -135,7 +135,8 @@ export function useProfile() {
         .select();
 
       if (profileError) {
-        toast.error(`Failed to save profile`);
+        console.error("Profile upsert error:", profileError);
+        toast.error(`Failed to save profile, Double check your inputs.`);
         return;
       }
 

@@ -3,6 +3,7 @@ import PublicProfileView from "@/components/public-profile-view";
 
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import type { TrainingRow } from "@/features/profiles/types/trainings";
+import { redirect } from "next/navigation";
 
 function isPublicSafeTraining(a: { status: string; result: string | null }) {
   const s = (a.status ?? "").toUpperCase();
@@ -100,7 +101,7 @@ export default async function TeacherPublicProfilePage({
     .eq("id", id)
     .single();
     
-  if (error || !profile) return <div className="p-6">profile not found</div>;
+  if (error || !profile) redirect("/teacher-profiles");
 
   const { data: profileHR } = await db
     .from("ProfileHR")

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseServer'
 import { prisma } from '@/lib/prisma'
@@ -29,7 +30,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ profile })
   } catch (err) {
-    toast.error(err)
     return NextResponse.json({ error: 'server error' }, { status: 500 })
   }
 }

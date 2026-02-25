@@ -1,29 +1,24 @@
-// /components/supabase-auth-listener.tsx
 'use client'
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient' 
-
+import { supabase } from '@/lib/supabaseClient'
 
 export default function SupabaseAuthListener() {
   const router = useRouter()
 
   useEffect(() => {
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-       
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-            router.refresh();
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') {
+          router.refresh();
         }
+        // PASSWORD_RECOVERY — do nothing, let reset page handle it
       }
     )
 
-    return () => {
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [router])
 
-  return null 
+  return null
 }

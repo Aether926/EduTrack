@@ -59,8 +59,6 @@ export function Combobox({ label, options, onChangeValue }: Props) {
 
     const handleInputChange = (val: string) => {
         setInputValue(val);
-
-        toast.log(isExistingValue, filteredOptions, canAddCustom);
     };
 
     return (

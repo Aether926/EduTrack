@@ -73,13 +73,13 @@ export default function SignUpPage() {
     if (issues.length) return setMessage(`Password is too weak. Use ${issues.join(", ")}.`);
     setSubmitting(true);
 
-    const res = await fetch("/api/auth/check-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: emailNorm }),
-    });
-    const { exists } = await res.json().catch(() => ({ exists: false }));
-    if (exists) { setMessage("Email already exists."); setSubmitting(false); return; }
+    // const res = await fetch("/api/auth/check-email", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ email: emailNorm }),
+    // });
+    // const { exists } = await res.json().catch(() => ({ exists: false }));
+    // if (exists) { setMessage("Email already exists."); setSubmitting(false); return; }
 
     const { error } = await supabase.auth.signUp({
       email: emailNorm,

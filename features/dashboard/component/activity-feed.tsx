@@ -26,7 +26,7 @@ function classify(r: FeedRow) {
   if (a.includes("APPROVED") || a === "COMPLIANCE_COMPLIANT") return "approved";
   if (a.includes("REJECTED") || a === "COMPLIANCE_NON_COMPLIANT") return "rejected";
   if (a.includes("COMPLIANCE")) return "compliance";
-  if (a.includes("REQUEST")) return "requests";
+  if (a.includes("REQUEST") || a.includes("REQUESTED")) return "requests";
   return "all";
 }
 
@@ -44,32 +44,149 @@ function iconFor(kind: ReturnType<typeof classify>) {
   return <Bell className="h-4 w-4" />;
 }
 
-function getDisplayMessage(r: FeedRow, viewerId: string) {
-  const title = (r.meta?.title as string | undefined) ?? null;
-  const note = (r.meta?.note as string | undefined) ?? null;
+export function getDisplayMessage(r: FeedRow, viewerId: string): string {
+  const title    = (r.meta?.title    as string | undefined) ?? null;
+  const note     = (r.meta?.note     as string | undefined) ?? null;
+  const reason   = (r.meta?.reason   as string | undefined) ?? null;
+  const docType  = (r.meta?.docType  as string | undefined) ?? null;
+  const position = (r.meta?.position as string | undefined) ?? null;
 
-  const targetUserId = r.target_user_id ?? null;
-  const actorId = r.actor_id ?? null;
-  const isReceiver = !!targetUserId && targetUserId === viewerId;
-  const isActor = !!actorId && actorId === viewerId;
+  const targetId = r.target_user_id ?? null;
+  const actorId  = r.actor_id       ?? null;
 
-  if (r.action === "ASSIGNED_TO_TRAINING") {
-    if (isActor) return `You assigned a teacher to ${title ?? "a training"}.`;
-    if (isReceiver) return `You were assigned to ${title ?? "a training"}.`;
-    return `Training assignment updated: ${title ?? "a training"}.`;
+  const isActor    = !!actorId  && actorId  === viewerId;
+  const isReceiver = !!targetId && targetId === viewerId;
+
+  switch (r.action) {
+
+    // ── Training ─────────────────────────────────────────────────────────────
+    case "ASSIGNED_TO_TRAINING":
+      if (isActor)    return `You assigned a teacher to "${title ?? "a training"}".`;
+      if (isReceiver) return `You were assigned to "${title ?? "a training"}".`;
+      return `A teacher was assigned to "${title ?? "a training"}".`;
+
+    case "PROOF_SUBMITTED":
+      if (isActor)    return `You submitted proof for "${title ?? "a training"}".`;
+      if (isReceiver) return `A proof submission was received for "${title ?? "a training"}".`;
+      return `Proof submitted for "${title ?? "a training"}".`;
+
+    case "PROOF_APPROVED":
+      if (isActor)    return `You approved a proof submission${title ? ` for "${title}"` : ""}.`;
+      if (isReceiver) return `Your proof submission${title ? ` for "${title}"` : ""} was approved.`;
+      return `A proof submission was approved${title ? ` for "${title}"` : ""}.`;
+
+    case "PROOF_REJECTED":
+      if (isActor)    return `You rejected a proof submission${title ? ` for "${title}"` : ""}${note ? `. Reason: ${note}` : ""}.`;
+      if (isReceiver) return `Your proof submission${title ? ` for "${title}"` : ""} was rejected${note ? `. Reason: ${note}` : ""}.`;
+      return `A proof submission was rejected${title ? ` for "${title}"` : ""}.`;
+
+    // ── HR / Employment ───────────────────────────────────────────────────────
+    case "REQUEST_APPROVED":
+    case "HR_REQUEST_APPROVED":
+    case "APPOINTMENT_REQUEST_APPROVED":
+      if (isActor)    return `You approved an employment change request${position ? ` for "${position}"` : ""}${note ? `. Note: ${note}` : ""}.`;
+      if (isReceiver) return `Your employment change request${position ? ` for "${position}"` : ""} was approved${note ? `. Note: ${note}` : ""}.`;
+      return `An employment change request was approved${position ? ` for "${position}"` : ""}.`;
+
+    case "REQUEST_REJECTED":
+    case "HR_REQUEST_REJECTED":
+      if (isActor)    return `You rejected an employment change request${note ? `. Reason: ${note}` : ""}.`;
+      if (isReceiver) return `Your employment change request was rejected${note ? `. Reason: ${note}` : ""}.`;
+      return `An employment change request was rejected.`;
+
+    // ── Documents ─────────────────────────────────────────────────────────────
+    case "DOC_SUBMITTED":
+      if (isActor)    return `You submitted "${docType ?? "a document"}" for review.`;
+      if (isReceiver) return `A document "${docType ?? ""}" was submitted and is pending your review.`;
+      return `A document "${docType ?? ""}" was submitted.`;
+
+    case "DOC_APPROVED":
+      if (isActor)    return `You approved "${docType ?? "a document"}".`;
+      if (isReceiver) return `Your document "${docType ?? ""}" was approved.`;
+      return `A document "${docType ?? ""}" was approved.`;
+
+    case "DOC_REJECTED":
+      if (isActor)    return `You rejected "${docType ?? "a document"}"${note ? `. Reason: ${note}` : ""}.`;
+      if (isReceiver) return `Your document "${docType ?? ""}" was rejected${note ? `. Reason: ${note}` : ""}.`;
+      return `A document "${docType ?? ""}" was rejected.`;
+
+    case "DOC_RESUBMIT_REQUESTED":
+      if (isActor)    return `You requested resubmission of "${docType ?? "a document"}".`;
+      if (isReceiver) return `Your request to resubmit "${docType ?? "a document"}" is pending admin review.`;
+      return `A resubmission was requested for "${docType ?? "a document"}".`;
+
+    case "DOC_RESUBMIT_REQUESTED_BY_ADMIN":
+      if (isActor)    return `You requested resubmission of "${docType ?? "a document"}" from a teacher.`;
+      if (isReceiver) return `Admin has requested you to resubmit "${docType ?? "a document"}"${note ? `. Note: ${note}` : ""}.`;
+      return `Admin requested resubmission of "${docType ?? "a document"}".`;
+
+    case "DOC_RESUBMIT_APPROVED":
+      if (isActor)    return `You approved the resubmission request for "${docType ?? "a document"}".`;
+      if (isReceiver) return `Your resubmission request for "${docType ?? "a document"}" was approved. You may now upload again.`;
+      return `A resubmission request was approved for "${docType ?? "a document"}".`;
+
+    case "DOC_RESUBMIT_REJECTED":
+      if (isActor)    return `You rejected the resubmission request for "${docType ?? "a document"}"${note ? `. Reason: ${note}` : ""}.`;
+      if (isReceiver) return `Your resubmission request for "${docType ?? "a document"}" was rejected${note ? `. Reason: ${note}` : ""}.`;
+      return `A resubmission request was rejected for "${docType ?? "a document"}".`;
+
+    case "DOC_DELETE_REQUESTED":
+      if (isActor)    return `You requested deletion of "${docType ?? "a document"}".`;
+      if (isReceiver) return `Your request to delete "${docType ?? "a document"}" is pending admin review.`;
+      return `A deletion was requested for "${docType ?? "a document"}".`;
+
+    case "DOC_DELETE_APPROVED":
+      if (isActor)    return `You approved the deletion of "${docType ?? "a document"}".`;
+      if (isReceiver) return `Your document "${docType ?? ""}" deletion request was approved and the document has been removed.`;
+      return `A document deletion was approved for "${docType ?? "a document"}".`;
+
+    case "DOC_DELETE_REJECTED":
+      if (isActor)    return `You rejected the deletion request for "${docType ?? "a document"}"${note ? `. Reason: ${note}` : ""}.`;
+      if (isReceiver) return `Your deletion request for "${docType ?? "a document"}" was rejected${note ? `. Reason: ${note}` : ""}.`;
+      return `A deletion request was rejected for "${docType ?? "a document"}".`;
+
+    // ── Compliance ────────────────────────────────────────────────────────────
+    case "COMPLIANCE_AT_RISK":
+      return "Your training compliance is at risk. Please complete the required hours soon.";
+
+    case "COMPLIANCE_NON_COMPLIANT":
+      return "You are currently non-compliant with training requirements. Please complete the required hours.";
+
+    case "COMPLIANCE_COMPLIANT":
+      return "You are now compliant with training requirements. Great work!";
+
+    // ── Account Deletion ──────────────────────────────────────────────────────
+    case "ACCOUNT_DELETION_REQUESTED":
+      if (isActor)    return `You submitted a request to delete your account${reason ? `. Reason: ${reason}` : ""}. You have a grace period to cancel.`;
+      if (isReceiver) return `A teacher has requested deletion of their account. Review it in Admin Actions.`;
+      return "An account deletion was requested.";
+
+    case "ACCOUNT_DELETION_CANCELLED":
+      if (isActor)    return "You cancelled your account deletion request. Your account remains active.";
+      if (isReceiver) return "The account deletion request was cancelled by the teacher.";
+      return "An account deletion request was cancelled.";
+
+    case "ACCOUNT_DELETION_CANCELLED_BY_ADMIN":
+      if (isActor)    return "You cancelled a teacher's account deletion request.";
+      if (isReceiver) return "Your account deletion request has been cancelled by an administrator. Your account remains active.";
+      return "An account deletion request was cancelled by admin.";
+
+    case "ACCOUNT_DELETION_INITIATED_BY_ADMIN":
+      if (isActor)    return `You initiated account deletion for a teacher${reason ? `. Reason: ${reason}` : ""}. Grace period has started.`;
+      if (isReceiver) return `An administrator has scheduled your account for deletion${reason ? `. Reason: ${reason}` : ""}. You have a grace period before this takes effect.`;
+      return "An administrator initiated account deletion for a teacher.";
+
+    // ── Password ──────────────────────────────────────────────────────────────
+    case "PASSWORD_CHANGED":
+      return "Your password was changed successfully.";
+
+    // ── Fallback ──────────────────────────────────────────────────────────────
+    case "TEST_LOG":
+      return "Test activity log entry.";
+
+    default:
+      return r.message || "Activity updated.";
   }
-
-  if (r.action === "PROOF_APPROVED") return isReceiver ? "Your proof submission was approved." : isActor ? "You approved a proof submission." : "A proof submission was approved.";
-  if (r.action === "PROOF_REJECTED") return isReceiver ? `Your proof submission was rejected.${note ? ` Reason: ${note}` : ""}` : isActor ? "You rejected a proof submission." : "A proof submission was rejected.";
-
-  if (r.action === "HR_REQUEST_APPROVED") return isReceiver ? `Your HR request was approved.${note ? ` Note: ${note}` : ""}` : "An HR request was approved.";
-  if (r.action === "HR_REQUEST_REJECTED") return isReceiver ? `Your HR request was rejected.${note ? ` Reason: ${note}` : ""}` : "An HR request was rejected.";
-
-  if (r.action === "COMPLIANCE_AT_RISK") return "Your compliance is at risk. Please complete required hours.";
-  if (r.action === "COMPLIANCE_NON_COMPLIANT") return "You are currently non-compliant. Please complete required hours.";
-  if (r.action === "COMPLIANCE_COMPLIANT") return "You are now compliant. Good job!";
-
-  return r.message || "Activity updated.";
 }
 
 export default function ActivityFeed({
@@ -81,12 +198,15 @@ export default function ActivityFeed({
   role: string | null;
   viewerId: string;
 }) {
-  const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<FilterKey>("all");
-  const [visible, setVisible] = useState(8);
+  const [q, setQ]               = useState("");
+  const [filter, setFilter]     = useState<FilterKey>("all");
+  const [visible, setVisible]   = useState(8);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const enriched = useMemo(() => (rows as FeedRow[]).map((r) => ({ ...r, _kind: classify(r) })), [rows]);
+  const enriched = useMemo(
+    () => (rows as FeedRow[]).map((r) => ({ ...r, _kind: classify(r) })),
+    [rows]
+  );
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -99,7 +219,7 @@ export default function ActivityFeed({
     });
   }, [enriched, q, filter, viewerId]);
 
-  const shown = filtered.slice(0, visible);
+  const shown      = filtered.slice(0, visible);
   const canLoadMore = visible < filtered.length;
 
   return (
@@ -121,17 +241,11 @@ export default function ActivityFeed({
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search..." />
           </div>
 
-          {/* Mobile search icon -> expand */}
+          {/* Mobile search */}
           <div className="flex md:hidden items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setSearchOpen((v) => !v)}
-              aria-label="Search"
-            >
+            <Button variant="outline" size="icon" onClick={() => setSearchOpen((v) => !v)} aria-label="Search">
               {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
             </Button>
-
             <AnimatePresence initial={false}>
               {searchOpen ? (
                 <motion.div
@@ -141,12 +255,7 @@ export default function ActivityFeed({
                   transition={{ duration: 0.18 }}
                   className="overflow-hidden"
                 >
-                  <Input
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Search..."
-                    className="h-9"
-                  />
+                  <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search..." className="h-9" />
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -161,11 +270,11 @@ export default function ActivityFeed({
             </Badge>
 
             {([
-              ["all", "All"],
-              ["approved", "Approved"],
-              ["rejected", "Rejected"],
+              ["all",        "All"],
+              ["approved",   "Approved"],
+              ["rejected",   "Rejected"],
               ["compliance", "Compliance"],
-              ["requests", "Requests"],
+              ["requests",   "Requests"],
             ] as const).map(([k, label]) => (
               <Button
                 key={k}
@@ -189,7 +298,7 @@ export default function ActivityFeed({
         <AnimatePresence initial={false}>
           {shown.map((r, idx) => {
             const kind = (r as any)._kind as ReturnType<typeof classify>;
-            const msg = getDisplayMessage(r, viewerId);
+            const msg  = getDisplayMessage(r, viewerId);
 
             return (
               <motion.div
@@ -227,7 +336,7 @@ export default function ActivityFeed({
 
                         <Separator className="mt-4" />
                         <div className="flex items-center justify-between px-1 pt-3 text-xs text-muted-foreground">
-                          <span>{r.entity_type ? `${r.entity_type}` : ""}</span>
+                          <span>{r.entity_type ?? ""}</span>
                           <span>{r.entity_id ? `#${String(r.entity_id).slice(0, 8)}` : ""}</span>
                         </div>
                       </div>

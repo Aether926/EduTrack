@@ -1,44 +1,38 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNotifications } from "@/features/notifications/hooks/use-notifications";
-import { Button } from "@/components/ui/button";
-
-
-const ACTION_LABELS: Record<string, string> = {
-  HR_REQUEST_APPROVED: "Employment request approved",
-  HR_REQUEST_REJECTED: "Employment request rejected",
-  APPOINTMENT_REQUEST_APPROVED: "Appointment request approved",
-  APPOINTMENT_REQUEST_REJECTED: "Appointment request rejected",
-  ASSIGNED_TO_TRAINING: "Assigned to training",
-  PROOF_APPROVED: "Proof submission approved",
-  PROOF_REJECTED: "Proof submission rejected",
-  COMPLIANCE_AT_RISK: "Training Compliance At Risk",
-COMPLIANCE_NON_COMPLIANT: "Training Non-Compliant",
-};
+import { supabase } from "@/lib/supabaseClient";
+import { getDisplayMessage } from "@/features/dashboard/component/activity-feed";
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  const hrs = Math.floor(mins / 60);
+  const hrs  = Math.floor(mins / 60);
   const days = Math.floor(hrs / 24);
   if (days > 0) return `${days}d ago`;
-  if (hrs > 0) return `${hrs}h ago`;
+  if (hrs  > 0) return `${hrs}h ago`;
   if (mins > 0) return `${mins}m ago`;
   return "just now";
 }
 
 export function NotificationPopover() {
   const { notifications, loading, unreadCount, markRead } = useNotifications();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]       = useState(false);
+  const [viewerId, setViewerId] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setViewerId(data.user.id);
+    });
+  }, []);
 
   const handleOpen = async (isOpen: boolean) => {
     setOpen(isOpen);
-    if (isOpen && unreadCount > 0) {
-      await markRead();
-    }
+    if (isOpen && unreadCount > 0) await markRead();
   };
 
   return (
@@ -54,11 +48,7 @@ export function NotificationPopover() {
         </button>
       </PopoverTrigger>
 
-      <PopoverContent
-        side="right"
-        align="end"
-        className="w-80 p-0 overflow-hidden"
-      >
+      <PopoverContent side="right" align="end" className="w-80 p-0 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="text-sm font-semibold">Notifications</h3>
           {unreadCount > 0 && (
@@ -76,35 +66,42 @@ export function NotificationPopover() {
               No notifications yet.
             </div>
           ) : (
-            notifications.map((n) => (
-              <div
-                key={n.id}
-                className={`px-4 py-3 border-b last:border-0 transition-colors ${
-                  !n.read_at ? "bg-blue-50 dark:bg-blue-950/20" : ""
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${!n.read_at ? "font-semibold" : "font-medium"}`}>
-                      {ACTION_LABELS[n.action] ?? n.action}
-                    </p>
-                    {n.message && (
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                        {n.message}
+            notifications.map((n) => {
+              // Build a FeedRow-compatible object for getDisplayMessage
+              const feedRow = {
+                ...n,
+                actor_id:       n.actor_id       ?? null,
+                target_user_id: n.target_user_id ?? undefined,
+              };
+              const msg = viewerId
+                ? getDisplayMessage(feedRow as any, viewerId)
+                : n.message || n.action;
+
+              return (
+                <div
+                  key={n.id}
+                  className={`px-4 py-3 border-b last:border-0 transition-colors ${
+                    !n.read_at ? "bg-blue-50 dark:bg-blue-950/20" : ""
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm ${!n.read_at ? "font-semibold" : "font-medium"}`}>
+                        {msg}
                       </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {timeAgo(n.created_at)}
-                    </span>
-                    {!n.read_at && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                        {timeAgo(n.created_at)}
+                      </span>
+                      {!n.read_at && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </PopoverContent>

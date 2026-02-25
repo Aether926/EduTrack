@@ -106,7 +106,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
               <div className="min-w-0">
                 <div className="truncate font-medium">{fullname}</div>
 
-                {/* mobile: show position + contact under name */}
                 <div className="md:hidden mt-1 space-y-0.5">
                   <div className="truncate text-xs text-muted-foreground">
                     {position || "N/A"}
@@ -168,23 +167,15 @@ export default function TeacherTable({ data }: TeacherTableProps) {
       const pos = String(row.original.position ?? "").toLowerCase();
       const contact = String(row.original.contact ?? "").toLowerCase();
 
-      return (
-        full.includes(v) ||
-        emp.includes(v) ||
-        pos.includes(v) ||
-        contact.includes(v)
-      );
+      return full.includes(v) || emp.includes(v) || pos.includes(v) || contact.includes(v);
     },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(), // filter BEFORE pagination
+    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: { pageSize: 10 },
-    },
+    initialState: { pagination: { pageSize: 10 } },
   });
 
-  // when searching, jump back to page 1 so you don't check other pages
   useEffect(() => {
     table.setPageIndex(0);
   }, [globalFilter]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -203,7 +194,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
           </CardDescription>
         </div>
 
-        {/* Desktop search */}
         <div className="hidden md:block w-[320px]">
           <Input
             value={globalFilter ?? ""}
@@ -212,7 +202,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
           />
         </div>
 
-        {/* Mobile search icon -> expand */}
         <div className="flex md:hidden items-center gap-2">
           <Button
             variant="outline"
@@ -253,13 +242,11 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                   {hg.headers.map((header) => {
                     const colId = header.column.id;
 
-                    // hide position/contact on small screens (shown under name)
                     const hideOnSmall =
                       colId === "position" || colId === "contact"
                         ? "hidden md:table-cell"
                         : "";
 
-                    // keep the view column narrow
                     const viewCol = colId === "view" ? "w-[1%]" : "";
 
                     return (
@@ -311,7 +298,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
           </Table>
         </div>
 
-        {/* Pagination */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <div className="text-xs text-muted-foreground">
             Page {pageIndex + 1} of {pageCount}

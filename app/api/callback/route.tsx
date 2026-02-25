@@ -26,11 +26,12 @@ export async function GET(request: Request) {
             }
         );
 
-        await supabase.auth.exchangeCodeForSession(code);
-
-        await new Promise((resolve) => setTimeout(resolve, 1000)); 
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (error) {
+            return NextResponse.redirect(new URL('/signin', request.url));
+        }
+        return NextResponse.redirect(new URL('/signin', request.url));
     }
-
-    // After email is confirmed, redirect to fillup
-    return NextResponse.redirect(new URL('/fillUp', request.url));
+    return NextResponse.redirect(new URL('/signin', request.url));
 }

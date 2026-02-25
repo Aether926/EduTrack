@@ -32,7 +32,6 @@ export function useAppointment(teacherId: string) {
 }, [teacherId]);
 
     const submitRequest = async (form: AppointmentRequestForm) => {
-    toast.success(">>> submitRequest called with teacherId:" + teacherId);
     if (!form.position.trim()) {
       toast.info("Please select a position.");
       return false;
@@ -57,7 +56,7 @@ export function useAppointment(teacherId: string) {
       await loadData();
       return true;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to submit request.");
+      toast.error("Having trouble submitting request. Please try again.");
       return false;
     } finally {
       setSubmitting(false);

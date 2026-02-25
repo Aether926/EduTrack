@@ -23,6 +23,7 @@ import TrainingsCard from "@/features/profiles/components/cards/training-card";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDownIcon } from "lucide-react";
+import { AdminDangerZone } from "@/features/admin-actions/teachers/components/admin-danger-zone";
 
 const POSITIONS = [
   "Teacher I", "Teacher II", "Teacher III",
@@ -557,6 +558,13 @@ export default function AdminTeacherManage(props: {
             />
           </div>
         </div>
+
+        {/* Danger Zone */}
+        <AdminDangerZone
+          teacherId={teacherId}
+          teacherName={fullName}
+        />
+
       </div>
     </main>
   );

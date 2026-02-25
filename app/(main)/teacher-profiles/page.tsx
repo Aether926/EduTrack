@@ -27,8 +27,8 @@ export default function TeacherProfilesPage() {
     const loadData = async () => {
       setLoading(true);
 
-      const { data } = await supabase.auth.getSession();
-      const authUser = data.session?.user;
+      const { data } = await supabase.auth.getUser();
+      const authUser = data.user;
 
       if (!authUser) {
         setTeachers([]);

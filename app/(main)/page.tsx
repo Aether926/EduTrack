@@ -6,7 +6,7 @@ import { postReligion } from "../actions/religion";
 export default function Home() {
     async function fetchData() {
         const religion = await postReligion();
-        console.log(religion);
+
     }
 
     return (

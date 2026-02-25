@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { PendingUser } from "../types";
-import { approveUser, fetchUsersByStatus, permanentlyDeleteUser, rejectUser } from "../lib/api";
+import { approveUser, fetchUsersByStatus, permanentlyDeleteUser, rejectUser } from "../actions/access-request-actions";
 import { errMsg } from "../lib/utils";
 
 export function useAccessRequests() {

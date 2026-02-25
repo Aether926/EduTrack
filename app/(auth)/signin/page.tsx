@@ -12,15 +12,15 @@ const FEATURES = [
 ];
 
 export default function LogIn() {
-  const [email, setEmail]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [message, setMessage]     = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [email, setEmail]               = useState("");
+  const [password, setPassword]         = useState("");
+  const [message, setMessage]           = useState("");
+  const [submitting, setSubmitting]     = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const router      = useRouter();
-  const cardRef     = useRef<HTMLDivElement>(null);
-  const glowRef     = useRef<HTMLDivElement>(null);
+  const router       = useRouter();
+  const cardRef      = useRef<HTMLDivElement>(null);
+  const glowRef      = useRef<HTMLDivElement>(null);
   const spotlightRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,8 +82,8 @@ export default function LogIn() {
     const { data: profile, error: profErr } = await supabase.from("User").select("status").eq("id", userId).maybeSingle();
     if (profErr) { setMessage("Something went wrong. Try again."); setSubmitting(false); return; }
 
-    if (!profile)                          router.push("/fillUp");
-    else if (profile.status === "PENDING") router.push("/pending-approval");
+    if (!profile)                           router.push("/fillUp");
+    else if (profile.status === "PENDING")  router.push("/pending-approval");
     else if (profile.status === "APPROVED") router.push("/dashboard");
     else setMessage("Your account status is unclear. Please contact support.");
 
@@ -142,7 +142,6 @@ export default function LogIn() {
 
           {/* ── LEFT: Hero ── */}
           <div className="flex-1 w-full text-center lg:text-left">
-
             <div className="fu fu-1 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#2a2a2d] bg-[#141415] mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-[#5b8dee] animate-pulse" />
               <span className="text-[11px] text-[#8a8a9a] font-medium tracking-widest uppercase">
@@ -181,7 +180,7 @@ export default function LogIn() {
             </p>
           </div>
 
-          {/* ── RIGHT: Login Card (unchanged internals) ── */}
+          {/* ── RIGHT: Login Card ── */}
           <div className="w-full max-w-sm flex-shrink-0">
             <div className="relative w-full" ref={cardRef}>
               <div className="glow-ring" ref={glowRef} />
@@ -197,7 +196,9 @@ export default function LogIn() {
 
                   <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                      <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">Email address</label>
+                      <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
+                        Email address
+                      </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#777786]" />
                         <input
@@ -212,7 +213,13 @@ export default function LogIn() {
                     </div>
 
                     <div className="mb-5">
-                      <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">Password</label>
+                      {/* ── Forgot password link added here ── */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[12.5px] font-medium text-[#8a8a9a]">Password</label>
+                        <a href="/forgot-password" className="text-[12px] text-[#5b8dee] hover:underline transition-colors">
+                          Forgot password?
+                        </a>
+                      </div>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#777786]" />
                         <input

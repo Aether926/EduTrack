@@ -354,6 +354,7 @@ export default function AppSidebar() {
 
               <DropdownMenuContent side="top" align="end" className="w-56">
                 <DropdownRedirect path="/profile">Manage Profile</DropdownRedirect>
+                <DropdownRedirect path="/settings">Settings</DropdownRedirect>
 
                 <button
                   onClick={handleSignOut}
