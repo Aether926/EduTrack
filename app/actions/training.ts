@@ -19,15 +19,18 @@ type UpdatePayload = {
 };
 
 export async function updateProfessionalDevelopment(payload: UpdatePayload) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
 
+  const { data: profile } = await supabase
+    .from("User").select("role").eq("id", user.id).single();
+  if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+
+  const adminSupabase = createAdminClient();
   const { id, ...update } = payload;
-
-  const { error } = await supabase
-    .from("ProfessionalDevelopment")
-    .update(update)
-    .eq("id", id);
-
+  const { error } = await adminSupabase
+    .from("ProfessionalDevelopment").update(update).eq("id", id);
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/add-training-seminar");

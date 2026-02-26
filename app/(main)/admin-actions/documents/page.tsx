@@ -7,6 +7,7 @@ import {
   getPendingDocumentRequests,
 } from "@/features/documents/actions/admin-document-actions";
 import { AdminDocumentReviewTable } from "@/features/documents/components/admin-document-review-table";
+import { TeacherOverviewTable } from "@/features/documents/components/teacher-overview-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
 
@@ -27,7 +28,7 @@ export default async function AdminDocumentsPage() {
   const [pendingDocs, teacherStatus, requests] = await Promise.all([
     getPendingDocuments(),
     getAllTeacherDocumentStatus(),
-    getPendingDocumentRequests(), // ✅ added
+    getPendingDocumentRequests(),
   ]);
 
   const totalApproved = teacherStatus.reduce((sum, t) => sum + t.approved, 0);
@@ -104,69 +105,9 @@ export default async function AdminDocumentsPage() {
 
         {/* Per-teacher overview */}
         <div>
-          <h2 className="text-lg font-semibold mb-3">Teacher Overview</h2>
-          <Card>
-            <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left p-3 font-medium">Teacher</th>
-                    <th className="text-center p-3 font-medium">Approved</th>
-                    <th className="text-center p-3 font-medium">Pending</th>
-                    <th className="text-center p-3 font-medium">Rejected</th>
-                    <th className="text-center p-3 font-medium">Missing</th>
-                    <th className="text-center p-3 font-medium">Progress</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teacherStatus.map((t) => (
-                    <tr
-                      key={t.teacherId}
-                      className="border-b border-border last:border-0"
-                    >
-                      <td className="p-3">
-                        <p className="font-medium">
-                          {t.firstName} {t.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{t.email}</p>
-                      </td>
-                      <td className="p-3 text-center text-green-600 font-medium">
-                        {t.approved}
-                      </td>
-                      <td className="p-3 text-center text-blue-600 font-medium">
-                        {t.submitted}
-                      </td>
-                      <td className="p-3 text-center text-red-600 font-medium">
-                        {t.rejected}
-                      </td>
-                      <td className="p-3 text-center text-orange-500 font-medium">
-                        {t.missing}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-muted rounded-full h-2">
-                            <div
-                              className="bg-green-500 h-2 rounded-full"
-                              style={{
-                                width:
-                                  t.total > 0
-                                    ? `${(t.approved / t.total) * 100}%`
-                                    : "0%",
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground shrink-0">
-                            {t.approved}/{t.total}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        </div>
+  <h2 className="text-lg font-semibold mb-3">Teacher Overview</h2>
+  <TeacherOverviewTable teacherStatus={teacherStatus} />
+</div>
       </div>
     </main>
   );

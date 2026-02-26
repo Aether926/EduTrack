@@ -1,8 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import React, { useMemo, useState } from "react";
+import { Clock, ClipboardList, Briefcase, BookMarked } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
 import { HRQueueRow } from "@/features/admin-actions/queue/components/queue-row";
 import { AppointmentQueueRow } from "@/features/admin-actions/queue/components/appointment-queue-row";
 import type {
@@ -15,23 +20,11 @@ import {
   rejectChangeRequest,
 } from "@/features/responsibilities/actions/admin-responsibility-actions";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-function SectionHeader(props: { title: string; count: number }) {
-  return (
-    <div className="flex items-center justify-between">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        {props.title}
-      </p>
-      <span className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground">
-        {props.count}
-      </span>
-    </div>
-  );
-}
+import { Textarea } from "@/components/ui/textarea";
 
 function QueueCard(props: {
+  icon: React.ReactNode;
   title: string;
   subtitle?: string;
   pendingCount: number;
@@ -39,49 +32,57 @@ function QueueCard(props: {
   pending: React.ReactNode;
   reviewed: React.ReactNode;
 }) {
-  const { title, subtitle, pendingCount, reviewedCount, pending, reviewed } =
-    props;
-
+  const { icon, title, subtitle, pendingCount, reviewedCount, pending, reviewed } = props;
   const [tab, setTab] = useState<"PENDING" | "REVIEWED">("PENDING");
 
   return (
-    <Card className="border-0 shadow-lg">
-      <CardHeader className="space-y-3">
+    <Card className="min-w-0">
+      <CardHeader className="space-y-2">
         <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle className="text-base">{title}</CardTitle>
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="rounded-md border bg-muted/10 p-2">{icon}</div>
+              <CardTitle className="text-base truncate">{title}</CardTitle>
+            </div>
             {subtitle ? (
-              <p className="text-sm text-muted-foreground">{subtitle}</p>
+              <CardDescription className="text-sm">{subtitle}</CardDescription>
             ) : null}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               size="sm"
               variant={tab === "PENDING" ? "default" : "outline"}
               onClick={() => setTab("PENDING")}
             >
-              Pending ({pendingCount})
+              Pending
+              <Badge variant="secondary" className="ml-2">
+                {pendingCount}
+              </Badge>
             </Button>
+
             <Button
               size="sm"
               variant={tab === "REVIEWED" ? "default" : "outline"}
               onClick={() => setTab("REVIEWED")}
             >
-              Reviewed ({reviewedCount})
+              Reviewed
+              <Badge variant="secondary" className="ml-2">
+                {reviewedCount}
+              </Badge>
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {tab === "PENDING" ? pending : reviewed}
       </CardContent>
     </Card>
   );
 }
 
-// ─── Responsibility Queue Row ──────────────────────────────────────
+// ─── Responsibility Queue Row (kept behavior, improved UI) ─────────
 function ResponsibilityQueueRow(props: {
   request: ResponsibilityRequestWithTeacher;
   onRefresh: (id: string, status: "APPROVED" | "REJECTED") => void;
@@ -92,9 +93,7 @@ function ResponsibilityQueueRow(props: {
   const [loading, setLoading] = useState(false);
 
   const teacher = r.teacher;
-  const fullName = teacher
-    ? `${teacher.firstName} ${teacher.lastName}`
-    : "Unknown";
+  const fullName = teacher ? `${teacher.firstName} ${teacher.lastName}` : "Unknown";
 
   const handleApprove = async () => {
     setLoading(true);
@@ -123,71 +122,77 @@ function ResponsibilityQueueRow(props: {
     }
   };
 
-  const statusStyle =
+  const statusBadge =
     r.status === "APPROVED"
-      ? "bg-green-100 text-green-800"
+      ? "bg-green-500/10 text-green-700 border-green-500/20"
       : r.status === "REJECTED"
-      ? "bg-red-100 text-red-800"
-      : "bg-yellow-100 text-yellow-800";
+      ? "bg-red-500/10 text-red-700 border-red-500/20"
+      : "bg-yellow-500/10 text-yellow-800 border-yellow-500/20";
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
+    <div className="rounded-lg border bg-muted/10 overflow-hidden">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+        className="w-full text-left p-3 hover:bg-muted/20 transition-colors"
         onClick={() => setExpanded((v) => !v)}
       >
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="font-medium text-sm">{fullName}</span>
-          <span className="text-xs text-muted-foreground">{teacher?.email}</span>
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusStyle}`}
-          >
-            {r.status}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{new Date(r.requested_at).toLocaleDateString()}</span>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium truncate">{fullName}</span>
+              <span className="text-xs text-muted-foreground truncate">
+                {teacher?.email ?? "—"}
+              </span>
+              <Badge variant="outline" className={statusBadge}>
+                {r.status}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+            <span>{new Date(r.requested_at).toLocaleDateString()}</span>
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </div>
         </div>
       </button>
 
-      {expanded && (
-        <div className="px-4 pb-4 pt-3 space-y-3 border-t border-border text-sm">
-          <div className="space-y-1">
+      {expanded ? (
+        <div className="border-t p-3 space-y-3">
+          <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Requested Changes
             </p>
-            {Object.entries(r.requested_changes).map(([key, val]) => (
-              <div key={key} className="flex gap-2">
-                <span className="w-32 text-muted-foreground capitalize">
-                  {key}
-                </span>
-                <span className="font-medium">
-                  {typeof val === "object"
-                    ? JSON.stringify(val)
-                    : String(val)}
-                </span>
-              </div>
-            ))}
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {Object.entries(r.requested_changes ?? {}).map(([key, val]) => (
+                <div key={key} className="rounded-md border bg-background p-3">
+                  <div className="text-xs text-muted-foreground capitalize">
+                    {key.replaceAll("_", " ")}
+                  </div>
+                  <div className="text-sm font-medium break-words">
+                    {typeof val === "object" ? JSON.stringify(val) : String(val)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+          <div className="rounded-md border bg-background p-3">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mb-1">
               Reason
-            </p>
-            <p>{r.reason}</p>
+            </div>
+            <div className="text-sm">{r.reason}</div>
           </div>
 
-          {r.status === "PENDING" && (
+          {r.status === "PENDING" ? (
             <div className="space-y-2">
-              <textarea
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-transparent resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={2}
+              <Textarea
+                rows={3}
                 placeholder="Review note (required for rejection)..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
-              <div className="flex gap-2">
+
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
                 <Button
                   size="sm"
                   className="bg-green-600 hover:bg-green-700 text-white"
@@ -207,13 +212,13 @@ function ResponsibilityQueueRow(props: {
                 </Button>
               </div>
             </div>
-          )}
-
-          {r.status !== "PENDING" && r.review_note && (
-            <p className="text-muted-foreground italic">Note: {r.review_note}</p>
-          )}
+          ) : r.review_note ? (
+            <div className="text-sm text-muted-foreground italic">
+              Note: {r.review_note}
+            </div>
+          ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -234,178 +239,127 @@ export function HRQueueClient(props: {
     setHrList((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
 
   const handleApptRefresh = (id: string, status: "APPROVED" | "REJECTED") =>
-    setApptList((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r))
-    );
+    setApptList((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
 
   const handleRespRefresh = (id: string, status: "APPROVED" | "REJECTED") =>
-    setRespList((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r))
-    );
+    setRespList((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
 
-  const pendingHR = hrList.filter((r) => r.status === "PENDING");
-  const reviewedHR = hrList.filter((r) => r.status !== "PENDING");
-  const pendingAppt = apptList.filter((r) => r.status === "PENDING");
-  const reviewedAppt = apptList.filter((r) => r.status !== "PENDING");
-  const pendingResp = respList.filter((r) => r.status === "PENDING");
-  const reviewedResp = respList.filter((r) => r.status !== "PENDING");
+  const pendingHR = useMemo(() => hrList.filter((r) => r.status === "PENDING"), [hrList]);
+  const reviewedHR = useMemo(() => hrList.filter((r) => r.status !== "PENDING"), [hrList]);
 
-  const totalPending =
-    pendingHR.length + pendingAppt.length + pendingResp.length;
+  const pendingAppt = useMemo(() => apptList.filter((r) => r.status === "PENDING"), [apptList]);
+  const reviewedAppt = useMemo(() => apptList.filter((r) => r.status !== "PENDING"), [apptList]);
+
+  const pendingResp = useMemo(() => respList.filter((r) => r.status === "PENDING"), [respList]);
+  const reviewedResp = useMemo(() => respList.filter((r) => r.status !== "PENDING"), [respList]);
+
+  const totalPending = pendingHR.length + pendingAppt.length + pendingResp.length;
 
   return (
-    <main className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <header>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
-            HR Change Request Queue
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Review and approve or reject pending requests from teachers.
-          </p>
-        </header>
-
-        <div className="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+    <div className="space-y-4">
+      {/* summary card (optional, matches theme) */}
+      <Card>
+        <CardContent className="p-4 md:p-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock size={18} className="text-yellow-500" />
-            <div className="text-sm text-muted-foreground">Total pending</div>
+            Total pending
           </div>
-          <div className="text-lg font-semibold text-foreground">
-            {totalPending}
-          </div>
-        </div>
+          <div className="text-2xl font-semibold">{totalPending}</div>
+        </CardContent>
+      </Card>
 
-        <div className="grid grid-cols-1 gap-6">
-          <QueueCard
-            title="Employment Info"
-            subtitle="ProfileHR change requests"
-            pendingCount={pendingHR.length}
-            reviewedCount={reviewedHR.length}
-            pending={
-              pendingHR.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No pending employment requests.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <SectionHeader title="pending" count={pendingHR.length} />
-                  {pendingHR.map((r) => (
-                    <HRQueueRow
-                      key={r.id}
-                      request={r}
-                      onRefresh={handleHRRefresh}
-                    />
-                  ))}
-                </div>
-              )
-            }
-            reviewed={
-              reviewedHR.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No reviewed employment requests yet.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <SectionHeader title="reviewed" count={reviewedHR.length} />
-                  {reviewedHR.map((r) => (
-                    <HRQueueRow
-                      key={r.id}
-                      request={r}
-                      onRefresh={handleHRRefresh}
-                    />
-                  ))}
-                </div>
-              )
-            }
-          />
+      {/* 3-card responsive grid like the loading state */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <QueueCard
+          icon={<ClipboardList className="h-5 w-5" />}
+          title="Employment Info"
+          subtitle="ProfileHR change requests"
+          pendingCount={pendingHR.length}
+          reviewedCount={reviewedHR.length}
+          pending={
+            pendingHR.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No pending employment requests.</div>
+            ) : (
+              <div className="space-y-2">
+                {pendingHR.map((r) => (
+                  <HRQueueRow key={r.id} request={r} onRefresh={handleHRRefresh} />
+                ))}
+              </div>
+            )
+          }
+          reviewed={
+            reviewedHR.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No reviewed employment requests yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {reviewedHR.map((r) => (
+                  <HRQueueRow key={r.id} request={r} onRefresh={handleHRRefresh} />
+                ))}
+              </div>
+            )
+          }
+        />
 
-          <QueueCard
-            title="Appointment Changes"
-            subtitle="Appointment history change requests"
-            pendingCount={pendingAppt.length}
-            reviewedCount={reviewedAppt.length}
-            pending={
-              pendingAppt.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No pending appointment requests.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <SectionHeader title="pending" count={pendingAppt.length} />
-                  {pendingAppt.map((r) => (
-                    <AppointmentQueueRow
-                      key={r.id}
-                      request={r}
-                      onRefresh={handleApptRefresh}
-                    />
-                  ))}
-                </div>
-              )
-            }
-            reviewed={
-              reviewedAppt.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No reviewed appointment requests yet.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <SectionHeader title="reviewed" count={reviewedAppt.length} />
-                  {reviewedAppt.map((r) => (
-                    <AppointmentQueueRow
-                      key={r.id}
-                      request={r}
-                      onRefresh={handleApptRefresh}
-                    />
-                  ))}
-                </div>
-              )
-            }
-          />
+        <QueueCard
+          icon={<Briefcase className="h-5 w-5" />}
+          title="Appointment Changes"
+          subtitle="Appointment history change requests"
+          pendingCount={pendingAppt.length}
+          reviewedCount={reviewedAppt.length}
+          pending={
+            pendingAppt.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No pending appointment requests.</div>
+            ) : (
+              <div className="space-y-2">
+                {pendingAppt.map((r) => (
+                  <AppointmentQueueRow key={r.id} request={r} onRefresh={handleApptRefresh} />
+                ))}
+              </div>
+            )
+          }
+          reviewed={
+            reviewedAppt.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No reviewed appointment requests yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {reviewedAppt.map((r) => (
+                  <AppointmentQueueRow key={r.id} request={r} onRefresh={handleApptRefresh} />
+                ))}
+              </div>
+            )
+          }
+        />
 
-          <QueueCard
-            title="Responsibility Changes"
-            subtitle="Teacher responsibility change requests"
-            pendingCount={pendingResp.length}
-            reviewedCount={reviewedResp.length}
-            pending={
-              pendingResp.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No pending responsibility requests.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <SectionHeader title="pending" count={pendingResp.length} />
-                  {pendingResp.map((r) => (
-                    <ResponsibilityQueueRow
-                      key={r.id}
-                      request={r}
-                      onRefresh={handleRespRefresh}
-                    />
-                  ))}
-                </div>
-              )
-            }
-            reviewed={
-              reviewedResp.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No reviewed responsibility requests yet.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <SectionHeader title="reviewed" count={reviewedResp.length} />
-                  {reviewedResp.map((r) => (
-                    <ResponsibilityQueueRow
-                      key={r.id}
-                      request={r}
-                      onRefresh={handleRespRefresh}
-                    />
-                  ))}
-                </div>
-              )
-            }
-          />
-        </div>
+        <QueueCard
+          icon={<BookMarked className="h-5 w-5" />}
+          title="Responsibility Changes"
+          subtitle="Teacher responsibility change requests"
+          pendingCount={pendingResp.length}
+          reviewedCount={reviewedResp.length}
+          pending={
+            pendingResp.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No pending responsibility requests.</div>
+            ) : (
+              <div className="space-y-2">
+                {pendingResp.map((r) => (
+                  <ResponsibilityQueueRow key={r.id} request={r} onRefresh={handleRespRefresh} />
+                ))}
+              </div>
+            )
+          }
+          reviewed={
+            reviewedResp.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No reviewed responsibility requests yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {reviewedResp.map((r) => (
+                  <ResponsibilityQueueRow key={r.id} request={r} onRefresh={handleRespRefresh} />
+                ))}
+              </div>
+            )
+          }
+        />
       </div>
-    </main>
+    </div>
   );
 }

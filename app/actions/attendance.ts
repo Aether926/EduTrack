@@ -39,8 +39,6 @@ async function insertActivity(rows: ActivityInsert[]) {
       meta: r.meta ?? null,
     }))
   );
-
-  if (error) toast.error("ActivityLog insert failed:");
 }
 
 async function requireAdmin() {
@@ -280,7 +278,6 @@ export async function rejectAttendance(
         .from("certificates")
         .remove([proofPath]);
 
-      if (delErr) toast.error("Failed to delete proof:");
     }
 
     const { error: updateErr } = await admin
