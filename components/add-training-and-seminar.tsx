@@ -1,8 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
 import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Plus,
+  Search,
+  X,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import {
+  ColumnDef,
+  SortingState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -11,52 +25,24 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { ArrowUpDown, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react";
-import { format } from "date-fns";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+
+import type { TrainingSeminarTableRow, ProfessionalDevelopment } from "@/lib/user";
+import {
+  createProfessionalDevelopment,
+  deleteMultipleProfessionalDevelopment,
+  updateProfessionalDevelopment,
+} from "@/app/actions/training";
 
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+
 import {
   Card,
   CardContent,
@@ -66,12 +52,54 @@ import {
 } from "@/components/ui/card";
 
 import {
-  createProfessionalDevelopment,
-  deleteMultipleProfessionalDevelopment,
-  updateProfessionalDevelopment,
-} from "@/app/actions/training";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-import type { TrainingSeminarTableRow, ProfessionalDevelopment } from "@/lib/user";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface AddTrainingAndSeminarProps {
   data: TrainingSeminarTableRow[];
@@ -79,14 +107,28 @@ interface AddTrainingAndSeminarProps {
 
 type Mode = "create" | "view" | "edit";
 
+type PendingDelete =
+  | { kind: "single"; id: string; title: string; type: string }
+  | { kind: "bulk"; ids: string[]; count: number };
+
+const DELETE_WARNING =
+  "Deleting this training/seminar will also remove it from all assigned teachers’ records (attendance/proof/compliance references). This action cannot be undone.";
+
 export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarProps) {
   const router = useRouter();
 
   const [mode, setMode] = useState<Mode>("create");
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [selected, setSelected] = useState<ProfessionalDevelopment | null>(null);
+
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -151,12 +193,56 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
     setIsOpen(true);
   };
 
+  const openSingleDelete = (row: TrainingSeminarTableRow) => {
+    setPendingDelete({
+      kind: "single",
+      id: row.id,
+      title: row.title,
+      type: String(row.type),
+    });
+    setDeleteDialogOpen(true);
+  };
+
+  const openBulkDelete = (rows: TrainingSeminarTableRow[]) => {
+    const ids = rows.map((r) => r.id);
+    setPendingDelete({ kind: "bulk", ids, count: ids.length });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+
+    setDeleting(true);
+    try {
+      const ids = pendingDelete.kind === "single" ? [pendingDelete.id] : pendingDelete.ids;
+
+      const result = await deleteMultipleProfessionalDevelopment(ids);
+
+      if (result.success) {
+        toast.success(
+          pendingDelete.kind === "single"
+            ? "Deleted successfully."
+            : `Successfully deleted ${result.count} item(s).`
+        );
+
+        setDeleteDialogOpen(false);
+        setPendingDelete(null);
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to delete.");
+      }
+    } catch {
+      toast.error("Failed to delete.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === "view") return;
 
     setIsSubmitting(true);
-
     try {
       if (!formData.start_date) {
         toast.error("Start date is required");
@@ -177,7 +263,6 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
 
       if (mode === "create") {
         const result = await createProfessionalDevelopment(payload);
-
         if (result.success) {
           toast.success(
             `${formData.type === "TRAINING" ? "Training" : "Seminar"} created successfully`
@@ -196,11 +281,7 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
           return;
         }
 
-        const result = await updateProfessionalDevelopment({
-          id: selected.id,
-          ...payload,
-        });
-
+        const result = await updateProfessionalDevelopment({ id: selected.id, ...payload });
         if (result.success) {
           toast.success("Updated successfully");
           setIsOpen(false);
@@ -217,31 +298,6 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
     }
   };
 
-  const handleDelete = async (selectedRows: TrainingSeminarTableRow[]) => {
-    if (selectedRows.length === 0) return;
-
-    const confirmed = confirm(
-      `Are you sure you want to delete ${selectedRows.length} item(s)? This action cannot be undone.`
-    );
-    if (!confirmed) return;
-
-    const ids = selectedRows.map((row) => row.id);
-
-    const result = await deleteMultipleProfessionalDevelopment(ids);
-
-    if (result.success) {
-      toast.success(`Successfully deleted ${result.count} item(s)`);
-      router.refresh();
-    } else {
-      toast.error(result.error || "Failed to delete");
-    }
-  };
-
-  // ===== Table UI (matches teacher-table style) =====
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-
   const columns = useMemo<ColumnDef<TrainingSeminarTableRow>[]>(
     () => [
       {
@@ -249,11 +305,8 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
         header: ({ table }) => (
           <Checkbox
             checked={
-              table.getIsAllPageRowsSelected()
-                ? true
-                : table.getIsSomePageRowsSelected()
-                  ? "indeterminate"
-                  : false
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
             aria-label="Select all"
@@ -272,83 +325,73 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
       {
         accessorKey: "type",
         header: "Type",
-        cell: ({ row }) => <div className="font-medium">{row.getValue("type")}</div>,
+        cell: ({ row }) => (
+          <Badge variant="outline" className="capitalize">
+            {String(row.getValue("type")).toLowerCase()}
+          </Badge>
+        ),
       },
       {
         accessorKey: "title",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            className="px-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Title <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <div className="max-w-[340px] truncate">{row.getValue("title")}</div>
-        ),
+        cell: ({ row }) => {
+          const r = row.original;
+          return (
+            <div className="min-w-0">
+              <div className="font-medium truncate max-w-[520px]">{r.title}</div>
+              <div className="md:hidden mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span>{r.level}</span>
+                <span>•</span>
+                <span className="font-mono">{r.date}</span>
+                <span>•</span>
+                <span className="font-mono">{r.totalHours}h</span>
+              </div>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "level",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            className="px-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Level <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: "Level",
         cell: ({ row }) => (
-          <div className="text-center text-sm text-muted-foreground">
-            {row.getValue("level")}
-          </div>
+          <div className="text-sm text-muted-foreground">{row.getValue("level")}</div>
         ),
       },
       {
         accessorKey: "date",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            className="px-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Date <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: "Date",
         cell: ({ row }) => (
-          <div className="text-center text-sm text-muted-foreground">
-            {row.getValue("date")}
-          </div>
+          <div className="text-sm text-muted-foreground">{row.getValue("date")}</div>
         ),
       },
       {
         accessorKey: "totalHours",
-        header: "Total Hours",
+        header: "Hours",
         cell: ({ row }) => (
-          <div className="text-center text-sm text-muted-foreground">
-            {row.getValue("totalHours")} hrs
-          </div>
+          <div className="text-sm text-muted-foreground">{row.getValue("totalHours")} hrs</div>
         ),
       },
       {
         accessorKey: "sponsor",
-        header: "Sponsoring Agency",
+        header: "Sponsor",
         cell: ({ row }) => (
-          <div className="max-w-[240px] truncate text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground truncate max-w-[240px]">
             {row.getValue("sponsor")}
           </div>
         ),
       },
       {
         id: "actions",
-        enableHiding: false,
+        header: "",
+        enableSorting: false,
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
+              <Button variant="outline" size="icon" aria-label="Actions">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -362,26 +405,19 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
               >
                 Assign Teachers
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openView(row.original)}>
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openEdit(row.original)}>
-                Edit
-              </DropdownMenuItem>
+
               <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={() => openView(row.original)}>View Details</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openEdit(row.original)}>Edit</DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={async () => {
-                  const confirmed = confirm("Are you sure you want to delete this item?");
-                  if (!confirmed) return;
-
-                  const result = await deleteMultipleProfessionalDevelopment([row.original.id]);
-                  if (result.success) {
-                    toast.success("Deleted successfully");
-                    router.refresh();
-                  } else {
-                    toast.error(result.error || "Failed to delete");
-                  }
+                onSelect={(e) => {
+                  e.preventDefault();
+                  openSingleDelete(row.original);
                 }}
               >
                 Delete
@@ -397,27 +433,17 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter, rowSelection },
+    state: { sorting, globalFilter },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
-    onRowSelectionChange: setRowSelection,
-    enableRowSelection: true,
-    globalFilterFn: (row, _columnId, filterValue) => {
+    globalFilterFn: (row, _id, filterValue) => {
       const q = String(filterValue ?? "").toLowerCase().trim();
       if (!q) return true;
-
-      const title = String(row.original.title ?? "").toLowerCase();
-      const sponsor = String(row.original.sponsor ?? "").toLowerCase();
-      const type = String(row.original.type ?? "").toLowerCase();
-      const level = String(row.original.level ?? "").toLowerCase();
-      const date = String(row.original.date ?? "").toLowerCase();
-
       return (
-        title.includes(q) ||
-        sponsor.includes(q) ||
-        type.includes(q) ||
-        level.includes(q) ||
-        date.includes(q)
+        String(row.original.title ?? "").toLowerCase().includes(q) ||
+        String(row.original.sponsor ?? "").toLowerCase().includes(q) ||
+        String(row.original.level ?? "").toLowerCase().includes(q) ||
+        String(row.original.type ?? "").toLowerCase().includes(q)
       );
     },
     getCoreRowModel: getCoreRowModel(),
@@ -427,33 +453,27 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
     initialState: { pagination: { pageSize: 10 } },
   });
 
-  useEffect(() => {
-    table.setPageIndex(0);
-  }, [globalFilter]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const selectedRows = table.getSelectedRowModel().rows.map((r) => r.original);
-  const selectedCount = selectedRows.length;
+  const filteredCount = table.getFilteredRowModel().rows.length;
+  const pageCount = table.getPageCount();
 
   return (
     <div className="space-y-4">
-      {/* Top bar (matches teacher-table) */}
-      <Card>
+      <Card className="min-w-0">
         <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-base">Trainings & Seminars</CardTitle>
+            <CardTitle className="text-base">Records</CardTitle>
             <CardDescription>
-              Create records, assign teachers, and manage submissions.
+              {filteredCount} result{filteredCount === 1 ? "" : "s"} • 10 per page
             </CardDescription>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-            <div className="relative w-full sm:w-[320px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="hidden md:block w-[360px]">
               <Input
                 value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Search title, sponsor, type..."
-                className="pl-9"
+                placeholder="Search title, sponsor, level..."
               />
             </div>
 
@@ -471,15 +491,15 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                     {mode === "create"
                       ? "Add Training or Seminar"
                       : mode === "edit"
-                        ? "Edit Training/Seminar"
-                        : "Training/Seminar Details"}
+                      ? "Edit Training/Seminar"
+                      : "Training/Seminar Details"}
                   </DialogTitle>
                   <DialogDescription>
                     {mode === "create"
                       ? "Fill in the details to add a new training or seminar record."
                       : mode === "edit"
-                        ? "Update the details and save changes."
-                        : "View the complete details."}
+                      ? "Update the details and save changes."
+                      : "View the complete details."}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -510,7 +530,6 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                         id="title"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="e.g., ICT Integration in Teaching"
                         required
                         disabled={isReadOnly}
                       />
@@ -541,10 +560,7 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                       <Input
                         id="sponsor"
                         value={formData.sponsoring_agency}
-                        onChange={(e) =>
-                          setFormData({ ...formData, sponsoring_agency: e.target.value })
-                        }
-                        placeholder="e.g., DepEd Regional Office"
+                        onChange={(e) => setFormData({ ...formData, sponsoring_agency: e.target.value })}
                         required
                         disabled={isReadOnly}
                       />
@@ -557,10 +573,7 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                         type="number"
                         min="1"
                         value={formData.total_hours}
-                        onChange={(e) =>
-                          setFormData({ ...formData, total_hours: e.target.value })
-                        }
-                        placeholder="e.g., 8"
+                        onChange={(e) => setFormData({ ...formData, total_hours: e.target.value })}
                         required
                         disabled={isReadOnly}
                       />
@@ -634,7 +647,6 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                         id="venue"
                         value={formData.venue}
                         onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                        placeholder="e.g., Regional Office Conference Room"
                         disabled={isReadOnly}
                       />
                     </div>
@@ -644,10 +656,7 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                       <Textarea
                         id="description"
                         value={formData.description}
-                        onChange={(e) =>
-                          setFormData({ ...formData, description: e.target.value })
-                        }
-                        placeholder="Brief description of the training/seminar"
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={3}
                         disabled={isReadOnly}
                       />
@@ -655,24 +664,20 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                   </div>
 
                   <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsOpen(false)}
-                      disabled={isSubmitting}
-                    >
+                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
                       Close
                     </Button>
 
                     {mode !== "view" ? (
-                      <Button type="submit" disabled={isSubmitting}>
+                      <Button type="submit" disabled={isSubmitting} className="gap-2">
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                         {isSubmitting
                           ? mode === "edit"
                             ? "Saving..."
                             : "Creating..."
                           : mode === "edit"
-                            ? "Save Changes"
-                            : "Create"}
+                          ? "Save Changes"
+                          : "Create"}
                       </Button>
                     ) : null}
                   </DialogFooter>
@@ -680,58 +685,115 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
               </DialogContent>
             </Dialog>
 
-            <Button
-              variant="destructive"
-              className="gap-2"
-              disabled={selectedCount === 0}
-              onClick={() => handleDelete(selectedRows)}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete selected{selectedCount ? ` (${selectedCount})` : ""}
-            </Button>
+            <div className="flex md:hidden items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSearchOpen((v) => !v)}
+                aria-label="Search"
+              >
+                {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+              </Button>
+
+              <AnimatePresence initial={false}>
+                {searchOpen ? (
+                  <motion.div
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: "240px", opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="overflow-hidden"
+                  >
+                    <Input
+                      value={globalFilter ?? ""}
+                      onChange={(e) => setGlobalFilter(e.target.value)}
+                      placeholder="Search..."
+                      className="h-9"
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+        <CardContent className="space-y-3">
+          {selectedRows.length > 0 ? (
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+              <div className="text-sm text-muted-foreground">
+                {selectedRows.length} selected
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => table.resetRowSelection()}>
+                  Clear
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="gap-2"
+                  onClick={() => openBulkDelete(selectedRows)}
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  Delete Selected
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="rounded-lg border overflow-hidden">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id}>
-                    {hg.headers.map((header) => (
-                      <TableHead
-                        key={header.id}
-                        className={cn(header.id === "select" && "w-[44px]")}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
+                    {hg.headers.map((header) => {
+                      const id = header.column.id;
+
+                      const hideOnSmall =
+                        id === "level" || id === "date" || id === "totalHours" || id === "sponsor"
+                          ? "hidden md:table-cell"
+                          : "";
+
+                      const actionsCol = id === "actions" ? "w-[1%]" : "";
+
+                      return (
+                        <TableHead key={header.id} className={`${hideOnSmall} ${actionsCol}`}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
                 ))}
               </TableHeader>
 
               <TableBody>
                 {table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
+                  table.getRowModel().rows.map((row, idx) => (
+                    <motion.tr
                       key={row.id}
-                      data-state={row.getIsSelected() ? "selected" : undefined}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.16, delay: Math.min(idx * 0.01, 0.15) }}
+                      className="border-b last:border-b-0 hover:bg-accent/40"
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
+                      {row.getVisibleCells().map((cell) => {
+                        const id = cell.column.id;
+                        const hideOnSmall =
+                          id === "level" || id === "date" || id === "totalHours" || id === "sponsor"
+                            ? "hidden md:table-cell"
+                            : "";
+
+                        return (
+                          <TableCell key={cell.id} className={hideOnSmall}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        );
+                      })}
+                    </motion.tr>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
                       No results.
                     </TableCell>
                   </TableRow>
@@ -740,20 +802,19 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
             </Table>
           </div>
 
-          <div className="flex items-center justify-between gap-2 p-4 border-t">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-xs text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount() || 1}
+              Page {table.getState().pagination.pageIndex + 1} of {pageCount || 1}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                Previous
+                Prev
               </Button>
               <Button
                 variant="outline"
@@ -767,6 +828,65 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
           </div>
         </CardContent>
       </Card>
+
+      {/* strict delete warning dialog */}
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Confirm deletion
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="space-y-3">
+              <div className="text-sm text-foreground">
+                {pendingDelete?.kind === "single" ? (
+                  <>
+                    You are about to delete{" "}
+                    <span className="font-semibold">
+                      {pendingDelete.type.toLowerCase()} — {pendingDelete.title}
+                    </span>
+                    .
+                  </>
+                ) : pendingDelete?.kind === "bulk" ? (
+                  <>
+                    You are about to delete{" "}
+                    <span className="font-semibold">
+                      {pendingDelete.count} selected record(s)
+                    </span>
+                    .
+                  </>
+                ) : null}
+              </div>
+
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
+                <div className="font-semibold mb-1">Warning</div>
+                <div className="text-muted-foreground">{DELETE_WARNING}</div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { getMyUpcomingEvents } from "@/lib/database/calendar";
 import type { ActivityRow } from "@/lib/database/activity";
 
 import DashboardView from "@/features/dashboard/component/dashboard-view";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ function fmtServer(dt: string) {
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return <div className="p-6">not authenticated</div>;
+  if (!auth.user) redirect("/signin");
 
   const { data: userRow } = await supabase
     .from("User")
