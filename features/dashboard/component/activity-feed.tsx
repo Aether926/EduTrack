@@ -362,7 +362,10 @@ export default function ActivityFeed({
                         {searchOpen ? (
                             <motion.div
                                 initial={{ width: 0, opacity: 0 }}
-                                animate={{ width: "220px", opacity: 1 }}
+                                animate={{
+                                    width: "min(220px, 55vw)",
+                                    opacity: 1,
+                                }}
                                 exit={{ width: 0, opacity: 0 }}
                                 transition={{ duration: 0.18 }}
                                 className="overflow-hidden"
