@@ -48,7 +48,6 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
     .order("created_at", { ascending: false });
 
   if (aErr) {
-    toast.error("getMyTrainingSeminars Attendance error");
     return [];
   }
 
@@ -63,7 +62,6 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
     .in("id", trainingIds);
 
   if (pErr) {
-    toast.error("Unexpected error");
     return attendanceRows.map((r) => ({
       id: String(r.id),
       trainingId: String(r.training_id),

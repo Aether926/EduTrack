@@ -13,9 +13,7 @@ export default async function ProfessionalDevelopmentPage() {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/signin");
 
-  // role (use admin client so it works even if RLS is strict)
-  const admin = createAdminClient();
-  const { data: userRow } = await admin
+  const { data: userRow } = await supabase
     .from("User")
     .select("role")
     .eq("id", auth.user.id)

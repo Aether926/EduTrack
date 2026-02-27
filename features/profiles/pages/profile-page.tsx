@@ -86,10 +86,16 @@ export default function ProfilePage() {
             onInputChange={handleInputChange}
           />
           <TrainingsCard trainings={trainings} loading={trainingsLoading} />
+          <EmergencyContactCard
+            data={tempProfileData}
+            isEditing={isEditing}
+            onInputChange={handleInputChange}
+          />
+          <ServiceRecordCard data={tempProfileData} />
         </div>
 
         {/* ── Right Column ── */}
-        <div className="flex flex-col gap-4 w-full xl:max-w-[700px]">
+        <div className="flex flex-col gap-4 w-full xl:max-w-[500px]">
           <FamilyBackgroundCard
             data={tempProfileData}
             isEditing={isEditing}
@@ -125,12 +131,6 @@ export default function ProfilePage() {
             isEditing={isEditing}
             onInputChange={handleInputChange}
           />
-          <EmergencyContactCard
-            data={tempProfileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-          />
-          <ServiceRecordCard data={tempProfileData} />
         </div>
 
       </div>

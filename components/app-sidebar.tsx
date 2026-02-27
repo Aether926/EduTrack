@@ -129,7 +129,7 @@ export default function AppSidebar() {
     { title: "Account Approval", path: "account-approval", icon: UserCheck },
     { title: "Trainings / Seminars", path: "add-training-seminar", icon: GraduationCap },
     { title: "Attendance", path: "proof-review", icon: ClipboardCheck },
-    { title: "201 File Documents", path: "admin-actions/documents", icon: FileText },
+    { title: "Teacher Documents", path: "admin-actions/documents", icon: FileText },
   ];
 
   const filteredMain = useMemo(() => {

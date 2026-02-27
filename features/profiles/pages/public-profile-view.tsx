@@ -284,7 +284,7 @@ export default function PublicProfileView(props: {
         </div>
 
         {/* ── RIGHT COLUMN ── */}
-        <div className="flex flex-col gap-4 w-full xl:max-w-[700px]">
+        <div className="flex flex-col gap-4 w-full xl:max-w-[500px]">
 
           {/* ADMIN only cards */}
           {isAdmin && (

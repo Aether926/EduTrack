@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CalendarDays, Clock, FileUp, CheckCircle2, XCircle } from "lucide-react";
+import { redirect } from "next/navigation";
 
 function fmtDate(d: string | null | undefined) {
   if (!d) return "—";
@@ -55,10 +56,10 @@ export default async function UploadProofPage({
 
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
-  if (!authData.user) return <div className="p-6">not authenticated</div>;
+  if (!authData.user) redirect("/signin");
 
   const ctx = await getUploadProofContext(attendance);
-  if (!ctx) return <div className="p-6">record not found</div>;
+  if (!ctx) redirect("/professional-dev")
 
   const title = ctx.training.title;
   const subtitle = `${ctx.training.type} • ${ctx.training.level} • ${ctx.training.totalHours} hrs`;

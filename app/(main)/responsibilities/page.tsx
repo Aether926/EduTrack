@@ -29,10 +29,12 @@ export default async function MyResponsibilitiesPage() {
       supabase
         .from("TeacherResponsibility")
         .select("*")
+        .eq("teacher_id", auth.user.id)
         .order("created_at", { ascending: false }),
       supabase
         .from("ResponsibilityChangeRequest")
         .select("*")
+        .eq("teacher_id", auth.user.id)
         .order("requested_at", { ascending: false }),
     ]);
 

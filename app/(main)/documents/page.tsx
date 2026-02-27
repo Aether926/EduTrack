@@ -15,9 +15,7 @@ export default async function DocumentsPage() {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/signin");
 
-  // dynamic role badge
-  const admin = createAdminClient();
-  const { data: me } = await admin
+  const { data: me } = await supabase
     .from("User")
     .select("role")
     .eq("id", auth.user.id)

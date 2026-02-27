@@ -72,6 +72,7 @@ export async function getUploadProofContext(
     `
     )
     .eq("id", attendanceId)
+    .eq("teacher_id", auth.user.id)
     .single<AttendanceWithPdRow>();
 
   if (error || !data) return null;
