@@ -47,11 +47,16 @@ function classify(r: FeedRow) {
     return "all";
 }
 
-function badgeVariant(kind: ReturnType<typeof classify>) {
-    if (kind === "approved") return "default";
-    if (kind === "rejected") return "destructive";
-    if (kind === "compliance") return "secondary";
-    return "outline";
+function badgeClass(kind: ReturnType<typeof classify>) {
+    if (kind === "approved")
+        return "bg-green-700/30 text-green-300 border-green-600/30";
+    if (kind === "rejected")
+        return "bg-red-700/30 text-red-300 border-red-600/30";
+    if (kind === "compliance")
+        return "bg-yellow-700/30 text-yellow-300 border-yellow-600/30";
+    if (kind === "requests")
+        return "bg-blue-700/30 text-blue-300 border-blue-600/30";
+    return "";
 }
 
 function iconFor(kind: ReturnType<typeof classify>) {
@@ -63,24 +68,37 @@ function iconFor(kind: ReturnType<typeof classify>) {
 
 // Left-border accent color per kind
 function accentClass(kind: ReturnType<typeof classify>) {
-    if (kind === "approved") return "border-l-4 border-l-green-500";
-    if (kind === "rejected") return "border-l-4 border-l-red-500";
-    if (kind === "compliance") return "border-l-4 border-l-yellow-500";
-    if (kind === "requests") return "border-l-4 border-l-blue-500";
+    if (kind === "approved") return "border-l-4 border-l-green-600/60";
+    if (kind === "rejected") return "border-l-4 border-l-red-600/60";
+    if (kind === "compliance") return "border-l-4 border-l-yellow-600/60";
+    if (kind === "requests") return "border-l-4 border-l-blue-600/60";
     return "border-l-4 border-l-border";
 }
 
 // Icon background tint per kind
 function iconBgClass(kind: ReturnType<typeof classify>) {
     if (kind === "approved")
-        return "bg-green-500/10 text-green-500 border-green-500/20";
+        return "bg-green-500/10 text-green-500/70 border-green-500/15";
     if (kind === "rejected")
-        return "bg-red-500/10 text-red-500 border-red-500/20";
+        return "bg-red-500/10 text-red-500/70 border-red-500/15";
     if (kind === "compliance")
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+        return "bg-yellow-500/10 text-yellow-500/70 border-yellow-500/15";
     if (kind === "requests")
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+        return "bg-blue-500/10 text-blue-500/70 border-blue-500/15";
     return "bg-muted text-muted-foreground border-border";
+}
+
+// Filter button active color per kind
+function filterActiveClass(k: FilterKey) {
+    if (k === "approved")
+        return "bg-green-700/40 text-green-300 border-green-600/40 hover:bg-green-700/50";
+    if (k === "rejected")
+        return "bg-red-700/40 text-red-300 border-red-600/40 hover:bg-red-700/50";
+    if (k === "compliance")
+        return "bg-yellow-700/40 text-yellow-300 border-yellow-600/40 hover:bg-yellow-700/50";
+    if (k === "requests")
+        return "bg-blue-700/40 text-blue-300 border-blue-600/40 hover:bg-blue-700/50";
+    return "bg-muted/60 text-foreground border-border hover:bg-muted";
 }
 
 export function getDisplayMessage(r: FeedRow, viewerId: string): string {
@@ -307,7 +325,7 @@ export default function ActivityFeed({
             <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-1">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-muted-foreground" />
+                        <Sparkles className="h-4 w-4 text-amber-400" />
                         Activity
                     </CardTitle>
                     <CardDescription className="text-sm">
@@ -381,8 +399,8 @@ export default function ActivityFeed({
                         <Button
                             key={k}
                             size="sm"
-                            variant={filter === k ? "default" : "outline"}
-                            className="h-8"
+                            variant="outline"
+                            className={`h-8 ${filter === k ? filterActiveClass(k) : "hover:bg-muted/40"}`}
                             onClick={() => setFilter(k)}
                         >
                             {label}
@@ -431,10 +449,8 @@ export default function ActivityFeed({
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <Badge
-                                                        variant={badgeVariant(
-                                                            kind,
-                                                        )}
-                                                        className="capitalize"
+                                                        variant="outline"
+                                                        className={`capitalize ${badgeClass(kind)}`}
                                                     >
                                                         {kind}
                                                     </Badge>
