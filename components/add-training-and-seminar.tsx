@@ -1,892 +1,601 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+
+import { motion } from "framer-motion";
 import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Plus,
-  Search,
-  X,
-  Loader2,
-  AlertTriangle,
+    Home,
+    Inbox,
+    Calendar,
+    ClipboardListIcon,
+    ShieldAlert,
+    ShieldCheck,
+    ChevronLeft,
+    User2,
+    ChevronUp,
+    Users,
+    UserCheck,
+    GraduationCap,
+    ClipboardCheck,
+    Search,
+    FileText,
 } from "lucide-react";
-import { toast } from "sonner";
+
+import { NotificationPopover } from "@/features/notifications/components/notification-popover";
 
 import {
-  ColumnDef,
-  SortingState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarFooter,
+    useSidebar,
+} from "@/components/ui/sidebar";
 
-import { motion, AnimatePresence } from "framer-motion";
-
-import type { TrainingSeminarTableRow, ProfessionalDevelopment } from "@/lib/user";
-import {
-  createProfessionalDevelopment,
-  deleteMultipleProfessionalDevelopment,
-  updateProfessionalDevelopment,
-} from "@/app/actions/training";
-
-import { cn } from "@/lib/utils";
-
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import DropdownRedirect from "@/components/dropdown-redirect";
+import { ThemeToggle } from "@/components/theme-toggle";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+type NavItem = {
+    title: string;
+    url: string;
+    icon: React.ComponentType<{ className?: string }>;
+    tag?: string;
+};
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+type AdminItem = {
+    title: string;
+    path: string;
+    icon: React.ComponentType<{ className?: string }>;
+    tag?: string;
+};
 
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+type PrincipalItem = {
+    title: string;
+    path: string;
+    icon: React.ComponentType<{ className?: string }>;
+    tag?: string;
+};
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+export default function AppSidebar() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [user, setUser] = useState<any>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [displayName, setDisplayName] = useState("User");
+    const [query, setQuery] = useState("");
+    const [pendingCount, setPendingCount] = useState(5);
 
-interface AddTrainingAndSeminarProps {
-  data: TrainingSeminarTableRow[];
-}
+    const pathname = usePathname();
+    const router = useRouter();
+    const { toggleSidebar } = useSidebar();
 
-type Mode = "create" | "view" | "edit";
+    useEffect(() => {
+        const fetchUser = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
 
-type PendingDelete =
-  | { kind: "single"; id: string; title: string; type: string }
-  | { kind: "bulk"; ids: string[]; count: number };
-
-const DELETE_WARNING =
-  "Deleting this training/seminar will also remove it from all assigned teachers’ records (attendance/proof/compliance references). This action cannot be undone.";
-
-export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarProps) {
-  const router = useRouter();
-
-  const [mode, setMode] = useState<Mode>("create");
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selected, setSelected] = useState<ProfessionalDevelopment | null>(null);
-
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const [formData, setFormData] = useState({
-    title: "",
-    type: "TRAINING" as "TRAINING" | "SEMINAR",
-    level: "REGIONAL" as "REGIONAL" | "NATIONAL" | "INTERNATIONAL",
-    sponsoring_agency: "",
-    total_hours: "",
-    start_date: undefined as Date | undefined,
-    end_date: undefined as Date | undefined,
-    venue: "",
-    description: "",
-  });
-
-  const isReadOnly = mode === "view";
-
-  const resetForm = () => {
-    setFormData({
-      title: "",
-      type: "TRAINING",
-      level: "REGIONAL",
-      sponsoring_agency: "",
-      total_hours: "",
-      start_date: undefined,
-      end_date: undefined,
-      venue: "",
-      description: "",
-    });
-  };
-
-  const fillFormFromRecord = (pd: ProfessionalDevelopment) => {
-    setFormData({
-      title: pd.title ?? "",
-      type: pd.type as "TRAINING" | "SEMINAR",
-      level: pd.level as "REGIONAL" | "NATIONAL" | "INTERNATIONAL",
-      sponsoring_agency: pd.sponsoring_agency ?? "",
-      total_hours: String(pd.total_hours ?? ""),
-      start_date: pd.start_date ? new Date(pd.start_date) : undefined,
-      end_date: pd.end_date ? new Date(pd.end_date) : undefined,
-      venue: pd.venue ?? "",
-      description: pd.description ?? "",
-    });
-  };
-
-  const openCreate = () => {
-    setMode("create");
-    setSelected(null);
-    resetForm();
-    setIsOpen(true);
-  };
-
-  const openView = (row: TrainingSeminarTableRow) => {
-    setMode("view");
-    setSelected(row.raw);
-    fillFormFromRecord(row.raw);
-    setIsOpen(true);
-  };
-
-  const openEdit = (row: TrainingSeminarTableRow) => {
-    setMode("edit");
-    setSelected(row.raw);
-    fillFormFromRecord(row.raw);
-    setIsOpen(true);
-  };
-
-  const openSingleDelete = (row: TrainingSeminarTableRow) => {
-    setPendingDelete({
-      kind: "single",
-      id: row.id,
-      title: row.title,
-      type: String(row.type),
-    });
-    setDeleteDialogOpen(true);
-  };
-
-  const openBulkDelete = (rows: TrainingSeminarTableRow[]) => {
-    const ids = rows.map((r) => r.id);
-    setPendingDelete({ kind: "bulk", ids, count: ids.length });
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-
-    setDeleting(true);
-    try {
-      const ids = pendingDelete.kind === "single" ? [pendingDelete.id] : pendingDelete.ids;
-
-      const result = await deleteMultipleProfessionalDevelopment(ids);
-
-      if (result.success) {
-        toast.success(
-          pendingDelete.kind === "single"
-            ? "Deleted successfully."
-            : `Successfully deleted ${result.count} item(s).`
-        );
-
-        setDeleteDialogOpen(false);
-        setPendingDelete(null);
-        router.refresh();
-      } else {
-        toast.error(result.error || "Failed to delete.");
-      }
-    } catch {
-      toast.error("Failed to delete.");
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mode === "view") return;
-
-    setIsSubmitting(true);
-    try {
-      if (!formData.start_date) {
-        toast.error("Start date is required");
-        return;
-      }
-
-      const payload = {
-        title: formData.title,
-        type: formData.type,
-        level: formData.level,
-        sponsoring_agency: formData.sponsoring_agency,
-        total_hours: parseInt(formData.total_hours),
-        start_date: format(formData.start_date, "yyyy-MM-dd"),
-        end_date: formData.end_date ? format(formData.end_date, "yyyy-MM-dd") : undefined,
-        venue: formData.venue || undefined,
-        description: formData.description || undefined,
-      };
-
-      if (mode === "create") {
-        const result = await createProfessionalDevelopment(payload);
-        if (result.success) {
-          toast.success(
-            `${formData.type === "TRAINING" ? "Training" : "Seminar"} created successfully`
-          );
-          setIsOpen(false);
-          resetForm();
-          router.refresh();
-        } else {
-          toast.error(result.error || "Failed to create");
-        }
-      }
-
-      if (mode === "edit") {
-        if (!selected?.id) {
-          toast.error("Missing record id");
-          return;
-        }
-
-        const result = await updateProfessionalDevelopment({ id: selected.id, ...payload });
-        if (result.success) {
-          toast.success("Updated successfully");
-          setIsOpen(false);
-          setSelected(null);
-          router.refresh();
-        } else {
-          toast.error(result.error || "Failed to update");
-        }
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const columns = useMemo<ColumnDef<TrainingSeminarTableRow>[]>(
-    () => [
-      {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
+            if (user) {
+                setUser(user);
+                setDisplayName(
+                    user.user_metadata?.name ||
+                        user.email?.split("@")[0] ||
+                        "User",
+                );
             }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-      },
-      {
-        accessorKey: "type",
-        header: "Type",
-        cell: ({ row }) => (
-          <Badge variant="outline" className="capitalize">
-            {String(row.getValue("type")).toLowerCase()}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "title",
-        header: ({ column }) => (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Title <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => {
-          const r = row.original;
-          return (
-            <div className="min-w-0">
-              <div className="font-medium truncate max-w-[520px]">{r.title}</div>
-              <div className="md:hidden mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span>{r.level}</span>
-                <span>•</span>
-                <span className="font-mono">{r.date}</span>
-                <span>•</span>
-                <span className="font-mono">{r.totalHours}h</span>
-              </div>
-            </div>
-          );
+        };
+        fetchUser();
+    }, []);
+
+    useEffect(() => {
+        const loadRole = async () => {
+            const { data } = await supabase.auth.getSession();
+            const authUser = data.session?.user;
+            if (!authUser) return;
+
+            const { data: userRow } = await supabase
+                .from("User")
+                .select("role")
+                .eq("id", authUser.id)
+                .single();
+
+            setUserRole(userRow?.role ?? null);
+        };
+
+        loadRole();
+    }, []);
+
+    useEffect(() => {
+        if (userRole !== "Principal") return;
+
+        const fetchPending = async () => {
+            const { count } = await supabase
+                .from("compliance_submissions")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "pending");
+            setPendingCount(count ?? 0);
+        };
+
+        fetchPending();
+
+        const channel = supabase
+            .channel("pending-approvals")
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "compliance_submissions",
+                },
+                fetchPending,
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userRole]);
+
+    async function handleSignOut() {
+        await supabase.auth.signOut();
+        router.push("/signin");
+    }
+
+    const items: NavItem[] = [
+        { title: "Home", url: "/dashboard", icon: Home },
+        { title: "All Profiles", url: "/teacher-profiles", icon: Inbox },
+        {
+            title: "Training / Seminar Records",
+            url: "/professional-dev",
+            icon: Calendar,
         },
-      },
-      {
-        accessorKey: "level",
-        header: "Level",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.getValue("level")}</div>
-        ),
-      },
-      {
-        accessorKey: "date",
-        header: "Date",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.getValue("date")}</div>
-        ),
-      },
-      {
-        accessorKey: "totalHours",
-        header: "Hours",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.getValue("totalHours")} hrs</div>
-        ),
-      },
-      {
-        accessorKey: "sponsor",
-        header: "Sponsor",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground truncate max-w-[240px]">
-            {row.getValue("sponsor")}
-          </div>
-        ),
-      },
-      {
-        id: "actions",
-        header: "",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Actions">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+        {
+            title: "My Responsibilities",
+            url: "/responsibilities",
+            icon: ClipboardListIcon,
+        },
+        { title: "My Compliance", url: "/compliance", icon: ShieldCheck },
+        { title: "Repository", url: "/documents", icon: FileText },
+    ];
 
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault();
-                  router.push(`/add-training-seminar/${row.original.id}/assign`);
-                }}
-              >
-                Assign Teachers
-              </DropdownMenuItem>
+    const admin: AdminItem[] = [
+        {
+            title: "Manage Users",
+            path: "admin-actions",
+            icon: Users,
+            tag: "HR",
+        },
+        {
+            title: "Account Approval",
+            path: "account-approval",
+            icon: UserCheck,
+        },
+        {
+            title: "Trainings / Seminars",
+            path: "add-training-seminar",
+            icon: GraduationCap,
+        },
+        { title: "Attendance", path: "proof-review", icon: ClipboardCheck },
+        {
+            title: "201 File Documents",
+            path: "admin-actions/documents",
+            icon: FileText,
+        },
+    ];
 
-              <DropdownMenuSeparator />
+    const principal: PrincipalItem[] = [
+        {
+            title: "Pending Approval",
+            path: "/principal-actions/pending-approval",
+            icon: ShieldAlert,
+        },
+        {
+            title: "Recently Approved",
+            path: "/principal-actions/recently-approved",
+            icon: ShieldCheck,
+        },
+    ];
 
-              <DropdownMenuItem onClick={() => openView(row.original)}>View Details</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openEdit(row.original)}>Edit</DropdownMenuItem>
+    const filteredMain = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return items;
+        return items.filter((i) => i.title.toLowerCase().includes(q));
+    }, [items, query]);
 
-              <DropdownMenuSeparator />
+    const filteredAdmin = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return admin;
+        return admin.filter((i) => i.title.toLowerCase().includes(q));
+    }, [admin, query]);
 
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  openSingleDelete(row.original);
-                }}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-      },
-    ],
-    [router]
-  );
+    const filteredPrincipal = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return principal;
+        return principal.filter((i) => i.title.toLowerCase().includes(q));
+    }, [principal, query]);
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: { sorting, globalFilter },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, _id, filterValue) => {
-      const q = String(filterValue ?? "").toLowerCase().trim();
-      if (!q) return true;
-      return (
-        String(row.original.title ?? "").toLowerCase().includes(q) ||
-        String(row.original.sponsor ?? "").toLowerCase().includes(q) ||
-        String(row.original.level ?? "").toLowerCase().includes(q) ||
-        String(row.original.type ?? "").toLowerCase().includes(q)
-      );
-    },
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
-  });
+    const container = {
+        hidden: { opacity: 1 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.045, delayChildren: 0.02 },
+        },
+    };
 
-  const selectedRows = table.getSelectedRowModel().rows.map((r) => r.original);
-  const filteredCount = table.getFilteredRowModel().rows.length;
-  const pageCount = table.getPageCount();
+    const child = {
+        hidden: { opacity: 0, x: -10 },
+        show: { opacity: 1, x: 0 },
+    };
 
-  return (
-    <div className="space-y-4">
-      <Card className="min-w-0">
-        <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-base">Records</CardTitle>
-            <CardDescription>
-              {filteredCount} result{filteredCount === 1 ? "" : "s"} • 10 per page
-            </CardDescription>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-            <div className="hidden md:block w-[360px]">
-              <Input
-                value={globalFilter ?? ""}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Search title, sponsor, level..."
-              />
-            </div>
-
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openCreate} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Training/Seminar
-                </Button>
-              </DialogTrigger>
-
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {mode === "create"
-                      ? "Add Training or Seminar"
-                      : mode === "edit"
-                      ? "Edit Training/Seminar"
-                      : "Training/Seminar Details"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {mode === "create"
-                      ? "Fill in the details to add a new training or seminar record."
-                      : mode === "edit"
-                      ? "Update the details and save changes."
-                      : "View the complete details."}
-                  </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit}>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="type">Type *</Label>
-                      <Select
-                        value={formData.type}
-                        onValueChange={(value: "TRAINING" | "SEMINAR") =>
-                          setFormData({ ...formData, type: value })
-                        }
-                        disabled={isReadOnly}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="TRAINING">Training</SelectItem>
-                          <SelectItem value="SEMINAR">Seminar</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Title *</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        required
-                        disabled={isReadOnly}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="level">Level *</Label>
-                      <Select
-                        value={formData.level}
-                        onValueChange={(value: "REGIONAL" | "NATIONAL" | "INTERNATIONAL") =>
-                          setFormData({ ...formData, level: value })
-                        }
-                        disabled={isReadOnly}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="REGIONAL">Regional</SelectItem>
-                          <SelectItem value="NATIONAL">National</SelectItem>
-                          <SelectItem value="INTERNATIONAL">International</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="sponsor">Sponsoring Agency *</Label>
-                      <Input
-                        id="sponsor"
-                        value={formData.sponsoring_agency}
-                        onChange={(e) => setFormData({ ...formData, sponsoring_agency: e.target.value })}
-                        required
-                        disabled={isReadOnly}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="hours">Total Hours *</Label>
-                      <Input
-                        id="hours"
-                        type="number"
-                        min="1"
-                        value={formData.total_hours}
-                        onChange={(e) => setFormData({ ...formData, total_hours: e.target.value })}
-                        required
-                        disabled={isReadOnly}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label>Start Date *</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            disabled={isReadOnly}
-                            className={cn(
-                              "justify-start text-left font-normal",
-                              !formData.start_date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {formData.start_date ? (
-                              format(formData.start_date, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={formData.start_date}
-                            onSelect={(date) => setFormData({ ...formData, start_date: date })}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label>End Date (Optional)</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            disabled={isReadOnly}
-                            className={cn(
-                              "justify-start text-left font-normal",
-                              !formData.end_date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {formData.end_date ? (
-                              format(formData.end_date, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={formData.end_date}
-                            onSelect={(date) => setFormData({ ...formData, end_date: date })}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="venue">Venue (Optional)</Label>
-                      <Input
-                        id="venue"
-                        value={formData.venue}
-                        onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                        disabled={isReadOnly}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description (Optional)</Label>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={3}
-                        disabled={isReadOnly}
-                      />
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
-                      Close
-                    </Button>
-
-                    {mode !== "view" ? (
-                      <Button type="submit" disabled={isSubmitting} className="gap-2">
-                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                        {isSubmitting
-                          ? mode === "edit"
-                            ? "Saving..."
-                            : "Creating..."
-                          : mode === "edit"
-                          ? "Save Changes"
-                          : "Create"}
-                      </Button>
-                    ) : null}
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            <div className="flex md:hidden items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setSearchOpen((v) => !v)}
-                aria-label="Search"
-              >
-                {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
-              </Button>
-
-              <AnimatePresence initial={false}>
-                {searchOpen ? (
-                  <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: "240px", opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="overflow-hidden"
-                  >
-                    <Input
-                      value={globalFilter ?? ""}
-                      onChange={(e) => setGlobalFilter(e.target.value)}
-                      placeholder="Search..."
-                      className="h-9"
-                    />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-3">
-          {selectedRows.length > 0 ? (
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-              <div className="text-sm text-muted-foreground">
-                {selectedRows.length} selected
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => table.resetRowSelection()}>
-                  Clear
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="gap-2"
-                  onClick={() => openBulkDelete(selectedRows)}
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                  Delete Selected
-                </Button>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow key={hg.id}>
-                    {hg.headers.map((header) => {
-                      const id = header.column.id;
-
-                      const hideOnSmall =
-                        id === "level" || id === "date" || id === "totalHours" || id === "sponsor"
-                          ? "hidden md:table-cell"
-                          : "";
-
-                      const actionsCol = id === "actions" ? "w-[1%]" : "";
-
-                      return (
-                        <TableHead key={header.id} className={`${hideOnSmall} ${actionsCol}`}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-
-              <TableBody>
-                {table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row, idx) => (
-                    <motion.tr
-                      key={row.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.16, delay: Math.min(idx * 0.01, 0.15) }}
-                      className="border-b last:border-b-0 hover:bg-accent/40"
-                    >
-                      {row.getVisibleCells().map((cell) => {
-                        const id = cell.column.id;
-                        const hideOnSmall =
-                          id === "level" || id === "date" || id === "totalHours" || id === "sponsor"
-                            ? "hidden md:table-cell"
-                            : "";
-
-                        return (
-                          <TableCell key={cell.id} className={hideOnSmall}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        );
-                      })}
-                    </motion.tr>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-xs text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} of {pageCount || 1}
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Prev
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* strict delete warning dialog */}
-      <AlertDialog
-        open={deleteDialogOpen}
-        onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
-          if (!open) setPendingDelete(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Confirm deletion
-            </AlertDialogTitle>
-
-            <AlertDialogDescription className="space-y-3">
-              <div className="text-sm text-foreground">
-                {pendingDelete?.kind === "single" ? (
-                  <>
-                    You are about to delete{" "}
-                    <span className="font-semibold">
-                      {pendingDelete.type.toLowerCase()} — {pendingDelete.title}
-                    </span>
-                    .
-                  </>
-                ) : pendingDelete?.kind === "bulk" ? (
-                  <>
-                    You are about to delete{" "}
-                    <span className="font-semibold">
-                      {pendingDelete.count} selected record(s)
-                    </span>
-                    .
-                  </>
-                ) : null}
-              </div>
-
-              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
-                <div className="font-semibold mb-1">Warning</div>
-                <div className="text-muted-foreground">{DELETE_WARNING}</div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                confirmDelete();
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleting}
+    function NavRow({
+        href,
+        title,
+        Icon,
+        active,
+        tag,
+        count,
+    }: {
+        href: string;
+        title: string;
+        Icon: NavItem["icon"];
+        active: boolean;
+        tag?: string;
+        count?: number;
+    }) {
+        return (
+            <SidebarMenuButton
+                asChild
+                className={[
+                    "group relative w-full justify-start",
+                    "transition-colors",
+                    active
+                        ? "bg-accent text-accent-foreground shadow-sm"
+                        : "hover:bg-accent/60",
+                ].join(" ")}
             >
-              {deleting ? "Deleting..." : "Delete permanently"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
+                <Link href={href} className="flex items-center gap-3">
+                    <Icon
+                        className={[
+                            "h-4 w-4 transition-transform duration-200",
+                            "group-hover:translate-x-[1px]",
+                            active
+                                ? "text-foreground"
+                                : "text-muted-foreground",
+                        ].join(" ")}
+                    />
+                    <span className="truncate">{title}</span>
+
+                    {count && count > 0 ? (
+                        <Badge
+                            variant="destructive"
+                            className="ml-auto shrink-0 text-[10px]"
+                        >
+                            {count > 99 ? "99+" : count}
+                        </Badge>
+                    ) : tag ? (
+                        <Badge
+                            variant="secondary"
+                            className="ml-auto hidden shrink-0 text-[10px] sm:inline-flex"
+                        >
+                            {tag}
+                        </Badge>
+                    ) : null}
+                </Link>
+            </SidebarMenuButton>
+        );
+    }
+
+    return (
+        <Sidebar collapsible="offcanvas">
+            <SidebarContent className="relative flex h-full flex-col">
+                {/* header */}
+                <div className="px-3 pt-3">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                            <div className="grid h-9 w-9 place-items-center rounded-md border bg-card">
+                                <span className="text-sm font-semibold">
+                                    📚
+                                </span>
+                            </div>
+
+                            <div className="min-w-0">
+                                <div className="truncate text-sm font-semibold">
+                                    EDUTRACK
+                                </div>
+                                <div className="truncate text-xs text-muted-foreground">
+                                    {userRole ?? "—"}
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={toggleSidebar}
+                            className="grid h-9 w-9 place-items-center rounded-md hover:bg-accent"
+                            aria-label="Close sidebar"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    {/* search */}
+                    <div className="relative mt-3">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search menu..."
+                            className="pl-9"
+                        />
+                    </div>
+
+                    {filteredMain.length > 0 && <Separator className="my-4" />}
+                </div>
+
+                {/* content */}
+                <ScrollArea className="flex-1 px-2">
+                    <div className="pb-4">
+                        {filteredMain.length > 0 && (
+                            <SidebarGroup>
+                                <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+                                    Main
+                                </div>
+
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        <motion.div
+                                            variants={container}
+                                            initial="hidden"
+                                            animate="show"
+                                            className="space-y-1"
+                                        >
+                                            {filteredMain.map((item) => {
+                                                const active =
+                                                    pathname === item.url;
+                                                const Icon = item.icon;
+
+                                                return (
+                                                    <SidebarMenuItem
+                                                        key={item.title}
+                                                    >
+                                                        <motion.div
+                                                            variants={child}
+                                                            whileHover={{
+                                                                x: 2,
+                                                            }}
+                                                            transition={{
+                                                                type: "spring",
+                                                                stiffness: 450,
+                                                                damping: 28,
+                                                            }}
+                                                        >
+                                                            <NavRow
+                                                                href={item.url}
+                                                                title={
+                                                                    item.title
+                                                                }
+                                                                Icon={Icon}
+                                                                active={active}
+                                                                tag={item.tag}
+                                                            />
+                                                        </motion.div>
+                                                    </SidebarMenuItem>
+                                                );
+                                            })}
+                                        </motion.div>
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+                        )}
+
+                        {userRole === "ADMIN" && filteredAdmin.length > 0 ? (
+                            <>
+                                <Separator className="my-4" />
+
+                                <SidebarGroup>
+                                    <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+                                        Admin tools
+                                    </div>
+
+                                    <SidebarGroupContent>
+                                        <SidebarMenu>
+                                            <motion.div
+                                                variants={container}
+                                                initial="hidden"
+                                                animate="show"
+                                                className="space-y-1"
+                                            >
+                                                {filteredAdmin.map((item) => {
+                                                    const href = `/${item.path}`;
+                                                    const active =
+                                                        pathname === href;
+                                                    const Icon = item.icon;
+
+                                                    return (
+                                                        <SidebarMenuItem
+                                                            key={item.path}
+                                                        >
+                                                            <motion.div
+                                                                variants={child}
+                                                                whileHover={{
+                                                                    x: 2,
+                                                                }}
+                                                                transition={{
+                                                                    type: "spring",
+                                                                    stiffness: 450,
+                                                                    damping: 28,
+                                                                }}
+                                                            >
+                                                                <NavRow
+                                                                    href={href}
+                                                                    title={
+                                                                        item.title
+                                                                    }
+                                                                    Icon={Icon}
+                                                                    active={
+                                                                        active
+                                                                    }
+                                                                    tag={
+                                                                        item.tag
+                                                                    }
+                                                                />
+                                                            </motion.div>
+                                                        </SidebarMenuItem>
+                                                    );
+                                                })}
+                                            </motion.div>
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </SidebarGroup>
+                            </>
+                        ) : null}
+
+                        {userRole === "PRINCIPAL" &&
+                        filteredPrincipal.length > 0 ? (
+                            <>
+                                <Separator className="my-4" />
+
+                                <SidebarGroup>
+                                    <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+                                        Principal tools
+                                    </div>
+
+                                    <SidebarGroupContent>
+                                        <SidebarMenu>
+                                            <motion.div
+                                                variants={container}
+                                                initial="hidden"
+                                                animate="show"
+                                                className="space-y-1"
+                                            >
+                                                {filteredPrincipal.map(
+                                                    (item) => {
+                                                        const href = item.path;
+                                                        const active =
+                                                            pathname === href;
+                                                        const Icon = item.icon;
+
+                                                        return (
+                                                            <SidebarMenuItem
+                                                                key={item.path}
+                                                            >
+                                                                <motion.div
+                                                                    variants={
+                                                                        child
+                                                                    }
+                                                                    whileHover={{
+                                                                        x: 2,
+                                                                    }}
+                                                                    transition={{
+                                                                        type: "spring",
+                                                                        stiffness: 450,
+                                                                        damping: 28,
+                                                                    }}
+                                                                >
+                                                                    <NavRow
+                                                                        href={
+                                                                            href
+                                                                        }
+                                                                        title={
+                                                                            item.title
+                                                                        }
+                                                                        Icon={
+                                                                            Icon
+                                                                        }
+                                                                        active={
+                                                                            active
+                                                                        }
+                                                                        tag={
+                                                                            item.tag
+                                                                        }
+                                                                        count={
+                                                                            item.path ===
+                                                                            "/principal-actions/pending-approval"
+                                                                                ? pendingCount
+                                                                                : undefined
+                                                                        }
+                                                                    />
+                                                                </motion.div>
+                                                            </SidebarMenuItem>
+                                                        );
+                                                    },
+                                                )}
+                                            </motion.div>
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </SidebarGroup>
+                            </>
+                        ) : null}
+                    </div>
+                </ScrollArea>
+            </SidebarContent>
+
+            {/* footer */}
+            <SidebarFooter className="border-t">
+                <div className="px-2 py-2">
+                    <DropdownMenu>
+                        <div className="flex items-center gap-2">
+                            <DropdownMenuTrigger asChild>
+                                <SidebarMenuButton className="w-full justify-start">
+                                    <User2 className="h-4 w-4 text-muted-foreground" />
+                                    <div className="ml-2 flex min-w-0 flex-col items-start">
+                                        <span className="truncate text-sm font-semibold">
+                                            {displayName}
+                                        </span>
+                                        <span className="truncate text-xs text-muted-foreground">
+                                            {user?.email ?? "—"}
+                                        </span>
+                                    </div>
+                                    <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />
+                                </SidebarMenuButton>
+                            </DropdownMenuTrigger>
+
+                            <div className="shrink-0">
+                                <NotificationPopover />
+                            </div>
+
+                            <div className="shrink-0">
+                                <ThemeToggle />
+                            </div>
+                        </div>
+
+                        <DropdownMenuContent
+                            side="top"
+                            align="end"
+                            className="w-56"
+                        >
+                            <DropdownRedirect path="/profile">
+                                Manage Profile
+                            </DropdownRedirect>
+                            <DropdownRedirect path="/settings">
+                                Settings
+                            </DropdownRedirect>
+
+                            <button
+                                onClick={handleSignOut}
+                                className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
+                            >
+                                Sign Out
+                            </button>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </SidebarFooter>
+        </Sidebar>
+    );
 }

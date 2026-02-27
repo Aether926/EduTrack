@@ -3,138 +3,78 @@
 import { UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Blue: A B C | Sky: D E F | Cyan: G H I | Emerald: J K L
+// Violet: M N O P | Amber: Q R S | Rose: T U V | Orange: O W X | Yellow: Y Z
+const COLOR_MAP: {
+    letters: string[];
+    bg: string;
+    text: string;
+    ring: string;
+}[] = [
+    {
+        letters: ["A", "B", "C"],
+        bg: "bg-blue-500/20",
+        text: "text-blue-300",
+        ring: "ring-blue-500/30",
+    },
+    {
+        letters: ["D", "E", "F"],
+        bg: "bg-sky-500/20",
+        text: "text-sky-300",
+        ring: "ring-sky-500/30",
+    },
+    {
+        letters: ["G", "H", "I"],
+        bg: "bg-cyan-500/20",
+        text: "text-cyan-300",
+        ring: "ring-cyan-500/30",
+    },
+    {
+        letters: ["J", "K", "L"],
+        bg: "bg-emerald-500/20",
+        text: "text-emerald-300",
+        ring: "ring-emerald-500/30",
+    },
+    {
+        letters: ["M", "N", "P"],
+        bg: "bg-violet-500/20",
+        text: "text-violet-300",
+        ring: "ring-violet-500/30",
+    },
+    {
+        letters: ["Q", "R", "S"],
+        bg: "bg-amber-500/20",
+        text: "text-amber-300",
+        ring: "ring-amber-500/30",
+    },
+    {
+        letters: ["T", "U", "V"],
+        bg: "bg-rose-500/20",
+        text: "text-rose-300",
+        ring: "ring-rose-500/30",
+    },
+    {
+        letters: ["O", "W", "X"],
+        bg: "bg-orange-500/20",
+        text: "text-orange-300",
+        ring: "ring-orange-500/30",
+    },
+    {
+        letters: ["Y", "Z"],
+        bg: "bg-yellow-500/20",
+        text: "text-yellow-300",
+        ring: "ring-yellow-500/30",
+    },
+];
+
 const LETTER_COLORS: Record<
     string,
     { bg: string; text: string; ring: string }
-> = {
-    // Blue — A B C
-    A: {
-        bg: "bg-blue-500/20",
-        text: "text-blue-300",
-        ring: "ring-blue-500/30",
-    },
-    B: {
-        bg: "bg-blue-500/20",
-        text: "text-blue-300",
-        ring: "ring-blue-500/30",
-    },
-    C: {
-        bg: "bg-blue-500/20",
-        text: "text-blue-300",
-        ring: "ring-blue-500/30",
-    },
-    // Sky — D E F
-    D: { bg: "bg-sky-500/20", text: "text-sky-300", ring: "ring-sky-500/30" },
-    E: { bg: "bg-sky-500/20", text: "text-sky-300", ring: "ring-sky-500/30" },
-    F: { bg: "bg-sky-500/20", text: "text-sky-300", ring: "ring-sky-500/30" },
-    // Cyan — G H I
-    G: {
-        bg: "bg-cyan-500/20",
-        text: "text-cyan-300",
-        ring: "ring-cyan-500/30",
-    },
-    H: {
-        bg: "bg-cyan-500/20",
-        text: "text-cyan-300",
-        ring: "ring-cyan-500/30",
-    },
-    I: {
-        bg: "bg-cyan-500/20",
-        text: "text-cyan-300",
-        ring: "ring-cyan-500/30",
-    },
-    // Emerald — J K L
-    J: {
-        bg: "bg-emerald-500/20",
-        text: "text-emerald-300",
-        ring: "ring-emerald-500/30",
-    },
-    K: {
-        bg: "bg-emerald-500/20",
-        text: "text-emerald-300",
-        ring: "ring-emerald-500/30",
-    },
-    L: {
-        bg: "bg-emerald-500/20",
-        text: "text-emerald-300",
-        ring: "ring-emerald-500/30",
-    },
-    // Violet — M N P
-    M: {
-        bg: "bg-violet-500/20",
-        text: "text-violet-300",
-        ring: "ring-violet-500/30",
-    },
-    N: {
-        bg: "bg-violet-500/20",
-        text: "text-violet-300",
-        ring: "ring-violet-500/30",
-    },
-    O: {
-        bg: "bg-violet-500/20",
-        text: "text-violet-300",
-        ring: "ring-violet-500/30",
-    },
-    // Amber — Q R S
-    P: {
-        bg: "bg-amber-500/20",
-        text: "text-amber-300",
-        ring: "ring-amber-500/30",
-    },
-    Q: {
-        bg: "bg-amber-500/20",
-        text: "text-amber-300",
-        ring: "ring-amber-500/30",
-    },
-    R: {
-        bg: "bg-amber-500/20",
-        text: "text-amber-300",
-        ring: "ring-amber-500/30",
-    },
-    // Rose — T U V
-    S: {
-        bg: "bg-rose-500/20",
-        text: "text-rose-300",
-        ring: "ring-rose-500/30",
-    },
-    T: {
-        bg: "bg-rose-500/20",
-        text: "text-rose-300",
-        ring: "ring-rose-500/30",
-    },
-    U: {
-        bg: "bg-rose-500/20",
-        text: "text-rose-300",
-        ring: "ring-rose-500/30",
-    },
-    // Orange — V W X
-    V: {
-        bg: "bg-orange-500/20",
-        text: "text-orange-300",
-        ring: "ring-orange-500/30",
-    },
-    W: {
-        bg: "bg-orange-500/20",
-        text: "text-orange-300",
-        ring: "ring-orange-500/30",
-    },
-    X: {
-        bg: "bg-orange-500/20",
-        text: "text-orange-300",
-        ring: "ring-orange-500/30",
-    },
-    // Yellow — Y Z
-    Y: {
-        bg: "bg-yellow-500/20",
-        text: "text-yellow-300",
-        ring: "ring-yellow-500/30",
-    },
-    Z: {
-        bg: "bg-yellow-500/20",
-        text: "text-yellow-300",
-        ring: "ring-yellow-500/30",
-    },
-};
+> = Object.fromEntries(
+    COLOR_MAP.flatMap(({ letters, bg, text, ring }) =>
+        letters.map((l) => [l, { bg, text, ring }]),
+    ),
+);
 
 const FALLBACK_COLOR = {
     bg: "bg-muted",

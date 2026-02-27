@@ -302,7 +302,7 @@ export default function AppSidebar() {
     }
 
     return (
-        <Sidebar>
+        <Sidebar collapsible="offcanvas" variant="sidebar">
             <SidebarContent className="relative flex h-full flex-col">
                 {/* header */}
                 <div className="px-3 pt-3">
@@ -326,7 +326,7 @@ export default function AppSidebar() {
 
                         <button
                             onClick={toggleSidebar}
-                            className="grid h-9 w-9 place-items-center rounded-md hover:bg-accent md:hidden"
+                            className="grid h-9 w-9 place-items-center rounded-md hover:bg-accent lg:hidden"
                             aria-label="Close sidebar"
                         >
                             <ChevronLeft className="h-5 w-5" />
