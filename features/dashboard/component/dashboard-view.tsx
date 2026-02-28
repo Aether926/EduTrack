@@ -185,13 +185,13 @@ export default function DashboardView({
 
             <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6">
                 {/* IMPORTANT: two-column starts at xl (not lg) so 1024px won't squeeze */}
-                <div className="grid gap-4 xl:grid-cols-[1fr_420px] 2xl:grid-cols-[1fr_460px] xl:items-start">
+                <div className="grid gap-4 lg:grid-cols-[3fr_2fr] xl:grid-cols-[3fr_2fr] lg:items-start">
                     {/* calendar first on mobile/tablet */}
-                    <div className="order-1 xl:order-2 xl:sticky xl:top-24 self-start min-w-0 xl:h-[calc(100vh-7rem)]">
+                    <div className="order-2 lg:order-2 lg:sticky lg:top-24 self-start min-w-0 lg:h-[calc(100vh-7rem)]">
                         <div
                             ref={calendarRef}
                             className={[
-                                "w-full max-w-full xl:max-w-[460px] h-full overscroll-contain",
+                                "w-full max-w-full h-full overscroll-contain",
                                 calendarOverflows
                                     ? "overflow-y-auto [&>*]:rounded-r-none [&>*]:border-r-0"
                                     : "overflow-y-visible",
@@ -202,12 +202,12 @@ export default function DashboardView({
                     </div>
 
                     {/* content */}
-                    <div className="order-2 xl:order-1 space-y-4 min-w-0">
+                    <div className="order-1 lg:order-1 space-y-4 min-w-0">
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.22 }}
-                            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 items-stretch"
+                            className="grid gap-2 grid-cols-1 sm:grid-cols-3 items-stretch"
                         >
                             <StatCard
                                 title="Profiles"
@@ -243,7 +243,7 @@ export default function DashboardView({
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="pt-0">
-                                <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="grid gap-3 grid-cols-2">
                                     <MiniTile
                                         label="Activity items"
                                         value={activity.length}
@@ -322,24 +322,51 @@ function StatCard({
     const a = accentMap[accent];
     return (
         <Card
-            className={`overflow-hidden min-w-0 border ${a.border} flex flex-col`}
+            className={`px-3 overflow-hidden min-w-0 border ${a.border} flex flex-col`}
         >
-            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="space-y-1 min-w-0">
-                    <CardTitle className="text-sm font-semibold">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-2 p-3 sm:items-start sm:p-4 sm:pb-2 lg:p-2 lg:pb-1">
+                {/* mobile layout */}
+                <div className="flex items-center gap-3 min-w-0 flex-1 sm:hidden pl-2">
+                    <div
+                        className={`rounded-md border p-1.5 shrink-0 ${a.iconBg} ${a.iconColor}`}
+                    >
+                        {icon}
+                    </div>
+                    <div className="min-w-0">
+                        <CardTitle className="text-sm font-semibold">
+                            {title}
+                        </CardTitle>
+                        <CardDescription className="text-xs leading-snug line-clamp-1">
+                            {desc}
+                        </CardDescription>
+                    </div>
+                </div>
+                {/* desktop layout title */}
+                <div className="hidden sm:block space-y-1 min-w-0 flex-1">
+                    <CardTitle className="text-base font-semibold line-clamp-2 lg:text-sm">
                         {title}
                     </CardTitle>
-                    <CardDescription className="text-xs leading-snug">
+                    <CardDescription className="text-xs leading-snug line-clamp-2">
                         {desc}
                     </CardDescription>
                 </div>
                 <div
-                    className={`rounded-md border p-2 shrink-0 ${a.iconBg} ${a.iconColor}`}
+                    className="sm:hidden flex items-center shrink-0"
+                    style={{ width: "30%", justifyContent: "center" }}
+                >
+                    <div
+                        className={`text-2xl font-bold tabular-nums ${a.value}`}
+                    >
+                        {value}
+                    </div>
+                </div>
+                <div
+                    className={`rounded-md border p-1.5 shrink-0 hidden sm:block ${a.iconBg} ${a.iconColor}`}
                 >
                     {icon}
                 </div>
             </CardHeader>
-            <CardContent className="pt-0 pb-4 mt-auto">
+            <CardContent className="hidden sm:block pt-0 pb-2 px-1 md:px-4 mt-auto lg:pb-0">
                 <div className={`text-3xl font-bold tabular-nums ${a.value}`}>
                     {value}
                 </div>

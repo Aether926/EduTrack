@@ -482,11 +482,11 @@ export default function ActivityFeed({
                                                 ) : null}
 
                                                 <Separator className="mt-4" />
-                                                <div className="flex items-center justify-between px-1 pt-3 text-xs text-muted-foreground">
-                                                    <span>
+                                                <div className="flex items-center justify-between px-1 pt-3 text-xs text-muted-foreground gap-2">
+                                                    <span className="truncate">
                                                         {r.entity_type ?? ""}
                                                     </span>
-                                                    <span>
+                                                    <span className="shrink-0">
                                                         {r.entity_id
                                                             ? `#${String(r.entity_id).slice(0, 8)}`
                                                             : ""}
