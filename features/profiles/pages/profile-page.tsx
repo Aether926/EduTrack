@@ -38,6 +38,21 @@ export default function ProfilePage() {
         saveProfile,
     } = useProfile();
 
+    const [savedFirstName, setSavedFirstName] = React.useState(
+        tempProfileData.firstName,
+    );
+
+    React.useEffect(() => {
+        if (tempProfileData.firstName && !isEditing) {
+            setSavedFirstName(tempProfileData.firstName);
+        }
+    }, [tempProfileData.firstName, isEditing]);
+
+    const handleSave = () => {
+        saveProfile();
+        setSavedFirstName(tempProfileData.firstName);
+    };
+
     const { preview, previewImage } = useProfileImage();
     const { trainings, trainingsLoading, loadTrainings } =
         useProfileTrainings();
@@ -57,6 +72,7 @@ export default function ProfilePage() {
                 teacherId={userId ?? ""}
                 preview={preview}
                 isEditing={isEditing}
+                savedFirstName={savedFirstName}
                 tempProfileData={{
                     firstName: tempProfileData.firstName,
                     middleInitial: tempProfileData.middleInitial,
@@ -66,7 +82,7 @@ export default function ProfilePage() {
                 }}
                 profileData={profileData}
                 onImageChange={previewImage}
-                onSave={saveProfile}
+                onSave={handleSave}
                 onCancel={cancelEditing}
                 onEdit={startEditing}
             />

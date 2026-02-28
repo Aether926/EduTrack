@@ -3,8 +3,8 @@
 import { UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Blue: A B C | Sky: D E F | Cyan: G H I | Emerald: J K L
-// Violet: M N O P | Amber: Q R S | Rose: T U V | Orange: O W X | Yellow: Y Z
+// Violet: A B C D | Blue: E F G H | Teal: I J K L | Green: M N O P
+// Orange: Q R S T | Red:  U V W   | Pink: X Y Z
 const COLOR_MAP: {
     letters: string[];
     bg: string;
@@ -12,58 +12,46 @@ const COLOR_MAP: {
     ring: string;
 }[] = [
     {
-        letters: ["A", "B", "C"],
-        bg: "bg-blue-500/20",
-        text: "text-blue-300",
-        ring: "ring-blue-500/30",
-    },
-    {
-        letters: ["D", "E", "F"],
-        bg: "bg-sky-500/20",
-        text: "text-sky-300",
-        ring: "ring-sky-500/30",
-    },
-    {
-        letters: ["G", "H", "I"],
-        bg: "bg-cyan-500/20",
-        text: "text-cyan-300",
-        ring: "ring-cyan-500/30",
-    },
-    {
-        letters: ["J", "K", "L"],
-        bg: "bg-emerald-500/20",
-        text: "text-emerald-300",
-        ring: "ring-emerald-500/30",
-    },
-    {
-        letters: ["M", "N", "P"],
+        letters: ["A", "B", "C", "D"],
         bg: "bg-violet-500/20",
         text: "text-violet-300",
         ring: "ring-violet-500/30",
     },
     {
-        letters: ["Q", "R", "S"],
-        bg: "bg-amber-500/20",
-        text: "text-amber-300",
-        ring: "ring-amber-500/30",
+        letters: ["E", "F", "G", "H"],
+        bg: "bg-blue-500/20",
+        text: "text-blue-300",
+        ring: "ring-blue-500/30",
     },
     {
-        letters: ["T", "U", "V"],
-        bg: "bg-rose-500/20",
-        text: "text-rose-300",
-        ring: "ring-rose-500/30",
+        letters: ["I", "J", "K", "L"],
+        bg: "bg-teal-500/20",
+        text: "text-teal-300",
+        ring: "ring-teal-500/30",
     },
     {
-        letters: ["O", "W", "X"],
+        letters: ["M", "N", "O", "P"],
+        bg: "bg-emerald-500/20",
+        text: "text-emerald-300",
+        ring: "ring-emerald-500/30",
+    },
+    {
+        letters: ["Q", "R", "S", "T"],
         bg: "bg-orange-500/20",
         text: "text-orange-300",
         ring: "ring-orange-500/30",
     },
     {
-        letters: ["Y", "Z"],
-        bg: "bg-yellow-500/20",
-        text: "text-yellow-300",
-        ring: "ring-yellow-500/30",
+        letters: ["U", "V", "W"],
+        bg: "bg-red-500/20",
+        text: "text-red-300",
+        ring: "ring-red-500/30",
+    },
+    {
+        letters: ["X", "Y", "Z"],
+        bg: "bg-pink-500/20",
+        text: "text-pink-300",
+        ring: "ring-pink-500/30",
     },
 ];
 

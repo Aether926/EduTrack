@@ -17,6 +17,7 @@ import {
     getCompletionTextColor,
 } from "@/features/profiles/lib/profile-completion";
 import type { ProfileState } from "@/features/profiles/types/profile";
+import BannerImage from "@/features/profiles/components/profile-header/banner-image";
 
 type TempProfileData = {
     firstName: string;
@@ -30,6 +31,7 @@ interface ProfileHeaderProps {
     teacherId: string;
     preview: string | null;
     isEditing: boolean;
+    savedFirstName: string;
     tempProfileData: TempProfileData;
     profileData?: ProfileState;
     onImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -44,6 +46,7 @@ export default function ProfileHeader({
     teacherId,
     preview,
     isEditing,
+    savedFirstName,
     tempProfileData,
     profileData,
     onImageChange,
@@ -80,11 +83,7 @@ export default function ProfileHeader({
 
     return (
         <Card className="border-0 rounded-none shadow-lg p-0">
-            <img
-                src="/banner.png"
-                alt="banner"
-                className="w-full h-45 md:h-65"
-            />
+            <BannerImage firstName={savedFirstName} />
 
             <CardContent className="px-4 md:px-10 py-6">
                 <div className="flex flex-col md:flex-row gap-6 md:gap-4 items-center md:items-start -mt-[90px] md:-mt-16">
