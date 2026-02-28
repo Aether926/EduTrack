@@ -39,6 +39,7 @@ import { formatName, cleanMiddleInitial } from "@/app/util/helper";
 
 function InputField(props: {
     label: string;
+    mobileLabel?: string;
     value: string;
     field: keyof ProfileState;
     type?: string;
@@ -52,6 +53,7 @@ function InputField(props: {
 }) {
     const {
         label,
+        mobileLabel,
         value,
         field,
         type = "text",
@@ -69,7 +71,16 @@ function InputField(props: {
         <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
                 {Icon ? <Icon size={14} className="text-blue-600" /> : null}
-                {label}
+                {mobileLabel ? (
+                    <>
+                        <span className="max-[425px]:hidden">{label}</span>
+                        <span className="hidden max-[425px]:inline">
+                            {mobileLabel}
+                        </span>
+                    </>
+                ) : (
+                    label
+                )}
                 {required ? <span className="text-red-500">*</span> : null}
             </label>
             {isEditing ? (
@@ -126,7 +137,13 @@ function DatePickerField(props: {
                             variant="outline"
                             className="w-full justify-start text-left font-normal"
                         >
-                            {value ? value.toLocaleDateString() : "Select date"}
+                            {value ? (
+                                value.toLocaleDateString()
+                            ) : (
+                                <span className="text-muted-foreground font-normal">
+                                    Select date
+                                </span>
+                            )}
                             <ChevronDownIcon className="ml-auto h-4 w-4" />
                         </Button>
                     </PopoverTrigger>
@@ -178,7 +195,9 @@ function SelectField(props: {
     return (
         <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                {Icon ? <Icon size={14} className="text-blue-600" /> : null}
+                {Icon ? (
+                    <Icon size={14} className="text-blue-600 shrink-0" />
+                ) : null}
                 {label}
             </label>
             {isEditing ? (
@@ -274,20 +293,28 @@ function AddressBlock(props: {
                 <MapPin size={13} className="text-blue-500" />
                 {label}
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 max-[480px]:grid-cols-1 gap-3 items-end">
                 {fields.map((field) => (
                     <div
                         key={field.key}
-                        className={field.half ? "" : "col-span-2"}
+                        className={`space-y-1.5 ${!field.half ? "col-span-2 max-[480px]:col-span-1" : ""}`}
                     >
-                        <InputField
-                            label={field.label}
-                            value={(data[f(field.key)] as string) ?? ""}
-                            field={f(field.key)}
-                            isEditing={isEditing && !disabled}
-                            onInputChange={onInputChange}
-                            placeholder={field.placeholder}
-                        />
+                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block">
+                            {field.label}
+                        </label>
+                        {isEditing && !disabled ? (
+                            <Input
+                                value={(data[f(field.key)] as string) ?? ""}
+                                onChange={(e) =>
+                                    onInputChange(f(field.key), e.target.value)
+                                }
+                                placeholder={field.placeholder}
+                            />
+                        ) : (
+                            <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                {(data[f(field.key)] as string) || "—"}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
@@ -393,16 +420,48 @@ export default function PersonalInfoCard(props: {
                     />
 
                     <div className="grid grid-cols-3 gap-3">
-                        <InputField
-                            label="Middle Initial"
-                            value={data.middleInitial}
-                            field="middleInitial"
-                            isEditing={isEditing}
-                            onInputChange={(field, value) =>
-                                onInputChange(field, cleanMiddleInitial(value))
-                            }
-                            placeholder="Optional"
-                        />
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+                                <span className="hidden md:inline">
+                                    Middle Initial
+                                </span>
+                                <span className="inline md:hidden">M.I.</span>
+                            </label>
+                            {isEditing ? (
+                                <Input
+                                    value={data.middleInitial}
+                                    onChange={(e) => {
+                                        const raw = e.target.value.replace(
+                                            /[^a-zA-Z.]/g,
+                                            "",
+                                        );
+                                        const letter = raw
+                                            .replace(/\./g, "")
+                                            .slice(0, 1)
+                                            .toUpperCase();
+                                        onInputChange(
+                                            "middleInitial",
+                                            letter ? `${letter}.` : "",
+                                        );
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (
+                                            (e.key === "Backspace" ||
+                                                e.key === "Delete") &&
+                                            data.middleInitial
+                                        ) {
+                                            e.preventDefault();
+                                            onInputChange("middleInitial", "");
+                                        }
+                                    }}
+                                    placeholder="Optional"
+                                />
+                            ) : (
+                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                    {data.middleInitial || "—"}
+                                </div>
+                            )}
+                        </div>
                         <div className="col-span-2">
                             <InputField
                                 label="Last Name"
@@ -422,7 +481,7 @@ export default function PersonalInfoCard(props: {
                         </div>
                     </div>
 
-                    {/* Name Extension */}
+                    {/* ── Name Extension */}
                     <SelectField
                         label="Name Extension"
                         value={data.nameExtension ?? ""}
@@ -479,7 +538,7 @@ export default function PersonalInfoCard(props: {
                                 </Select>
                             ) : (
                                 <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                    {data.gender}
+                                    {data.gender || "—"}
                                 </div>
                             )}
                         </div>
@@ -493,7 +552,7 @@ export default function PersonalInfoCard(props: {
                         onDateChange={onDateChange}
                     />
 
-                    {/* Place of Birth */}
+                    {/* ── Place of Birth ── */}
                     <InputField
                         label="Place of Birth"
                         value={data.placeOfBirth ?? ""}
@@ -538,7 +597,7 @@ export default function PersonalInfoCard(props: {
                             </Select>
                         ) : (
                             <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {data.civilStatus}
+                                {data.civilStatus || "—"}
                             </div>
                         )}
                     </div>
@@ -551,40 +610,85 @@ export default function PersonalInfoCard(props: {
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                         Physical Information
                     </p>
-                    <div className="grid grid-cols-3 gap-3">
-                        <InputField
-                            label="Height (m)"
-                            value={data.height ?? ""}
-                            field="height"
-                            type="number"
-                            icon={Ruler}
-                            isEditing={isEditing}
-                            onInputChange={onInputChange}
-                            placeholder="e.g. 1.65"
-                        />
-                        <InputField
-                            label="Weight (kg)"
-                            value={data.weight ?? ""}
-                            field="weight"
-                            type="number"
-                            icon={Weight}
-                            isEditing={isEditing}
-                            onInputChange={onInputChange}
-                            placeholder="e.g. 62.5"
-                        />
-                        <SelectField
-                            label="Blood Type"
-                            value={data.bloodType ?? ""}
-                            field="bloodType"
-                            options={BLOOD_TYPES.map((v) => ({
-                                value: v,
-                                label: v,
-                            }))}
-                            icon={Droplets}
-                            isEditing={isEditing}
-                            onInputChange={onInputChange}
-                            placeholder="Select"
-                        />
+                    {/* Labels row */}
+                    <div className="grid grid-row-1 gap-2">
+                        <div className="grid grid-cols-3 gap-3">
+                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+                                <Ruler
+                                    size={14}
+                                    className="text-blue-600 shrink-0"
+                                />
+                                Height (m)
+                            </label>
+                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+                                <Weight
+                                    size={14}
+                                    className="text-blue-600 shrink-0"
+                                />
+                                Weight (kg)
+                            </label>
+                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+                                <Droplets
+                                    size={14}
+                                    className="text-blue-600 shrink-0"
+                                />
+                                Blood Type
+                            </label>
+                        </div>
+                        {/* Inputs row */}
+                        <div className="grid grid-cols-3 gap-3">
+                            {isEditing ? (
+                                <Input
+                                    type="number"
+                                    value={data.height ?? ""}
+                                    onChange={(e) =>
+                                        onInputChange("height", e.target.value)
+                                    }
+                                    placeholder="e.g. 1.65"
+                                />
+                            ) : (
+                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                    {data.height || "—"}
+                                </div>
+                            )}
+                            {isEditing ? (
+                                <Input
+                                    type="number"
+                                    value={data.weight ?? ""}
+                                    onChange={(e) =>
+                                        onInputChange("weight", e.target.value)
+                                    }
+                                    placeholder="e.g. 62.5"
+                                />
+                            ) : (
+                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                    {data.weight || "—"}
+                                </div>
+                            )}
+                            {isEditing ? (
+                                <Select
+                                    value={data.bloodType ?? ""}
+                                    onValueChange={(v) =>
+                                        onInputChange("bloodType", v)
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {BLOOD_TYPES.map((v) => (
+                                            <SelectItem key={v} value={v}>
+                                                {v}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
+                                    {data.bloodType || "—"}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -606,7 +710,7 @@ export default function PersonalInfoCard(props: {
                             />
                         ) : (
                             <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {data.nationality}
+                                {data.nationality || "—"}
                             </div>
                         )}
                     </div>
@@ -626,12 +730,12 @@ export default function PersonalInfoCard(props: {
                             />
                         ) : (
                             <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {data.religion}
+                                {data.religion || "—"}
                             </div>
                         )}
                     </div>
 
-                    {/* Citizenship */}
+                    {/* ── Citizenship ── */}
                     <SelectField
                         label="Citizenship"
                         value={data.citizenship ?? "Filipino"}
@@ -689,7 +793,6 @@ export default function PersonalInfoCard(props: {
                         isEditing={isEditing}
                         onInputChange={onInputChange}
                         placeholder="e.g. (088) 123-4567"
-                        required
                     />
                 </div>
 

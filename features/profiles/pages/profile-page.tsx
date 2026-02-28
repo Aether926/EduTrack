@@ -94,7 +94,10 @@ export default function ProfilePage() {
                         isEditing={isEditing}
                         onInputChange={handleInputChange}
                     />
-                    <ServiceRecordCard data={tempProfileData} />
+                    {/* Hidden on mobile, shown md+ */}
+                    <div className="hidden md:block">
+                        <ServiceRecordCard data={tempProfileData} />
+                    </div>
                 </div>
 
                 {/* ── Right Column ── */}
@@ -135,6 +138,11 @@ export default function ProfilePage() {
                         onInputChange={handleInputChange}
                     />
                 </div>
+            </div>
+
+            {/* Service Record — mobile only, always at bottom */}
+            <div className="md:hidden px-4 pb-4">
+                <ServiceRecordCard data={tempProfileData} />
             </div>
         </div>
     );

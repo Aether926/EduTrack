@@ -80,14 +80,18 @@ export default function ProfileHeader({
 
     return (
         <Card className="border-0 rounded-none shadow-lg p-0">
-            <img src="/banner.png" alt="banner" className="w-full h-65" />
+            <img
+                src="/banner.png"
+                alt="banner"
+                className="w-full h-45 md:h-65"
+            />
 
             <CardContent className="px-4 md:px-10 py-6">
-                <div className="flex flex-col md:flex-row gap-6 md:gap-4 items-center md:items-start -mt-16">
+                <div className="flex flex-col md:flex-row gap-6 md:gap-4 items-center md:items-start -mt-[90px] md:-mt-16">
                     <div className="flex flex-col md:flex-row w-full gap-2 md:gap-4 lg:gap-8 relative min-w-0">
                         {/* ── Profile Image ── */}
                         <div className="flex justify-center shrink-0">
-                            <div className="relative w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40">
+                            <div className="relative w-40 h-40 md:w-36 md:h-36 lg:w-40 lg:h-40">
                                 <div
                                     className={`w-full h-full ${bgImage} rounded-full border-4 overflow-hidden bg-gray-200 dark:bg-gray-800`}
                                 >
