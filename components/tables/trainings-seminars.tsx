@@ -249,19 +249,24 @@ export default function TrainingsSeminars({
         [],
     );
 
+    const columns = useMemo(
+        () => [selectColumn, ...dataColumns, actionsColumn],
+        [selectColumn, dataColumns, actionsColumn],
+    );
+
     return (
         <>
-            <DataTable
-                data={data}
-                selectColumn={selectColumn}
-                dataColumns={dataColumns}
-                actionsColumn={actionsColumn}
-                filterColumn="title"
-                filterPlaceholder="Search trainings..."
-                pageSize={10}
-                showAddButton={false}
-                showDeleteButton={false}
-            />
+            <div className="w-full overflow-x-auto">
+                <DataTable
+                    data={data}
+                    columns={columns}
+                    filterColumn="title"
+                    filterPlaceholder="Search trainings..."
+                    pageSize={10}
+                    showAddButton={false}
+                    showDeleteButton={false}
+                />
+            </div>
 
             <PdViewModal
                 open={detailsOpen}
