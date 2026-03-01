@@ -31,7 +31,7 @@ interface ProfileHeaderProps {
     teacherId: string;
     preview: string | null;
     isEditing: boolean;
-    savedFirstName: string;
+    savedFirstName?: string;
     tempProfileData: TempProfileData;
     profileData?: ProfileState;
     onImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;

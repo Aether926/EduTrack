@@ -9,7 +9,6 @@ import {
     Ruler,
     Weight,
     Droplets,
-    Phone,
     Flag,
     Copy,
 } from "lucide-react";
@@ -610,7 +609,6 @@ export default function PersonalInfoCard(props: {
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                         Physical Information
                     </p>
-                    {/* Labels row */}
                     <div className="grid grid-row-1 gap-2">
                         <div className="grid grid-cols-3 gap-3">
                             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
@@ -635,7 +633,6 @@ export default function PersonalInfoCard(props: {
                                 Blood Type
                             </label>
                         </div>
-                        {/* Inputs row */}
                         <div className="grid grid-cols-3 gap-3">
                             {isEditing ? (
                                 <Input
@@ -778,22 +775,6 @@ export default function PersonalInfoCard(props: {
                             />
                         </div>
                     )}
-                </div>
-
-                <div className="border-t border-gray-200 dark:border-gray-800" />
-
-                {/* ── Telephone ── */}
-                <div className="space-y-4">
-                    <InputField
-                        label="Telephone No. (Landline)"
-                        value={data.telephoneNo ?? ""}
-                        field="telephoneNo"
-                        type="tel"
-                        icon={Phone}
-                        isEditing={isEditing}
-                        onInputChange={onInputChange}
-                        placeholder="e.g. (088) 123-4567"
-                    />
                 </div>
 
                 <div className="border-t border-gray-200 dark:border-gray-800" />

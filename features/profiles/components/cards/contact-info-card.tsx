@@ -15,6 +15,7 @@ function Field(props: {
     onInputChange: (field: keyof ProfileState, value: string) => void;
     rows?: number;
     required?: boolean;
+    placeholder?: string;
 }) {
     const {
         label,
@@ -26,6 +27,7 @@ function Field(props: {
         onInputChange,
         rows,
         required,
+        placeholder,
     } = props;
     const isTextarea = type === "textarea";
 
@@ -50,6 +52,7 @@ function Field(props: {
                         type={type}
                         value={value}
                         onChange={(e) => onInputChange(field, e.target.value)}
+                        placeholder={placeholder || ""}
                         required={Boolean(required)}
                     />
                 )
@@ -89,6 +92,17 @@ export default function ContactInfoCard(props: {
                         isEditing={isEditing}
                         onInputChange={onInputChange}
                         required
+                    />
+
+                    <Field
+                        label="Telephone No. (Landline)"
+                        value={data.telephoneNo ?? ""}
+                        field="telephoneNo"
+                        type="tel"
+                        icon={Phone}
+                        isEditing={isEditing}
+                        onInputChange={onInputChange}
+                        placeholder="e.g. (088) 123-4567"
                     />
 
                     <Field
