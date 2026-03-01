@@ -1,3 +1,7 @@
+export async function POST() {
+    return Response.json({ exists: false });
+}
+
 // import { NextResponse } from "next/server";
 // import { createClient } from "@supabase/supabase-js";
 
