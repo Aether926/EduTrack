@@ -721,3 +721,7 @@
 //         </div>
 //     );
 // }
+
+export default function PositionDesignationPage() {
+    return null;
+}
