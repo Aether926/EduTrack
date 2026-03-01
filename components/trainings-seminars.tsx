@@ -431,12 +431,6 @@ export default function TrainingsSeminars({
     return (
         <>
             <Card className="min-w-0 overflow-hidden">
-                {/*
-                 * KEY FIX: CardHeader uses flex-col by default on mobile so the
-                 * search stays inside the card. On md+ it goes flex-row.
-                 * The search wrapper uses w-full md:w-[320px] so it never
-                 * escapes the card boundary.
-                 */}
                 <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="space-y-1 shrink-0">
                         <CardTitle className="text-base">

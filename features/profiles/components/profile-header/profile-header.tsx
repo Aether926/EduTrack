@@ -83,7 +83,9 @@ export default function ProfileHeader({
 
     return (
         <Card className="border-0 rounded-none shadow-lg p-0">
-            <BannerImage firstName={savedFirstName} />
+            <BannerImage
+                firstName={savedFirstName || tempProfileData.firstName}
+            />
 
             <CardContent className="px-4 md:px-10 py-6">
                 <div className="flex flex-col md:flex-row gap-6 md:gap-4 items-center md:items-start -mt-[90px] md:-mt-16">

@@ -73,7 +73,6 @@ export default function TeacherProfilesPage() {
                 )
                 .eq("User.status", "APPROVED")
                 .eq("User.role", "TEACHER") // don't include ADMIN in table
-                .neq("id", authUser.id) // don't include own profile row
                 .order("lastName", { ascending: true });
 
             if (error) {
@@ -89,7 +88,7 @@ export default function TeacherProfilesPage() {
                     employeeid: profile.employeeId || "N/A",
                     fullname: `${profile.firstName} ${
                         profile.middleInitial
-                            ? profile.middleInitial + ". "
+                            ? profile.middleInitial.replace(/\.+$/, "") + ". "
                             : ""
                     }${profile.lastName}`,
                     position: profile.position || "N/A",

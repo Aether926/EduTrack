@@ -66,7 +66,7 @@ export default function UserApprovalGrid({
                                 )}
                                 {user.firstName}{" "}
                                 {user.middleInitial &&
-                                    `${user.middleInitial}. `}
+                                    `${user.middleInitial.replace(/\.+$/, "")}. `}
                                 {user.lastName}
                             </CardTitle>
                             <Badge

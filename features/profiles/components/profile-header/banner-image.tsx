@@ -15,7 +15,7 @@ const LETTER_HUE: Record<string, number> = Object.fromEntries(
 );
 
 function getBannerHue(name: string): number {
-    const first = name.trim()[0]?.toUpperCase() ?? "";
+    const first = name?.trim()?.[0]?.toUpperCase() ?? "";
     return LETTER_HUE[first] ?? 0;
 }
 
