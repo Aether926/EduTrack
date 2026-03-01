@@ -3,7 +3,8 @@ import { supabaseAdmin } from '@/lib/supabaseServer'
 import { cookies } from 'next/headers'
 
 export async function GET() {
-  const token = cookies().get('sb-access-token')?.value ?? null
+  const cookieStore = await cookies();
+  const token = cookieStore.get('sb-access-token')?.value ?? null;
   if (!token) return NextResponse.json({ error: 'no token' }, { status: 401 })
 
   const { data, error } = await supabaseAdmin.auth.getUser(token)
