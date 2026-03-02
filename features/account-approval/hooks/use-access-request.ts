@@ -37,19 +37,19 @@ export function useAccessRequests() {
     return {
       approve: async (id: string) => {
         const res = await approveUser(id);
-        if (!res.ok) return toast.error(res.error);
+        if (!res.ok) { toast.error(res.error); return; }
         toast.success("User approved. They can now login.");
         refresh();
       },
       reject: async (id: string) => {
         const res = await rejectUser(id);
-        if (!res.ok) return toast.error(res.error);
+        if (!res.ok) { toast.error(res.error); return; }
         toast.success("User rejected and moved to archive.");
         refresh();
       },
       deleteForever: async (id: string) => {
         const res = await permanentlyDeleteUser(id);
-        if (!res.ok) return toast.error(res.error);
+        if (!res.ok) { toast.error(res.error); return; }
         toast.success("User permanently deleted.");
         refresh();
       },
@@ -57,4 +57,4 @@ export function useAccessRequests() {
   }, [refresh]);
 
   return { pendingUsers, rejectedUsers, loading, refresh, ...actions };
-}
+}   

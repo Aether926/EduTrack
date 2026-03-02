@@ -28,7 +28,7 @@ export async function getMyTrainings(): Promise<TrainingRow[]> {
 
   const { data: pdRows } = await supabase
     .from("ProfessionalDevelopment")
-    .select("id, title, type, level, start_date, end_date, total_hours, sponsoring_agency")
+    .select("id, title, type, level, start_date, end_date, total_hours, approved_hours, sponsoring_agency")
     .in("id", trainingIds);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,6 +48,7 @@ export async function getMyTrainings(): Promise<TrainingRow[]> {
       startDate: pd?.start_date ?? "",
       endDate: pd?.end_date ?? "",
       totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
+      approvedHours: pd?.approved_hours ?? null,
       sponsor: pd?.sponsoring_agency ?? "",
 
       status: a.status ?? "",

@@ -131,7 +131,7 @@ export async function getUsersWithPending(
 
         return pendingProfiles;
     } catch (error) {
-        toast.error("Error fetching pending users:", error);
+        console.error("Error fetching pending users:", error);
         return [];
     }
 }
@@ -169,8 +169,7 @@ export async function getUsersWithRejected(
 
         return rejectedProfiles;
     } catch (error) {
-        toast.error("Error fetching rejected users:", error);
+        console.error("Error fetching rejected users:", error);
         return [];
     }
 }
-

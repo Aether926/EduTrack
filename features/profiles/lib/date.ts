@@ -21,24 +21,30 @@ export function fmtShort(d: Date) {
 export function calculateServiceYears(dateValue: Date | undefined) {
   if (!dateValue) return "—";
 
-  const originalDate = new Date(dateValue);
+  const start = new Date(dateValue);
   const today = new Date();
-  if (originalDate > today) return "Invalid date";
+  if (start > today) return "Invalid date";
 
-  let years = today.getFullYear() - originalDate.getFullYear();
-  let months = today.getMonth() - originalDate.getMonth();
-  let days = today.getDate() - originalDate.getDate();
+  let years = today.getFullYear() - start.getFullYear();
+  let months = today.getMonth() - start.getMonth();
+  let days = today.getDate() - start.getDate();
 
+  // Borrow a month if days are negative
   if (days < 0) {
     months--;
-    const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
-    days += lastDayOfPrevMonth;
+    // Days in the month before today's month
+    const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += prevMonth.getDate();
   }
+
+  // Borrow a year if months are negative
   if (months < 0) {
     years--;
     months += 12;
   }
 
+  if (years === 0 && months === 0) return `${days}d`;
+  if (years === 0) return `${months}m ${days}d`;
   return `${years}y ${months}m ${days}d`;
 }
 
