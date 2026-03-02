@@ -29,10 +29,10 @@ export function badgeClass(status: string): string {
     return "bg-gray-500/10 text-gray-400 border-gray-500/30";
 }
 
-export function calculateServiceYears(dateStr: string | null | undefined): string {
+export function calculateServiceYears(dateStr: string | Date | null | undefined): string {
     if (!dateStr) return "—";
 
-    const start = new Date(dateStr);
+    const start = dateStr instanceof Date ? dateStr : new Date(dateStr);
     if (isNaN(start.getTime())) return "—";
 
     const now = new Date();
