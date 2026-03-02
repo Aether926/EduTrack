@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import PublicProfileView from "@/components/public-profile-view";
@@ -230,11 +232,16 @@ export default async function QRPublicProfilePage({
         emergencyTelephoneNo: emergency?.telephoneNo ?? null,
     };
 
-    // ── 3. Detect viewer session + role ──────────────────────────────────────
+    // ── 3. Detect viewer session ───────────────────────────────
 
     const viewerClient = await createClient();
     const { data: auth } = await viewerClient.auth.getUser();
 
+    console.log("[QR page] auth.user?.id =", auth.user?.id ?? "none");
+
+    // Logged-out visitors see minimal public view (GUEST).
+    // Any logged-in user sees the full profile view (TEACHER).
+    // ADMIN role is preserved for admins who want full access including sensitive cards.
     let viewerRole: ViewerRole = "GUEST";
 
     if (auth.user?.id) {
@@ -245,8 +252,10 @@ export default async function QRPublicProfilePage({
             .single();
 
         if (viewer?.role === "ADMIN") viewerRole = "ADMIN";
-        else if (viewer?.role === "TEACHER") viewerRole = "TEACHER";
+        else viewerRole = "TEACHER";
     }
+
+    console.log("[QR page] viewerRole =", viewerRole);
 
     const adminMode = viewerRole === "ADMIN";
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ProfileState, ProfileChild } from "@/features/profiles/types/profile";
+import type { ProfileState } from "@/features/profiles/types/profile";
 import { toDate } from "@/features/profiles/lib/date";
 
 export function getInitialProfileState(): ProfileState {
