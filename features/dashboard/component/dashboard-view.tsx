@@ -185,23 +185,12 @@ export default function DashboardView({
 
             <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6">
                 {/* IMPORTANT: two-column starts at xl (not lg) so 1024px won't squeeze */}
+                {/*
+                  Mobile order: 1=stats+focus  2=calendar  3=activity
+                  Desktop (lg+): left col = stats+focus+activity | right col = calendar sticky
+                */}
                 <div className="grid gap-4 lg:grid-cols-[3fr_2fr] xl:grid-cols-[3fr_2fr] lg:items-start">
-                    {/* calendar first on mobile/tablet */}
-                    <div className="order-2 lg:order-2 lg:sticky lg:top-24 self-start min-w-0 lg:h-[calc(100vh-7rem)]">
-                        <div
-                            ref={calendarRef}
-                            className={[
-                                "w-full max-w-full h-full overscroll-contain",
-                                calendarOverflows
-                                    ? "overflow-y-auto [&>*]:rounded-r-none [&>*]:border-r-0"
-                                    : "overflow-y-visible",
-                            ].join(" ")}
-                        >
-                            <TrainingCalendar events={events} />
-                        </div>
-                    </div>
-
-                    {/* content */}
+                    {/* LEFT: stats + focus — order-1 on mobile */}
                     <div className="order-1 lg:order-1 space-y-4 min-w-0">
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
@@ -263,6 +252,33 @@ export default function DashboardView({
                             </CardContent>
                         </Card>
 
+                        {/* Activity — desktop only here (sits below focus in left col) */}
+                        <div className="hidden lg:block">
+                            <ActivityFeed
+                                rows={activity as any}
+                                role={role}
+                                viewerId={viewerId}
+                            />
+                        </div>
+                    </div>
+
+                    {/* RIGHT: calendar — order-2 on mobile (between focus & activity), sticky on desktop */}
+                    <div className="order-2 lg:order-2 lg:sticky lg:top-24 self-start min-w-0 lg:h-[calc(100vh-7rem)]">
+                        <div
+                            ref={calendarRef}
+                            className={[
+                                "w-full max-w-full h-full overscroll-contain",
+                                calendarOverflows
+                                    ? "overflow-y-auto [&>*]:rounded-r-none [&>*]:border-r-0"
+                                    : "overflow-y-visible",
+                            ].join(" ")}
+                        >
+                            <TrainingCalendar events={events} />
+                        </div>
+                    </div>
+
+                    {/* Activity — mobile only (order-3, after calendar) */}
+                    <div className="order-3 lg:hidden min-w-0">
                         <ActivityFeed
                             rows={activity as any}
                             role={role}
