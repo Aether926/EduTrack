@@ -248,8 +248,9 @@ export default function PersonalInfoCard(props: {
   isEditing: boolean;
   onInputChange: (field: keyof ProfileState, value: string) => void;
   onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
+  viewerRole?: "GUEST" | "TEACHER" | "ADMIN";
 }) {
-  const { data, isEditing, onInputChange, onDateChange } = props;
+  const { data, isEditing, onInputChange, onDateChange, viewerRole } = props;
 
   const isDualCitizen = data.citizenship === "Dual Citizenship";
 
