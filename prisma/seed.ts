@@ -14,9 +14,9 @@ async function main() {
     },
   });
 
-  toast.log("Admin created!");
+  console.log("Admin created!");
 }
 
 main()
-  .catch((e) => toast.error(e))
+  .catch((e) => console.error(e))
   .finally(async () => await prisma.$disconnect());

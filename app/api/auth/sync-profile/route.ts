@@ -8,25 +8,20 @@ export async function POST(req: Request) {
     const { accessToken } = await req.json()
     if (!accessToken) return NextResponse.json({ error: 'no token' }, { status: 400 })
 
-
     const { data, error } = await supabaseAdmin.auth.getUser(accessToken)
     if (error || !data.user) {
       return NextResponse.json({ error: 'invalid token' }, { status: 401 })
     }
 
     const user = data.user
-    const supabaseId = user.id
+    const id = user.id
     const email = user.email ?? null
-    const name = (user.user_metadata as any)?.full_name ?? (user.user_metadata as any)?.name ?? null
-    const avatarUrl = (user.user_metadata as any)?.avatar_url ?? null
 
- 
     const profile = await prisma.profile.upsert({
-      where: { id: supabaseId },
-      update: { email, name, avatarUrl },
-      create: { supabaseId, email, name, avatarUrl }
+      where: { id },
+      update: { email },
+      create: { id, email, contactNumber: "" },
     })
-
 
     return NextResponse.json({ profile })
   } catch (err) {

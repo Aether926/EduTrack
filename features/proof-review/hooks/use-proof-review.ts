@@ -25,20 +25,20 @@ export function useProofReview(rows: ProofReviewRow[]) {
     const res = await approveProof(attendanceId, comment);
     setLoadingId(null);
 
-    if (!res.ok) return toast.error(res.error);
+    if (!res.ok) { toast.error(res.error); return; }
     toast.success("Approved");
     setSelected(null);
   };
 
   const onReject = async (attendanceId: string) => {
     const comment = (remarks[attendanceId] ?? "").trim();
-    if (!comment) return toast.error("Please provide a reason.");
+    if (!comment) { toast.error("Please provide a reason."); return; }
 
     setLoadingId(attendanceId);
     const res = await rejectProof(attendanceId, comment);
     setLoadingId(null);
 
-    if (!res.ok) return toast.error(res.error);
+    if (!res.ok) { toast.error(res.error); return; }
     toast.success("Rejected");
     setSelected(null);
   };

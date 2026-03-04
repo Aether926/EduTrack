@@ -146,8 +146,8 @@ export function DataTable<T>({
         .rows.map((row) => row.original);
 
     return (
-        <div className="w-full min-h-screen flex flex-col">
-            <div className="flex-1">
+        <div className="w-full flex flex-col">
+            <div>
                 <div className="flex items-center py-2">
                     <div className="flex flex-row">
                         <div className="relative max-w-sm pr-2">
@@ -221,8 +221,8 @@ export function DataTable<T>({
                     </DropdownMenu>
                 </div>
 
-                <div className="overflow-hidden rounded-md border">
-                    <Table>
+                <div className="overflow-x-auto rounded-md border">
+                    <Table className="min-w-[900px]">
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>

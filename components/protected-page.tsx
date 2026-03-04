@@ -1,3 +1,11 @@
+export default function ProtectedPage({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return <>{children}</>;
+}
+
 // "use client";
 // import { useEffect, useState } from "react";
 // import { supabase } from "@/lib/supabaseClient";

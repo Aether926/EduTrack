@@ -22,7 +22,6 @@ export type Teacher = {
     url: string;
 };
 
-// Sample Data
 const teacherData: Teacher[] = [
     {
         employeeid: "EID-2024011523",
@@ -66,37 +65,34 @@ const teacherData: Teacher[] = [
     },
 ];
 
-// Checkbox column
-const selectColumn: ColumnDef<Teacher> = {
-    id: "select",
-    header: ({ table }) => (
-        <Checkbox
-            checked={
-                table.getIsAllPageRowsSelected() ||
-                (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) =>
-                table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label="Select all"
-        />
-    ),
-    cell: ({ row }) => (
-        <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-        />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-    size: 40,
-    minSize: 40,
-    maxSize: 40,
-};
-
-// Data columns
-const dataColumns: ColumnDef<Teacher>[] = [
+const columns: ColumnDef<Teacher>[] = [
+    {
+        id: "select",
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected() ||
+                    (table.getIsSomePageRowsSelected() && "indeterminate")
+                }
+                onCheckedChange={(value) =>
+                    table.toggleAllPageRowsSelected(!!value)
+                }
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 40,
+        minSize: 40,
+        maxSize: 40,
+    },
     {
         accessorKey: "employeeid",
         header: ({ column }) => (
@@ -169,65 +165,55 @@ const dataColumns: ColumnDef<Teacher>[] = [
         ),
         size: 220,
     },
+    {
+        id: "actions",
+        enableHiding: false,
+        cell: () => (
+            <div className="flex justify-end">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        ),
+        size: 60,
+        minSize: 60,
+        maxSize: 60,
+    },
 ];
-
-// Actions column
-const actionsColumn: ColumnDef<Teacher> = {
-    id: "actions",
-    enableHiding: false,
-    cell: () => (
-        <div className="flex justify-end">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>Delete</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-    ),
-    size: 60,
-    minSize: 60,
-    maxSize: 60,
-};
 
 interface TeacherTableProps {
     isAdmin?: boolean;
-    role?: "ADMIN" | "TEACHER"; // Add role prop
+    role?: "ADMIN" | "TEACHER";
 }
 
 export default function TeacherTable({
     isAdmin = false,
     role,
 }: TeacherTableProps) {
+    const canManage = role === "ADMIN" || isAdmin || !role;
+
     const handleAdd = (selectedRows: Teacher[]) => {
         console.log("Adding:", selectedRows);
-        // Implement your add logic here
     };
 
     const handleDelete = (selectedRows: Teacher[]) => {
         console.log("Deleting:", selectedRows);
-        // Implement your delete logic here
     };
-
-    // Determine if user has management permissions
-    // Enable if: role is ADMIN OR isAdmin is true OR role is not specified (default to enabled)
-    const canManage = role === "ADMIN" || isAdmin || !role;
 
     return (
         <DataTable
             data={teacherData}
-            selectColumn={selectColumn}
-            dataColumns={dataColumns}
-            actionsColumn={actionsColumn}
-            enableSelection={false} // Checkbox hidden
-            enableActions={canManage} // Only disable if explicitly TEACHER
+            columns={columns}
             filterColumn="fullname"
             filterPlaceholder="Filter names..."
             pageSize={8}
@@ -236,7 +222,6 @@ export default function TeacherTable({
             onAddClick={handleAdd}
             onDeleteClick={handleDelete}
             getRowUrl={(row) => row.url}
-            isAdmin={isAdmin}
         />
     );
 }

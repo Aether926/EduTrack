@@ -54,7 +54,6 @@ function teacherProfileHref(id: string) {
 
 const ADMIN_LIKE = ["ADMIN", "HR", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN"] as const;
 
-export const dynamic = "force-dynamic";
 
 export default async function AdminActionsPage() {
   const supabase = await createClient();

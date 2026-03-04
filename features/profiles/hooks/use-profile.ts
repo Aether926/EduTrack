@@ -107,7 +107,6 @@ export function useProfile() {
     if (
       !tempProfileData.firstName.trim() ||
       !tempProfileData.lastName.trim() ||
-      !tempProfileData.middleInitial.trim() ||
       !tempProfileData.contactNumber.trim()
     ) {
       toast.info("Please fill in all required fields.");

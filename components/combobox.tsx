@@ -48,11 +48,11 @@ export function Combobox({ label, options, onChangeValue }: Props) {
     };
 
     const isExistingValue = options.some(
-        (item) => item.value.toLowerCase() === inputValue.toLowerCase()
+        (item) => item.value.toLowerCase() === inputValue.toLowerCase(),
     );
 
     const filteredOptions = options.filter((option) =>
-        option.label.toLowerCase().includes(inputValue.toLowerCase())
+        option.label.toLowerCase().includes(inputValue.toLowerCase()),
     );
 
     const canAddCustom = inputValue.trim().length > 0 && !isExistingValue;
@@ -70,10 +70,14 @@ export function Combobox({ label, options, onChangeValue }: Props) {
                     aria-expanded={open}
                     className="w-[200px] justify-between"
                 >
-                    {value
-                        ? options.find((item) => item.value === value)?.label ||
-                          value
-                        : `${label}...`}
+                    {value ? (
+                        options.find((item) => item.value === value)?.label ||
+                        value
+                    ) : (
+                        <span className="text-muted-foreground font-normal">
+                            {label}...
+                        </span>
+                    )}
                     <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -102,7 +106,7 @@ export function Combobox({ label, options, onChangeValue }: Props) {
                                                 "mr-2 h-4 w-4",
                                                 value === options.value
                                                     ? "opacity-100"
-                                                    : "opacity-0"
+                                                    : "opacity-0",
                                             )}
                                         />
                                         {options.label}

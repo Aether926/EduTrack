@@ -6,7 +6,6 @@ import { AdminComplianceClient } from "@/features/compliance/components/admin-co
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
 

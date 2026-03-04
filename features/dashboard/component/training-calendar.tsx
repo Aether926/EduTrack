@@ -130,12 +130,12 @@ export default function TrainingCalendar({
     while (cells.length % 7 !== 0) cells.push(null);
 
     return (
-        <Card className="overflow-hidden rounded-r-none border-r-0">
+        <Card className="overflow-hidden">
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                            <CalendarDays className="h-4 w-4 text-orange-400" />
                             Training calendar
                         </CardTitle>
                         <CardDescription className="text-sm">
@@ -240,9 +240,9 @@ export default function TrainingCalendar({
                                                 className={[
                                                     "rounded-md py-2 text-sm transition-colors",
                                                     isCurrent
-                                                        ? "bg-primary text-primary-foreground font-semibold"
+                                                        ? "bg-orange-600/50 text-orange-100 font-semibold"
                                                         : isToday
-                                                          ? "border border-border font-semibold hover:bg-accent"
+                                                          ? "border border-orange-500/40 font-semibold hover:bg-accent"
                                                           : "hover:bg-accent text-foreground",
                                                 ].join(" ")}
                                             >
@@ -283,9 +283,9 @@ export default function TrainingCalendar({
                                     className={[
                                         "relative mx-auto flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors",
                                         isSelected
-                                            ? "bg-primary text-primary-foreground font-semibold"
+                                            ? "bg-orange-600/50 text-orange-100 font-semibold"
                                             : isToday
-                                              ? "border border-border font-semibold hover:bg-accent"
+                                              ? "border border-orange-500/40 font-semibold text-orange-300 hover:bg-accent"
                                               : "hover:bg-accent",
                                         hasEvent && !isSelected
                                             ? "font-semibold"
@@ -296,7 +296,7 @@ export default function TrainingCalendar({
                                 >
                                     {day}
                                     {hasEvent && (
-                                        <span className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary opacity-80" />
+                                        <span className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-orange-400 opacity-50" />
                                     )}
                                 </button>
                             );

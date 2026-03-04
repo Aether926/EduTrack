@@ -7,7 +7,6 @@ import AccessRequestPanel from "@/features/account-approval/components/access-re
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, XCircle } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
 

@@ -288,8 +288,7 @@ export async function GET(req: NextRequest) {
     ? `compliance-report-${schoolYear.replace(/\s/g, "-")}.xlsx`
     : `my-compliance-${schoolYear.replace(/\s/g, "-")}.xlsx`;
 
-  return new NextResponse(buffer as Buffer, {
-    headers: {
+return new NextResponse(new Uint8Array(buffer), {    headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${fileName}"`,
     },

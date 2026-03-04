@@ -19,7 +19,7 @@ import type { AddAppointmentForm } from "@/features/admin-actions/appointment-hi
 import { TeacherPickerModal, type TeacherOption } from "@/components/teacher-picker-modal";
 
 const POSITIONS = [
-  "Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI",
+  "Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI","Teacher VII",
   "Master Teacher I", "Master Teacher II", "Master Teacher III", 
   "Principal", "Administrative Staff",
 ];
