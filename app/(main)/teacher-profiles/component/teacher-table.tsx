@@ -22,7 +22,7 @@ import { ArrowUpDown, Search, X, UserRound, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import InitialAvatar from "@/app/(main)/teacher-profiles/component/avatar-color";
+import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
 
 import {
     Card,
