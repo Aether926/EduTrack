@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { TrendingUp } from "lucide-react";
 
 import {
   ClipboardList,
@@ -135,6 +136,13 @@ export default async function AdminActionsPage() {
       icon: <ShieldAlert className="h-5 w-5" />,
       badge: "Compliance",
     },
+    {
+    title: "Salary Increase",
+    description: "Track teachers eligible for salary increase every 3 years.",
+    href: "/admin-actions/salary-increase-eligibility",
+    icon: <TrendingUp className="h-5 w-5" />,
+    badge: "Eligibility",
+  },
   ];
 
   const recentTeachers = teachers.slice(0, 8);
