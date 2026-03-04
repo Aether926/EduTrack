@@ -2,6 +2,7 @@
 
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { toast } from "sonner";
 
 export type ActionResult<T = null> =
   | { ok: true; data?: T }
@@ -38,8 +39,6 @@ async function insertActivity(rows: ActivityInsert[]) {
       meta: r.meta ?? null,
     }))
   );
-
-  if (error) console.error("ActivityLog insert failed:", error.message);
 }
 
 async function requireAdmin() {
@@ -194,7 +193,7 @@ export async function approveAttendance(
     const admin = createAdminClient();
     const now = new Date().toISOString();
 
-    // get teacher id + training id for activity
+    // get teacher id + training id
     const { data: att, error: attErr } = await admin
       .from("Attendance")
       .select("teacher_id, training_id")
@@ -202,6 +201,15 @@ export async function approveAttendance(
       .single();
 
     if (attErr) return { ok: false, error: attErr.message };
+
+    // snapshot total_hours from ProfessionalDevelopment at approval time
+    const { data: pd, error: pdErr } = await admin
+      .from("ProfessionalDevelopment")
+      .select("total_hours, title")
+      .eq("id", att.training_id)
+      .single();
+
+    if (pdErr) return { ok: false, error: pdErr.message };
 
     const { error } = await admin
       .from("Attendance")
@@ -211,6 +219,7 @@ export async function approveAttendance(
         remarks: remarks || null,
         reviewed_at: now,
         reviewed_by: adminCheck.userId,
+        approved_hours: pd?.total_hours ?? 0, // ← snapshot here
       })
       .eq("id", attendanceId);
 
@@ -224,7 +233,11 @@ export async function approveAttendance(
         entity_type: "ATTENDANCE",
         entity_id: attendanceId,
         message: "Your proof was approved.",
-        meta: { attendanceId, trainingId: att?.training_id ?? null },
+        meta: {
+          attendanceId,
+          trainingId: att?.training_id ?? null,
+          title: pd?.title ?? null,
+        },
       },
     ]);
 
@@ -265,7 +278,6 @@ export async function rejectAttendance(
         .from("certificates")
         .remove([proofPath]);
 
-      if (delErr) console.error("failed to delete proof:", delErr.message);
     }
 
     const { error: updateErr } = await admin

@@ -10,44 +10,46 @@ export default function AccessRequest() {
     const [rejectedUsers, setRejectedUsers] = useState<PendingUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<"pending" | "rejected">(
-        "pending"
+        "pending",
     );
 
     const fetchUsers = async () => {
         setLoading(true);
 
-        const {
-            data: pending,
-            error: pendingError,
-        } = await supabase
+        const { data: pending, error: pendingError } = await supabase
             .from("User")
             .select("id, email, role, status, created_at")
             .eq("status", "PENDING")
             .order("created_at", { ascending: false });
 
         if (pendingError) {
-            console.error("pendingError:", pendingError);
+            toast.error(
+                "Failed to load pending users: " + pendingError.message,
+            );
             setPendingUsers([]);
         } else {
             const pendingWithProfiles = await Promise.all(
-            (pending ?? []).map(async (u) => {
-                const { data: profile, error: profileError } = await supabase
-                .from("Profile")
-                .select("firstName, lastName, middleInitial, contactNumber")
-                .eq("id", u.id)
-                .single();
+                (pending ?? []).map(async (u) => {
+                    const { data: profile, error: profileError } =
+                        await supabase
+                            .from("Profile")
+                            .select(
+                                "firstName, lastName, middleInitial, contactNumber",
+                            )
+                            .eq("id", u.id)
+                            .single();
 
-                if (profileError) console.error("profileError:", profileError);
-
-                return {
-                ...u,
-                createdAt: u.created_at, // normalize for your UI type
-                firstName: profile?.firstName || "",
-                lastName: profile?.lastName || "",
-                middleInitial: profile?.middleInitial || "",
-                contactNumber: profile?.contactNumber || "",
-                };
-            })
+                    if (profileError)
+                        toast.error("profileError: " + profileError.message);
+                    return {
+                        ...u,
+                        createdAt: u.created_at, // normalize for your UI type
+                        firstName: profile?.firstName || "",
+                        lastName: profile?.lastName || "",
+                        middleInitial: profile?.middleInitial || "",
+                        contactNumber: profile?.contactNumber || "",
+                    };
+                }),
             );
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,26 +63,28 @@ export default function AccessRequest() {
             .order("created_at", { ascending: false });
 
         if (rejectedError) {
-            console.error("rejectedError:", rejectedError);
+            toast.error("rejectedError: " + rejectedError.message);
             setRejectedUsers([]);
         } else {
             const rejectedWithProfiles = await Promise.all(
-            (rejected ?? []).map(async (u) => {
-                const { data: profile } = await supabase
-                .from("Profile")
-                .select("firstName, lastName, middleInitial, contactNumber")
-                .eq("id", u.id)
-                .single();
+                (rejected ?? []).map(async (u) => {
+                    const { data: profile } = await supabase
+                        .from("Profile")
+                        .select(
+                            "firstName, lastName, middleInitial, contactNumber",
+                        )
+                        .eq("id", u.id)
+                        .single();
 
-                return {
-                ...u,
-                createdAt: u.created_at,
-                firstName: profile?.firstName || "",
-                lastName: profile?.lastName || "",
-                middleInitial: profile?.middleInitial || "",
-                contactNumber: profile?.contactNumber || "",
-                };
-            })
+                    return {
+                        ...u,
+                        createdAt: u.created_at,
+                        firstName: profile?.firstName || "",
+                        lastName: profile?.lastName || "",
+                        middleInitial: profile?.middleInitial || "",
+                        contactNumber: profile?.contactNumber || "",
+                    };
+                }),
             );
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,8 +92,7 @@ export default function AccessRequest() {
         }
 
         setLoading(false);
-        };
-
+    };
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -113,7 +116,7 @@ export default function AccessRequest() {
 
     const handleReject = async (id: string) => {
         const confirmed = confirm(
-            "Are you sure you want to reject this user? They will be moved to the rejected list."
+            "Are you sure you want to reject this user? They will be moved to the rejected list.",
         );
 
         if (!confirmed) return;
@@ -134,7 +137,7 @@ export default function AccessRequest() {
 
     const handlePermanentDelete = async (id: string) => {
         const confirmed = confirm(
-            "⚠️ PERMANENT DELETE: This will permanently delete the user from the database. This action CANNOT be undone. Are you sure?"
+            "⚠️ PERMANENT DELETE: This will permanently delete the user from the database. This action CANNOT be undone. Are you sure?",
         );
 
         if (!confirmed) return;

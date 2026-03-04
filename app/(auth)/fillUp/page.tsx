@@ -129,7 +129,6 @@ export default function FillUpPage() {
             success = true;
             router.push("/pending-approval");
         } catch (error) {
-            console.error("Submission error:", error);
             toast("An error occurred. Please try again.");
             setSubmitting(false);
         } finally {

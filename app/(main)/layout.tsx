@@ -8,9 +8,9 @@ import {
 } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
-
 import SupabaseAuthListener from "@/components/supabase-auth-listener";
 import { Toaster } from "sonner";
+import { DeletionWarningBanner } from "@/features/settingss/components/deletion-warning-banner";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -48,8 +48,10 @@ export default function RootLayout({
 
                     <SidebarProvider>
                         <AppSidebar />
-                        <SidebarInset>
-                            <main>
+                        <SidebarInset className="overflow-y-auto">
+                            {/* Deletion warning banner — shows on every page if pending */}
+                            <DeletionWarningBanner />
+                            <main className="min-w-0">
                                 <div className="absolute top-2 left-2 z-50">
                                     <SidebarTrigger className="fixed hover:bg-gray-200" />
                                 </div>

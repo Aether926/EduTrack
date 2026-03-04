@@ -1,5 +1,6 @@
 
 import { createClient } from '@/lib/supabase/server';
+import { toast } from 'sonner';
 
 export async function getApprovedTeachers() {
   const supabase = await createClient();
@@ -19,7 +20,7 @@ export async function getApprovedTeachers() {
       .order('lastName', { ascending: true });
 
     if (error) {
-      console.error('Error fetching teachers:', error);
+      toast.error('Error fetching teachers:');
       return [];
     }
 
@@ -38,7 +39,7 @@ export async function getApprovedTeachers() {
       created_at: profile.created_at,
     }));
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return [];
   }
 }

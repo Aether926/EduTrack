@@ -189,6 +189,7 @@ export default function ProfileForm({
                                         mode="single"
                                         selected={birthDate}
                                         captionLayout="dropdown"
+                                        disabled={(d) => d > new Date()}
                                         onSelect={(date) => {
                                             setBirthDate(date);
                                             setBirthDateOpen(false);
@@ -387,90 +388,6 @@ export default function ProfileForm({
                             className="bg-gray-200 border-gray-600"
                         />
                     </Field>
-                </FieldSet>
-                <FieldSet>
-                    <FieldLegend>
-                        Appointment Details
-                        <span className="pl-1 text-sm text-gray-600">
-                            (optional)
-                        </span>
-                    </FieldLegend>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Field>
-                            <FieldLabel htmlFor="date-of-appointment">
-                                Date of Original Appointment
-                            </FieldLabel>
-                            <Popover
-                                open={dateOfOriginalAppointmentOpen}
-                                onOpenChange={setDateOfOriginalAppointmentOpen}
-                            >
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        id="date-of-appointment"
-                                    >
-                                        {dateOfOriginalAppointment
-                                            ? dateOfOriginalAppointment.toLocaleDateString()
-                                            : "Select date"}
-                                        <ChevronDownIcon />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-auto overflow-hidden p-0"
-                                    align="start"
-                                >
-                                    <Calendar
-                                        mode="single"
-                                        selected={dateOfOriginalAppointment}
-                                        captionLayout="dropdown"
-                                        onSelect={(date) => {
-                                            setDateOfOriginalAppointment(date);
-                                            setDateOfOriginalAppointmentOpen(
-                                                false
-                                            );
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="date-of-appointment">
-                                Date of Latest Appointment
-                            </FieldLabel>
-                            <Popover
-                                open={dateOfLatestAppointmentOpen}
-                                onOpenChange={setDateOfLatestAppointmentOpen}
-                            >
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        id="date-of-appointment"
-                                    >
-                                        {dateOfLatestAppointment
-                                            ? dateOfLatestAppointment.toLocaleDateString()
-                                            : "Select date"}
-                                        <ChevronDownIcon />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-auto overflow-hidden p-0"
-                                    align="start"
-                                >
-                                    <Calendar
-                                        mode="single"
-                                        selected={dateOfLatestAppointment}
-                                        captionLayout="dropdown"
-                                        onSelect={(date) => {
-                                            setDateOfLatestAppointment(date);
-                                            setDateOfLatestAppointmentOpen(
-                                                false
-                                            );
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </Field>
-                    </div>
                 </FieldSet>
                 <FieldSet>
                     <FieldLegend>Educational Background</FieldLegend>

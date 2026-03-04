@@ -3,120 +3,167 @@
 import React, { useEffect } from "react";
 import { useTheme } from "next-themes";
 
-import ProfileHeader from "@/features/profiles/components/profile-header";
+import ProfileHeader from "@/features/profiles/components/profile-header/profile-header";
 import PersonalInfoCard from "@/features/profiles/components/cards/personal-info-card";
 import ContactInfoCard from "@/features/profiles/components/cards/contact-info-card";
 import TrainingsCard from "@/features/profiles/components/cards/training-card";
 import EmploymentInfoCard from "@/features/profiles/components/cards/employment-info-card";
 import GovernmentIDsCard from "@/features/profiles/components/cards/government-ids-card";
 import EducationCard from "@/features/profiles/components/cards/education-card";
+import EducationBackgroundCard from "@/features/profiles/components/cards/education-background-card";
+import FamilyBackgroundCard from "@/features/profiles/components/cards/family-background-card";
+import EmergencyContactCard from "@/features/profiles/components/cards/emergency-contact-card";
 import ServiceRecordCard from "@/features/profiles/components/cards/service-record-card";
+import AppointmentHistoryCard from "@/features/profiles/components/cards/appointment-history-card";
 
 import { useProfile } from "@/features/profiles/hooks/use-profile";
 import { useProfileTrainings } from "@/features/profiles/hooks/use-profile-trainings";
 import { useProfileImage } from "@/features/profiles/hooks/use-profile-image";
-import AppointmentHistoryCard from "@/features/profiles/components/cards/appointment-history-card";
-
 
 export default function ProfilePage() {
-  const { theme } = useTheme();
-  const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
+    const { theme } = useTheme();
+    const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
 
-  const {
-    mounted,
-    userId,
-    isEditing,
-    isSaving,
-    tempProfileData,
+    const {
+        mounted,
+        userId,
+        isEditing,
+        profileData,
+        tempProfileData,
+        handleInputChange,
+        handleDateChange,
+        handleChildrenChange,
+        startEditing,
+        cancelEditing,
+        saveProfile,
+    } = useProfile();
 
-    handleInputChange,
-    handleDateChange,
+    const [savedFirstName, setSavedFirstName] = React.useState(
+        tempProfileData.firstName,
+    );
 
-    startEditing,
-    cancelEditing,
-    saveProfile,
-  } = useProfile();
+    React.useEffect(() => {
+        if (tempProfileData.firstName && !isEditing) {
+            setSavedFirstName(tempProfileData.firstName);
+        }
+    }, [tempProfileData.firstName, isEditing]);
 
-  const { preview, previewImage } = useProfileImage();
-  const { trainings, trainingsLoading, loadTrainings } = useProfileTrainings();
-  
-  // TODO: Define viewerRole from appropriate hook or context
-  const viewerRole = "GUEST"; // Replace with actual role logic
+    const handleSave = () => {
+        saveProfile();
+        setSavedFirstName(tempProfileData.firstName);
+    };
 
-  useEffect(() => {
-    if (!userId) return;
-    void loadTrainings(userId);
-  }, [userId, loadTrainings]);
+    const { preview, previewImage } = useProfileImage();
+    const { trainings, trainingsLoading, loadTrainings } =
+        useProfileTrainings();
 
-  if (!mounted) return null;
+    const viewerRole = "GUEST";
 
-  return (
-    <div className={`min-h-screen ${bgClass} space-y-6`}>
-      <ProfileHeader
-        preview={preview}
-        isEditing={isEditing}
-        tempProfileData={{
-          firstName: tempProfileData.firstName,
-          middleInitial: tempProfileData.middleInitial,
-          lastName: tempProfileData.lastName,
-          position: tempProfileData.position,
-          username: tempProfileData.username,
-        }}
-        onImageChange={previewImage}
-        onSave={saveProfile}
-        onCancel={cancelEditing}
-        onEdit={startEditing}
-      />
+    useEffect(() => {
+        if (!userId) return;
+        void loadTrainings(userId);
+    }, [userId, loadTrainings]);
 
-      <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
-        <div className="flex flex-col gap-4 w-full xl:max-w-[500px]">
-          <PersonalInfoCard
-            data={tempProfileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-            onDateChange={handleDateChange}
-          />
+    if (!mounted) return null;
 
-          <ContactInfoCard
-            data={tempProfileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-          />
+    return (
+        <div className={`min-h-screen ${bgClass} space-y-6`}>
+            <ProfileHeader
+                teacherId={userId ?? ""}
+                preview={preview}
+                isEditing={isEditing}
+                savedFirstName={savedFirstName}
+                tempProfileData={{
+                    firstName: tempProfileData.firstName,
+                    middleInitial: tempProfileData.middleInitial,
+                    lastName: tempProfileData.lastName,
+                    position: tempProfileData.position,
+                    username: tempProfileData.username,
+                }}
+                profileData={profileData}
+                onImageChange={previewImage}
+                onSave={handleSave}
+                onCancel={cancelEditing}
+                onEdit={startEditing}
+            />
 
-          <TrainingsCard trainings={trainings} loading={trainingsLoading} />
+            <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+                {/* ── Left Column ── */}
+                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px]">
+                    <PersonalInfoCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                        onDateChange={handleDateChange}
+                    />
+                    <ContactInfoCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                    />
+                    <EmergencyContactCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                    />
+                    {/* Trainings & Service Record — tablet/desktop: after emergency contact */}
+                    <div className="hidden md:flex md:flex-col md:gap-4">
+                        <TrainingsCard
+                            trainings={trainings}
+                            loading={trainingsLoading}
+                        />
+                        <ServiceRecordCard data={tempProfileData} />
+                    </div>
+                </div>
+
+                {/* ── Right Column ── */}
+                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px]">
+                    <FamilyBackgroundCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                        onChildrenChange={handleChildrenChange}
+                    />
+                    <EmploymentInfoCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                        onDateChange={handleDateChange}
+                        viewerRole={viewerRole}
+                        from="profile"
+                        isOwnProfile={true}
+                    />
+                    <AppointmentHistoryCard
+                        teacherId={userId ?? ""}
+                        isOwnProfile={true}
+                        from="profile"
+                    />
+                    <GovernmentIDsCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                    />
+                    <EducationCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                    />
+                    <EducationBackgroundCard
+                        data={tempProfileData}
+                        isEditing={isEditing}
+                        onInputChange={handleInputChange}
+                    />
+                </div>
+            </div>
+
+            {/* Trainings & Service Record — mobile only, always at the very bottom */}
+            <div className="md:hidden flex flex-col gap-4 px-4 pb-4">
+                <TrainingsCard
+                    trainings={trainings}
+                    loading={trainingsLoading}
+                />
+                <ServiceRecordCard data={tempProfileData} />
+            </div>
         </div>
-
-        <div className="flex flex-col gap-4 w-full xl:max-w-[700px]">
-          <EmploymentInfoCard
-            data={tempProfileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-            onDateChange={handleDateChange}
-            viewerRole={viewerRole}
-            from="profile"
-            isOwnProfile={true}
-          />
-          <AppointmentHistoryCard
-            teacherId={userId ?? ""}
-            isOwnProfile={true}
-            from="profile"
-          />
-
-          <GovernmentIDsCard
-            data={tempProfileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-          />
-
-          <EducationCard
-            data={tempProfileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-          />
-
-          <ServiceRecordCard data={tempProfileData} />
-        </div>
-      </div>
-    </div>
-  );
+    );
 }

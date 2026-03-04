@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { ProfessionalDevelopment } from '@/lib/user';
+import { toast } from 'sonner';
 
 export async function getAllProfessionalDevelopment() {
   const supabase = await createAdminClient();
@@ -13,13 +14,13 @@ export async function getAllProfessionalDevelopment() {
       
 
     if (error) {
-      console.error( 'Error fetching professional development:', error);
+      toast.error( 'Error fetching professional development');
       return [];
     }
 
     return data as ProfessionalDevelopment[];
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return [];
   }
 }
@@ -35,13 +36,13 @@ export async function getTrainings() {
       .order('start_date', { ascending: false });
 
     if (error) {
-      console.error('Error fetching trainings:', error);
+      toast.error('Error fetching trainings');
       return [];
     }
 
     return data as ProfessionalDevelopment[];
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return [];
   }
 }
@@ -57,13 +58,13 @@ export async function getSeminars() {
       .order('start_date', { ascending: false });
 
     if (error) {
-      console.error('Error fetching seminars:', error);
+      toast.error('Error fetching seminars');
       return [];
     }
 
     return data as ProfessionalDevelopment[];
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return [];
   }
 }
@@ -79,13 +80,13 @@ export async function getProfessionalDevelopmentById(id: string) {
       .single();
 
     if (error) {
-      console.error('Error fetching professional development:', error);
+      toast.error('Error fetching professional development');
       return null;
     }
 
     return data as ProfessionalDevelopment;
   } catch (error) {
-    console.error('Unexpected error:', error);
+    toast.error('Unexpected error');
     return null;
   }
 }

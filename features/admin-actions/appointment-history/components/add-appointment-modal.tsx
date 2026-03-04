@@ -16,10 +16,11 @@ import {
 import { toast } from "sonner";
 import { addAppointmentHistoryEntry } from "@/features/admin-actions/appointment-history/actions/appointment-history-actions";
 import type { AddAppointmentForm } from "@/features/admin-actions/appointment-history/types/appointment-history";
+import { TeacherPickerModal, type TeacherOption } from "@/components/teacher-picker-modal";
 
 const POSITIONS = [
-  "Teacher I", "Teacher II", "Teacher III",
-  "Master Teacher I", "Master Teacher II", "Master Teacher III",
+  "Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI",
+  "Master Teacher I", "Master Teacher II", "Master Teacher III", 
   "Principal", "Administrative Staff",
 ];
 
@@ -41,12 +42,13 @@ const EMPTY: AddAppointmentForm = {
 export function AddAppointmentModal(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  teachers: { id: string; fullName: string }[];
   onSuccess: () => void;
 }) {
-  const { open, onOpenChange, teachers, onSuccess } = props;
+  const { open, onOpenChange, onSuccess } = props;
   const [form, setForm] = useState<AddAppointmentForm>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherOption | null>(null);
 
   const set = (key: keyof AddAppointmentForm) => (val: string) =>
     setForm((f: any) => ({ ...f, [key]: val }));
@@ -84,16 +86,23 @@ export function AddAppointmentModal(props: {
             <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
               Teacher <span className="text-red-500">*</span>
             </label>
-            <Select value={form.teacher_id} onValueChange={set("teacher_id")}>
-              <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
-              <SelectContent>
-                {teachers.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.fullName}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Button
+              variant="outline"
+              className="w-full justify-start font-normal"
+              onClick={() => setPickerOpen(true)}
+            >
+              {selectedTeacher ? selectedTeacher.fullName : "Select teacher..."}
+            </Button>
+            <TeacherPickerModal
+              open={pickerOpen}
+              onOpenChange={setPickerOpen}
+              selectedId={selectedTeacher?.id}
+              onSelect={(t) => {
+                setSelectedTeacher(t);
+                setForm((f) => ({ ...f, teacher_id: t.id }));
+              }}
+            />
           </div>
-
           {/* Position */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">

@@ -1,6 +1,6 @@
 "use client";
 
-import PaginationBar from "../pagination";
+import PaginationBar from "./pagination";
 import { useRouter } from "next/navigation";
 
 import * as React from "react";
@@ -37,10 +37,7 @@ import {
 
 interface DataTableProps<T> {
     data: T[];
-    selectColumn?: ColumnDef<T>;
-    dataColumns: ColumnDef<T>[];
-    actionsColumn?: ColumnDef<T>;
-
+    columns: ColumnDef<T>[];
     filterColumn: string;
     filterPlaceholder?: string;
     pageSize?: number;
@@ -49,17 +46,11 @@ interface DataTableProps<T> {
     showAddButton?: boolean;
     showDeleteButton?: boolean;
     getRowUrl?: (row: T) => string;
-
-    enableSelection?: boolean;
-    enableActions?: boolean;
-    isAdmin?: boolean;
 }
 
 export function DataTable<T>({
     data,
-    selectColumn,
-    dataColumns,
-    actionsColumn,
+    columns,
     filterColumn,
     filterPlaceholder = "Filter.",
     pageSize = 8,
@@ -68,9 +59,6 @@ export function DataTable<T>({
     showAddButton = false,
     showDeleteButton = true,
     getRowUrl,
-    enableSelection = true,
-    enableActions = true,
-    isAdmin = false,
 }: DataTableProps<T>) {
     const router = useRouter();
     const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -80,31 +68,11 @@ export function DataTable<T>({
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
-    // FIX: Always start with pageSize to avoid server/client mismatch.
-    // The resize useEffect will update it on the client after mount.
-    const [currentPageSize, setCurrentPageSize] = React.useState(pageSize);
-
-    const columns = React.useMemo(() => {
-        const cols: ColumnDef<T>[] = [];
-
-        if (enableSelection && selectColumn) {
-            cols.push(selectColumn);
-        }
-
-        cols.push(...dataColumns);
-
-        if (enableActions && actionsColumn) {
-            cols.push(actionsColumn);
-        }
-
-        return cols;
-    }, [
-        enableSelection,
-        selectColumn,
-        dataColumns,
-        enableActions,
-        actionsColumn,
-    ]);
+    // Add state for dynamic page size
+    const [currentPageSize, setCurrentPageSize] = React.useState(() => {
+        if (typeof window === "undefined") return pageSize;
+        return getPageSize();
+    });
 
     const handleRowClick = (row: T, event: React.MouseEvent) => {
         if (!getRowUrl) return;
@@ -125,16 +93,13 @@ export function DataTable<T>({
 
         const width = window.innerWidth;
 
-        if (width < 768) return 6;
-        if (width < 1440) return 7;
-        return 12;
+        // Row limiter depending on screen size
+        if (width < 768) return 6; // sm
+        if (width < 1440) return 7; // md-lg
+        return 12; // xl+
     }
 
-    // Set correct page size on first client render
-    React.useEffect(() => {
-        setCurrentPageSize(getPageSize());
-    }, []);
-
+    // Handle window resize
     React.useEffect(() => {
         const handleResize = () => {
             const newPageSize = getPageSize();
@@ -171,14 +136,14 @@ export function DataTable<T>({
         },
     });
 
+    // Update table page size when currentPageSize changes
     React.useEffect(() => {
         table.setPageSize(currentPageSize);
     }, [currentPageSize, table]);
 
-    // FIX: Safe access in case table model isn't ready yet
-    const selectedRows =
-        table.getFilteredSelectedRowModel()?.rows?.map((row) => row.original) ??
-        [];
+    const selectedRows = table
+        .getFilteredSelectedRowModel()
+        .rows.map((row) => row.original);
 
     return (
         <div className="w-full min-h-screen flex flex-col">
@@ -203,6 +168,7 @@ export function DataTable<T>({
                             />
                         </div>
 
+                        {/* Add button: show when at least 1 row is selected */}
                         {showAddButton &&
                             onAddClick &&
                             selectedRows.length >= 1 && (
@@ -214,10 +180,10 @@ export function DataTable<T>({
                                 </Button>
                             )}
 
+                        {/* Delete button: show when at least 2 rows are selected */}
                         {showDeleteButton &&
                             onDeleteClick &&
-                            selectedRows.length >= 2 &&
-                            isAdmin && (
+                            selectedRows.length >= 2 && (
                                 <Button
                                     onClick={() => onDeleteClick(selectedRows)}
                                     className="mr-2 !bg-red-700 !text-white hover:!bg-red-800"
@@ -289,6 +255,7 @@ export function DataTable<T>({
                                             const colId = cell.column.id;
                                             const isClickable =
                                                 !!getRowUrl &&
+                                                // Url excluding checkbox and menu column
                                                 colId !== "select" &&
                                                 colId !== "actions";
 
@@ -333,12 +300,11 @@ export function DataTable<T>({
                     </Table>
                 </div>
             </div>
-
             <div className="sticky bottom-0 bg-background border-t py-4 z-10 mt-auto">
                 <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
                     <div className="text-muted-foreground text-sm mr-auto">
-                        {table.getFilteredSelectedRowModel()?.rows?.length ?? 0}{" "}
-                        of {table.getFilteredRowModel().rows.length} row(s)
+                        {table.getFilteredSelectedRowModel().rows.length} of{" "}
+                        {table.getFilteredRowModel().rows.length} row(s)
                         selected.
                     </div>
                     <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2">
