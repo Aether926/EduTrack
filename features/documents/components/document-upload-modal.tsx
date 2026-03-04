@@ -23,6 +23,7 @@ export function DocumentUploadModal({
     onOpenChange: (open: boolean) => void;
 }) {
     const [file, setFile] = useState<File | null>(null);
+    const [preview, setPreview] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -30,6 +31,16 @@ export function DocumentUploadModal({
 
     const { documentType, submission } = item;
     const isReplace = !!submission;
+
+    const handleFileChange = (f: File | null) => {
+        setFile(f);
+        if (f && f.type.startsWith("image/")) {
+            const url = URL.createObjectURL(f);
+            setPreview(url);
+        } else {
+            setPreview(null);
+        }
+    };
 
     const handleSubmit = async () => {
         if (!file) return toast.error("Please select a file.");
@@ -56,10 +67,13 @@ export function DocumentUploadModal({
             open={open}
             onOpenChange={(o) => {
                 onOpenChange(o);
-                if (!o) setFile(null);
+                if (!o) {
+                    setFile(null);
+                    setPreview(null);
+                }
             }}
         >
-            <DialogContent className="max-w-md w-[90vw] p-0 gap-0">
+            <DialogContent className="max-w-xl w-[90vw] p-0 gap-0">
                 {/* Header */}
                 <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
@@ -121,19 +135,44 @@ export function DocumentUploadModal({
 
                     {/* Drop zone */}
                     <div
-                        className="border-2 border-dashed border-border/60 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500/40 hover:bg-blue-500/[0.02] transition-colors"
+                        className="border-2 border-dashed border-border/60 rounded-xl overflow-hidden cursor-pointer hover:border-blue-500/40 transition-colors"
                         onClick={() => inputRef.current?.click()}
                     >
-                        {file ? (
-                            <div className="flex items-center justify-center gap-2">
-                                <FileText className="h-4 w-4 text-blue-400 shrink-0" />
-                                <span className="text-sm font-medium truncate max-w-[200px]">
-                                    {file.name}
-                                </span>
+                        {preview ? (
+                            <div className="relative">
+                                <img
+                                    src={preview}
+                                    alt="Preview"
+                                    className="w-full max-h-72 object-contain bg-muted/10"
+                                />
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setFile(null);
+                                        handleFileChange(null);
+                                    }}
+                                    className="absolute top-2 right-2 rounded-full bg-background/80 border border-border/60 p-1 text-muted-foreground hover:text-rose-400 transition-colors"
+                                >
+                                    <X className="h-3.5 w-3.5" />
+                                </button>
+                                <div className="px-3 py-2 border-t border-border/60 flex items-center gap-2 bg-muted/5">
+                                    <FileText className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                                    <span className="text-xs font-medium truncate">
+                                        {file?.name}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : file ? (
+                            <div className="p-4 flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <FileText className="h-4 w-4 text-blue-400 shrink-0" />
+                                    <span className="text-sm font-medium truncate">
+                                        {file.name}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleFileChange(null);
                                     }}
                                     className="text-muted-foreground hover:text-rose-400 transition-colors shrink-0"
                                 >
@@ -141,7 +180,7 @@ export function DocumentUploadModal({
                                 </button>
                             </div>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="p-6 text-center space-y-2 hover:bg-blue-500/[0.02] transition-colors">
                                 <div className="mx-auto h-10 w-10 rounded-lg border border-border/60 bg-muted/20 flex items-center justify-center">
                                     <Upload className="h-5 w-5 text-muted-foreground" />
                                 </div>
@@ -156,7 +195,7 @@ export function DocumentUploadModal({
                             className="hidden"
                             accept={documentType.allowed_mime?.join(",") ?? "*"}
                             onChange={(e) =>
-                                setFile(e.target.files?.[0] ?? null)
+                                handleFileChange(e.target.files?.[0] ?? null)
                             }
                         />
                     </div>

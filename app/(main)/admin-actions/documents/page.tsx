@@ -99,7 +99,7 @@ export default async function AdminCompliancePage() {
                         </div>
 
                         {/* Right — role pill + stat badges */}
-                        <div className="flex flex-col md:flex-row flex-wrap items-start sm:items-center gap-2">
+                        <div className="flex flex-col md:flex-row flex-wrap items-center gap-2">
                             <span className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                 {roleLabel}
                             </span>
