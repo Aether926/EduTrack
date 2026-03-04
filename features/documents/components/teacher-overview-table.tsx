@@ -2,180 +2,221 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { TeacherDocumentsModal } from "./teacher-documents-modal";
-import { CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, AlertCircle, Users } from "lucide-react";
 
 type TeacherStatus = {
-  teacherId: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  employeeId: string | null;
-  approved: number;
-  submitted: number;
-  rejected: number;
-  missing: number;
-  total: number;
-  docs: any[];
+    teacherId: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    employeeId: string | null;
+    approved: number;
+    submitted: number;
+    rejected: number;
+    missing: number;
+    total: number;
+    docs: any[];
 };
 
 function pct(approved: number, total: number) {
-  if (!total) return 0;
-  return Math.round((approved / total) * 100);
+    if (!total) return 0;
+    return Math.round((approved / total) * 100);
+}
+
+function MiniStat({
+    icon,
+    value,
+    cls,
+}: {
+    icon: React.ReactNode;
+    value: number;
+    cls: string;
+}) {
+    return (
+        <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums ${cls}`}
+        >
+            {icon}
+            {value}
+        </span>
+    );
 }
 
 export function TeacherOverviewTable({
-  teacherStatus,
+    teacherStatus,
 }: {
-  teacherStatus: TeacherStatus[];
+    teacherStatus: TeacherStatus[];
 }) {
-  const [selectedTeacher, setSelectedTeacher] = useState<TeacherStatus | null>(
-    null
-  );
-  const [modalOpen, setModalOpen] = useState(false);
+    const [selectedTeacher, setSelectedTeacher] =
+        useState<TeacherStatus | null>(null);
+    const [modalOpen, setModalOpen] = useState(false);
 
-  return (
-    <>
-      <Card>
-        <CardContent className="p-0">
-          {/* prevents squish/overlap */}
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left p-3 font-medium">Teacher</th>
-
-                  {/* hide heavy columns on mobile */}
-                  <th className="hidden md:table-cell text-center p-3 font-medium">
-                    Approved
-                  </th>
-                  <th className="hidden md:table-cell text-center p-3 font-medium">
-                    Pending
-                  </th>
-                  <th className="hidden md:table-cell text-center p-3 font-medium">
-                    Rejected
-                  </th>
-                  <th className="hidden md:table-cell text-center p-3 font-medium">
-                    Missing
-                  </th>
-
-                  <th className="text-center p-3 font-medium">Progress</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {teacherStatus.map((t) => {
-                  const percent = pct(t.approved, t.total);
-
-                  return (
-                    <tr
-                      key={t.teacherId}
-                      className="border-b border-border last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => {
-                        setSelectedTeacher(t);
-                        setModalOpen(true);
-                      }}
-                    >
-                      <td className="p-3 align-top">
-                        <p className="font-medium">
-                          {t.firstName} {t.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[60vw]">
-                          {t.email}
-                        </p>
-
-                        {/* mobile: show counts compactly under the name */}
-                        <div className="mt-2 flex flex-wrap gap-2 md:hidden">
-                          <Badge variant="secondary" className="gap-1">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            {t.approved}
-                          </Badge>
-                          <Badge variant="secondary" className="gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            {t.submitted}
-                          </Badge>
-                          <Badge variant="secondary" className="gap-1">
-                            <XCircle className="h-3.5 w-3.5" />
-                            {t.rejected}
-                          </Badge>
-                          <Badge variant="secondary" className="gap-1">
-                            <AlertCircle className="h-3.5 w-3.5" />
-                            {t.missing}
-                          </Badge>
+    return (
+        <>
+            <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+                {/* ── Header ── */}
+                <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent pointer-events-none" />
+                    <div className="relative flex items-center gap-2.5">
+                        <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-2 shrink-0">
+                            <Users className="h-4 w-4 text-blue-400" />
                         </div>
-
-                        {/* mobile: progress under counts */}
-                        <div className="mt-2 md:hidden">
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div
-                              className="bg-green-500 h-2 rounded-full transition-all"
-                              style={{
-                                width: t.total > 0 ? `${(t.approved / t.total) * 100}%` : "0%",
-                              }}
-                            />
-                          </div>
-                          <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
-                              {t.approved}/{t.total} approved
-                            </span>
-                            <span>{percent}%</span>
-                          </div>
+                        <div>
+                            <p className="text-sm font-semibold">
+                                Teacher Overview
+                            </p>
+                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+                                {teacherStatus.length} teacher
+                                {teacherStatus.length === 1 ? "" : "s"}
+                            </p>
                         </div>
-                      </td>
+                    </div>
+                </div>
 
-                      {/* desktop counts */}
-                      <td className="hidden md:table-cell p-3 text-center text-green-600 font-medium align-top">
-                        {t.approved}
-                      </td>
-                      <td className="hidden md:table-cell p-3 text-center text-blue-600 font-medium align-top">
-                        {t.submitted}
-                      </td>
-                      <td className="hidden md:table-cell p-3 text-center text-red-600 font-medium align-top">
-                        {t.rejected}
-                      </td>
-                      <td className="hidden md:table-cell p-3 text-center text-orange-500 font-medium align-top">
-                        {t.missing}
-                      </td>
+                {/* ── Table ── */}
+                <div className="w-full overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b border-border/60 bg-muted/30">
+                                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Teacher
+                                </th>
+                                <th className="hidden md:table-cell text-center px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Approved
+                                </th>
+                                <th className="hidden md:table-cell text-center px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Pending
+                                </th>
+                                <th className="hidden md:table-cell text-center px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Rejected
+                                </th>
+                                <th className="hidden md:table-cell text-center px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Missing
+                                </th>
+                                <th className="text-center px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Progress
+                                </th>
+                            </tr>
+                        </thead>
 
-                      {/* desktop progress */}
-                      <td className="p-3 align-top">
-                        <div className="hidden md:flex items-center gap-2 min-w-[220px]">
-                          <div className="flex-1 bg-muted rounded-full h-2">
-                            <div
-                              className="bg-green-500 h-2 rounded-full transition-all"
-                              style={{
-                                width: t.total > 0 ? `${(t.approved / t.total) * 100}%` : "0%",
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground shrink-0">
-                            {t.approved}/{t.total}
-                          </span>
-                        </div>
+                        <tbody className="divide-y divide-border/60">
+                            {teacherStatus.map((t) => {
+                                const percent = pct(t.approved, t.total);
 
-                        {/* on mobile we already show progress under teacher */}
-                        <div className="md:hidden text-center text-xs text-muted-foreground">
-                          —
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-      <TeacherDocumentsModal
-        teacher={selectedTeacher}
-        open={modalOpen}
-        onOpenChange={(o) => {
-          setModalOpen(o);
-          if (!o) setSelectedTeacher(null);
-        }}
-      />
-    </>
-  );
+                                return (
+                                    <tr
+                                        key={t.teacherId}
+                                        className="cursor-pointer hover:bg-muted/20 transition-colors"
+                                        onClick={() => {
+                                            setSelectedTeacher(t);
+                                            setModalOpen(true);
+                                        }}
+                                    >
+                                        {/* Teacher info */}
+                                        <td className="px-5 py-3 align-middle">
+                                            <p className="font-medium text-sm leading-snug">
+                                                {t.firstName} {t.lastName}
+                                            </p>
+                                            <p className="text-[11px] text-muted-foreground font-mono truncate max-w-[55vw]">
+                                                {t.email}
+                                            </p>
+
+                                            {/* Mobile stats */}
+                                            <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
+                                                <MiniStat
+                                                    icon={
+                                                        <CheckCircle2 className="h-3 w-3" />
+                                                    }
+                                                    value={t.approved}
+                                                    cls="bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                                />
+                                                <MiniStat
+                                                    icon={
+                                                        <Clock className="h-3 w-3" />
+                                                    }
+                                                    value={t.submitted}
+                                                    cls="bg-blue-500/10 text-blue-400 border-blue-500/30"
+                                                />
+                                                <MiniStat
+                                                    icon={
+                                                        <XCircle className="h-3 w-3" />
+                                                    }
+                                                    value={t.rejected}
+                                                    cls="bg-rose-500/10 text-rose-400 border-rose-500/30"
+                                                />
+                                                <MiniStat
+                                                    icon={
+                                                        <AlertCircle className="h-3 w-3" />
+                                                    }
+                                                    value={t.missing}
+                                                    cls="bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                                />
+                                            </div>
+                                        </td>
+
+                                        {/* Desktop stat columns */}
+                                        <td className="hidden md:table-cell px-4 py-3 text-center align-middle">
+                                            <span className="text-sm font-semibold tabular-nums text-emerald-400">
+                                                {t.approved}
+                                            </span>
+                                        </td>
+                                        <td className="hidden md:table-cell px-4 py-3 text-center align-middle">
+                                            <span className="text-sm font-semibold tabular-nums text-blue-400">
+                                                {t.submitted}
+                                            </span>
+                                        </td>
+                                        <td className="hidden md:table-cell px-4 py-3 text-center align-middle">
+                                            <span className="text-sm font-semibold tabular-nums text-rose-400">
+                                                {t.rejected}
+                                            </span>
+                                        </td>
+                                        <td className="hidden md:table-cell px-4 py-3 text-center align-middle">
+                                            <span className="text-sm font-semibold tabular-nums text-amber-400">
+                                                {t.missing}
+                                            </span>
+                                        </td>
+
+                                        {/* Progress */}
+                                        <td className="px-4 py-3 align-middle">
+                                            <div className="flex flex-col items-end gap-1 min-w-[120px] md:min-w-[180px]">
+                                                <div className="flex items-center gap-2 w-full">
+                                                    <div className="flex-1 h-1.5 rounded-full bg-muted/60 overflow-hidden">
+                                                        <div
+                                                            className="h-1.5 rounded-full bg-emerald-500 transition-all"
+                                                            style={{
+                                                                width:
+                                                                    t.total > 0
+                                                                        ? `${(t.approved / t.total) * 100}%`
+                                                                        : "0%",
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 font-mono">
+                                                        {percent}%
+                                                    </span>
+                                                </div>
+                                                <span className="text-[10px] text-muted-foreground/60 tabular-nums">
+                                                    {t.approved}/{t.total}
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <TeacherDocumentsModal
+                teacher={selectedTeacher}
+                open={modalOpen}
+                onOpenChange={(o) => {
+                    setModalOpen(o);
+                    if (!o) setSelectedTeacher(null);
+                }}
+            />
+        </>
+    );
 }
