@@ -25,13 +25,6 @@ async function getTrainingsForTeacher(
         )
         .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false });
-    const { data: attendanceRows, error: aErr } = await db
-        .from("Attendance")
-        .select(
-            "id, training_id, status, result, proof_url, proof_path, created_at",
-        )
-        .eq("teacher_id", teacherId)
-        .order("created_at", { ascending: false });
 
     if (aErr || !attendanceRows || attendanceRows.length === 0) return [];
 
@@ -45,9 +38,6 @@ async function getTrainingsForTeacher(
         created_at: string;
     }>;
 
-    const filtered = adminMode
-        ? attendance
-        : attendance.filter(isPublicSafeTraining);
     const filtered = adminMode
         ? attendance
         : attendance.filter(isPublicSafeTraining);

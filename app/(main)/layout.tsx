@@ -15,11 +15,13 @@ import { DeletionWarningBanner } from "@/features/settingss/components/deletion-
 const geistSans = Geist({
     variable: "--font-geist-sans",
     subsets: ["latin"],
+    display: "swap",
 });
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-mono",
     subsets: ["latin"],
+    display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,7 +38,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-                suppressHydrationWarning
+                suppressHydrationWarning={true}
             >
                 <ThemeProvider
                     attribute="class"
@@ -48,7 +50,7 @@ export default function RootLayout({
 
                     <SidebarProvider>
                         <AppSidebar />
-                        <SidebarInset className="overflow-y-auto">
+                        <SidebarInset>
                             {/* Deletion warning banner — shows on every page if pending */}
                             <DeletionWarningBanner />
                             <main className="min-w-0">

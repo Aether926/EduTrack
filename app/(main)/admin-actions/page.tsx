@@ -19,8 +19,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
 import { AdminDeletionRequestsTable } from "@/features/settingss/components/admin-deletion-requests-table";
 import { getAllDeletionRequests } from "@/features/settingss/actions/admin-deletion-actions";
 
@@ -30,12 +36,6 @@ type ActionItem = {
     href: string;
     icon: React.ReactNode;
     badge?: string;
-    color: {
-        icon: string;
-        glow: string;
-        border: string;
-        open: string;
-    };
 };
 
 type TeacherItem = {
@@ -149,53 +149,38 @@ export default async function AdminActionsPage() {
     const recentTeachers = teachers.slice(0, 8);
 
     return (
-        <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-            {/* header card */}
-            <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-indigo-500/5 pointer-events-none" />
-                <div className="relative px-5 py-5 md:px-6 md:py-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-lg border border-violet-500/20 bg-violet-500/10 p-2.5 shrink-0">
-                                <ShieldAlert className="h-5 w-5 text-violet-400" />
-                            </div>
-                            <div>
-                                <h1 className="text-lg font-semibold tracking-tight leading-tight">
-                                    Admin Actions
-                                </h1>
-                                <p className="text-[13px] text-muted-foreground mt-0.5">
-                                    Manage teachers, compliance, and system
-                                    operations.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {roleLabel}
-                            </span>
-                            <Badge variant="outline" className="gap-1.5">
-                                <Users className="h-3.5 w-3.5" />
-                                {teachers.length} teachers
-                            </Badge>
-                            <Button asChild variant="outline" size="sm">
-                                <Link href="/dashboard">Back to Dashboard</Link>
-                            </Button>
-                            <Button asChild size="sm">
-                                <Link
-                                    href="/admin-actions/teachers"
-                                    className="gap-1.5"
-                                >
-                                    Teacher directory{" "}
-                                    <ArrowRight className="h-3.5 w-3.5" />
-                                </Link>
-                            </Button>
-                        </div>
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-6">
+            {/* header card (same style as your other pages) */}
+            <div className="rounded-xl border bg-card p-4 md:p-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary">{roleLabel}</Badge>
+                        <Badge variant="outline">Admin Actions</Badge>
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                        <Button
+                            asChild
+                            variant="secondary"
+                            className="w-full sm:w-auto"
+                        >
+                            <Link href="/dashboard">Back to Dashboard</Link>
+                        </Button>
+                        <Button asChild className="w-full sm:w-auto">
+                            <Link
+                                href="/admin-actions/teachers"
+                                className="gap-2"
+                            >
+                                Teacher directory{" "}
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </Button>
                     </div>
                 </div>
             </div>
 
             <Tabs defaultValue="overview">
-                <TabsList>
+                <TabsList className="mb-4">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="deletions" className="gap-2">
                         <Trash2 className="h-3.5 w-3.5" />
@@ -208,153 +193,146 @@ export default async function AdminActionsPage() {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="overview" className="mt-4">
+                <TabsContent value="overview">
                     <div className="grid gap-4 lg:grid-cols-3">
-                        {/* Quick actions */}
-                        <div className="lg:col-span-2 space-y-3">
-                            <div>
-                                <h2 className="text-sm font-semibold">
+                        <Card className="lg:col-span-2">
+                            <CardHeader>
+                                <CardTitle className="text-base">
                                     Quick actions
-                                </h2>
-                                <p className="text-[12px] text-muted-foreground mt-0.5">
+                                </CardTitle>
+                                <CardDescription>
                                     Open a module. Access is permission-gated.
-                                </p>
-                            </div>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                {actions.map((a) => (
-                                    <Link
-                                        key={a.href}
-                                        href={a.href}
-                                        className={`group relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden transition-colors ${a.color.border}`}
-                                    >
-                                        <div
-                                            className={`absolute inset-0 bg-gradient-to-br ${a.color.glow} via-transparent to-transparent pointer-events-none`}
-                                        />
-                                        <div className="relative flex flex-col gap-3 px-4 py-4">
-                                            <div className="flex items-center justify-between">
-                                                <div
-                                                    className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-colors ${a.color.icon}`}
-                                                >
-                                                    {a.icon}
-                                                </div>
-                                                {a.badge && (
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="text-[11px]"
-                                                    >
-                                                        {a.badge}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold leading-tight">
-                                                    {a.title}
-                                                </p>
-                                                <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug">
-                                                    {a.description}
-                                                </p>
-                                            </div>
-                                            <div
-                                                className={`flex items-center gap-1 text-[12px] text-muted-foreground font-medium transition-colors ${a.color.open}`}
-                                            >
-                                                Open{" "}
-                                                <ArrowRight className="h-3 w-3" />
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
+                                </CardDescription>
+                            </CardHeader>
 
-                        {/* Teacher snapshot */}
-                        <div className="space-y-3">
-                            <div>
-                                <h2 className="text-sm font-semibold">
-                                    Teacher snapshot
-                                </h2>
-                                <p className="text-[12px] text-muted-foreground mt-0.5">
-                                    Quick access to recent teachers.
-                                </p>
-                            </div>
-                            <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/3 via-transparent to-transparent pointer-events-none" />
-                                <div className="relative p-4 space-y-3">
-                                    <div className="flex items-end justify-between">
-                                        <div>
-                                            <p className="text-2xl font-bold tabular-nums">
-                                                {teachers.length}
-                                            </p>
-                                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
-                                                Total approved teachers
-                                            </p>
-                                        </div>
-                                        <Badge variant="outline">Recent</Badge>
-                                    </div>
-                                    <Separator />
-                                    <div className="space-y-1.5">
-                                        {recentTeachers.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">
-                                                No teachers found.
-                                            </p>
-                                        ) : (
-                                            recentTeachers.map((t) => (
-                                                <Link
-                                                    key={t.id}
-                                                    href={teacherProfileHref(
-                                                        t.id,
-                                                    )}
-                                                    className="group flex items-center gap-3 rounded-lg border border-border/50 bg-muted/10 px-3 py-2.5 hover:bg-muted/20 hover:border-border/80 transition-colors"
-                                                >
-                                                    <InitialAvatar
-                                                        name={t.fullName}
-                                                        className="h-8 w-8 shrink-0"
-                                                    />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-sm font-medium truncate leading-tight">
-                                                            {t.fullName}
-                                                        </p>
-                                                        <p className="text-[11px] text-muted-foreground truncate">
-                                                            {t.email ?? "—"}
-                                                        </p>
+                            <CardContent>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    {actions.map((a) => (
+                                        <Card
+                                            key={a.href}
+                                            className="group transition-colors hover:bg-muted/20"
+                                        >
+                                            <CardHeader className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                                                        <div className="rounded-md border bg-card p-2">
+                                                            {a.icon}
+                                                        </div>
+                                                        {a.badge ? (
+                                                            <Badge variant="secondary">
+                                                                {a.badge}
+                                                            </Badge>
+                                                        ) : null}
                                                     </div>
-                                                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground transition-colors" />
-                                                </Link>
-                                            ))
-                                        )}
-                                    </div>
-                                    <Button
-                                        asChild
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full"
-                                    >
-                                        <Link href="/admin-actions/teachers">
-                                            Open teacher directory
-                                        </Link>
-                                    </Button>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <CardTitle className="text-base">
+                                                        {a.title}
+                                                    </CardTitle>
+                                                    <CardDescription className="text-sm">
+                                                        {a.description}
+                                                    </CardDescription>
+                                                </div>
+                                            </CardHeader>
+
+                                            <CardContent className="pt-0">
+                                                <Button
+                                                    asChild
+                                                    variant="outline"
+                                                    className="w-full justify-between"
+                                                >
+                                                    <Link href={a.href}>
+                                                        Open{" "}
+                                                        <ArrowRight className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
                                 </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="space-y-1">
+                                <CardTitle className="text-base">
+                                    Teacher snapshot
+                                </CardTitle>
+                                <CardDescription>
+                                    Quick access to recent teachers.
+                                </CardDescription>
+                            </CardHeader>
+
+                            <CardContent className="space-y-4">
+                                <div className="flex items-end justify-between">
+                                    <div>
+                                        <div className="text-2xl font-semibold">
+                                            {teachers.length}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            Total approved teachers
+                                        </div>
+                                    </div>
+                                    <Badge variant="outline">Recent</Badge>
+                                </div>
+
+                                <Separator />
+
+                                <div className="space-y-2">
+                                    {recentTeachers.length === 0 ? (
+                                        <div className="text-sm text-muted-foreground">
+                                            No teachers found.
+                                        </div>
+                                    ) : (
+                                        recentTeachers.map((t) => (
+                                            <Link
+                                                key={t.id}
+                                                href={teacherProfileHref(t.id)}
+                                                className="block rounded-lg border bg-muted/10 p-3 transition-colors hover:bg-muted/20"
+                                            >
+                                                <div className="text-sm font-medium truncate">
+                                                    {t.fullName}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground truncate">
+                                                    {t.email ?? "—"}
+                                                </div>
+                                            </Link>
+                                        ))
+                                    )}
+                                </div>
+
+                                <Button
+                                    asChild
+                                    variant="secondary"
+                                    className="w-full"
+                                >
+                                    <Link href="/admin-actions/teachers">
+                                        Open teacher directory
+                                    </Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
                     </div>
                 </TabsContent>
 
-                <TabsContent value="deletions" className="mt-4">
-                    <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
-                        <div className="px-5 py-4 border-b border-border/60">
-                            <h2 className="text-sm font-semibold">
+                <TabsContent value="deletions">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">
                                 Account deletion requests
-                            </h2>
-                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                            </CardTitle>
+                            <CardDescription>
                                 Review and approve deletion requests. This
                                 action is sensitive.
-                            </p>
-                        </div>
-                        <div className="p-4">
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
                             <AdminDeletionRequestsTable
                                 requests={deletionRequests}
                             />
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
         </div>

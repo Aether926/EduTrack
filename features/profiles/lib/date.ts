@@ -1,32 +1,21 @@
-export function toDate(value: string | Date | null | undefined): Date | undefined {
-    if (!value) return undefined;
-    if (value instanceof Date) return isNaN(value.getTime()) ? undefined : value;
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? undefined : d;
+export function toDate(v: unknown): Date | undefined {
+  if (!v) return undefined;
+  const d = v instanceof Date ? v : new Date(String(v));
+  return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
-export function fmtDateRange(start: string | null | undefined, end: string | null | undefined): string {
-    const fmt = (d: string | null | undefined) => {
-        if (!d) return null;
-        const date = new Date(d);
-        if (isNaN(date.getTime())) return null;
-        return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-    };
-    const s = fmt(start);
-    const e = fmt(end);
-    if (!s && !e) return "—";
-    if (!e) return s!;
-    if (s === e) return s!;
-    return `${s} – ${e}`;
+export function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
 }
 
-export function badgeClass(status: string): string {
-    const s = (status ?? "").toLowerCase();
-    if (s === "completed" || s === "passed") return "bg-green-500/10 text-green-400 border-green-500/30";
-    if (s === "failed") return "bg-red-500/10 text-red-400 border-red-500/30";
-    if (s === "ongoing" || s === "in progress") return "bg-blue-500/10 text-blue-400 border-blue-500/30";
-    if (s === "pending") return "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
-    return "bg-gray-500/10 text-gray-400 border-gray-500/30";
+export function fmtShort(d: Date) {
+  try {
+    return d.toLocaleDateString();
+  } catch {
+    return d.toISOString().slice(0, 10);
+  }
 }
 
 export function calculateServiceYears(dateValue: Date | undefined) {

@@ -1,41 +1,22 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import {
-    ColumnDef,
-    SortingState,
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from "@tanstack/react-table";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-    ArrowUpDown,
-    Search,
-    X,
-    ShieldCheck,
-    Clock,
-    Building2,
-    ExternalLink,
-    MoreHorizontal,
-} from "lucide-react";
-
 import type { ProofReviewRow } from "../types";
 import { useProofReview } from "../hooks/use-proof-review";
-import { fmt } from "../lib/utils";
+import { fmt, statusBadgeVariant } from "../lib/utils";
 
+import { useMemo, useState } from "react";
+import { Search, X, Clock, GraduationCap, User2 } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
+    CardDescription,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
     Table,
     TableBody,
@@ -44,13 +25,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import ProofReviewSheet from "@/features/proof-review/components/proof-review-sheet";
 

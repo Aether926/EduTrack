@@ -3,7 +3,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import ActivityFeed from "@/features/dashboard/component/activity-feed";
@@ -268,33 +268,6 @@ export default function DashboardView({
                             </CardContent>
                         </Card>
 
-                        {/* Activity — desktop only here (sits below focus in left col) */}
-                        <div className="hidden lg:block">
-                            <ActivityFeed
-                                rows={activity as any}
-                                role={role}
-                                viewerId={viewerId}
-                            />
-                        </div>
-                    </div>
-
-                    {/* RIGHT: calendar — order-2 on mobile (between focus & activity), sticky on desktop */}
-                    <div className="order-2 lg:order-2 lg:sticky lg:top-24 self-start min-w-0 lg:h-[calc(100vh-7rem)]">
-                        <div
-                            ref={calendarRef}
-                            className={[
-                                "w-full max-w-full h-full overscroll-contain",
-                                calendarOverflows
-                                    ? "overflow-y-auto [&>*]:rounded-r-none [&>*]:border-r-0"
-                                    : "overflow-y-visible",
-                            ].join(" ")}
-                        >
-                            <TrainingCalendar events={events} />
-                        </div>
-                    </div>
-
-                    {/* Activity — mobile only (order-3, after calendar) */}
-                    <div className="order-3 lg:hidden min-w-0">
                         <ActivityFeed
                             rows={activity as any}
                             role={role}
@@ -394,37 +367,6 @@ export default function DashboardView({
         </div>
     );
 }
-
-const accentMap = {
-    blue: {
-        border: "border-blue-500/30",
-        iconBg: "bg-blue-500/10 border-blue-500/20",
-        iconColor: "text-blue-400",
-        bar: "bg-blue-500",
-        value: "text-blue-400",
-    },
-    violet: {
-        border: "border-violet-500/30",
-        iconBg: "bg-violet-500/10 border-violet-500/20",
-        iconColor: "text-violet-400",
-        bar: "bg-violet-500",
-        value: "text-violet-400",
-    },
-    sky: {
-        border: "border-sky-500/30",
-        iconBg: "bg-sky-500/10 border-sky-500/20",
-        iconColor: "text-sky-400",
-        bar: "bg-sky-500",
-        value: "text-sky-400",
-    },
-    emerald: {
-        border: "border-emerald-500/30",
-        iconBg: "bg-emerald-500/10 border-emerald-500/20",
-        iconColor: "text-emerald-400",
-        bar: "bg-emerald-500",
-        value: "text-emerald-400",
-    },
-} as const;
 
 // ── StatCard ──────────────────────────────────────────────────────────────────
 
