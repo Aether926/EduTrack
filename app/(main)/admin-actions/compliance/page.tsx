@@ -1,110 +1,95 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { CompliancePageClient } from "@/features/compliance/components/compliance-page-client";
+import { AdminComplianceClient } from "@/features/compliance/components/admin-compliance-client";
 
-import { Badge } from "@/components/ui/badge";
-import {
-    CalendarRange,
-    CheckCircle2,
-    ClipboardCheck,
-    Layers3,
-} from "lucide-react";
+import { ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+const ALLOWED = [
+    "ADMIN",
+    "HR_ADMIN",
+    "PRINCIPAL",
+    "SUPER_ADMIN",
+    "HR",
+] as const;
 
 function currentSchoolYear() {
     const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
-    return month >= 6 ? `SY ${year}-${year + 1}` : `SY ${year - 1}-${year}`;
+    const m = now.getMonth() + 1;
+    const y = now.getFullYear();
+    return m >= 6 ? `SY ${y}-${y + 1}` : `SY ${y - 1}-${y}`;
 }
 
-function fmtDate(d: string | null | undefined) {
-    if (!d) return "—";
-    try {
-        return new Date(d).toISOString().slice(0, 10);
-    } catch {
-        return String(d);
-    }
-}
-
-export default async function CompliancePage() {
+export default async function AdminCompliancePage() {
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) redirect("/signin");
 
-    // role badge (dynamic)
     const admin = createAdminClient();
-    const { data: me } = await admin
+
+    const { data: viewer } = await admin
         .from("User")
         .select("role")
         .eq("id", auth.user.id)
         .maybeSingle();
 
-    const roleLabel = (me?.role ?? "USER").toString();
+    const roleLabel = (viewer?.role ?? "USER").toString();
+    if (!ALLOWED.includes(roleLabel as any)) redirect("/dashboard");
 
     const schoolYear = currentSchoolYear();
 
-    // policy period
-    const { data: policy } = await supabase
-        .from("TrainingCompliancePolicy")
-        .select("period_start, period_end")
-        .eq("school_year", schoolYear)
-        .maybeSingle();
+    const [{ data: schools }, { data: policies }, { data: compliance }] =
+        await Promise.all([
+            admin
+                .from("School")
+                .select("id,name")
+                .order("name", { ascending: true }),
+            admin
+                .from("TrainingCompliancePolicy")
+                .select("*")
+                .order("school_year", { ascending: false }),
+            admin
+                .from("TeacherTrainingCompliance")
+                .select(
+                    `
+          *,
+          teacher:Profile(id, firstName, lastName, email),
+          school:School(id, name)
+        `,
+                )
+                .eq("school_year", schoolYear)
+                .order("remaining_hours", { ascending: false }),
+        ]);
 
-    // compliance row
-    const { data: compliance } = await supabase
-        .from("TeacherTrainingCompliance")
-        .select("*")
-        .eq("teacher_id", auth.user.id)
-        .maybeSingle();
+    const safeCompliance = (compliance ?? []) as any[];
 
-    // trainings (approved + passed)
-    const { data: allTrainings } = await supabase
-        .from("Attendance")
-        .select(
-            "id, status, result, training_id, approved_hours, ProfessionalDevelopment(title, type, start_date, end_date, total_hours, sponsoring_agency)",
-        )
-        .eq("teacher_id", auth.user.id)
-        .eq("status", "APPROVED")
-        .eq("result", "PASSED");
-
-    const periodStart = policy?.period_start ?? null;
-    const periodEnd = policy?.period_end ?? null;
-
-    const countedTrainings = (allTrainings ?? []).filter((t) => {
-        const pd = t.ProfessionalDevelopment as any;
-        if (!pd?.start_date || !pd?.end_date) return false;
-        if (!periodStart || !periodEnd) return true;
-        return pd.start_date >= periodStart && pd.end_date <= periodEnd;
-    });
-
-    const otherTrainings = (allTrainings ?? []).filter((t) => {
-        const pd = t.ProfessionalDevelopment as any;
-        if (!pd?.start_date || !pd?.end_date) return false;
-        if (!periodStart || !periodEnd) return false;
-        return pd.start_date < periodStart || pd.end_date > periodEnd;
-    });
+    const counts = {
+        NON_COMPLIANT: safeCompliance.filter(
+            (c) => c.status === "NON_COMPLIANT",
+        ).length,
+        AT_RISK: safeCompliance.filter((c) => c.status === "AT_RISK").length,
+        COMPLIANT: safeCompliance.filter((c) => c.status === "COMPLIANT")
+            .length,
+    };
 
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
             {/* header card */}
             <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-yellow-500/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 pointer-events-none" />
                 <div className="relative px-5 py-5 md:px-6 md:py-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-3 md:flex-1">
                             <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-2.5 shrink-0">
-                                <ClipboardCheck className="h-5 w-5 text-amber-400" />
+                                <ShieldCheck className="h-5 w-5 text-amber-400" />
                             </div>
                             <div>
                                 <h1 className="text-lg font-semibold tracking-tight leading-tight">
-                                    My Compliance
+                                    Training Compliance
                                 </h1>
                                 <p className="text-[13px] text-muted-foreground mt-0.5">
-                                    Track your training hours and compliance
-                                    status — {schoolYear}
+                                    Monitor compliance and hour requirements —{" "}
+                                    {schoolYear}
                                 </p>
                             </div>
                         </div>
@@ -112,81 +97,27 @@ export default async function CompliancePage() {
                             <span className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                 {roleLabel}
                             </span>
-                            <Badge
-                                variant="outline"
-                                className="gap-1.5 text-amber-400 border-amber-500/30"
-                            >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                {countedTrainings.length} counted
-                            </Badge>
-                            <Badge variant="outline" className="gap-1.5">
-                                <Layers3 className="h-3.5 w-3.5" />
-                                {otherTrainings.length} outside period
-                            </Badge>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
+                                <ShieldCheck className="h-3 w-3" />
+                                {counts.COMPLIANT} compliant
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+                                <ShieldAlert className="h-3 w-3" />
+                                {counts.AT_RISK} at risk
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-rose-400">
+                                <ShieldX className="h-3 w-3" />
+                                {counts.NON_COMPLIANT} non-compliant
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* quick stats cards */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
-                    <div className="relative flex items-center gap-4 px-5 py-5">
-                        <div className="h-10 w-10 rounded-lg border border-amber-500/20 bg-amber-500/10 flex items-center justify-center shrink-0">
-                            <ClipboardCheck className="h-4 w-4 text-amber-400" />
-                        </div>
-                        <div>
-                            <p className="text-xl font-bold tabular-nums leading-tight">
-                                {schoolYear}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                                Current school year
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
-                    <div className="relative flex items-center gap-4 px-5 py-5">
-                        <div className="h-10 w-10 rounded-lg border border-amber-500/20 bg-amber-500/10 flex items-center justify-center shrink-0">
-                            <CalendarRange className="h-4 w-4 text-amber-400" />
-                        </div>
-                        <div>
-                            <p className="text-xl font-bold tabular-nums leading-tight font-mono">
-                                {fmtDate(periodStart)} → {fmtDate(periodEnd)}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                                Counting period
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden sm:col-span-2 lg:col-span-1">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
-                    <div className="relative flex items-center gap-4 px-5 py-5">
-                        <div className="h-10 w-10 rounded-lg border border-amber-500/20 bg-amber-500/10 flex items-center justify-center shrink-0">
-                            <CheckCircle2 className="h-4 w-4 text-amber-400" />
-                        </div>
-                        <div>
-                            <p className="text-xl font-bold tabular-nums leading-tight">
-                                {(allTrainings ?? []).length}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                                Approved & passed trainings
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* existing client UI */}
-            <CompliancePageClient
-                compliance={compliance}
-                countedTrainings={countedTrainings}
-                otherTrainings={otherTrainings}
+            <AdminComplianceClient
+                compliance={safeCompliance as any}
+                policies={(policies ?? []) as any}
+                schools={(schools ?? []) as any}
                 schoolYear={schoolYear}
             />
         </div>
