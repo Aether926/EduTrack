@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { TrendingUp } from "lucide-react";
 
 import {
     ClipboardList,
@@ -55,8 +56,6 @@ const ADMIN_LIKE = [
     "SUPER_ADMIN",
 ] as const;
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminActionsPage() {
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
@@ -108,12 +107,6 @@ export default async function AdminActionsPage() {
             href: "/admin-actions/queue",
             icon: <ClipboardList className="h-5 w-5" />,
             badge: "Queue",
-            color: {
-                icon: "border-blue-500/20 bg-blue-500/10 text-blue-400 group-hover:border-blue-500/40 group-hover:bg-blue-500/15 group-hover:text-blue-300",
-                glow: "from-blue-500/5",
-                border: "hover:border-blue-500/30",
-                open: "group-hover:text-blue-400",
-            },
         },
         {
             title: "Teacher Directory",
@@ -121,12 +114,6 @@ export default async function AdminActionsPage() {
             href: "/admin-actions/teachers",
             icon: <Users className="h-5 w-5" />,
             badge: "Teachers",
-            color: {
-                icon: "border-violet-500/20 bg-violet-500/10 text-violet-400 group-hover:border-violet-500/40 group-hover:bg-violet-500/15 group-hover:text-violet-300",
-                glow: "from-violet-500/5",
-                border: "hover:border-violet-500/30",
-                open: "group-hover:text-violet-400",
-            },
         },
         {
             title: "Appointment History",
@@ -134,12 +121,6 @@ export default async function AdminActionsPage() {
             href: "/admin-actions/appointment-history",
             icon: <FileCheck className="h-5 w-5" />,
             badge: "History",
-            color: {
-                icon: "border-teal-500/20 bg-teal-500/10 text-teal-400 group-hover:border-teal-500/40 group-hover:bg-teal-500/15 group-hover:text-teal-300",
-                glow: "from-teal-500/5",
-                border: "hover:border-teal-500/30",
-                open: "group-hover:text-teal-400",
-            },
         },
         {
             title: "Academic Responsibilities",
@@ -147,12 +128,6 @@ export default async function AdminActionsPage() {
             href: "/admin-actions/responsibilities",
             icon: <BookMarked className="h-5 w-5" />,
             badge: "Assignments",
-            color: {
-                icon: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 group-hover:border-emerald-500/40 group-hover:bg-emerald-500/15 group-hover:text-emerald-300",
-                glow: "from-emerald-500/5",
-                border: "hover:border-emerald-500/30",
-                open: "group-hover:text-emerald-400",
-            },
         },
         {
             title: "Training Compliance",
@@ -160,12 +135,14 @@ export default async function AdminActionsPage() {
             href: "/admin-actions/compliance",
             icon: <ShieldAlert className="h-5 w-5" />,
             badge: "Compliance",
-            color: {
-                icon: "border-amber-500/20 bg-amber-500/10 text-amber-400 group-hover:border-amber-500/40 group-hover:bg-amber-500/15 group-hover:text-amber-300",
-                glow: "from-amber-500/5",
-                border: "hover:border-amber-500/30",
-                open: "group-hover:text-amber-400",
-            },
+        },
+        {
+            title: "Salary Increase",
+            description:
+                "Track teachers eligible for salary increase every 3 years.",
+            href: "/admin-actions/salary-increase-eligibility",
+            icon: <TrendingUp className="h-5 w-5" />,
+            badge: "Eligibility",
         },
     ];
 

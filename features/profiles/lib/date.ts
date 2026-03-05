@@ -29,42 +29,49 @@ export function badgeClass(status: string): string {
     return "bg-gray-500/10 text-gray-400 border-gray-500/30";
 }
 
-export function calculateServiceYears(dateStr: string | Date | null | undefined): string {
-    if (!dateStr) return "—";
+export function calculateServiceYears(dateValue: Date | undefined) {
+  if (!dateValue) return "—";
 
-    const start = dateStr instanceof Date ? dateStr : new Date(dateStr);
-    if (isNaN(start.getTime())) return "—";
+  const start = new Date(dateValue);
+  const today = new Date();
+  if (start > today) return "Invalid date";
 
-    const now = new Date();
+  let years = today.getFullYear() - start.getFullYear();
+  let months = today.getMonth() - start.getMonth();
+  let days = today.getDate() - start.getDate();
 
-    // If start is in the future
-    if (start > now) {
-        const diffMs = start.getTime() - now.getTime();
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        return `Starts in ${diffDays}d`;
-    }
+  // Borrow a month if days are negative
+  if (days < 0) {
+    months--;
+    // Days in the month before today's month
+    const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
 
-    let years = now.getFullYear() - start.getFullYear();
-    let months = now.getMonth() - start.getMonth();
-    let days = now.getDate() - start.getDate();
+  // Borrow a year if months are negative
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
 
-    // Borrow from months if days is negative
-    if (days < 0) {
-        months -= 1;
-        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-        days += prevMonth.getDate();
-    }
+  if (years === 0 && months === 0) return `${days}d`;
+  if (years === 0) return `${months}m ${days}d`;
+  return `${years}y ${months}m ${days}d`;
+}
 
-    // Borrow from years if months is negative
-    if (months < 0) {
-        years -= 1;
-        months += 12;
-    }
+export function fmtDateRange(start?: string, end?: string) {
+  const s = start ? new Date(start).toLocaleDateString() : "—";
+  const e = end ? new Date(end).toLocaleDateString() : "—";
+  return `${s} - ${e}`;
+}
 
-    const parts: string[] = [];
-    if (years > 0) parts.push(`${years}y`);
-    if (months > 0) parts.push(`${months}m`);
-    if (days > 0 || parts.length === 0) parts.push(`${days}d`);
-
-    return parts.join(" ");
+export function badgeClass(value: string) {
+  const v = (value || "").toUpperCase();
+  if (v === "APPROVED" || v === "PASSED")
+    return "bg-green-600/15 text-green-400 border-green-600/30";
+  if (v === "SUBMITTED" || v === "ENROLLED")
+    return "bg-blue-600/15 text-blue-400 border-blue-600/30";
+  if (v === "REJECTED" || v === "FAILED")
+    return "bg-red-600/15 text-red-400 border-red-600/30";
+  return "bg-gray-600/15 text-gray-300 border-gray-600/30";
 }

@@ -82,8 +82,9 @@ export default function TeacherProfilesPage() {
                 return;
             }
 
-            const tableData: TeacherTableRow[] = (profiles ?? []).map(
-                (profile: any) => ({
+            const tableData: TeacherTableRow[] = (profiles ?? [])
+                .filter((profile: any) => profile.id !== authUser.id)
+                .map((profile: any) => ({
                     id: profile.id,
                     employeeid: profile.employeeId || "N/A",
                     fullname: `${profile.firstName} ${
@@ -96,8 +97,7 @@ export default function TeacherProfilesPage() {
                     email: profile.email,
                     profileImage: profile.profileImage || null,
                     status: profile.User.status,
-                }),
-            );
+                }));
 
             setTeachers(tableData);
             setLoading(false);

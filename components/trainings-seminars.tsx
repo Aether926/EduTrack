@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import {
     flexRender,
@@ -13,19 +14,23 @@ import {
 } from "@tanstack/react-table";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown, MoreHorizontal, Search, X, Clock } from "lucide-react";
+import {
+    ArrowUpDown,
+    MoreHorizontal,
+    Search,
+    X,
+    Clock,
+    Plus,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import {
     Card,
     CardContent,
@@ -33,7 +38,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-
 import {
     Table,
     TableBody,
@@ -43,7 +47,11 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import PdViewModal from "@/components/pd-view-modal";
+import PdViewSheet from "@/components/pd-view-sheet";
+import SelfEnrollModal from "@/features/professional-dev/components/self-enroll-modal";
+import UploadProofSheet, {
+    type UploadProofContext,
+} from "@/features/professional-dev/components/upload-proof-sheet";
 
 export type TrainingSeminarRow = {
     id: string;
@@ -62,52 +70,50 @@ export type TrainingSeminarRow = {
 /* ─── Status badge ─── */
 function StatusBadge({ status }: { status: string }) {
     const s = (status || "").toUpperCase();
-
     if (s === "APPROVED")
         return (
-            <Badge className="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 Approved
-            </Badge>
+            </span>
         );
     if (s === "REJECTED")
         return (
-            <Badge className="inline-flex items-center gap-1.5 bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/15">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold text-rose-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
                 Rejected
-            </Badge>
+            </span>
+        );
+    if (s === "SUBMITTED")
+        return (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                Submitted
+            </span>
         );
     if (s === "ENROLLED")
         return (
-            <Badge className="inline-flex items-center gap-1.5 bg-sky-500/15 text-sky-400 border border-sky-500/30 hover:bg-sky-500/15">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/15 px-2 py-0.5 text-[11px] font-semibold text-sky-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
                 Enrolled
-            </Badge>
+            </span>
         );
-    if (s === "PENDING")
-        return (
-            <Badge className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                Pending
-            </Badge>
-        );
-
-    return <Badge variant="outline">{status}</Badge>;
+    return (
+        <span className="rounded-full border px-2 py-0.5 text-[11px]">
+            {status}
+        </span>
+    );
 }
 
-/* ─── Type chip ─── */
 const typeColors: Record<string, string> = {
     training: "bg-teal-500/10 text-teal-400 border-teal-500/40",
     seminar: "bg-violet-500/10 text-violet-400 border-violet-500/40",
-    workshop: "bg-orange-500/10 text-orange-400 border-orange-500/40",
-    webinar: "bg-sky-500/10 text-sky-400 border-sky-500/40",
-    conference: "bg-pink-500/10 text-pink-400 border-pink-500/40",
 };
 
 function TypeChip({ type }: { type: string }) {
-    const key = (type || "").toLowerCase();
     const cls =
-        typeColors[key] ?? "bg-slate-500/10 text-slate-400 border-slate-500/40";
+        typeColors[(type || "").toLowerCase()] ??
+        "bg-slate-500/10 text-slate-400 border-slate-500/40";
     return (
         <span
             className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}
@@ -117,7 +123,6 @@ function TypeChip({ type }: { type: string }) {
     );
 }
 
-/* ─── Level pill ─── */
 function LevelPill({ level }: { level: string }) {
     const l = (level || "").toLowerCase();
     const cls =
@@ -142,17 +147,40 @@ export default function TrainingsSeminars({
 }: {
     data: TrainingSeminarRow[];
 }) {
+    const router = useRouter();
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(
         null,
     );
+    const [selfEnrollOpen, setSelfEnrollOpen] = useState(false);
+
+    const [uploadOpen, setUploadOpen] = useState(false);
+    const [uploadCtx, setUploadCtx] = useState<UploadProofContext | null>(null);
+
+    const openUpload = (row: TrainingSeminarRow) => {
+        setUploadCtx({
+            attendanceId: row.id,
+            status: row.status,
+            training: {
+                title: row.title,
+                type: row.type,
+                level: row.level,
+                totalHours: Number(row.totalHours),
+                startDate: row.startDate,
+                endDate: row.endDate,
+            },
+        });
+        setUploadOpen(true);
+    };
+
+    const openDetails = (trainingId: string) => {
+        setSelectedTrainingId(trainingId);
+        setDetailsOpen(true);
+    };
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
-    const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(
-        {},
-    );
 
     const columns = useMemo<ColumnDef<TrainingSeminarRow>[]>(
         () => [
@@ -277,8 +305,7 @@ export default function TrainingsSeminars({
                     </Button>
                 ),
                 cell: ({ row }) => {
-                    const status = row.original.status;
-                    const approvedHours = row.original.approvedHours;
+                    const { status, approvedHours } = row.original;
                     const totalHours = row.getValue("totalHours") as string;
                     const isApproved = status === "APPROVED";
                     return (
@@ -333,10 +360,15 @@ export default function TrainingsSeminars({
                     const canUpload =
                         row.original.status === "ENROLLED" ||
                         row.original.status === "REJECTED";
+                    if (!canUpload) return null;
                     return (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <span className="sr-only">Open menu</span>
                                     <MoreHorizontal className="h-4 w-4" />
                                 </Button>
@@ -345,28 +377,11 @@ export default function TrainingsSeminars({
                                 <DropdownMenuItem
                                     onSelect={(e) => {
                                         e.preventDefault();
-                                        setSelectedTrainingId(
-                                            row.original.trainingId,
-                                        );
-                                        setDetailsOpen(true);
+                                        openUpload(row.original);
                                     }}
                                 >
-                                    View details
+                                    Upload proof
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                {canUpload ? (
-                                    <DropdownMenuItem asChild>
-                                        <a
-                                            href={`/professional-dev/${row.original.id}/upload-proof`}
-                                        >
-                                            Upload proof
-                                        </a>
-                                    </DropdownMenuItem>
-                                ) : (
-                                    <DropdownMenuItem disabled>
-                                        Upload proof
-                                    </DropdownMenuItem>
-                                )}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     );
@@ -374,16 +389,14 @@ export default function TrainingsSeminars({
             },
         ],
         [],
-    );
+    ); // eslint-disable-line
 
     const table = useReactTable({
         data,
         columns,
-        state: { sorting, globalFilter, rowSelection },
+        state: { sorting, globalFilter },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
-        onRowSelectionChange: setRowSelection,
-        enableRowSelection: true,
         globalFilterFn: (row, _columnId, filterValue) => {
             const q = String(filterValue ?? "")
                 .toLowerCase()
@@ -422,7 +435,7 @@ export default function TrainingsSeminars({
 
     useEffect(() => {
         table.setPageIndex(0);
-    }, [globalFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [globalFilter]); // eslint-disable-line
 
     const filteredCount = table.getFilteredRowModel().rows.length;
     const pageIndex = table.getState().pagination.pageIndex;
@@ -442,53 +455,63 @@ export default function TrainingsSeminars({
                         </CardDescription>
                     </div>
 
-                    {/* Desktop search — full width on mobile, fixed on md+ */}
-                    <div className="hidden md:block w-full md:w-[320px]">
-                        <Input
-                            value={globalFilter ?? ""}
-                            onChange={(e) => setGlobalFilter(e.target.value)}
-                            placeholder="Search title, sponsor, status..."
-                        />
-                    </div>
-
-                    {/* Mobile search icon → expand */}
-                    <div className="flex md:hidden items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                        <div className="hidden md:block w-[280px]">
+                            <Input
+                                value={globalFilter ?? ""}
+                                onChange={(e) =>
+                                    setGlobalFilter(e.target.value)
+                                }
+                                placeholder="Search title, sponsor, status..."
+                            />
+                        </div>
+                        <div className="flex md:hidden items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setSearchOpen((v) => !v)}
+                                aria-label="Search"
+                            >
+                                {searchOpen ? (
+                                    <X className="h-4 w-4" />
+                                ) : (
+                                    <Search className="h-4 w-4" />
+                                )}
+                            </Button>
+                            <AnimatePresence initial={false}>
+                                {searchOpen && (
+                                    <motion.div
+                                        initial={{ width: 0, opacity: 0 }}
+                                        animate={{
+                                            width: "min(240px, 55vw)",
+                                            opacity: 1,
+                                        }}
+                                        exit={{ width: 0, opacity: 0 }}
+                                        transition={{ duration: 0.18 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <Input
+                                            value={globalFilter ?? ""}
+                                            onChange={(e) =>
+                                                setGlobalFilter(e.target.value)
+                                            }
+                                            placeholder="Search..."
+                                            className="h-9"
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                         <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setSearchOpen((v) => !v)}
-                            aria-label="Search"
+                            onClick={() => setSelfEnrollOpen(true)}
+                            className="gap-2 bg-teal-600 hover:bg-teal-700 text-white shrink-0"
                         >
-                            {searchOpen ? (
-                                <X className="h-4 w-4" />
-                            ) : (
-                                <Search className="h-4 w-4" />
-                            )}
+                            <Plus className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                                Self-Report Training
+                            </span>
+                            <span className="sm:hidden">Self-Report</span>
                         </Button>
-
-                        <AnimatePresence initial={false}>
-                            {searchOpen ? (
-                                <motion.div
-                                    initial={{ width: 0, opacity: 0 }}
-                                    animate={{
-                                        width: "min(240px, 55vw)",
-                                        opacity: 1,
-                                    }}
-                                    exit={{ width: 0, opacity: 0 }}
-                                    transition={{ duration: 0.18 }}
-                                    className="overflow-hidden"
-                                >
-                                    <Input
-                                        value={globalFilter ?? ""}
-                                        onChange={(e) =>
-                                            setGlobalFilter(e.target.value)
-                                        }
-                                        placeholder="Search..."
-                                        className="h-9"
-                                    />
-                                </motion.div>
-                            ) : null}
-                        </AnimatePresence>
                     </div>
                 </CardHeader>
 
@@ -506,14 +529,10 @@ export default function TrainingsSeminars({
                                                 colId === "sponsor"
                                                     ? "hidden md:table-cell"
                                                     : "";
-                                            const narrowActions =
-                                                colId === "actions"
-                                                    ? "w-[1%]"
-                                                    : "";
                                             return (
                                                 <TableHead
                                                     key={header.id}
-                                                    className={`${hideOnSmall} ${narrowActions}`}
+                                                    className={`${hideOnSmall} ${colId === "actions" ? "w-[1%]" : ""}`}
                                                 >
                                                     {header.isPlaceholder
                                                         ? null
@@ -529,7 +548,6 @@ export default function TrainingsSeminars({
                                     </TableRow>
                                 ))}
                             </TableHeader>
-
                             <TableBody>
                                 {table.getRowModel().rows.length ? (
                                     table.getRowModel().rows.map((row, idx) => (
@@ -544,7 +562,12 @@ export default function TrainingsSeminars({
                                                     0.15,
                                                 ),
                                             }}
-                                            className="border-b last:border-b-0 hover:bg-accent/40"
+                                            className="border-b last:border-b-0 hover:bg-accent/40 cursor-pointer"
+                                            onClick={() =>
+                                                openDetails(
+                                                    row.original.trainingId,
+                                                )
+                                            }
                                         >
                                             {row
                                                 .getVisibleCells()
@@ -562,6 +585,13 @@ export default function TrainingsSeminars({
                                                             key={cell.id}
                                                             className={
                                                                 hideOnSmall
+                                                            }
+                                                            onClick={
+                                                                colId ===
+                                                                "actions"
+                                                                    ? (e) =>
+                                                                          e.stopPropagation()
+                                                                    : undefined
                                                             }
                                                         >
                                                             {flexRender(
@@ -589,7 +619,6 @@ export default function TrainingsSeminars({
                         </Table>
                     </div>
 
-                    {/* Pagination */}
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                         <div className="text-xs text-muted-foreground">
                             Page {pageIndex + 1} of {pageCount || 1}
@@ -616,10 +645,22 @@ export default function TrainingsSeminars({
                 </CardContent>
             </Card>
 
-            <PdViewModal
+            <PdViewSheet
                 open={detailsOpen}
                 onOpenChange={setDetailsOpen}
                 trainingId={selectedTrainingId}
+            />
+
+            <SelfEnrollModal
+                open={selfEnrollOpen}
+                onOpenChange={setSelfEnrollOpen}
+                onSuccess={() => router.refresh()}
+            />
+
+            <UploadProofSheet
+                open={uploadOpen}
+                onOpenChange={setUploadOpen}
+                ctx={uploadCtx}
             />
         </>
     );

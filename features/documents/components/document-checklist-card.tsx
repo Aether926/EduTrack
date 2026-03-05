@@ -1,15 +1,19 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 import {
     CheckCircle2,
     Clock,
@@ -22,20 +26,27 @@ import {
     Loader2,
     HourglassIcon,
     MoreHorizontal,
-    FileStack,
+    FileText,
+    X,
+    ArrowLeft,
+    CalendarDays,
+    Eye,
+    ZoomIn,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentStatusBadge } from "./document-status-badge";
-import { DocumentUploadModal } from "./document-upload-modal";
 import {
     getDocumentSignedUrl,
     requestResubmit,
     requestDelete,
+    submitTeacherDocument,
 } from "@/features/documents/actions/document-actions";
 import type {
     ChecklistItem,
     DocumentStatus,
 } from "@/features/documents/types/documents";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -45,57 +56,105 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const STATUS_ICON: Record<DocumentStatus | "MISSING", React.ReactNode> = {
-    APPROVED: <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />,
-    SUBMITTED: <Clock className="h-4 w-4 text-blue-400 shrink-0" />,
-    REJECTED: <XCircle className="h-4 w-4 text-rose-400 shrink-0" />,
-    DRAFT: <AlertCircle className="h-4 w-4 text-slate-400 shrink-0" />,
-    MISSING: <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />,
+    APPROVED: <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />,
+    SUBMITTED: <Clock className="h-5 w-5 text-blue-500 shrink-0" />,
+    REJECTED: <XCircle className="h-5 w-5 text-red-500 shrink-0" />,
+    DRAFT: <AlertCircle className="h-5 w-5 text-gray-400 shrink-0" />,
+    MISSING: <AlertCircle className="h-5 w-5 text-orange-500 shrink-0" />,
 };
 
-const STATUS_ACCENT: Record<DocumentStatus | "MISSING", string> = {
-    APPROVED: "border-l-emerald-500/50",
-    SUBMITTED: "border-l-blue-500/50",
-    REJECTED: "border-l-rose-500/50",
-    DRAFT: "border-l-slate-500/50",
-    MISSING: "border-l-amber-500/50",
-};
-
-type RequestModal = {
-    type: "RESUBMIT" | "DELETE";
-    docId: string;
-    docName: string;
-};
-
-function FieldLabel({
-    children,
-    required,
-}: {
-    children: React.ReactNode;
-    required?: boolean;
-}) {
-    return (
-        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-0.5 block">
-            {children}
-            {required && <span className="text-rose-400 ml-0.5">*</span>}
-        </label>
-    );
+function fmtDate(d: string | null | undefined) {
+    if (!d) return "—";
+    try {
+        return new Date(d).toLocaleString("en-PH", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    } catch {
+        return d;
+    }
 }
 
+function formatBytes(bytes: number | null | undefined) {
+    if (!bytes || !Number.isFinite(bytes)) return null;
+    const sizes = ["B", "KB", "MB", "GB"];
+    let i = 0;
+    let v = bytes;
+    while (v >= 1024 && i < sizes.length - 1) {
+        v /= 1024;
+        i++;
+    }
+    return `${v.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
+}
+
+type SheetView = "detail" | "upload" | "request";
+type RequestType = "RESUBMIT" | "DELETE";
+
 export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
-    const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(
-        null,
-    );
-    const [modalOpen, setModalOpen] = useState(false);
-    const [viewingId, setViewingId] = useState<string | null>(null);
-    const [requestModal, setRequestModal] = useState<RequestModal | null>(null);
+    const isMobile = useIsMobile();
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // sheet state
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [sheetView, setSheetView] = useState<SheetView>("detail");
+    const [activeItem, setActiveItem] = useState<ChecklistItem | null>(null);
+    const [requestType, setRequestType] = useState<RequestType>("RESUBMIT");
+
+    // upload state
+    const [file, setFile] = useState<File | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    // request state
     const [requestReason, setRequestReason] = useState("");
     const [requesting, setRequesting] = useState(false);
+
+    // view doc
+    const [viewingId, setViewingId] = useState<string | null>(null);
+
+    // inline preview
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [previewFullscreen, setPreviewFullscreen] = useState(false);
 
     const approved = items.filter(
         (i) => i.submission?.status === "APPROVED",
     ).length;
     const total = items.filter((i) => i.documentType.required).length;
-    const pct = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+    const openSheet = (
+        item: ChecklistItem,
+        view: SheetView,
+        reqType?: RequestType,
+    ) => {
+        setActiveItem(item);
+        setSheetView(view);
+        if (reqType) setRequestType(reqType);
+        setFile(null);
+        setRequestReason("");
+        setPreviewUrl(null);
+        setSheetOpen(true);
+
+        // fetch preview when opening detail view with a file
+        if (view === "detail" && item.submission?.file_path) {
+            setPreviewLoading(true);
+            getDocumentSignedUrl(item.submission.id)
+                .then((result) => {
+                    if (result.ok) setPreviewUrl(result.data!.url);
+                })
+                .catch(() => {})
+                .finally(() => setPreviewLoading(false));
+        }
+    };
+
+    const handleClose = () => {
+        if (submitting || requesting) return;
+        setSheetOpen(false);
+        setFile(null);
+        setRequestReason("");
+    };
 
     const handleView = async (docId: string) => {
         setViewingId(docId);
@@ -110,24 +169,47 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
         }
     };
 
+    const handleUpload = async () => {
+        if (!file || !activeItem) return toast.error("Please select a file.");
+        setSubmitting(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const result = await submitTeacherDocument(
+                activeItem.documentType.id,
+                fd,
+            );
+            if (!result.ok) return toast.error(result.error);
+            toast.success(
+                activeItem.submission
+                    ? "Document resubmitted."
+                    : "Document submitted.",
+            );
+            setSheetOpen(false);
+            setFile(null);
+        } catch {
+            toast.error("Failed to submit document.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleRequest = async () => {
-        if (!requestModal) return;
+        if (!activeItem?.submission) return;
         if (!requestReason.trim())
             return toast.error("Please provide a reason.");
         setRequesting(true);
         try {
             const fn =
-                requestModal.type === "RESUBMIT"
-                    ? requestResubmit
-                    : requestDelete;
-            const result = await fn(requestModal.docId, requestReason);
+                requestType === "RESUBMIT" ? requestResubmit : requestDelete;
+            const result = await fn(activeItem.submission.id, requestReason);
             if (!result.ok) return toast.error(result.error);
             toast.success(
-                requestModal.type === "RESUBMIT"
+                requestType === "RESUBMIT"
                     ? "Resubmit request sent. Waiting for admin approval."
                     : "Delete request sent. Waiting for admin approval.",
             );
-            setRequestModal(null);
+            setSheetOpen(false);
             setRequestReason("");
         } catch {
             toast.error("Failed to send request.");
@@ -136,52 +218,46 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
         }
     };
 
+    const item = activeItem;
+    const submission = item?.submission;
+    const documentType = item?.documentType;
+    const pendingRequest = (item as any)?.pendingRequest;
+    const status = submission?.status ?? "MISSING";
+
     return (
         <>
-            <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-                {/* ── Header ── */}
-                <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-transparent pointer-events-none" />
-                    <div className="relative flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                            <div className="rounded-lg border border-violet-500/20 bg-violet-500/10 p-2 shrink-0">
-                                <FileStack className="h-4 w-4 text-violet-400" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold">
-                                    201 File Documents
-                                </p>
-                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
-                                    {approved}/{total} required approved
-                                </p>
-                            </div>
-                        </div>
-                        <span className="text-lg font-bold tabular-nums text-muted-foreground">
-                            {pct}%
+            <Card>
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <CardTitle className="text-base">
+                            201 File Documents
+                        </CardTitle>
+                        <span className="text-sm text-muted-foreground">
+                            {approved}/{total} required approved
                         </span>
                     </div>
-
-                    {/* Progress bar */}
-                    <div className="relative mt-3 h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
+                    <div className="w-full bg-muted rounded-full h-2 mt-2">
                         <div
-                            className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${pct}%` }}
+                            className="bg-emerald-500 h-2 rounded-full transition-all"
+                            style={{
+                                width:
+                                    total > 0
+                                        ? `${(approved / total) * 100}%`
+                                        : "0%",
+                            }}
                         />
                     </div>
-                </div>
+                </CardHeader>
 
-                {/* ── Items ── */}
-                <div className="p-3 space-y-2">
+                <CardContent className="space-y-2">
                     {items.map((item) => {
                         const { documentType, submission, pendingRequest } =
                             item as any;
-                        const status: DocumentStatus | "MISSING" =
-                            submission?.status ?? "MISSING";
+                        const status = submission?.status ?? "MISSING";
                         const isViewing = viewingId === submission?.id;
                         const hasPending = !!pendingRequest;
 
                         const canUpload =
-                            status !== "APPROVED" &&
                             !hasPending &&
                             (status === "MISSING" || status === "REJECTED");
                         const canRequestResubmit =
@@ -190,45 +266,36 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                             (status === "SUBMITTED" || status === "APPROVED");
                         const canRequestDelete = !!submission && !hasPending;
 
-                        const openUpload = () => {
-                            setSelectedItem(item);
-                            setModalOpen(true);
-                        };
-                        const openRequest = (type: "RESUBMIT" | "DELETE") => {
-                            if (!submission) return;
-                            setRequestModal({
-                                type,
-                                docId: submission.id,
-                                docName: documentType.name,
-                            });
-                            setRequestReason("");
-                        };
-
-                        const accent =
-                            STATUS_ACCENT[status] ?? "border-l-slate-500/50";
-
                         return (
                             <div
                                 key={documentType.id}
-                                className={`rounded-lg border border-border bg-card border-l-4 ${accent} px-4 py-3 transition-colors hover:bg-muted/20`}
+                                className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/40 cursor-pointer"
+                                onClick={() => openSheet(item, "detail")}
                             >
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    {/* Left */}
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                    {/* LEFT */}
                                     <div className="flex items-start gap-3 min-w-0">
                                         <div className="mt-0.5">
-                                            {STATUS_ICON[status]}
+                                            {
+                                                STATUS_ICON[
+                                                    status as
+                                                        | DocumentStatus
+                                                        | "MISSING"
+                                                ]
+                                            }
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-medium leading-snug">
+                                            <p className="text-sm font-medium leading-tight">
                                                 {documentType.name}
                                                 {documentType.required && (
-                                                    <span className="text-rose-400 ml-1 text-xs">
+                                                    <span className="text-red-500 ml-1 text-xs">
                                                         *
                                                     </span>
                                                 )}
                                             </p>
                                             {submission?.submitted_at && (
-                                                <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                                                <p className="text-xs text-muted-foreground mt-0.5">
+                                                    Submitted:{" "}
                                                     {new Date(
                                                         submission.submitted_at,
                                                     ).toLocaleDateString(
@@ -238,7 +305,8 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                             )}
                                             {status === "REJECTED" &&
                                                 submission?.reject_reason && (
-                                                    <p className="text-[11px] text-rose-400 mt-1 leading-snug">
+                                                    <p className="text-xs text-red-500 mt-1">
+                                                        Reason:{" "}
                                                         {
                                                             submission.reject_reason
                                                         }
@@ -246,8 +314,8 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                 )}
                                             {hasPending && (
                                                 <div className="flex items-center gap-1 mt-1">
-                                                    <HourglassIcon className="h-3 w-3 text-amber-400" />
-                                                    <p className="text-[11px] text-amber-400 font-medium">
+                                                    <HourglassIcon className="h-3 w-3 text-yellow-500" />
+                                                    <p className="text-xs text-yellow-500 font-medium">
                                                         {pendingRequest.type ===
                                                         "RESUBMIT"
                                                             ? "Resubmit request pending"
@@ -258,18 +326,19 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         </div>
                                     </div>
 
-                                    {/* Right */}
-                                    <div className="flex items-center justify-between gap-2 sm:justify-end">
-                                        {/* Status badge */}
+                                    {/* RIGHT */}
+                                    <div
+                                        className="flex items-center justify-between gap-2 sm:justify-end"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         {submission?.status ? (
-                                            <DocumentStatusBadge
-                                                status={submission.status}
-                                            />
+                                            <div className="shrink-0">
+                                                <DocumentStatusBadge
+                                                    status={submission.status}
+                                                />
+                                            </div>
                                         ) : (
-                                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                                                Missing
-                                            </span>
+                                            <div className="shrink-0" />
                                         )}
 
                                         {/* Mobile dropdown */}
@@ -279,36 +348,32 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
-                                                        className="h-8 w-8"
                                                         aria-label="Actions"
                                                     >
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    {submission?.file_path ? (
+                                                    <DropdownMenuItem
+                                                        onSelect={(e) => {
+                                                            e.preventDefault();
+                                                            openSheet(
+                                                                item,
+                                                                "detail",
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Eye className="h-4 w-4 mr-2" />{" "}
+                                                        View details
+                                                    </DropdownMenuItem>
+                                                    {canUpload && (
                                                         <DropdownMenuItem
                                                             onSelect={(e) => {
                                                                 e.preventDefault();
-                                                                handleView(
-                                                                    submission.id,
+                                                                openSheet(
+                                                                    item,
+                                                                    "upload",
                                                                 );
-                                                            }}
-                                                            disabled={isViewing}
-                                                        >
-                                                            {isViewing ? (
-                                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                            ) : (
-                                                                <ExternalLink className="h-4 w-4 mr-2" />
-                                                            )}
-                                                            View document
-                                                        </DropdownMenuItem>
-                                                    ) : null}
-                                                    {canUpload ? (
-                                                        <DropdownMenuItem
-                                                            onSelect={(e) => {
-                                                                e.preventDefault();
-                                                                openUpload();
                                                             }}
                                                         >
                                                             <Upload className="h-4 w-4 mr-2" />
@@ -317,79 +382,60 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                                 ? "Resubmit"
                                                                 : "Upload"}
                                                         </DropdownMenuItem>
-                                                    ) : null}
-                                                    {(submission?.file_path ||
-                                                        canUpload) && (
+                                                    )}
+                                                    {canUpload && (
                                                         <DropdownMenuSeparator />
                                                     )}
-                                                    {canRequestResubmit ? (
+                                                    {canRequestResubmit && (
                                                         <DropdownMenuItem
                                                             onSelect={(e) => {
                                                                 e.preventDefault();
-                                                                openRequest(
+                                                                openSheet(
+                                                                    item,
+                                                                    "request",
                                                                     "RESUBMIT",
                                                                 );
                                                             }}
                                                         >
-                                                            <RotateCcw className="h-4 w-4 mr-2" />
+                                                            <RotateCcw className="h-4 w-4 mr-2" />{" "}
                                                             Request resubmit
                                                         </DropdownMenuItem>
-                                                    ) : null}
-                                                    {canRequestDelete ? (
+                                                    )}
+                                                    {canRequestDelete && (
                                                         <DropdownMenuItem
                                                             className="text-destructive focus:text-destructive"
                                                             onSelect={(e) => {
                                                                 e.preventDefault();
-                                                                openRequest(
+                                                                openSheet(
+                                                                    item,
+                                                                    "request",
                                                                     "DELETE",
                                                                 );
                                                             }}
                                                         >
-                                                            <Trash2 className="h-4 w-4 mr-2" />
+                                                            <Trash2 className="h-4 w-4 mr-2" />{" "}
                                                             Request delete
                                                         </DropdownMenuItem>
-                                                    ) : null}
-                                                    {!submission &&
-                                                    !canUpload ? (
-                                                        <DropdownMenuItem
-                                                            disabled
-                                                        >
-                                                            No actions
-                                                        </DropdownMenuItem>
-                                                    ) : null}
+                                                    )}
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </div>
 
                                         {/* Desktop buttons */}
-                                        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-                                            {submission?.file_path && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                                                    onClick={() =>
-                                                        handleView(
-                                                            submission.id,
-                                                        )
-                                                    }
-                                                    disabled={isViewing}
-                                                    title="View document"
-                                                >
-                                                    {isViewing ? (
-                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                    ) : (
-                                                        <ExternalLink className="h-3.5 w-3.5" />
-                                                    )}
-                                                </Button>
-                                            )}
+                                        <div className="hidden sm:flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                                             {canUpload && (
                                                 <Button
                                                     size="sm"
-                                                    onClick={openUpload}
-                                                    className="gap-1.5 h-7 text-xs"
+                                                    variant="default"
+                                                    onClick={() =>
+                                                        openSheet(
+                                                            item,
+                                                            "upload",
+                                                        )
+                                                    }
+                                                    className="gap-1.5"
                                                 >
-                                                    <Upload className="h-3 w-3" />
+                                                    <Upload className="h-3.5 w-3.5" />
                                                     {status === "REJECTED"
                                                         ? "Resubmit"
                                                         : "Upload"}
@@ -399,26 +445,34 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                                                    className="gap-1.5 text-yellow-600 border-yellow-500/40 hover:bg-yellow-500/10"
                                                     onClick={() =>
-                                                        openRequest("RESUBMIT")
+                                                        openSheet(
+                                                            item,
+                                                            "request",
+                                                            "RESUBMIT",
+                                                        )
                                                     }
                                                 >
-                                                    <RotateCcw className="h-3 w-3" />
-                                                    Resubmit
+                                                    <RotateCcw className="h-3.5 w-3.5" />{" "}
+                                                    Request Resubmit
                                                 </Button>
                                             )}
                                             {canRequestDelete && (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
+                                                    className="gap-1.5 text-red-500 border-red-500/40 hover:bg-red-500/10"
                                                     onClick={() =>
-                                                        openRequest("DELETE")
+                                                        openSheet(
+                                                            item,
+                                                            "request",
+                                                            "DELETE",
+                                                        )
                                                     }
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
-                                                    Delete
+                                                    <Trash2 className="h-3.5 w-3.5" />{" "}
+                                                    Request Delete
                                                 </Button>
                                             )}
                                         </div>
@@ -427,102 +481,604 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                             </div>
                         );
                     })}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
-            {/* Upload modal */}
-            <DocumentUploadModal
-                item={selectedItem}
-                open={modalOpen}
-                onOpenChange={(o) => {
-                    setModalOpen(o);
-                    if (!o) setSelectedItem(null);
-                }}
-            />
-
-            {/* Request modal */}
-            <Dialog
-                open={!!requestModal}
-                onOpenChange={(o) => {
-                    if (!o) {
-                        setRequestModal(null);
-                        setRequestReason("");
-                    }
-                }}
-            >
-                <DialogContent className="max-w-md w-[90vw] p-0 gap-0">
-                    <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-rose-500/5 pointer-events-none" />
-                        <DialogHeader className="relative">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div
-                                    className={`rounded-lg border p-2 ${requestModal?.type === "DELETE" ? "border-rose-500/20 bg-rose-500/10" : "border-amber-500/20 bg-amber-500/10"}`}
-                                >
-                                    {requestModal?.type === "DELETE" ? (
-                                        <Trash2 className="h-4 w-4 text-rose-400" />
-                                    ) : (
-                                        <RotateCcw className="h-4 w-4 text-amber-400" />
+            {/* ── Unified Sheet ── */}
+            <Sheet open={sheetOpen} onOpenChange={handleClose}>
+                <SheetContent
+                    side={isMobile ? "bottom" : "right"}
+                    className={[
+                        "flex flex-col gap-0 p-0 overflow-y-auto",
+                        isMobile
+                            ? "h-auto max-h-[92vh] rounded-t-2xl"
+                            : "w-[480px] sm:w-[520px]",
+                    ].join(" ")}
+                >
+                    {/* ── Header ── */}
+                    <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                                {sheetView !== "detail" && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 shrink-0"
+                                        onClick={() => setSheetView("detail")}
+                                        disabled={submitting || requesting}
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                <div className="min-w-0">
+                                    <SheetTitle className="text-base leading-snug truncate">
+                                        {sheetView === "detail" &&
+                                            documentType?.name}
+                                        {sheetView === "upload" &&
+                                            `${submission ? "Resubmit" : "Upload"} — ${documentType?.name}`}
+                                        {sheetView === "request" &&
+                                            `${requestType === "RESUBMIT" ? "Request Resubmission" : "Request Deletion"}`}
+                                    </SheetTitle>
+                                    {sheetView === "detail" && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {submission?.status ? (
+                                                <DocumentStatusBadge
+                                                    status={submission.status}
+                                                />
+                                            ) : (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="text-orange-500 border-orange-500/30"
+                                                >
+                                                    Missing
+                                                </Badge>
+                                            )}
+                                            {documentType?.required && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    Required
+                                                </span>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                                <DialogTitle className="text-sm font-medium text-muted-foreground">
-                                    {requestModal?.type === "RESUBMIT"
-                                        ? "Request Resubmission"
-                                        : "Request Deletion"}
-                                </DialogTitle>
                             </div>
-                            <p className="text-base font-semibold tracking-tight">
-                                {requestModal?.docName}
-                            </p>
-                        </DialogHeader>
-                    </div>
-                    <div className="px-6 py-5 space-y-4">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                            {requestModal?.type === "RESUBMIT"
-                                ? "You are requesting to replace this document. Admin must approve before you can upload a new one."
-                                : "You are requesting to delete this document. This requires admin approval."}
-                        </p>
-                        <div className="space-y-1">
-                            <FieldLabel required>Reason</FieldLabel>
-                            <Textarea
-                                placeholder="Reason for this request..."
-                                value={requestReason}
-                                onChange={(e) =>
-                                    setRequestReason(e.target.value)
-                                }
-                                className="min-h-[100px] text-sm"
-                            />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="shrink-0 h-7 w-7"
+                                onClick={handleClose}
+                                disabled={submitting || requesting}
+                                aria-label="Close"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
                         </div>
+                    </SheetHeader>
+
+                    {/* ── Body ── */}
+                    <div className="flex-1 px-5 py-4 space-y-4">
+                        {/* ── DETAIL VIEW ── */}
+                        {sheetView === "detail" && item && (
+                            <>
+                                {documentType?.description && (
+                                    <p className="text-sm text-muted-foreground">
+                                        {documentType.description}
+                                    </p>
+                                )}
+
+                                {/* Pending request warning */}
+                                {pendingRequest && (
+                                    <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 px-3 py-2 flex items-center gap-2">
+                                        <HourglassIcon className="h-4 w-4 text-yellow-500 shrink-0" />
+                                        <p className="text-xs text-yellow-500 font-medium">
+                                            {pendingRequest.type === "RESUBMIT"
+                                                ? "Resubmit request pending admin approval"
+                                                : "Delete request pending admin approval"}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Rejection reason */}
+                                {status === "REJECTED" &&
+                                    submission?.reject_reason && (
+                                        <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
+                                            <p className="text-xs font-medium text-red-500 mb-1">
+                                                Rejection reason
+                                            </p>
+                                            <p className="text-xs text-red-400">
+                                                {submission.reject_reason}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                {submission ? (
+                                    <>
+                                        <Separator />
+
+                                        {/* Timeline */}
+                                        <div className="space-y-3">
+                                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Timeline
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <div className="flex items-start gap-3 text-sm">
+                                                    <CalendarDays className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                                                    <div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            Submitted
+                                                        </div>
+                                                        <div className="text-xs font-medium">
+                                                            {fmtDate(
+                                                                submission.submitted_at,
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {submission.reviewed_at && (
+                                                    <div className="flex items-start gap-3 text-sm">
+                                                        <CalendarDays className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                                                        <div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                Reviewed
+                                                            </div>
+                                                            <div className="text-xs font-medium">
+                                                                {fmtDate(
+                                                                    submission.reviewed_at,
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {submission.status ===
+                                                    "APPROVED" &&
+                                                    submission.reviewed_at && (
+                                                        <div className="flex items-start gap-3 text-sm">
+                                                            <CheckCircle2 className="h-4 w-4 mt-0.5 text-emerald-500 shrink-0" />
+                                                            <div>
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    Approved
+                                                                </div>
+                                                                <div className="text-xs font-medium">
+                                                                    {fmtDate(
+                                                                        submission.reviewed_at,
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                {submission.expires_at && (
+                                                    <div className="flex items-start gap-3 text-sm">
+                                                        <Clock className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                                                        <div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                Expires
+                                                            </div>
+                                                            <div className="text-xs font-medium">
+                                                                {fmtDate(
+                                                                    submission.expires_at,
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <Separator />
+
+                                        {/* File preview */}
+                                        <div className="space-y-2">
+                                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                File
+                                            </div>
+                                            {previewLoading ? (
+                                                <div className="rounded-lg border bg-muted/20 h-48 flex items-center justify-center">
+                                                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                                </div>
+                                            ) : previewUrl ? (
+                                                <div className="space-y-2">
+                                                    {submission.mime_type?.startsWith(
+                                                        "image/",
+                                                    ) ? (
+                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                        <div className="rounded-lg border overflow-hidden bg-muted/20">
+                                                            <img
+                                                                src={previewUrl}
+                                                                alt="Document preview"
+                                                                className="w-full max-h-64 object-contain"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="rounded-lg border overflow-hidden bg-muted/20">
+                                                            <iframe
+                                                                src={previewUrl}
+                                                                className="w-full h-64"
+                                                                title="Document preview"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="text-xs text-muted-foreground truncate">
+                                                            {submission.mime_type ??
+                                                                "Document"}
+                                                            {submission.file_size_bytes
+                                                                ? ` • ${formatBytes(submission.file_size_bytes)}`
+                                                                : ""}
+                                                        </div>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="shrink-0 gap-1.5 text-xs"
+                                                            onClick={() =>
+                                                                setPreviewFullscreen(
+                                                                    true,
+                                                                )
+                                                            }
+                                                        >
+                                                            <ZoomIn className="h-3.5 w-3.5" />
+                                                            Fullscreen
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="rounded-lg border bg-muted/20 px-3 py-2 flex items-center gap-2">
+                                                    <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-xs font-medium truncate">
+                                                            {submission.mime_type ??
+                                                                "Document"}
+                                                        </div>
+                                                        {submission.file_size_bytes && (
+                                                            <div className="text-xs text-muted-foreground">
+                                                                {formatBytes(
+                                                                    submission.file_size_bytes,
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="rounded-lg border border-dashed bg-muted/10 p-6 text-center text-sm text-muted-foreground">
+                                        No document submitted yet.
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* ── UPLOAD VIEW ── */}
+                        {sheetView === "upload" && item && (
+                            <>
+                                {documentType?.description && (
+                                    <p className="text-sm text-muted-foreground">
+                                        {documentType.description}
+                                    </p>
+                                )}
+
+                                {status === "REJECTED" &&
+                                    submission?.reject_reason && (
+                                        <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
+                                            <p className="text-xs font-medium text-red-500 mb-1">
+                                                Rejection reason
+                                            </p>
+                                            <p className="text-xs text-red-400">
+                                                {submission.reject_reason}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                <div className="text-xs text-muted-foreground space-y-1">
+                                    {documentType?.allowed_mime && (
+                                        <p>
+                                            Allowed:{" "}
+                                            {documentType.allowed_mime.join(
+                                                ", ",
+                                            )}
+                                        </p>
+                                    )}
+                                    {documentType?.max_mb && (
+                                        <p>Max size: {documentType.max_mb}MB</p>
+                                    )}
+                                </div>
+
+                                <input
+                                    ref={inputRef}
+                                    type="file"
+                                    className="hidden"
+                                    accept={
+                                        documentType?.allowed_mime?.join(",") ??
+                                        "*"
+                                    }
+                                    onChange={(e) =>
+                                        setFile(e.target.files?.[0] ?? null)
+                                    }
+                                />
+
+                                {/* Dropzone / preview */}
+                                {!file ? (
+                                    <div
+                                        className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-muted/10 transition-colors"
+                                        onClick={() =>
+                                            inputRef.current?.click()
+                                        }
+                                    >
+                                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                        <p className="text-sm text-muted-foreground">
+                                            Click to select file
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            or drag and drop here
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <div className="rounded-lg border bg-muted/20 px-3 py-3 flex items-center gap-3">
+                                            <FileText className="h-5 w-5 text-primary shrink-0" />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-sm font-medium truncate">
+                                                    {file.name}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {formatBytes(file.size)}
+                                                </div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                className="shrink-0 h-7 w-7"
+                                                onClick={() => setFile(null)}
+                                                disabled={submitting}
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* ── REQUEST VIEW ── */}
+                        {sheetView === "request" && item && (
+                            <>
+                                <p className="text-sm text-muted-foreground">
+                                    {requestType === "RESUBMIT" ? (
+                                        <>
+                                            You are requesting to replace your{" "}
+                                            <strong className="text-foreground">
+                                                {documentType?.name}
+                                            </strong>
+                                            . Admin must approve before you can
+                                            upload a new one.
+                                        </>
+                                    ) : (
+                                        <>
+                                            You are requesting to delete your{" "}
+                                            <strong className="text-foreground">
+                                                {documentType?.name}
+                                            </strong>
+                                            . This requires admin approval.
+                                        </>
+                                    )}
+                                </p>
+
+                                {requestType === "DELETE" && (
+                                    <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-400">
+                                        This action is irreversible once
+                                        approved by an admin.
+                                    </div>
+                                )}
+
+                                <div className="space-y-1.5">
+                                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                        Reason
+                                    </div>
+                                    <Textarea
+                                        placeholder="Provide a reason for this request..."
+                                        value={requestReason}
+                                        onChange={(e) =>
+                                            setRequestReason(e.target.value)
+                                        }
+                                        className="min-h-[120px]"
+                                        disabled={requesting}
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
-                    <div className="px-6 py-4 border-t border-border/60 bg-gradient-to-br from-card to-background flex justify-end gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                setRequestModal(null);
-                                setRequestReason("");
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant={
-                                requestModal?.type === "DELETE"
-                                    ? "destructive"
-                                    : "default"
-                            }
-                            onClick={handleRequest}
-                            disabled={!requestReason.trim() || requesting}
-                            className="gap-1.5"
-                        >
-                            {requesting && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            )}
-                            Send Request
-                        </Button>
+
+                    {/* ── Footer ── */}
+                    <div className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-3 flex gap-2">
+                        {sheetView === "detail" && (
+                            <>
+                                {/* Quick actions from detail view */}
+                                {(() => {
+                                    const hasPending = !!(item as any)
+                                        ?.pendingRequest;
+                                    const canUpload =
+                                        !hasPending &&
+                                        (status === "MISSING" ||
+                                            status === "REJECTED");
+                                    const canRequestResubmit =
+                                        !!submission &&
+                                        !hasPending &&
+                                        (status === "SUBMITTED" ||
+                                            status === "APPROVED");
+                                    const canRequestDelete =
+                                        !!submission && !hasPending;
+
+                                    return (
+                                        <>
+                                            <Button
+                                                variant="secondary"
+                                                onClick={handleClose}
+                                                className="flex-1"
+                                            >
+                                                Close
+                                            </Button>
+                                            {canUpload && (
+                                                <Button
+                                                    onClick={() =>
+                                                        setSheetView("upload")
+                                                    }
+                                                    className="flex-1 gap-2"
+                                                >
+                                                    <Upload className="h-4 w-4" />
+                                                    {status === "REJECTED"
+                                                        ? "Resubmit"
+                                                        : "Upload"}
+                                                </Button>
+                                            )}
+                                            {(canRequestResubmit ||
+                                                canRequestDelete) && (
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                        >
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {canRequestResubmit && (
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    setRequestType(
+                                                                        "RESUBMIT",
+                                                                    );
+                                                                    setSheetView(
+                                                                        "request",
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <RotateCcw className="h-4 w-4 mr-2" />{" "}
+                                                                Request Resubmit
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        {canRequestDelete && (
+                                                            <DropdownMenuItem
+                                                                className="text-destructive focus:text-destructive"
+                                                                onClick={() => {
+                                                                    setRequestType(
+                                                                        "DELETE",
+                                                                    );
+                                                                    setSheetView(
+                                                                        "request",
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 mr-2" />{" "}
+                                                                Request Delete
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                            </>
+                        )}
+
+                        {sheetView === "upload" && (
+                            <>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setSheetView("detail")}
+                                    disabled={submitting}
+                                    className="flex-1"
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    onClick={handleUpload}
+                                    disabled={submitting || !file}
+                                    className="flex-1 gap-2"
+                                >
+                                    {submitting && (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    )}
+                                    {submitting
+                                        ? "Uploading..."
+                                        : submission
+                                          ? "Resubmit"
+                                          : "Submit"}
+                                </Button>
+                            </>
+                        )}
+
+                        {sheetView === "request" && (
+                            <>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setSheetView("detail")}
+                                    disabled={requesting}
+                                    className="flex-1"
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant={
+                                        requestType === "DELETE"
+                                            ? "destructive"
+                                            : "default"
+                                    }
+                                    onClick={handleRequest}
+                                    disabled={
+                                        !requestReason.trim() || requesting
+                                    }
+                                    className="flex-1 gap-2"
+                                >
+                                    {requesting && (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    )}
+                                    {requesting ? "Sending..." : "Send Request"}
+                                </Button>
+                            </>
+                        )}
                     </div>
-                </DialogContent>
-            </Dialog>
+                </SheetContent>
+            </Sheet>
+            {previewFullscreen && previewUrl && (
+                <div
+                    className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center"
+                    onClick={() => setPreviewFullscreen(false)}
+                >
+                    <button
+                        onClick={() => setPreviewFullscreen(false)}
+                        className="absolute top-4 right-4 z-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors p-2 text-white"
+                        aria-label="Close fullscreen"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+
+                    {submission?.mime_type?.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={previewUrl}
+                            alt="Fullscreen preview"
+                            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    ) : (
+                        <iframe
+                            src={previewUrl}
+                            className="w-[90vw] h-[90vh] rounded-lg shadow-2xl bg-white"
+                            title="Fullscreen preview"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    )}
+                </div>
+            )}
         </>
     );
 }

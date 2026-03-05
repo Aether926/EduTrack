@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -6,7 +7,9 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import ActivityFeed from "@/features/dashboard/component/activity-feed";
+import DashboardRightPanel from "@/features/dashboard/component/dashboard-tab";
 import TrainingCalendar from "@/features/dashboard/component/training-calendar";
+import SalaryEligibilityOverview from "@/features/dashboard/component/salary-eligibility-overview";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,12 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 
 import {
     ArrowRight,
@@ -26,7 +35,11 @@ import {
     Users,
     LayoutGrid,
     ShieldCheck,
+    CalendarRange,
+    TrendingUp,
 } from "lucide-react";
+
+import type { TeacherEligibilityRow } from "@/lib/database/salary-eligibility";
 
 type Props = {
     role: string | null;
@@ -38,6 +51,8 @@ type Props = {
     };
     events: any[];
     activity: any[];
+    eligibilityData: TeacherEligibilityRow[];
+    eligibilityCount: number;
 };
 
 export default function DashboardView({
@@ -46,21 +61,19 @@ export default function DashboardView({
     stats,
     events,
     activity,
+    eligibilityData,
+    eligibilityCount,
 }: Props) {
     const [scrolled, setScrolled] = useState(false);
-    const calendarRef = useRef<HTMLDivElement>(null);
-    const [calendarOverflows, setCalendarOverflows] = useState(false);
+    const [calendarOpen, setCalendarOpen] = useState(false);
+    const [eligibilityOpen, setEligibilityOpen] = useState(false);
 
-    useEffect(() => {
-        const el = calendarRef.current;
-        if (!el) return;
-        const check = () =>
-            setCalendarOverflows(el.scrollHeight > el.clientHeight);
-        check();
-        const ro = new ResizeObserver(check);
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, []);
+    const eligibleCount = eligibilityData.filter(
+        (r) => r.status === "ELIGIBLE",
+    ).length;
+    const approachingCount = eligibilityData.filter(
+        (r) => r.status === "APPROACHING",
+    ).length;
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 18);
@@ -69,9 +82,16 @@ export default function DashboardView({
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
+    const eligibilityBadge =
+        eligibleCount > 0
+            ? { label: String(eligibleCount), color: "bg-emerald-500" }
+            : approachingCount > 0
+              ? { label: String(approachingCount), color: "bg-amber-500" }
+              : null;
+
     return (
         <div className="min-h-screen bg-background">
-            {/* sticky top strip */}
+            {/* ── Sticky top strip ── */}
             <div
                 className={[
                     "sticky top-0 z-40 w-full",
@@ -89,7 +109,7 @@ export default function DashboardView({
                         "transition-all duration-200",
                     ].join(" ")}
                 >
-                    {/* Mobile: [badges+title] left | [buttons] right — single row */}
+                    {/* Mobile */}
                     <div className="flex items-center justify-between gap-2 md:hidden">
                         <div className="flex flex-col gap-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-1.5">
@@ -110,7 +130,7 @@ export default function DashboardView({
                                 EduTrack
                             </h1>
                         </div>
-                        {role === "ADMIN" ? (
+                        {role === "ADMIN" && (
                             <div className="flex flex-col gap-1 shrink-0">
                                 <Button
                                     asChild
@@ -135,10 +155,10 @@ export default function DashboardView({
                                     </Link>
                                 </Button>
                             </div>
-                        ) : null}
+                        )}
                     </div>
 
-                    {/* Desktop: original layout */}
+                    {/* Desktop */}
                     <div className="hidden md:flex md:flex-row md:items-center md:justify-between gap-3">
                         <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
@@ -161,7 +181,7 @@ export default function DashboardView({
                                 EduTrack
                             </h1>
                         </div>
-                        {role === "ADMIN" ? (
+                        {role === "ADMIN" && (
                             <div className="flex flex-row gap-2">
                                 <Button asChild variant="secondary">
                                     <Link href="/account-approval">
@@ -178,20 +198,16 @@ export default function DashboardView({
                                     </Link>
                                 </Button>
                             </div>
-                        ) : null}
+                        )}
                     </div>
                 </div>
             </div>
 
+            {/* ── Main content ── */}
             <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6">
-                {/* IMPORTANT: two-column starts at xl (not lg) so 1024px won't squeeze */}
-                {/*
-                  Mobile order: 1=stats+focus  2=calendar  3=activity
-                  Desktop (lg+): left col = stats+focus+activity | right col = calendar sticky
-                */}
-                <div className="grid gap-4 lg:grid-cols-[3fr_2fr] xl:grid-cols-[3fr_2fr] lg:items-start">
-                    {/* LEFT: stats + focus — order-1 on mobile */}
-                    <div className="order-1 lg:order-1 space-y-4 min-w-0">
+                <div className="lg:grid lg:grid-cols-[3fr_2fr] lg:gap-4 lg:items-start">
+                    {/* ── LEFT COLUMN — scrolls naturally with the page ── */}
+                    <div className="space-y-4 min-w-0">
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -228,7 +244,7 @@ export default function DashboardView({
                                     Focus
                                 </CardTitle>
                                 <CardDescription className="text-sm">
-                                    Today’s quick view. Minimal, no clutter.
+                                    Today's quick view. Minimal, no clutter.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="pt-0">
@@ -285,11 +301,132 @@ export default function DashboardView({
                             viewerId={viewerId}
                         />
                     </div>
+
+                    {/* ── RIGHT COLUMN — single tabbed card, sticky ── */}
+                    <div className="hidden lg:block lg:sticky lg:top-[5rem] self-start min-w-0">
+                        {role === "ADMIN" ? (
+                            <DashboardRightPanel
+                                events={events}
+                                eligibilityData={eligibilityData}
+                                eligibilityCount={eligibilityCount}
+                            />
+                        ) : (
+                            // Non-admin users only see the calendar, no tabs needed
+                            <TrainingCalendar events={events} />
+                        )}
+                    </div>
                 </div>
             </div>
+
+            {/* ── Mobile FABs ── */}
+            <div className="lg:hidden fixed bottom-6 right-4 z-50 flex flex-col gap-2 items-end">
+                <button
+                    onClick={() => setCalendarOpen(true)}
+                    className="flex items-center gap-2 rounded-full shadow-lg bg-card border border-border/80 px-4 py-2.5 hover:bg-accent/50 transition-colors text-sm font-medium"
+                >
+                    <CalendarRange className="h-4 w-4 text-muted-foreground" />
+                    <span>Calendar</span>
+                    {events.length > 0 && (
+                        <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-sky-500 text-white text-[10px] font-bold px-1">
+                            {events.length}
+                        </span>
+                    )}
+                </button>
+
+                {role === "ADMIN" && (
+                    <button
+                        onClick={() => setEligibilityOpen(true)}
+                        className="relative flex items-center gap-2 rounded-full shadow-lg bg-card border border-border/80 px-4 py-2.5 hover:bg-accent/50 transition-colors text-sm font-medium"
+                    >
+                        <TrendingUp className="h-4 w-4 text-emerald-400" />
+                        <span>Eligibility</span>
+                        {eligibilityBadge && (
+                            <span
+                                className={`inline-flex items-center justify-center h-5 min-w-5 rounded-full ${eligibilityBadge.color} text-white text-[10px] font-bold px-1`}
+                            >
+                                {eligibilityBadge.label}
+                            </span>
+                        )}
+                    </button>
+                )}
+            </div>
+
+            {/* ── Calendar Sheet (mobile) ── */}
+            <Sheet open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <SheetContent
+                    side="bottom"
+                    className="h-[85vh] rounded-t-2xl overflow-y-auto p-0"
+                >
+                    <SheetHeader className="px-4 pt-4 pb-2 border-b border-border/60 sticky top-0 bg-background z-10">
+                        <SheetTitle className="text-sm flex items-center gap-2">
+                            <CalendarRange className="h-4 w-4 text-muted-foreground" />
+                            Training Calendar
+                        </SheetTitle>
+                    </SheetHeader>
+                    <div className="p-4">
+                        <TrainingCalendar events={events} />
+                    </div>
+                </SheetContent>
+            </Sheet>
+
+            {/* ── Eligibility Sheet (mobile) ── */}
+            {role === "ADMIN" && (
+                <Sheet open={eligibilityOpen} onOpenChange={setEligibilityOpen}>
+                    <SheetContent
+                        side="bottom"
+                        className="h-[85vh] rounded-t-2xl overflow-y-auto p-0"
+                    >
+                        <SheetHeader className="px-4 pt-4 pb-2 border-b border-border/60 sticky top-0 bg-background z-10">
+                            <SheetTitle className="text-sm flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4 text-emerald-400" />
+                                Salary Eligibility
+                            </SheetTitle>
+                        </SheetHeader>
+                        <div className="p-4">
+                            <SalaryEligibilityOverview
+                                data={eligibilityData}
+                                count={eligibilityCount}
+                            />
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            )}
         </div>
     );
 }
+
+const accentMap = {
+    blue: {
+        border: "border-blue-500/30",
+        iconBg: "bg-blue-500/10 border-blue-500/20",
+        iconColor: "text-blue-400",
+        bar: "bg-blue-500",
+        value: "text-blue-400",
+    },
+    violet: {
+        border: "border-violet-500/30",
+        iconBg: "bg-violet-500/10 border-violet-500/20",
+        iconColor: "text-violet-400",
+        bar: "bg-violet-500",
+        value: "text-violet-400",
+    },
+    sky: {
+        border: "border-sky-500/30",
+        iconBg: "bg-sky-500/10 border-sky-500/20",
+        iconColor: "text-sky-400",
+        bar: "bg-sky-500",
+        value: "text-sky-400",
+    },
+    emerald: {
+        border: "border-emerald-500/30",
+        iconBg: "bg-emerald-500/10 border-emerald-500/20",
+        iconColor: "text-emerald-400",
+        bar: "bg-emerald-500",
+        value: "text-emerald-400",
+    },
+} as const;
+
+// ── StatCard ──────────────────────────────────────────────────────────────────
 
 const accentMap = {
     blue: {
@@ -341,7 +478,6 @@ function StatCard({
             className={`px-3 overflow-hidden min-w-0 border ${a.border} flex flex-col`}
         >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-2 p-3 sm:items-start sm:p-4 sm:pb-2 lg:p-2 lg:pb-1">
-                {/* mobile layout */}
                 <div className="flex items-center gap-3 min-w-0 flex-1 sm:hidden pl-2">
                     <div
                         className={`rounded-md border p-1.5 shrink-0 ${a.iconBg} ${a.iconColor}`}
@@ -357,7 +493,6 @@ function StatCard({
                         </CardDescription>
                     </div>
                 </div>
-                {/* desktop layout title */}
                 <div className="hidden sm:block space-y-1 min-w-0 flex-1">
                     <CardTitle className="text-base font-semibold line-clamp-2 lg:text-sm">
                         {title}
@@ -390,6 +525,8 @@ function StatCard({
         </Card>
     );
 }
+
+// ── MiniTile ──────────────────────────────────────────────────────────────────
 
 const miniAccentMap = {
     blue: { border: "border-blue-500/30", value: "text-blue-400" },

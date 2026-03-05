@@ -15,11 +15,15 @@ type AttendanceRow = {
 type UserRow = { id: string; email: string | null };
 
 type ProfileRow = {
-  email: string | null;
+  id: string;
   firstName: string | null;
   lastName: string | null;
-  employeeId: string | null;
   profileImage: string | null;
+};
+
+type ProfileHRRow = {
+  id: string;
+  employeeId: string | null;
 };
 
 type PDRow = {
@@ -52,6 +56,7 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
   const teacherIds = Array.from(new Set(attRows.map((r) => r.teacher_id)));
   const trainingIds = Array.from(new Set(attRows.map((r) => r.training_id)));
 
+  // trainings
   const { data: pds } = await admin
     .from("ProfessionalDevelopment")
     .select(
@@ -63,6 +68,7 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
     ((pds ?? []) as PDRow[]).map((x) => [String(x.id), x])
   );
 
+  // users → email
   const { data: users } = await admin
     .from("User")
     .select("id,email")
@@ -72,34 +78,35 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
     ((users ?? []) as UserRow[]).map((u) => [String(u.id), u])
   );
 
-  const emails = Array.from(
-    new Set(
-      teacherIds
-        .map((id) => userMap.get(String(id))?.email ?? null)
-        .filter((e): e is string => !!e)
-    )
+  // Profile — name + avatar only (id is text, matches teacher_id)
+  const { data: profData } = await admin
+    .from("Profile")
+    .select("id,firstName,lastName,profileImage")
+    .in("id", teacherIds);
+
+  const profileMap = new Map<string, ProfileRow>(
+    ((profData ?? []) as ProfileRow[]).map((p) => [String(p.id), p])
   );
 
-  let profiles: ProfileRow[] = [];
-  if (emails.length > 0) {
-    const { data: profData } = await admin
-      .from("Profile")
-      .select("email,firstName,lastName,employeeId,profileImage")
-      .in("email", emails);
+  // ProfileHR — employeeId (id is uuid, need to cast)
+  const { data: hrData } = await admin
+    .from("ProfileHR")
+    .select("id,employeeId")
+    .in("id", teacherIds);
 
-    profiles = (profData ?? []) as ProfileRow[];
-  }
-
-  const profileByEmail = new Map<string, ProfileRow>(
-    profiles.filter((p) => p.email).map((p) => [String(p.email), p])
+  const hrMap = new Map<string, ProfileHRRow>(
+    ((hrData ?? []) as ProfileHRRow[]).map((p) => [String(p.id), p])
   );
 
   return attRows.map((r) => {
     const pd = pdMap.get(String(r.training_id));
     const u = userMap.get(String(r.teacher_id));
-    const prof = u?.email ? profileByEmail.get(u.email) : null;
+    const prof = profileMap.get(String(r.teacher_id));
+    const hr = hrMap.get(String(r.teacher_id));
 
-    const fullName = `${prof?.firstName ?? ""} ${prof?.lastName ?? ""}`.trim();
+    const firstName = prof?.firstName ?? "";
+    const lastName = prof?.lastName ?? "";
+    const fullName = `${firstName} ${lastName}`.trim();
 
     return {
       attendanceId: String(r.id),
@@ -113,7 +120,9 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
         userId: String(r.teacher_id),
         email: u?.email ?? null,
         name: fullName || u?.email || "(unknown)",
-        employeeId: prof?.employeeId ?? null,
+        firstName,
+        lastName,
+        employeeId: hr?.employeeId ?? null,
         profileImage: prof?.profileImage ?? null,
       },
 

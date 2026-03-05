@@ -15,7 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import PdViewModal from "@/components/pd-view-modal";
+import PdViewModal from "@/components/pd-view-sheet";
 
 export type TrainingSeminarRow = {
     id: string; // Attendance.id

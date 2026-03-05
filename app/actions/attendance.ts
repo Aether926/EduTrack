@@ -2,7 +2,6 @@
 
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { toast } from "sonner";
 
 export type ActionResult<T = null> =
   | { ok: true; data?: T }
@@ -65,33 +64,88 @@ async function requireAdmin() {
 }
 
 /** ADMIN assigns teachers to a training */
-export async function saveTrainingAssignments(trainingId: string, teacherIds: string[]) {
+export async function saveTrainingAssignments(
+  trainingId: string,
+  teacherIds: string[]
+): Promise<{
+  ok: true;
+  assigned: number;
+  skipped: { teacherId: string; status: string }[];
+} | {
+  ok: false;
+  error: string;
+}> {
   const adminCheck = await requireAdmin();
   if (!adminCheck.ok) throw new Error(adminCheck.error);
 
   const admin = createAdminClient();
 
-  const rows = teacherIds.map((id) => ({
+  // check existing attendance records for these teachers
+  const { data: existing } = await admin
+    .from("Attendance")
+    .select("teacher_id, status")
+    .eq("training_id", trainingId)
+    .in("teacher_id", teacherIds);
+
+  const existingMap = new Map(
+    (existing ?? []).map((r) => [r.teacher_id, r.status?.toUpperCase()])
+  );
+
+  // only skip ENROLLED, SUBMITTED, APPROVED — allow REJECTED (fresh start)
+  const skipped: { teacherId: string; status: string }[] = [];
+  const toAssign: string[] = [];
+
+  for (const id of teacherIds) {
+    const status = existingMap.get(id);
+    if (status === "ENROLLED" || status === "SUBMITTED" || status === "APPROVED") {
+      skipped.push({ teacherId: id, status });
+    } else {
+      // new record OR rejected — assign/reassign
+      toAssign.push(id);
+    }
+  }
+
+  // if everyone is skipped, return early
+  if (toAssign.length === 0) {
+    return {
+      ok: true,
+      assigned: 0,
+      skipped,
+    };
+  }
+
+  // upsert only the safe ones
+  const rows = toAssign.map((id) => ({
     teacher_id: id,
     training_id: trainingId,
     status: "ENROLLED",
+    // reset proof fields in case of REJECTED reassignment
+    proof_url: null,
+    proof_path: null,
+    proof_submitted_at: null,
+    reviewed_at: null,
+    reviewed_by: null,
+    remarks: null,
+    result: null,
+    approved_hours: null,
   }));
 
   const { error } = await admin
     .from("Attendance")
     .upsert(rows, { onConflict: "teacher_id,training_id" });
 
-  if (error) throw new Error(error.message);
+  if (error) return { ok: false, error: error.message };
 
-  // get training title for nicer activity
+  // get training title for activity log
   const { data: pd } = await admin
     .from("ProfessionalDevelopment")
-    .select("title,type")
+    .select("title, type")
     .eq("id", trainingId)
     .single();
 
+  // only log activity for actually assigned teachers
   await insertActivity(
-    teacherIds.map((teacherId) => ({
+    toAssign.map((teacherId) => ({
       actor_id: adminCheck.userId,
       target_user_id: teacherId,
       action: "ASSIGNED_TO_TRAINING",
@@ -105,6 +159,12 @@ export async function saveTrainingAssignments(trainingId: string, teacherIds: st
   revalidatePath(`/add-training-seminar/${trainingId}/assign`);
   revalidatePath("/add-training-seminar");
   revalidatePath("/dashboard");
+
+  return {
+    ok: true,
+    assigned: toAssign.length,
+    skipped,
+  };
 }
 
 /** TEACHER submits proof */

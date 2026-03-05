@@ -5,7 +5,7 @@ import AdminTeacherTable from "@/features/admin-actions/teachers/components/teac
 import { Badge } from "@/components/ui/badge";
 import { Users, CheckCircle2 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+
 
 export default async function AdminTeachersPage() {
   const supabase = await createClient();

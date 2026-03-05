@@ -6,7 +6,7 @@ import { HRQueueClient } from "@/features/admin-actions/queue/components/queue-c
 import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Users, Briefcase, BookMarked } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+
 
 const ALLOWED_ROLES = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
 

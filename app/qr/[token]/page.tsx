@@ -232,16 +232,11 @@ export default async function QRPublicProfilePage({
         emergencyTelephoneNo: emergency?.telephoneNo ?? null,
     };
 
-    // ── 3. Detect viewer session ───────────────────────────────
+    // ── 3. Detect viewer session + role ──────────────────────────────────────
 
     const viewerClient = await createClient();
     const { data: auth } = await viewerClient.auth.getUser();
 
-    console.log("[QR page] auth.user?.id =", auth.user?.id ?? "none");
-
-    // Logged-out visitors see minimal public view (GUEST).
-    // Any logged-in user sees the full profile view (TEACHER).
-    // ADMIN role is preserved for admins who want full access including sensitive cards.
     let viewerRole: ViewerRole = "GUEST";
 
     if (auth.user?.id) {
@@ -252,10 +247,8 @@ export default async function QRPublicProfilePage({
             .single();
 
         if (viewer?.role === "ADMIN") viewerRole = "ADMIN";
-        else viewerRole = "TEACHER";
+        else if (viewer?.role === "TEACHER") viewerRole = "TEACHER";
     }
-
-    console.log("[QR page] viewerRole =", viewerRole);
 
     const adminMode = viewerRole === "ADMIN";
 

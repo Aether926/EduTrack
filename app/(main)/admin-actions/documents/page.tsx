@@ -16,7 +16,6 @@ import {
     Clock,
     XCircle,
     AlertCircle,
-    ShieldCheck,
 } from "lucide-react";
 
 const ALLOWED = [

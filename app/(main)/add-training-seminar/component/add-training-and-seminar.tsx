@@ -42,7 +42,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-
 import {
     Card,
     CardContent,
@@ -50,7 +49,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -58,11 +56,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-
-import PdFormModal from "@/app/(main)/add-training-seminar/component/pd-form-modal";
-
 import {
     AlertDialog,
     AlertDialogAction,
@@ -73,15 +66,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-
 import {
     Table,
     TableBody,
@@ -90,6 +74,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+
+import PdFormSheet from "@/features/add-training-seminar/components/pd-form-sheet";
 
 interface AddTrainingAndSeminarProps {
     data: TrainingSeminarTableRow[];
@@ -102,9 +88,8 @@ type PendingDelete =
     | { kind: "bulk"; ids: string[]; count: number };
 
 const DELETE_WARNING =
-    "Deleting this training/seminar will also remove it from all assigned teachers’ records (attendance/proof/compliance references). This action cannot be undone.";
+    "Deleting this training/seminar will also remove it from all assigned teachers' records (attendance/proof/compliance references). This action cannot be undone.";
 
-/* ── Type chip ── */
 const typeColors: Record<string, string> = {
     training: "bg-teal-500/10 text-teal-400 border-teal-500/40",
     seminar: "bg-violet-500/10 text-violet-400 border-violet-500/40",
@@ -126,7 +111,6 @@ function TypeChip({ type }: { type: string }) {
     );
 }
 
-/* ── Level pill ── */
 function LevelPill({ level }: { level: string }) {
     const l = (level ?? "").toLowerCase();
     const cls =
@@ -214,14 +198,12 @@ export default function AddTrainingAndSeminar({
         resetForm();
         setIsOpen(true);
     };
-
     const openView = (row: TrainingSeminarTableRow) => {
         setMode("view");
         setSelected(row.raw);
         fillFormFromRecord(row.raw);
         setIsOpen(true);
     };
-
     const openEdit = (row: TrainingSeminarTableRow) => {
         setMode("edit");
         setSelected(row.raw);
@@ -247,23 +229,19 @@ export default function AddTrainingAndSeminar({
 
     const confirmDelete = async () => {
         if (!pendingDelete) return;
-
         setDeleting(true);
         try {
             const ids =
                 pendingDelete.kind === "single"
                     ? [pendingDelete.id]
                     : pendingDelete.ids;
-
             const result = await deleteMultipleProfessionalDevelopment(ids);
-
             if (result.success) {
                 toast.success(
                     pendingDelete.kind === "single"
                         ? "Deleted successfully."
                         : `Successfully deleted ${result.count} item(s).`,
                 );
-
                 setDeleteDialogOpen(false);
                 setPendingDelete(null);
                 router.refresh();
@@ -280,7 +258,6 @@ export default function AddTrainingAndSeminar({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (mode === "view") return;
-
         setIsSubmitting(true);
         try {
             if (!formData.start_date) {
@@ -321,7 +298,6 @@ export default function AddTrainingAndSeminar({
                     toast.error("Missing record id");
                     return;
                 }
-
                 const result = await updateProfessionalDevelopment({
                     id: selected.id,
                     ...payload,
@@ -388,16 +364,13 @@ export default function AddTrainingAndSeminar({
                         Title <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                 ),
-                cell: ({ row }) => {
-                    const r = row.original;
-                    return (
-                        <div className="min-w-0">
-                            <div className="font-medium truncate max-w-[200px] sm:max-w-[520px]">
-                                {r.title}
-                            </div>
+                cell: ({ row }) => (
+                    <div className="min-w-0">
+                        <div className="font-medium truncate max-w-[200px] sm:max-w-[520px]">
+                            {row.original.title}
                         </div>
-                    );
-                },
+                    </div>
+                ),
             },
             {
                 accessorKey: "level",
@@ -452,7 +425,6 @@ export default function AddTrainingAndSeminar({
                                 <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem
                                 onSelect={(e) => {
@@ -464,9 +436,7 @@ export default function AddTrainingAndSeminar({
                             >
                                 Assign Teachers
                             </DropdownMenuItem>
-
                             <DropdownMenuSeparator />
-
                             <DropdownMenuItem
                                 onClick={() => openView(row.original)}
                             >
@@ -477,9 +447,7 @@ export default function AddTrainingAndSeminar({
                             >
                                 Edit
                             </DropdownMenuItem>
-
                             <DropdownMenuSeparator />
-
                             <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
                                 onSelect={(e) => {
@@ -495,7 +463,7 @@ export default function AddTrainingAndSeminar({
             },
         ],
         [router],
-    );
+    ); // eslint-disable-line
 
     const table = useReactTable({
         data,
@@ -564,30 +532,16 @@ export default function AddTrainingAndSeminar({
                             />
                         </div>
 
-                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                            <DialogTrigger asChild>
-                                <Button
-                                    onClick={openCreate}
-                                    className="gap-2 bg-white/10 hover:bg-white/15 text-foreground border border-white/10 shrink-0"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    <span className="hidden sm:inline">
-                                        Add Training/Seminar
-                                    </span>
-                                    <span className="sm:hidden">Add</span>
-                                </Button>
-                            </DialogTrigger>
-                        </Dialog>
-
-                        <PdFormModal
-                            open={isOpen}
-                            onOpenChange={setIsOpen}
-                            mode={mode}
-                            formData={formData}
-                            setFormData={setFormData}
-                            onSubmit={handleSubmit}
-                            isSubmitting={isSubmitting}
-                        />
+                        <Button
+                            onClick={openCreate}
+                            className="gap-2 bg-white/10 hover:bg-white/15 text-foreground border border-white/10 shrink-0"
+                        >
+                            <Plus className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                                Add Training/Seminar
+                            </span>
+                            <span className="sm:hidden">Add</span>
+                        </Button>
 
                         <div className="flex md:hidden items-center w-full min-w-0">
                             <Button
@@ -603,7 +557,6 @@ export default function AddTrainingAndSeminar({
                                     <Search className="h-4 w-4" />
                                 )}
                             </Button>
-
                             <AnimatePresence initial={false}>
                                 {searchOpen && (
                                     <motion.div
@@ -630,7 +583,7 @@ export default function AddTrainingAndSeminar({
                 </CardHeader>
 
                 <CardContent className="space-y-3">
-                    {selectedRows.length > 0 ? (
+                    {selectedRows.length > 0 && (
                         <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between rounded-lg border border-rose-500/20 bg-rose-500/5 px-4 py-2.5">
                             <div className="text-sm text-rose-400 font-medium">
                                 {selectedRows.length} row
@@ -654,7 +607,7 @@ export default function AddTrainingAndSeminar({
                                 </Button>
                             </div>
                         </div>
-                    ) : null}
+                    )}
 
                     <div className="rounded-lg border overflow-x-auto">
                         <Table className="min-w-[600px]">
@@ -663,19 +616,16 @@ export default function AddTrainingAndSeminar({
                                     <TableRow key={hg.id}>
                                         {hg.headers.map((header) => {
                                             const id = header.column.id;
-
                                             const hideOnSmall =
                                                 id === "select" ||
                                                 id === "date" ||
                                                 id === "sponsor"
                                                     ? "hidden md:table-cell"
                                                     : "";
-
                                             const actionsCol =
                                                 id === "actions"
                                                     ? "w-[1%]"
                                                     : "";
-
                                             return (
                                                 <TableHead
                                                     key={header.id}
@@ -695,7 +645,6 @@ export default function AddTrainingAndSeminar({
                                     </TableRow>
                                 ))}
                             </TableHeader>
-
                             <TableBody>
                                 {table.getRowModel().rows.length ? (
                                     table.getRowModel().rows.map((row, idx) => (
@@ -722,7 +671,6 @@ export default function AddTrainingAndSeminar({
                                                         id === "sponsor"
                                                             ? "hidden md:table-cell"
                                                             : "";
-
                                                     return (
                                                         <TableCell
                                                             key={cell.id}
@@ -760,7 +708,6 @@ export default function AddTrainingAndSeminar({
                             Page {table.getState().pagination.pageIndex + 1} of{" "}
                             {pageCount || 1}
                         </div>
-
                         <div className="flex gap-2">
                             <Button
                                 variant="outline"
@@ -783,7 +730,18 @@ export default function AddTrainingAndSeminar({
                 </CardContent>
             </Card>
 
-            {/* strict delete warning dialog */}
+            {/* ── PD Form Sheet ── */}
+            <PdFormSheet
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                mode={mode}
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+            />
+
+            {/* ── Delete confirmation ── */}
             <AlertDialog
                 open={deleteDialogOpen}
                 onOpenChange={(open) => {
@@ -797,7 +755,6 @@ export default function AddTrainingAndSeminar({
                             <AlertTriangle className="h-5 w-5 text-destructive" />
                             Confirm deletion
                         </AlertDialogTitle>
-
                         <AlertDialogDescription className="space-y-3">
                             <div className="text-sm text-foreground">
                                 {pendingDelete?.kind === "single" ? (
@@ -820,7 +777,6 @@ export default function AddTrainingAndSeminar({
                                     </>
                                 ) : null}
                             </div>
-
                             <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
                                 <div className="font-semibold mb-1">
                                     Warning
@@ -831,7 +787,6 @@ export default function AddTrainingAndSeminar({
                             </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={deleting}>
                             Cancel

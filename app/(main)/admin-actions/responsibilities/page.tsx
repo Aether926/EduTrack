@@ -6,7 +6,7 @@ import { AdminResponsibilitiesClient } from "@/features/responsibilities/compone
 import { Badge } from "@/components/ui/badge";
 import { BookMarked, CheckCircle2, Clock } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+
 
 const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
 

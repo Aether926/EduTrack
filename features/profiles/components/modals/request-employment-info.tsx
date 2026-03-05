@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Send } from "lucide-react";
+import {
+    Send,
+    X,
+    FileText,
+    Briefcase,
+    Calendar,
+    ClipboardList,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -10,12 +17,12 @@ import {
 } from "@/components/ui/popover";
 import { ChevronDownIcon } from "lucide-react";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetFooter,
+} from "@/components/ui/sheet";
 import {
     Select,
     SelectContent,
@@ -23,12 +30,52 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { ProfileState } from "@/features/profiles/types/profile";
 import type { HRChangeRequestPayload } from "@/features/profiles/types/employment-info";
 
-// add this helper component inside the file
+function parseDateLocal(value: string): Date | undefined {
+    if (!value) return undefined;
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function toDateString(d?: Date): string {
+    if (!d) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+function FieldLabel({
+    icon: Icon,
+    label,
+    required,
+    optional,
+}: {
+    icon?: React.ComponentType<{ size?: number; className?: string }>;
+    label: string;
+    required?: boolean;
+    optional?: boolean;
+}) {
+    return (
+        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+            {Icon && <Icon size={14} className="text-blue-600" />}
+            {label}
+            {required && <span className="text-red-500 ml-0.5">*</span>}
+            {optional && (
+                <span className="text-muted-foreground font-normal">
+                    (optional)
+                </span>
+            )}
+        </label>
+    );
+}
+
 function DatePickerField(props: {
     label: string;
+    icon?: React.ComponentType<{ size?: number; className?: string }>;
     value: string;
     onChange: (val: string) => void;
     required?: boolean;
@@ -36,23 +83,29 @@ function DatePickerField(props: {
     minDate?: string;
     disabled?: boolean;
 }) {
-    const { label, value, onChange, required, optional, minDate, disabled } =
-        props;
+    const {
+        label,
+        icon,
+        value,
+        onChange,
+        required,
+        optional,
+        minDate,
+        disabled,
+    } = props;
     const [open, setOpen] = useState(false);
-    const dateValue = value ? new Date(value) : undefined;
-    const minDateObj = minDate ? new Date(minDate) : undefined;
+
+    const dateValue = value ? parseDateLocal(value) : undefined;
+    const minDateObj = minDate ? parseDateLocal(minDate) : undefined;
 
     return (
         <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                {label}
-                {required && <span className="text-red-500 ml-1">*</span>}
-                {optional && (
-                    <span className="text-gray-400 font-normal ml-1">
-                        (optional)
-                    </span>
-                )}
-            </label>
+            <FieldLabel
+                icon={icon}
+                label={label}
+                required={required}
+                optional={optional}
+            />
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
@@ -79,9 +132,7 @@ function DatePickerField(props: {
                             (minDateObj ? d < minDateObj : false)
                         }
                         onSelect={(date) => {
-                            onChange(
-                                date ? date.toISOString().split("T")[0] : "",
-                            );
+                            onChange(date ? toDateString(date) : "");
                             setOpen(false);
                         }}
                     />
@@ -90,15 +141,28 @@ function DatePickerField(props: {
         </div>
     );
 }
+
 const POSITIONS = [
     "Teacher I",
     "Teacher II",
     "Teacher III",
+    "Teacher IV",
+    "Teacher V",
+    "Teacher VI",
+    "Teacher VII",
     "Master Teacher I",
     "Master Teacher II",
     "Master Teacher III",
     "Principal",
     "Administrative Staff",
+];
+
+const REASONS = [
+    "Correction of records",
+    "Promotion / Salary grade upgrade",
+    "Transfer from another school",
+    "Renewal of appointment",
+    "Initial entry into service",
 ];
 
 type Form = {
@@ -110,10 +174,6 @@ type Form = {
     reason: string;
 };
 
-function toDateString(d?: Date) {
-    return d ? d.toISOString().split("T")[0] : "";
-}
-
 export function RequestHRChangeModal(props: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -122,6 +182,7 @@ export function RequestHRChangeModal(props: {
     onSubmit: (payload: HRChangeRequestPayload) => Promise<boolean>;
 }) {
     const { open, onOpenChange, currentData, submitting, onSubmit } = props;
+    const isMobile = useIsMobile();
 
     const [form, setForm] = useState<Form>({
         employeeId: currentData.employeeId ?? "",
@@ -135,6 +196,24 @@ export function RequestHRChangeModal(props: {
         ),
         reason: "",
     });
+
+    // Re-sync form with latest currentData each time sheet opens
+    React.useEffect(() => {
+        if (open) {
+            setForm({
+                employeeId: currentData.employeeId ?? "",
+                position: currentData.position ?? "",
+                plantillaNo: currentData.plantillaNo ?? "",
+                dateOfOriginalAppointment: toDateString(
+                    currentData.dateOfOriginalAppointment,
+                ),
+                dateOfLatestAppointment: toDateString(
+                    currentData.dateOfLatestAppointment,
+                ),
+                reason: "",
+            });
+        }
+    }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const set = (key: keyof Form) => (val: string) =>
         setForm((f) => ({ ...f, [key]: val }));
@@ -155,23 +234,32 @@ export function RequestHRChangeModal(props: {
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md max-h-[90vh] max-w-[90vw] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Request Employment Info Change</DialogTitle>
-                </DialogHeader>
-
-                <div className="space-y-4 py-2">
-                    <p className="text-sm text-gray-500">
-                        Fill in only the fields you want changed. Leave blank to
-                        keep current values. An admin will review your request
-                        before any changes are applied.
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent
+                side={isMobile ? "bottom" : "right"}
+                className={[
+                    "flex flex-col gap-0 p-0 overflow-hidden",
+                    isMobile
+                        ? "h-[92vh] rounded-t-2xl"
+                        : "w-[500px] sm:w-[540px]",
+                ].join(" ")}
+            >
+                {/* ── Header ── */}
+                <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10 shrink-0">
+                    <div className="flex items-center gap-2">
+                        <ClipboardList className="text-blue-600" size={18} />
+                        <SheetTitle>Request Employment Info Change</SheetTitle>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Fill in only the fields you want changed. An admin will
+                        review before applying.
                     </p>
+                </SheetHeader>
 
+                {/* ── Body ── */}
+                <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                            Employee ID
-                        </label>
+                        <FieldLabel icon={FileText} label="Employee ID" />
                         <Input
                             value={form.employeeId}
                             onChange={(e) => set("employeeId")(e.target.value)}
@@ -182,9 +270,10 @@ export function RequestHRChangeModal(props: {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                            Position/Designation
-                        </label>
+                        <FieldLabel
+                            icon={Briefcase}
+                            label="Position / Designation"
+                        />
                         <Select
                             value={form.position}
                             onValueChange={set("position")}
@@ -203,9 +292,11 @@ export function RequestHRChangeModal(props: {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                            Plantilla No.
-                        </label>
+                        <FieldLabel
+                            icon={FileText}
+                            label="Plantilla No."
+                            optional
+                        />
                         <Input
                             value={form.plantillaNo}
                             onChange={(e) => set("plantillaNo")(e.target.value)}
@@ -214,8 +305,10 @@ export function RequestHRChangeModal(props: {
                             }
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-4 items-end">
+
+                    <div className="grid grid-cols-2 gap-3">
                         <DatePickerField
+                            icon={Calendar}
                             label="Original Appointment"
                             value={form.dateOfOriginalAppointment}
                             onChange={(d) => {
@@ -229,8 +322,8 @@ export function RequestHRChangeModal(props: {
                                 }
                             }}
                         />
-
                         <DatePickerField
+                            icon={Calendar}
                             label="Latest Appointment"
                             value={form.dateOfLatestAppointment}
                             minDate={form.dateOfOriginalAppointment}
@@ -238,39 +331,81 @@ export function RequestHRChangeModal(props: {
                             onChange={set("dateOfLatestAppointment")}
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                            Reason for Change{" "}
-                            <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-transparent resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows={3}
-                            placeholder="Explain why you need these changes..."
-                            value={form.reason}
-                            onChange={(e) => set("reason")(e.target.value)}
+
+                    <div className="space-y-2">
+                        <FieldLabel
+                            icon={ClipboardList}
+                            label="Reason for Change"
+                            required
                         />
+                        <Select
+                            value={
+                                REASONS.includes(form.reason)
+                                    ? form.reason
+                                    : form.reason
+                                      ? "__custom__"
+                                      : ""
+                            }
+                            onValueChange={(val) => {
+                                if (val === "__custom__") {
+                                    set("reason")("");
+                                } else {
+                                    set("reason")(val);
+                                }
+                            }}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a reason..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {REASONS.map((r) => (
+                                    <SelectItem key={r} value={r}>
+                                        {r}
+                                    </SelectItem>
+                                ))}
+                                <SelectItem value="__custom__">
+                                    Other (specify below)
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {!REASONS.includes(form.reason) && (
+                            <textarea
+                                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-transparent resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                                rows={3}
+                                placeholder="Describe your reason..."
+                                value={form.reason}
+                                onChange={(e) => set("reason")(e.target.value)}
+                                autoFocus
+                            />
+                        )}
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                        disabled={submitting}
-                    >
-                        Cancel
-                    </Button>
+                {/* ── Footer ── */}
+                <SheetFooter className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-4 flex flex-row gap-2 shrink-0">
                     <Button
                         onClick={handleSubmit}
-                        disabled={submitting}
-                        className="flex items-center gap-2"
+                        disabled={submitting || !form.reason.trim()}
+                        className="gap-2 flex-1"
                     >
-                        <Send size={14} />
+                        {submitting ? (
+                            <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Send size={16} />
+                        )}
                         {submitting ? "Submitting..." : "Submit Request"}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    <Button
+                        variant="secondary"
+                        onClick={() => onOpenChange(false)}
+                        disabled={submitting}
+                        className="gap-2 flex-1"
+                    >
+                        <X size={16} /> Cancel
+                    </Button>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
     );
 }

@@ -6,8 +6,6 @@ import { AppointmentHistoryClient } from "@/features/admin-actions/appointment-h
 import { Badge } from "@/components/ui/badge";
 import { Users, ClipboardList } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
 const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
 
 export default async function AppointmentHistoryPage() {

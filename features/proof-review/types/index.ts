@@ -8,9 +8,10 @@ export type ProofReviewRow = {
   remarks: string | null;
 
   teacher: {
+    name: string;
     userId: string;
     email: string | null;
-    name: string;
+    firstName: string;
     employeeId: string | null;
     profileImage: string | null;
   };

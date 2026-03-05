@@ -3,6 +3,7 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { getDashboardStats } from "@/lib/database/dashboard";
 import { getMyUpcomingEvents } from "@/lib/database/calendar";
 import type { ActivityRow } from "@/lib/database/activity";
+import { getTeacherSalaryEligibility } from "@/lib/database/salary-eligibility";
 
 import DashboardView from "@/features/dashboard/component/dashboard-view";
 import { redirect } from "next/navigation";
@@ -36,10 +37,13 @@ export default async function DashboardPage() {
 
   const role = userRow?.role ?? null;
 
-  const [stats, events] = await Promise.all([
-    getDashboardStats(auth.user.id),
-    getMyUpcomingEvents(),
-  ]);
+  const [stats, events, eligibility] = await Promise.all([
+  getDashboardStats(auth.user.id),
+  getMyUpcomingEvents(),
+  role === "ADMIN"
+    ? getTeacherSalaryEligibility(1, 10, "eligible_first")
+    : Promise.resolve({ data: [], count: 0 }),
+]);
 
   const db = role === "ADMIN" ? createAdminClient() : supabase;
 
@@ -76,6 +80,8 @@ export default async function DashboardPage() {
       stats={stats}
       events={events}
       activity={activity as any}
+      eligibilityData={eligibility.data}
+      eligibilityCount={eligibility.count}
     />
   );
 }

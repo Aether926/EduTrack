@@ -25,6 +25,13 @@ async function getTrainingsForTeacher(
         )
         .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false });
+    const { data: attendanceRows, error: aErr } = await db
+        .from("Attendance")
+        .select(
+            "id, training_id, status, result, proof_url, proof_path, created_at",
+        )
+        .eq("teacher_id", teacherId)
+        .order("created_at", { ascending: false });
 
     if (aErr || !attendanceRows || attendanceRows.length === 0) return [];
 
@@ -41,15 +48,20 @@ async function getTrainingsForTeacher(
     const filtered = adminMode
         ? attendance
         : attendance.filter(isPublicSafeTraining);
+    const filtered = adminMode
+        ? attendance
+        : attendance.filter(isPublicSafeTraining);
+
+    if (filtered.length === 0) return [];
 
     const trainingIds = Array.from(new Set(filtered.map((r) => r.training_id)));
 
     const { data: pdRows } = await db
         .from("ProfessionalDevelopment")
         .select(
-            "id, title, type, level, start_date, end_date, total_hours, approved_hours, sponsoring_agency",
+            "id, title, type, level, start_date, end_date, total_hours, sponsoring_agency",
         )
-        .in("id", trainingIds.length ? trainingIds : ["__none__"]);
+        .in("id", trainingIds);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdMap = new Map<string, any>();
@@ -62,22 +74,18 @@ async function getTrainingsForTeacher(
         return {
             attendanceId: String(a.id),
             trainingId: String(a.training_id),
-
             title: pd?.title ?? "(missing title)",
             type: pd?.type ?? "",
             level: pd?.level ?? "",
             startDate: pd?.start_date ?? "",
             endDate: pd?.end_date ?? "",
             totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
-            approvedHours: pd?.approved_hours ?? null,
+            approvedHours: null,
             sponsor: pd?.sponsoring_agency ?? "",
-
             status: a.status ?? "",
             result: a.result ?? null,
-
             proof_url: adminMode ? (a.proof_url ?? null) : null,
             proof_path: adminMode ? (a.proof_path ?? null) : null,
-
             created_at: a.created_at ?? "",
         };
     });

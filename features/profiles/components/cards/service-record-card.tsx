@@ -18,7 +18,7 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="flex flex-col justify-between bg-white/10 backdrop-blur rounded-lg p-4">
                         <p className="text-sm text-blue-100 mb-2">
-                            Years at This School
+                            Years of Original Appointment
                         </p>
                         <div>
                             <p className="text-3xl font-bold">
@@ -27,7 +27,7 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                                 )}
                             </p>
                             <p className="text-xs text-blue-200 mt-2">
-                                Since joining this school
+                                Since Original Appointment
                             </p>
                         </div>
                     </div>
@@ -52,9 +52,9 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                 <div className="bg-white/5 backdrop-blur rounded-lg p-3 text-sm">
                     <p className="text-blue-100">
                         <span className="font-semibold">Note:</span> Date of
-                        original appointment marks when the teacher joined this
-                        school. Latest appointment updates when promoted within
-                        the school.
+                        original appointment marks when this individual first
+                        entered government service. Latest appointment updates
+                        when promoted within the school.
                     </p>
                 </div>
             </CardContent>

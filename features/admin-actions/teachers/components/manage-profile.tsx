@@ -26,8 +26,8 @@ import { ChevronDownIcon } from "lucide-react";
 import { AdminDangerZone } from "@/features/admin-actions/teachers/components/admin-danger-zone";
 
 const POSITIONS = [
-  "Teacher I", "Teacher II", "Teacher III",
-  "Master Teacher I", "Master Teacher II", "Master Teacher III",
+  "Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI","Teacher VII",
+  "Master Teacher I", "Master Teacher II", "Master Teacher III", 
   "Principal", "Administrative Staff",
 ];
 

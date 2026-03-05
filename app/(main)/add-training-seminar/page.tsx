@@ -14,7 +14,6 @@ import AddTrainingAndSeminar from "@/app/(main)/add-training-seminar/component/a
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, GraduationCap, Users } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 const ALLOWED = [
     "ADMIN",

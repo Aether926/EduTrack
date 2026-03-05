@@ -57,6 +57,7 @@ interface PdFormModalProps {
     setFormData: (data: FormData) => void;
     onSubmit: (e: React.FormEvent) => void;
     isSubmitting: boolean;
+    extraFooter?: React.ReactNode;
 }
 
 const modeConfig = {
@@ -386,6 +387,7 @@ export default function PdFormModal({
     setFormData,
     onSubmit,
     isSubmitting,
+    extraFooter,
 }: PdFormModalProps) {
     const isReadOnly = mode === "view";
     const cfg = modeConfig[mode];
@@ -649,7 +651,7 @@ export default function PdFormModal({
                             />
                         </div>
                     </div>
-
+                    {extraFooter}
                     {/* ── Footer ── */}
                     <div className="px-6 py-4 border-t border-border/60 bg-muted/20">
                         <DialogFooter>
