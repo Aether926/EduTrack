@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import PublicProfileView from "@/components/public-profile-view";
