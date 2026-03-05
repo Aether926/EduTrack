@@ -821,7 +821,9 @@ export function AdminDocumentReviewTable({
     return (
         <div className="space-y-4">
             <PendingSubmissionsTable docs={docs} />
-            <PendingRequestsTable requests={requests} />
+            {requests.length > 0 && (
+                <PendingRequestsTable requests={requests} />
+            )}
         </div>
     );
 }
