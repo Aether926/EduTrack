@@ -15,9 +15,21 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 import {
-    CheckCircle2, Clock, XCircle, AlertCircle, ExternalLink,
-    Upload, RotateCcw, Trash2, Loader2, HourglassIcon,
-    MoreHorizontal, FileText, X, ArrowLeft, CalendarDays,
+    CheckCircle2,
+    Clock,
+    XCircle,
+    AlertCircle,
+    ExternalLink,
+    Upload,
+    RotateCcw,
+    Trash2,
+    Loader2,
+    HourglassIcon,
+    MoreHorizontal,
+    FileText,
+    X,
+    ArrowLeft,
+    CalendarDays,
     Eye,
     ZoomIn,
 } from "lucide-react";
@@ -29,12 +41,18 @@ import {
     requestDelete,
     submitTeacherDocument,
 } from "@/features/documents/actions/document-actions";
-import type { ChecklistItem, DocumentStatus } from "@/features/documents/types/documents";
+import type {
+    ChecklistItem,
+    DocumentStatus,
+} from "@/features/documents/types/documents";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-    DropdownMenuSeparator, DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 const STATUS_ICON: Record<DocumentStatus | "MISSING", React.ReactNode> = {
@@ -49,17 +67,26 @@ function fmtDate(d: string | null | undefined) {
     if (!d) return "—";
     try {
         return new Date(d).toLocaleString("en-PH", {
-            year: "numeric", month: "short", day: "numeric",
-            hour: "2-digit", minute: "2-digit",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
         });
-    } catch { return d; }
+    } catch {
+        return d;
+    }
 }
 
 function formatBytes(bytes: number | null | undefined) {
     if (!bytes || !Number.isFinite(bytes)) return null;
     const sizes = ["B", "KB", "MB", "GB"];
-    let i = 0; let v = bytes;
-    while (v >= 1024 && i < sizes.length - 1) { v /= 1024; i++; }
+    let i = 0;
+    let v = bytes;
+    while (v >= 1024 && i < sizes.length - 1) {
+        v /= 1024;
+        i++;
+    }
     return `${v.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
 }
 
@@ -92,10 +119,16 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
     const [previewLoading, setPreviewLoading] = useState(false);
     const [previewFullscreen, setPreviewFullscreen] = useState(false);
 
-    const approved = items.filter((i) => i.submission?.status === "APPROVED").length;
+    const approved = items.filter(
+        (i) => i.submission?.status === "APPROVED",
+    ).length;
     const total = items.filter((i) => i.documentType.required).length;
 
-    const openSheet = (item: ChecklistItem, view: SheetView, reqType?: RequestType) => {
+    const openSheet = (
+        item: ChecklistItem,
+        view: SheetView,
+        reqType?: RequestType,
+    ) => {
         setActiveItem(item);
         setSheetView(view);
         if (reqType) setRequestType(reqType);
@@ -142,9 +175,16 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
         try {
             const fd = new FormData();
             fd.append("file", file);
-            const result = await submitTeacherDocument(activeItem.documentType.id, fd);
+            const result = await submitTeacherDocument(
+                activeItem.documentType.id,
+                fd,
+            );
             if (!result.ok) return toast.error(result.error);
-            toast.success(activeItem.submission ? "Document resubmitted." : "Document submitted.");
+            toast.success(
+                activeItem.submission
+                    ? "Document resubmitted."
+                    : "Document submitted.",
+            );
             setSheetOpen(false);
             setFile(null);
         } catch {
@@ -156,16 +196,18 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
 
     const handleRequest = async () => {
         if (!activeItem?.submission) return;
-        if (!requestReason.trim()) return toast.error("Please provide a reason.");
+        if (!requestReason.trim())
+            return toast.error("Please provide a reason.");
         setRequesting(true);
         try {
-            const fn = requestType === "RESUBMIT" ? requestResubmit : requestDelete;
+            const fn =
+                requestType === "RESUBMIT" ? requestResubmit : requestDelete;
             const result = await fn(activeItem.submission.id, requestReason);
             if (!result.ok) return toast.error(result.error);
             toast.success(
                 requestType === "RESUBMIT"
                     ? "Resubmit request sent. Waiting for admin approval."
-                    : "Delete request sent. Waiting for admin approval."
+                    : "Delete request sent. Waiting for admin approval.",
             );
             setSheetOpen(false);
             setRequestReason("");
@@ -187,7 +229,9 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
             <Card>
                 <CardHeader className="pb-3">
                     <div className="flex items-center justify-between gap-3">
-                        <CardTitle className="text-base">201 File Documents</CardTitle>
+                        <CardTitle className="text-base">
+                            201 File Documents
+                        </CardTitle>
                         <span className="text-sm text-muted-foreground">
                             {approved}/{total} required approved
                         </span>
@@ -195,20 +239,31 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                     <div className="w-full bg-muted rounded-full h-2 mt-2">
                         <div
                             className="bg-emerald-500 h-2 rounded-full transition-all"
-                            style={{ width: total > 0 ? `${(approved / total) * 100}%` : "0%" }}
+                            style={{
+                                width:
+                                    total > 0
+                                        ? `${(approved / total) * 100}%`
+                                        : "0%",
+                            }}
                         />
                     </div>
                 </CardHeader>
 
                 <CardContent className="space-y-2">
                     {items.map((item) => {
-                        const { documentType, submission, pendingRequest } = item as any;
+                        const { documentType, submission, pendingRequest } =
+                            item as any;
                         const status = submission?.status ?? "MISSING";
                         const isViewing = viewingId === submission?.id;
                         const hasPending = !!pendingRequest;
 
-                        const canUpload = !hasPending && (status === "MISSING" || status === "REJECTED");
-                        const canRequestResubmit = !!submission && !hasPending && (status === "SUBMITTED" || status === "APPROVED");
+                        const canUpload =
+                            !hasPending &&
+                            (status === "MISSING" || status === "REJECTED");
+                        const canRequestResubmit =
+                            !!submission &&
+                            !hasPending &&
+                            (status === "SUBMITTED" || status === "APPROVED");
                         const canRequestDelete = !!submission && !hasPending;
 
                         return (
@@ -221,30 +276,48 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                     {/* LEFT */}
                                     <div className="flex items-start gap-3 min-w-0">
                                         <div className="mt-0.5">
-                                            {STATUS_ICON[status as DocumentStatus | "MISSING"]}
+                                            {
+                                                STATUS_ICON[
+                                                    status as
+                                                        | DocumentStatus
+                                                        | "MISSING"
+                                                ]
+                                            }
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-sm font-medium leading-tight">
                                                 {documentType.name}
                                                 {documentType.required && (
-                                                    <span className="text-red-500 ml-1 text-xs">*</span>
+                                                    <span className="text-red-500 ml-1 text-xs">
+                                                        *
+                                                    </span>
                                                 )}
                                             </p>
                                             {submission?.submitted_at && (
                                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                                    Submitted: {new Date(submission.submitted_at).toLocaleDateString("en-PH")}
+                                                    Submitted:{" "}
+                                                    {new Date(
+                                                        submission.submitted_at,
+                                                    ).toLocaleDateString(
+                                                        "en-PH",
+                                                    )}
                                                 </p>
                                             )}
-                                            {status === "REJECTED" && submission?.reject_reason && (
-                                                <p className="text-xs text-red-500 mt-1">
-                                                    Reason: {submission.reject_reason}
-                                                </p>
-                                            )}
+                                            {status === "REJECTED" &&
+                                                submission?.reject_reason && (
+                                                    <p className="text-xs text-red-500 mt-1">
+                                                        Reason:{" "}
+                                                        {
+                                                            submission.reject_reason
+                                                        }
+                                                    </p>
+                                                )}
                                             {hasPending && (
                                                 <div className="flex items-center gap-1 mt-1">
                                                     <HourglassIcon className="h-3 w-3 text-yellow-500" />
                                                     <p className="text-xs text-yellow-500 font-medium">
-                                                        {pendingRequest.type === "RESUBMIT"
+                                                        {pendingRequest.type ===
+                                                        "RESUBMIT"
                                                             ? "Resubmit request pending"
                                                             : "Delete request pending"}
                                                     </p>
@@ -258,38 +331,90 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         className="flex items-center justify-between gap-2 sm:justify-end"
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        {submission?.status
-                                            ? <div className="shrink-0"><DocumentStatusBadge status={submission.status} /></div>
-                                            : <div className="shrink-0" />
-                                        }
+                                        {submission?.status ? (
+                                            <div className="shrink-0">
+                                                <DocumentStatusBadge
+                                                    status={submission.status}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="shrink-0" />
+                                        )}
 
                                         {/* Mobile dropdown */}
                                         <div className="sm:hidden">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" size="icon" aria-label="Actions">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        aria-label="Actions"
+                                                    >
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openSheet(item, "detail"); }}>
-                                                        <Eye className="h-4 w-4 mr-2" /> View details
+                                                    <DropdownMenuItem
+                                                        onSelect={(e) => {
+                                                            e.preventDefault();
+                                                            openSheet(
+                                                                item,
+                                                                "detail",
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Eye className="h-4 w-4 mr-2" />{" "}
+                                                        View details
                                                     </DropdownMenuItem>
                                                     {canUpload && (
-                                                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openSheet(item, "upload"); }}>
+                                                        <DropdownMenuItem
+                                                            onSelect={(e) => {
+                                                                e.preventDefault();
+                                                                openSheet(
+                                                                    item,
+                                                                    "upload",
+                                                                );
+                                                            }}
+                                                        >
                                                             <Upload className="h-4 w-4 mr-2" />
-                                                            {status === "REJECTED" ? "Resubmit" : "Upload"}
+                                                            {status ===
+                                                            "REJECTED"
+                                                                ? "Resubmit"
+                                                                : "Upload"}
                                                         </DropdownMenuItem>
                                                     )}
-                                                    {canUpload && <DropdownMenuSeparator />}
+                                                    {canUpload && (
+                                                        <DropdownMenuSeparator />
+                                                    )}
                                                     {canRequestResubmit && (
-                                                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openSheet(item, "request", "RESUBMIT"); }}>
-                                                            <RotateCcw className="h-4 w-4 mr-2" /> Request resubmit
+                                                        <DropdownMenuItem
+                                                            onSelect={(e) => {
+                                                                e.preventDefault();
+                                                                openSheet(
+                                                                    item,
+                                                                    "request",
+                                                                    "RESUBMIT",
+                                                                );
+                                                            }}
+                                                        >
+                                                            <RotateCcw className="h-4 w-4 mr-2" />{" "}
+                                                            Request resubmit
                                                         </DropdownMenuItem>
                                                     )}
                                                     {canRequestDelete && (
-                                                        <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={(e) => { e.preventDefault(); openSheet(item, "request", "DELETE"); }}>
-                                                            <Trash2 className="h-4 w-4 mr-2" /> Request delete
+                                                        <DropdownMenuItem
+                                                            className="text-destructive focus:text-destructive"
+                                                            onSelect={(e) => {
+                                                                e.preventDefault();
+                                                                openSheet(
+                                                                    item,
+                                                                    "request",
+                                                                    "DELETE",
+                                                                );
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-2" />{" "}
+                                                            Request delete
                                                         </DropdownMenuItem>
                                                     )}
                                                 </DropdownMenuContent>
@@ -299,19 +424,55 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         {/* Desktop buttons */}
                                         <div className="hidden sm:flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                                             {canUpload && (
-                                                <Button size="sm" variant="default" onClick={() => openSheet(item, "upload")} className="gap-1.5">
+                                                <Button
+                                                    size="sm"
+                                                    variant="default"
+                                                    onClick={() =>
+                                                        openSheet(
+                                                            item,
+                                                            "upload",
+                                                        )
+                                                    }
+                                                    className="gap-1.5"
+                                                >
                                                     <Upload className="h-3.5 w-3.5" />
-                                                    {status === "REJECTED" ? "Resubmit" : "Upload"}
+                                                    {status === "REJECTED"
+                                                        ? "Resubmit"
+                                                        : "Upload"}
                                                 </Button>
                                             )}
                                             {canRequestResubmit && (
-                                                <Button size="sm" variant="outline" className="gap-1.5 text-yellow-600 border-yellow-500/40 hover:bg-yellow-500/10" onClick={() => openSheet(item, "request", "RESUBMIT")}>
-                                                    <RotateCcw className="h-3.5 w-3.5" /> Request Resubmit
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="gap-1.5 text-yellow-600 border-yellow-500/40 hover:bg-yellow-500/10"
+                                                    onClick={() =>
+                                                        openSheet(
+                                                            item,
+                                                            "request",
+                                                            "RESUBMIT",
+                                                        )
+                                                    }
+                                                >
+                                                    <RotateCcw className="h-3.5 w-3.5" />{" "}
+                                                    Request Resubmit
                                                 </Button>
                                             )}
                                             {canRequestDelete && (
-                                                <Button size="sm" variant="outline" className="gap-1.5 text-red-500 border-red-500/40 hover:bg-red-500/10" onClick={() => openSheet(item, "request", "DELETE")}>
-                                                    <Trash2 className="h-3.5 w-3.5" /> Request Delete
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="gap-1.5 text-red-500 border-red-500/40 hover:bg-red-500/10"
+                                                    onClick={() =>
+                                                        openSheet(
+                                                            item,
+                                                            "request",
+                                                            "DELETE",
+                                                        )
+                                                    }
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />{" "}
+                                                    Request Delete
                                                 </Button>
                                             )}
                                         </div>
@@ -329,7 +490,9 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                     side={isMobile ? "bottom" : "right"}
                     className={[
                         "flex flex-col gap-0 p-0 overflow-y-auto",
-                        isMobile ? "h-auto max-h-[92vh] rounded-t-2xl" : "w-[480px] sm:w-[520px]",
+                        isMobile
+                            ? "h-auto max-h-[92vh] rounded-t-2xl"
+                            : "w-[480px] sm:w-[520px]",
                     ].join(" ")}
                 >
                     {/* ── Header ── */}
@@ -349,18 +512,31 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                 )}
                                 <div className="min-w-0">
                                     <SheetTitle className="text-base leading-snug truncate">
-                                        {sheetView === "detail" && documentType?.name}
-                                        {sheetView === "upload" && `${submission ? "Resubmit" : "Upload"} — ${documentType?.name}`}
-                                        {sheetView === "request" && `${requestType === "RESUBMIT" ? "Request Resubmission" : "Request Deletion"}`}
+                                        {sheetView === "detail" &&
+                                            documentType?.name}
+                                        {sheetView === "upload" &&
+                                            `${submission ? "Resubmit" : "Upload"} — ${documentType?.name}`}
+                                        {sheetView === "request" &&
+                                            `${requestType === "RESUBMIT" ? "Request Resubmission" : "Request Deletion"}`}
                                     </SheetTitle>
                                     {sheetView === "detail" && (
                                         <div className="flex items-center gap-2 mt-1">
-                                            {submission?.status
-                                                ? <DocumentStatusBadge status={submission.status} />
-                                                : <Badge variant="outline" className="text-orange-500 border-orange-500/30">Missing</Badge>
-                                            }
+                                            {submission?.status ? (
+                                                <DocumentStatusBadge
+                                                    status={submission.status}
+                                                />
+                                            ) : (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="text-orange-500 border-orange-500/30"
+                                                >
+                                                    Missing
+                                                </Badge>
+                                            )}
                                             {documentType?.required && (
-                                                <span className="text-xs text-muted-foreground">Required</span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    Required
+                                                </span>
                                             )}
                                         </div>
                                     )}
@@ -381,12 +557,13 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
 
                     {/* ── Body ── */}
                     <div className="flex-1 px-5 py-4 space-y-4">
-
                         {/* ── DETAIL VIEW ── */}
                         {sheetView === "detail" && item && (
                             <>
                                 {documentType?.description && (
-                                    <p className="text-sm text-muted-foreground">{documentType.description}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {documentType.description}
+                                    </p>
                                 )}
 
                                 {/* Pending request warning */}
@@ -402,12 +579,17 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                 )}
 
                                 {/* Rejection reason */}
-                                {status === "REJECTED" && submission?.reject_reason && (
-                                    <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
-                                        <p className="text-xs font-medium text-red-500 mb-1">Rejection reason</p>
-                                        <p className="text-xs text-red-400">{submission.reject_reason}</p>
-                                    </div>
-                                )}
+                                {status === "REJECTED" &&
+                                    submission?.reject_reason && (
+                                        <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
+                                            <p className="text-xs font-medium text-red-500 mb-1">
+                                                Rejection reason
+                                            </p>
+                                            <p className="text-xs text-red-400">
+                                                {submission.reject_reason}
+                                            </p>
+                                        </div>
+                                    )}
 
                                 {submission ? (
                                     <>
@@ -415,14 +597,22 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
 
                                         {/* Timeline */}
                                         <div className="space-y-3">
-                                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Timeline</div>
+                                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Timeline
+                                            </div>
 
                                             <div className="space-y-2">
                                                 <div className="flex items-start gap-3 text-sm">
                                                     <CalendarDays className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                                                     <div>
-                                                        <div className="text-xs text-muted-foreground">Submitted</div>
-                                                        <div className="text-xs font-medium">{fmtDate(submission.submitted_at)}</div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            Submitted
+                                                        </div>
+                                                        <div className="text-xs font-medium">
+                                                            {fmtDate(
+                                                                submission.submitted_at,
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -430,28 +620,48 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                     <div className="flex items-start gap-3 text-sm">
                                                         <CalendarDays className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                                                         <div>
-                                                            <div className="text-xs text-muted-foreground">Reviewed</div>
-                                                            <div className="text-xs font-medium">{fmtDate(submission.reviewed_at)}</div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                Reviewed
+                                                            </div>
+                                                            <div className="text-xs font-medium">
+                                                                {fmtDate(
+                                                                    submission.reviewed_at,
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )}
 
-                                                {submission.status === "APPROVED" && submission.reviewed_at && (
-                                                    <div className="flex items-start gap-3 text-sm">
-                                                        <CheckCircle2 className="h-4 w-4 mt-0.5 text-emerald-500 shrink-0" />
-                                                        <div>
-                                                            <div className="text-xs text-muted-foreground">Approved</div>
-                                                            <div className="text-xs font-medium">{fmtDate(submission.reviewed_at)}</div>
+                                                {submission.status ===
+                                                    "APPROVED" &&
+                                                    submission.reviewed_at && (
+                                                        <div className="flex items-start gap-3 text-sm">
+                                                            <CheckCircle2 className="h-4 w-4 mt-0.5 text-emerald-500 shrink-0" />
+                                                            <div>
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    Approved
+                                                                </div>
+                                                                <div className="text-xs font-medium">
+                                                                    {fmtDate(
+                                                                        submission.reviewed_at,
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
 
                                                 {submission.expires_at && (
                                                     <div className="flex items-start gap-3 text-sm">
                                                         <Clock className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                                                         <div>
-                                                            <div className="text-xs text-muted-foreground">Expires</div>
-                                                            <div className="text-xs font-medium">{fmtDate(submission.expires_at)}</div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                Expires
+                                                            </div>
+                                                            <div className="text-xs font-medium">
+                                                                {fmtDate(
+                                                                    submission.expires_at,
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )}
@@ -462,14 +672,18 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
 
                                         {/* File preview */}
                                         <div className="space-y-2">
-                                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">File</div>
+                                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                File
+                                            </div>
                                             {previewLoading ? (
                                                 <div className="rounded-lg border bg-muted/20 h-48 flex items-center justify-center">
                                                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                                                 </div>
                                             ) : previewUrl ? (
                                                 <div className="space-y-2">
-                                                    {submission.mime_type?.startsWith("image/") ? (
+                                                    {submission.mime_type?.startsWith(
+                                                        "image/",
+                                                    ) ? (
                                                         // eslint-disable-next-line @next/next/no-img-element
                                                         <div className="rounded-lg border overflow-hidden bg-muted/20">
                                                             <img
@@ -489,14 +703,21 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                     )}
                                                     <div className="flex items-center justify-between gap-2">
                                                         <div className="text-xs text-muted-foreground truncate">
-                                                            {submission.mime_type ?? "Document"}
-                                                            {submission.file_size_bytes ? ` • ${formatBytes(submission.file_size_bytes)}` : ""}
+                                                            {submission.mime_type ??
+                                                                "Document"}
+                                                            {submission.file_size_bytes
+                                                                ? ` • ${formatBytes(submission.file_size_bytes)}`
+                                                                : ""}
                                                         </div>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
                                                             className="shrink-0 gap-1.5 text-xs"
-                                                            onClick={() => setPreviewFullscreen(true)}
+                                                            onClick={() =>
+                                                                setPreviewFullscreen(
+                                                                    true,
+                                                                )
+                                                            }
                                                         >
                                                             <ZoomIn className="h-3.5 w-3.5" />
                                                             Fullscreen
@@ -507,9 +728,16 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                 <div className="rounded-lg border bg-muted/20 px-3 py-2 flex items-center gap-2">
                                                     <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="text-xs font-medium truncate">{submission.mime_type ?? "Document"}</div>
+                                                        <div className="text-xs font-medium truncate">
+                                                            {submission.mime_type ??
+                                                                "Document"}
+                                                        </div>
                                                         {submission.file_size_bytes && (
-                                                            <div className="text-xs text-muted-foreground">{formatBytes(submission.file_size_bytes)}</div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                {formatBytes(
+                                                                    submission.file_size_bytes,
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -528,19 +756,31 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                         {sheetView === "upload" && item && (
                             <>
                                 {documentType?.description && (
-                                    <p className="text-sm text-muted-foreground">{documentType.description}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {documentType.description}
+                                    </p>
                                 )}
 
-                                {status === "REJECTED" && submission?.reject_reason && (
-                                    <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
-                                        <p className="text-xs font-medium text-red-500 mb-1">Rejection reason</p>
-                                        <p className="text-xs text-red-400">{submission.reject_reason}</p>
-                                    </div>
-                                )}
+                                {status === "REJECTED" &&
+                                    submission?.reject_reason && (
+                                        <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
+                                            <p className="text-xs font-medium text-red-500 mb-1">
+                                                Rejection reason
+                                            </p>
+                                            <p className="text-xs text-red-400">
+                                                {submission.reject_reason}
+                                            </p>
+                                        </div>
+                                    )}
 
                                 <div className="text-xs text-muted-foreground space-y-1">
                                     {documentType?.allowed_mime && (
-                                        <p>Allowed: {documentType.allowed_mime.join(", ")}</p>
+                                        <p>
+                                            Allowed:{" "}
+                                            {documentType.allowed_mime.join(
+                                                ", ",
+                                            )}
+                                        </p>
                                     )}
                                     {documentType?.max_mb && (
                                         <p>Max size: {documentType.max_mb}MB</p>
@@ -551,27 +791,42 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                     ref={inputRef}
                                     type="file"
                                     className="hidden"
-                                    accept={documentType?.allowed_mime?.join(",") ?? "*"}
-                                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                                    accept={
+                                        documentType?.allowed_mime?.join(",") ??
+                                        "*"
+                                    }
+                                    onChange={(e) =>
+                                        setFile(e.target.files?.[0] ?? null)
+                                    }
                                 />
 
                                 {/* Dropzone / preview */}
                                 {!file ? (
                                     <div
                                         className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-muted/10 transition-colors"
-                                        onClick={() => inputRef.current?.click()}
+                                        onClick={() =>
+                                            inputRef.current?.click()
+                                        }
                                     >
                                         <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                                        <p className="text-sm text-muted-foreground">Click to select file</p>
-                                        <p className="text-xs text-muted-foreground mt-1">or drag and drop here</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Click to select file
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            or drag and drop here
+                                        </p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
                                         <div className="rounded-lg border bg-muted/20 px-3 py-3 flex items-center gap-3">
                                             <FileText className="h-5 w-5 text-primary shrink-0" />
                                             <div className="min-w-0 flex-1">
-                                                <div className="text-sm font-medium truncate">{file.name}</div>
-                                                <div className="text-xs text-muted-foreground">{formatBytes(file.size)}</div>
+                                                <div className="text-sm font-medium truncate">
+                                                    {file.name}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {formatBytes(file.size)}
+                                                </div>
                                             </div>
                                             <Button
                                                 type="button"
@@ -594,29 +849,46 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                             <>
                                 <p className="text-sm text-muted-foreground">
                                     {requestType === "RESUBMIT" ? (
-                                        <>You are requesting to replace your <strong className="text-foreground">{documentType?.name}</strong>. Admin must approve before you can upload a new one.</>
+                                        <>
+                                            You are requesting to replace your{" "}
+                                            <strong className="text-foreground">
+                                                {documentType?.name}
+                                            </strong>
+                                            . Admin must approve before you can
+                                            upload a new one.
+                                        </>
                                     ) : (
-                                        <>You are requesting to delete your <strong className="text-foreground">{documentType?.name}</strong>. This requires admin approval.</>
+                                        <>
+                                            You are requesting to delete your{" "}
+                                            <strong className="text-foreground">
+                                                {documentType?.name}
+                                            </strong>
+                                            . This requires admin approval.
+                                        </>
                                     )}
                                 </p>
 
                                 {requestType === "DELETE" && (
                                     <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-400">
-                                        This action is irreversible once approved by an admin.
+                                        This action is irreversible once
+                                        approved by an admin.
                                     </div>
                                 )}
 
                                 <div className="space-y-1.5">
-                                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reason</div>
+                                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                        Reason
+                                    </div>
                                     <Textarea
                                         placeholder="Provide a reason for this request..."
                                         value={requestReason}
-                                        onChange={(e) => setRequestReason(e.target.value)}
+                                        onChange={(e) =>
+                                            setRequestReason(e.target.value)
+                                        }
                                         className="min-h-[120px]"
                                         disabled={requesting}
                                     />
                                 </div>
-                                
                             </>
                         )}
                     </div>
@@ -627,36 +899,85 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                             <>
                                 {/* Quick actions from detail view */}
                                 {(() => {
-                                    const hasPending = !!(item as any)?.pendingRequest;
-                                    const canUpload = !hasPending && (status === "MISSING" || status === "REJECTED");
-                                    const canRequestResubmit = !!submission && !hasPending && (status === "SUBMITTED" || status === "APPROVED");
-                                    const canRequestDelete = !!submission && !hasPending;
+                                    const hasPending = !!(item as any)
+                                        ?.pendingRequest;
+                                    const canUpload =
+                                        !hasPending &&
+                                        (status === "MISSING" ||
+                                            status === "REJECTED");
+                                    const canRequestResubmit =
+                                        !!submission &&
+                                        !hasPending &&
+                                        (status === "SUBMITTED" ||
+                                            status === "APPROVED");
+                                    const canRequestDelete =
+                                        !!submission && !hasPending;
 
                                     return (
                                         <>
-                                            <Button variant="secondary" onClick={handleClose} className="flex-1">Close</Button>
+                                            <Button
+                                                variant="secondary"
+                                                onClick={handleClose}
+                                                className="flex-1"
+                                            >
+                                                Close
+                                            </Button>
                                             {canUpload && (
-                                                <Button onClick={() => setSheetView("upload")} className="flex-1 gap-2">
+                                                <Button
+                                                    onClick={() =>
+                                                        setSheetView("upload")
+                                                    }
+                                                    className="flex-1 gap-2"
+                                                >
                                                     <Upload className="h-4 w-4" />
-                                                    {status === "REJECTED" ? "Resubmit" : "Upload"}
+                                                    {status === "REJECTED"
+                                                        ? "Resubmit"
+                                                        : "Upload"}
                                                 </Button>
                                             )}
-                                            {(canRequestResubmit || canRequestDelete) && (
+                                            {(canRequestResubmit ||
+                                                canRequestDelete) && (
                                                 <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="outline" size="icon">
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                        >
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         {canRequestResubmit && (
-                                                            <DropdownMenuItem onClick={() => { setRequestType("RESUBMIT"); setSheetView("request"); }}>
-                                                                <RotateCcw className="h-4 w-4 mr-2" /> Request Resubmit
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    setRequestType(
+                                                                        "RESUBMIT",
+                                                                    );
+                                                                    setSheetView(
+                                                                        "request",
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <RotateCcw className="h-4 w-4 mr-2" />{" "}
+                                                                Request Resubmit
                                                             </DropdownMenuItem>
                                                         )}
                                                         {canRequestDelete && (
-                                                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => { setRequestType("DELETE"); setSheetView("request"); }}>
-                                                                <Trash2 className="h-4 w-4 mr-2" /> Request Delete
+                                                            <DropdownMenuItem
+                                                                className="text-destructive focus:text-destructive"
+                                                                onClick={() => {
+                                                                    setRequestType(
+                                                                        "DELETE",
+                                                                    );
+                                                                    setSheetView(
+                                                                        "request",
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 mr-2" />{" "}
+                                                                Request Delete
                                                             </DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuContent>
@@ -670,24 +991,56 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
 
                         {sheetView === "upload" && (
                             <>
-                                <Button variant="secondary" onClick={() => setSheetView("detail")} disabled={submitting} className="flex-1">Back</Button>
-                                <Button onClick={handleUpload} disabled={submitting || !file} className="flex-1 gap-2">
-                                    {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                                    {submitting ? "Uploading..." : submission ? "Resubmit" : "Submit"}
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setSheetView("detail")}
+                                    disabled={submitting}
+                                    className="flex-1"
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    onClick={handleUpload}
+                                    disabled={submitting || !file}
+                                    className="flex-1 gap-2"
+                                >
+                                    {submitting && (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    )}
+                                    {submitting
+                                        ? "Uploading..."
+                                        : submission
+                                          ? "Resubmit"
+                                          : "Submit"}
                                 </Button>
                             </>
                         )}
 
                         {sheetView === "request" && (
                             <>
-                                <Button variant="secondary" onClick={() => setSheetView("detail")} disabled={requesting} className="flex-1">Back</Button>
                                 <Button
-                                    variant={requestType === "DELETE" ? "destructive" : "default"}
+                                    variant="secondary"
+                                    onClick={() => setSheetView("detail")}
+                                    disabled={requesting}
+                                    className="flex-1"
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant={
+                                        requestType === "DELETE"
+                                            ? "destructive"
+                                            : "default"
+                                    }
                                     onClick={handleRequest}
-                                    disabled={!requestReason.trim() || requesting}
+                                    disabled={
+                                        !requestReason.trim() || requesting
+                                    }
                                     className="flex-1 gap-2"
                                 >
-                                    {requesting && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    {requesting && (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    )}
                                     {requesting ? "Sending..." : "Send Request"}
                                 </Button>
                             </>

@@ -29,7 +29,10 @@ import {
 
 import { motion, AnimatePresence } from "framer-motion";
 
-import type { TrainingSeminarTableRow, ProfessionalDevelopment } from "@/lib/user";
+import type {
+    TrainingSeminarTableRow,
+    ProfessionalDevelopment,
+} from "@/lib/user";
 import {
     createProfessionalDevelopment,
     deleteMultipleProfessionalDevelopment,
@@ -39,17 +42,38 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-    DropdownMenuSeparator, DropdownMenuTrigger,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription,
-    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
 import PdFormSheet from "@/features/add-training-seminar/components/pd-form-sheet";
 
@@ -75,9 +99,13 @@ const typeColors: Record<string, string> = {
 };
 
 function TypeChip({ type }: { type: string }) {
-    const cls = typeColors[(type ?? "").toLowerCase()] ?? "bg-slate-500/10 text-slate-400 border-slate-500/40";
+    const cls =
+        typeColors[(type ?? "").toLowerCase()] ??
+        "bg-slate-500/10 text-slate-400 border-slate-500/40";
     return (
-        <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}>
+        <span
+            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}
+        >
             {type}
         </span>
     );
@@ -85,31 +113,43 @@ function TypeChip({ type }: { type: string }) {
 
 function LevelPill({ level }: { level: string }) {
     const l = (level ?? "").toLowerCase();
-    const cls = l === "regional" ? "bg-amber-500/10 text-amber-400 border-amber-500/40"
-        : l === "national" ? "bg-blue-500/10 text-blue-400 border-blue-500/40"
-            : l === "international" ? "bg-rose-500/10 text-rose-400 border-rose-500/40"
+    const cls =
+        l === "regional"
+            ? "bg-amber-500/10 text-amber-400 border-amber-500/40"
+            : l === "national"
+              ? "bg-blue-500/10 text-blue-400 border-blue-500/40"
+              : l === "international"
+                ? "bg-rose-500/10 text-rose-400 border-rose-500/40"
                 : "bg-slate-500/10 text-slate-400 border-slate-500/40";
     return (
-        <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}>
+        <span
+            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}
+        >
             {level}
         </span>
     );
 }
 
-export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarProps) {
+export default function AddTrainingAndSeminar({
+    data,
+}: AddTrainingAndSeminarProps) {
     const router = useRouter();
 
     const [mode, setMode] = useState<Mode>("create");
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selected, setSelected] = useState<ProfessionalDevelopment | null>(null);
+    const [selected, setSelected] = useState<ProfessionalDevelopment | null>(
+        null,
+    );
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
+        null,
+    );
     const [deleting, setDeleting] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -152,12 +192,32 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
         });
     };
 
-    const openCreate = () => { setMode("create"); setSelected(null); resetForm(); setIsOpen(true); };
-    const openView = (row: TrainingSeminarTableRow) => { setMode("view"); setSelected(row.raw); fillFormFromRecord(row.raw); setIsOpen(true); };
-    const openEdit = (row: TrainingSeminarTableRow) => { setMode("edit"); setSelected(row.raw); fillFormFromRecord(row.raw); setIsOpen(true); };
+    const openCreate = () => {
+        setMode("create");
+        setSelected(null);
+        resetForm();
+        setIsOpen(true);
+    };
+    const openView = (row: TrainingSeminarTableRow) => {
+        setMode("view");
+        setSelected(row.raw);
+        fillFormFromRecord(row.raw);
+        setIsOpen(true);
+    };
+    const openEdit = (row: TrainingSeminarTableRow) => {
+        setMode("edit");
+        setSelected(row.raw);
+        fillFormFromRecord(row.raw);
+        setIsOpen(true);
+    };
 
     const openSingleDelete = (row: TrainingSeminarTableRow) => {
-        setPendingDelete({ kind: "single", id: row.id, title: row.title, type: String(row.type) });
+        setPendingDelete({
+            kind: "single",
+            id: row.id,
+            title: row.title,
+            type: String(row.type),
+        });
         setDeleteDialogOpen(true);
     };
 
@@ -171,7 +231,10 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
         if (!pendingDelete) return;
         setDeleting(true);
         try {
-            const ids = pendingDelete.kind === "single" ? [pendingDelete.id] : pendingDelete.ids;
+            const ids =
+                pendingDelete.kind === "single"
+                    ? [pendingDelete.id]
+                    : pendingDelete.ids;
             const result = await deleteMultipleProfessionalDevelopment(ids);
             if (result.success) {
                 toast.success(
@@ -197,7 +260,10 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
         if (mode === "view") return;
         setIsSubmitting(true);
         try {
-            if (!formData.start_date) { toast.error("Start date is required"); return; }
+            if (!formData.start_date) {
+                toast.error("Start date is required");
+                return;
+            }
 
             const payload = {
                 title: formData.title,
@@ -206,7 +272,9 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                 sponsoring_agency: formData.sponsoring_agency,
                 total_hours: parseInt(formData.total_hours),
                 start_date: format(formData.start_date, "yyyy-MM-dd"),
-                end_date: formData.end_date ? format(formData.end_date, "yyyy-MM-dd") : undefined,
+                end_date: formData.end_date
+                    ? format(formData.end_date, "yyyy-MM-dd")
+                    : undefined,
                 venue: formData.venue || undefined,
                 description: formData.description || undefined,
             };
@@ -214,7 +282,9 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
             if (mode === "create") {
                 const result = await createProfessionalDevelopment(payload);
                 if (result.success) {
-                    toast.success(`${formData.type === "TRAINING" ? "Training" : "Seminar"} created successfully`);
+                    toast.success(
+                        `${formData.type === "TRAINING" ? "Training" : "Seminar"} created successfully`,
+                    );
                     setIsOpen(false);
                     resetForm();
                     router.refresh();
@@ -224,8 +294,14 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
             }
 
             if (mode === "edit") {
-                if (!selected?.id) { toast.error("Missing record id"); return; }
-                const result = await updateProfessionalDevelopment({ id: selected.id, ...payload });
+                if (!selected?.id) {
+                    toast.error("Missing record id");
+                    return;
+                }
+                const result = await updateProfessionalDevelopment({
+                    id: selected.id,
+                    ...payload,
+                });
                 if (result.success) {
                     toast.success("Updated successfully");
                     setIsOpen(false);
@@ -242,118 +318,177 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
         }
     };
 
-    const columns = useMemo<ColumnDef<TrainingSeminarTableRow>[]>(() => [
-        {
-            id: "select",
-            header: ({ table }) => (
-                <Checkbox
-                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                    aria-label="Select all"
-                />
-            ),
-            cell: ({ row }) => (
-                <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    aria-label="Select row"
-                />
-            ),
-            enableSorting: false,
-            enableHiding: false,
-        },
-        {
-            accessorKey: "type",
-            header: "Type",
-            cell: ({ row }) => <TypeChip type={row.getValue("type") as string} />,
-        },
-        {
-            accessorKey: "title",
-            header: ({ column }) => (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                    Title <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => (
-                <div className="min-w-0">
-                    <div className="font-medium truncate max-w-[200px] sm:max-w-[520px]">{row.original.title}</div>
-                </div>
-            ),
-        },
-        {
-            accessorKey: "level",
-            header: "Level",
-            cell: ({ row }) => <LevelPill level={row.getValue("level") as string} />,
-        },
-        {
-            accessorKey: "date",
-            header: "Date",
-            cell: ({ row }) => <div className="font-mono text-xs text-muted-foreground">{row.getValue("date")}</div>,
-        },
-        {
-            accessorKey: "totalHours",
-            header: "Hours",
-            cell: ({ row }) => (
-                <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                    <span className="text-emerald-400 font-semibold tabular-nums text-sm">{row.getValue("totalHours")}h</span>
-                </div>
-            ),
-        },
-        {
-            accessorKey: "sponsor",
-            header: "Sponsor",
-            cell: ({ row }) => (
-                <div className="text-sm text-muted-foreground truncate max-w-[240px] flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                    {row.getValue("sponsor")}
-                </div>
-            ),
-        },
-        {
-            id: "actions",
-            header: "",
-            enableSorting: false,
-            cell: ({ row }) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" aria-label="Actions">
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); router.push(`/add-training-seminar/${row.original.id}/assign`); }}>
-                            Assign Teachers
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => openView(row.original)}>View Details</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEdit(row.original)}>Edit</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onSelect={(e) => { e.preventDefault(); openSingleDelete(row.original); }}
-                        >
-                            Delete
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ),
-        },
-    ], [router]); // eslint-disable-line
+    const columns = useMemo<ColumnDef<TrainingSeminarTableRow>[]>(
+        () => [
+            {
+                id: "select",
+                header: ({ table }) => (
+                    <Checkbox
+                        checked={
+                            table.getIsAllPageRowsSelected() ||
+                            (table.getIsSomePageRowsSelected() &&
+                                "indeterminate")
+                        }
+                        onCheckedChange={(value) =>
+                            table.toggleAllPageRowsSelected(!!value)
+                        }
+                        aria-label="Select all"
+                    />
+                ),
+                cell: ({ row }) => (
+                    <Checkbox
+                        checked={row.getIsSelected()}
+                        onCheckedChange={(value) => row.toggleSelected(!!value)}
+                        aria-label="Select row"
+                    />
+                ),
+                enableSorting: false,
+                enableHiding: false,
+            },
+            {
+                accessorKey: "type",
+                header: "Type",
+                cell: ({ row }) => (
+                    <TypeChip type={row.getValue("type") as string} />
+                ),
+            },
+            {
+                accessorKey: "title",
+                header: ({ column }) => (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === "asc")
+                        }
+                    >
+                        Title <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                ),
+                cell: ({ row }) => (
+                    <div className="min-w-0">
+                        <div className="font-medium truncate max-w-[200px] sm:max-w-[520px]">
+                            {row.original.title}
+                        </div>
+                    </div>
+                ),
+            },
+            {
+                accessorKey: "level",
+                header: "Level",
+                cell: ({ row }) => (
+                    <LevelPill level={row.getValue("level") as string} />
+                ),
+            },
+            {
+                accessorKey: "date",
+                header: "Date",
+                cell: ({ row }) => (
+                    <div className="font-mono text-xs text-muted-foreground">
+                        {row.getValue("date")}
+                    </div>
+                ),
+            },
+            {
+                accessorKey: "totalHours",
+                header: "Hours",
+                cell: ({ row }) => (
+                    <div className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                        <span className="text-emerald-400 font-semibold tabular-nums text-sm">
+                            {row.getValue("totalHours")}h
+                        </span>
+                    </div>
+                ),
+            },
+            {
+                accessorKey: "sponsor",
+                header: "Sponsor",
+                cell: ({ row }) => (
+                    <div className="text-sm text-muted-foreground truncate max-w-[240px] flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                        {row.getValue("sponsor")}
+                    </div>
+                ),
+            },
+            {
+                id: "actions",
+                header: "",
+                enableSorting: false,
+                cell: ({ row }) => (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                aria-label="Actions"
+                            >
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    router.push(
+                                        `/add-training-seminar/${row.original.id}/assign`,
+                                    );
+                                }}
+                            >
+                                Assign Teachers
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                onClick={() => openView(row.original)}
+                            >
+                                View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => openEdit(row.original)}
+                            >
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    openSingleDelete(row.original);
+                                }}
+                            >
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ),
+            },
+        ],
+        [router],
+    ); // eslint-disable-line
 
     const table = useReactTable({
-        data, columns,
+        data,
+        columns,
         state: { sorting, globalFilter },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
         globalFilterFn: (row, _id, filterValue) => {
-            const q = String(filterValue ?? "").toLowerCase().trim();
+            const q = String(filterValue ?? "")
+                .toLowerCase()
+                .trim();
             if (!q) return true;
             return (
-                String(row.original.title ?? "").toLowerCase().includes(q) ||
-                String(row.original.sponsor ?? "").toLowerCase().includes(q) ||
-                String(row.original.level ?? "").toLowerCase().includes(q) ||
-                String(row.original.type ?? "").toLowerCase().includes(q)
+                String(row.original.title ?? "")
+                    .toLowerCase()
+                    .includes(q) ||
+                String(row.original.sponsor ?? "")
+                    .toLowerCase()
+                    .includes(q) ||
+                String(row.original.level ?? "")
+                    .toLowerCase()
+                    .includes(q) ||
+                String(row.original.type ?? "")
+                    .toLowerCase()
+                    .includes(q)
             );
         },
         getCoreRowModel: getCoreRowModel(),
@@ -363,7 +498,9 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
         initialState: { pagination: { pageSize: 10 } },
     });
 
-    const selectedRows = table.getSelectedRowModel().rows.map((r) => r.original);
+    const selectedRows = table
+        .getSelectedRowModel()
+        .rows.map((r) => r.original);
     const filteredCount = table.getFilteredRowModel().rows.length;
     const pageCount = table.getPageCount();
 
@@ -379,7 +516,8 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                             Training & Seminar Records
                         </CardTitle>
                         <CardDescription>
-                            {filteredCount} result{filteredCount === 1 ? "" : "s"} • 10 per page
+                            {filteredCount} result
+                            {filteredCount === 1 ? "" : "s"} • 10 per page
                         </CardDescription>
                     </div>
 
@@ -387,7 +525,9 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                         <div className="hidden md:block w-[360px]">
                             <Input
                                 value={globalFilter ?? ""}
-                                onChange={(e) => setGlobalFilter(e.target.value)}
+                                onChange={(e) =>
+                                    setGlobalFilter(e.target.value)
+                                }
                                 placeholder="Search title, sponsor, level..."
                             />
                         </div>
@@ -397,7 +537,9 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                             className="gap-2 bg-white/10 hover:bg-white/15 text-foreground border border-white/10 shrink-0"
                         >
                             <Plus className="h-4 w-4" />
-                            <span className="hidden sm:inline">Add Training/Seminar</span>
+                            <span className="hidden sm:inline">
+                                Add Training/Seminar
+                            </span>
                             <span className="sm:hidden">Add</span>
                         </Button>
 
@@ -409,7 +551,11 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                                 aria-label="Search"
                                 className={`shrink-0 transition-all ${searchOpen ? "rounded-r-none border-r-0 bg-muted/50" : ""}`}
                             >
-                                {searchOpen ? <X className="h-3.5 w-3.5" /> : <Search className="h-4 w-4" />}
+                                {searchOpen ? (
+                                    <X className="h-3.5 w-3.5" />
+                                ) : (
+                                    <Search className="h-4 w-4" />
+                                )}
                             </Button>
                             <AnimatePresence initial={false}>
                                 {searchOpen && (
@@ -423,7 +569,9 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                                         <Input
                                             value={globalFilter ?? ""}
-                                            onChange={(e) => setGlobalFilter(e.target.value)}
+                                            onChange={(e) =>
+                                                setGlobalFilter(e.target.value)
+                                            }
                                             placeholder="Search..."
                                             className="h-9 w-full rounded-l-none pl-8"
                                         />
@@ -438,10 +586,17 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                     {selectedRows.length > 0 && (
                         <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between rounded-lg border border-rose-500/20 bg-rose-500/5 px-4 py-2.5">
                             <div className="text-sm text-rose-400 font-medium">
-                                {selectedRows.length} row{selectedRows.length > 1 ? "s" : ""} selected
+                                {selectedRows.length} row
+                                {selectedRows.length > 1 ? "s" : ""} selected
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => table.resetRowSelection()}>Clear</Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => table.resetRowSelection()}
+                                >
+                                    Clear
+                                </Button>
                                 <Button
                                     size="sm"
                                     className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
@@ -461,11 +616,29 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                                     <TableRow key={hg.id}>
                                         {hg.headers.map((header) => {
                                             const id = header.column.id;
-                                            const hideOnSmall = id === "select" || id === "date" || id === "sponsor" ? "hidden md:table-cell" : "";
-                                            const actionsCol = id === "actions" ? "w-[1%]" : "";
+                                            const hideOnSmall =
+                                                id === "select" ||
+                                                id === "date" ||
+                                                id === "sponsor"
+                                                    ? "hidden md:table-cell"
+                                                    : "";
+                                            const actionsCol =
+                                                id === "actions"
+                                                    ? "w-[1%]"
+                                                    : "";
                                             return (
-                                                <TableHead key={header.id} className={`${hideOnSmall} ${actionsCol}`}>
-                                                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                                <TableHead
+                                                    key={header.id}
+                                                    className={`${hideOnSmall} ${actionsCol}`}
+                                                >
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                              header.column
+                                                                  .columnDef
+                                                                  .header,
+                                                              header.getContext(),
+                                                          )}
                                                 </TableHead>
                                             );
                                         })}
@@ -479,23 +652,49 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                                             key={row.id}
                                             initial={{ opacity: 0, y: 6 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.16, delay: Math.min(idx * 0.01, 0.15) }}
+                                            transition={{
+                                                duration: 0.16,
+                                                delay: Math.min(
+                                                    idx * 0.01,
+                                                    0.15,
+                                                ),
+                                            }}
                                             className="border-b last:border-b-0 hover:bg-accent/40"
                                         >
-                                            {row.getVisibleCells().map((cell) => {
-                                                const id = cell.column.id;
-                                                const hideOnSmall = id === "select" || id === "date" || id === "sponsor" ? "hidden md:table-cell" : "";
-                                                return (
-                                                    <TableCell key={cell.id} className={hideOnSmall}>
-                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </TableCell>
-                                                );
-                                            })}
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => {
+                                                    const id = cell.column.id;
+                                                    const hideOnSmall =
+                                                        id === "select" ||
+                                                        id === "date" ||
+                                                        id === "sponsor"
+                                                            ? "hidden md:table-cell"
+                                                            : "";
+                                                    return (
+                                                        <TableCell
+                                                            key={cell.id}
+                                                            className={
+                                                                hideOnSmall
+                                                            }
+                                                        >
+                                                            {flexRender(
+                                                                cell.column
+                                                                    .columnDef
+                                                                    .cell,
+                                                                cell.getContext(),
+                                                            )}
+                                                        </TableCell>
+                                                    );
+                                                })}
                                         </motion.tr>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-24 text-center text-muted-foreground"
+                                        >
                                             No results.
                                         </TableCell>
                                     </TableRow>
@@ -506,11 +705,26 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
 
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="text-xs text-muted-foreground">
-                            Page {table.getState().pagination.pageIndex + 1} of {pageCount || 1}
+                            Page {table.getState().pagination.pageIndex + 1} of{" "}
+                            {pageCount || 1}
                         </div>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Prev</Button>
-                            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                Prev
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                Next
+                            </Button>
                         </div>
                     </div>
                 </CardContent>
@@ -530,7 +744,10 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
             {/* ── Delete confirmation ── */}
             <AlertDialog
                 open={deleteDialogOpen}
-                onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setPendingDelete(null); }}
+                onOpenChange={(open) => {
+                    setDeleteDialogOpen(open);
+                    if (!open) setPendingDelete(null);
+                }}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -541,21 +758,44 @@ export default function AddTrainingAndSeminar({ data }: AddTrainingAndSeminarPro
                         <AlertDialogDescription className="space-y-3">
                             <div className="text-sm text-foreground">
                                 {pendingDelete?.kind === "single" ? (
-                                    <>You are about to delete <span className="font-semibold">{pendingDelete.type.toLowerCase()} — {pendingDelete.title}</span>.</>
+                                    <>
+                                        You are about to delete{" "}
+                                        <span className="font-semibold">
+                                            {pendingDelete.type.toLowerCase()} —{" "}
+                                            {pendingDelete.title}
+                                        </span>
+                                        .
+                                    </>
                                 ) : pendingDelete?.kind === "bulk" ? (
-                                    <>You are about to delete <span className="font-semibold">{pendingDelete.count} selected record(s)</span>.</>
+                                    <>
+                                        You are about to delete{" "}
+                                        <span className="font-semibold">
+                                            {pendingDelete.count} selected
+                                            record(s)
+                                        </span>
+                                        .
+                                    </>
                                 ) : null}
                             </div>
                             <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
-                                <div className="font-semibold mb-1">Warning</div>
-                                <div className="text-muted-foreground">{DELETE_WARNING}</div>
+                                <div className="font-semibold mb-1">
+                                    Warning
+                                </div>
+                                <div className="text-muted-foreground">
+                                    {DELETE_WARNING}
+                                </div>
                             </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleting}>
+                            Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={(e) => { e.preventDefault(); confirmDelete(); }}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                confirmDelete();
+                            }}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             disabled={deleting}
                         >

@@ -16,9 +16,18 @@ import { useEmploymentHR } from "@/features/profiles/hooks/use-employment-info";
 import type { ProfileState } from "@/features/profiles/types/profile";
 
 const POSITIONS = [
-    "Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI","Teacher VII",
-  "Master Teacher I", "Master Teacher II", "Master Teacher III", 
-  "Principal", "Administrative Staff",
+    "Teacher I",
+    "Teacher II",
+    "Teacher III",
+    "Teacher IV",
+    "Teacher V",
+    "Teacher VI",
+    "Teacher VII",
+    "Master Teacher I",
+    "Master Teacher II",
+    "Master Teacher III",
+    "Principal",
+    "Administrative Staff",
 ];
 
 const STATUS_BADGE: Record<string, string> = {

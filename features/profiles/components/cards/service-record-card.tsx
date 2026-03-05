@@ -51,9 +51,9 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
 
                 <div className="bg-white/5 backdrop-blur rounded-lg p-3 text-sm">
                     <p className="text-blue-100">
-                        <span className="font-semibold">Note:</span> Date of 
-                        original appointment marks when this individual first 
-                        entered government service. Latest appointment updates 
+                        <span className="font-semibold">Note:</span> Date of
+                        original appointment marks when this individual first
+                        entered government service. Latest appointment updates
                         when promoted within the school.
                     </p>
                 </div>

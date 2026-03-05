@@ -123,16 +123,17 @@ export async function proxy(req: NextRequest) {
     if (error) return NextResponse.redirect(new URL("/signin", req.url));
     if (!urow) return NextResponse.redirect(new URL("/fillUp", req.url));
 
-    // Block admins from teacher-only routes
+    // Block admins from teacher-only routes (SUPERADMIN bypasses this)
     if (
       urow.role === "ADMIN" &&
+      urow.role !== "SUPERADMIN" &&
       teacherOnlyRoutes.some((p) => pathname.startsWith(p))
     ) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     // Block non-admins from admin routes
-    if (adminRoutes.some((p) => pathname.startsWith(p)) && urow.role !== "ADMIN") {
+    if (adminRoutes.some((p) => pathname.startsWith(p)) && urow.role !== "ADMIN" && urow.role !== "SUPERADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 

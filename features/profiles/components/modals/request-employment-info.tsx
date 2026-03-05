@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Send, X, FileText, Briefcase, Calendar, ClipboardList } from "lucide-react";
+import {
+    Send,
+    X,
+    FileText,
+    Briefcase,
+    Calendar,
+    ClipboardList,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -41,7 +48,12 @@ function toDateString(d?: Date): string {
     return `${y}-${m}-${day}`;
 }
 
-function FieldLabel({ icon: Icon, label, required, optional }: {
+function FieldLabel({
+    icon: Icon,
+    label,
+    required,
+    optional,
+}: {
     icon?: React.ComponentType<{ size?: number; className?: string }>;
     label: string;
     required?: boolean;
@@ -52,7 +64,11 @@ function FieldLabel({ icon: Icon, label, required, optional }: {
             {Icon && <Icon size={14} className="text-blue-600" />}
             {label}
             {required && <span className="text-red-500 ml-0.5">*</span>}
-            {optional && <span className="text-muted-foreground font-normal">(optional)</span>}
+            {optional && (
+                <span className="text-muted-foreground font-normal">
+                    (optional)
+                </span>
+            )}
         </label>
     );
 }
@@ -67,7 +83,16 @@ function DatePickerField(props: {
     minDate?: string;
     disabled?: boolean;
 }) {
-    const { label, icon, value, onChange, required, optional, minDate, disabled } = props;
+    const {
+        label,
+        icon,
+        value,
+        onChange,
+        required,
+        optional,
+        minDate,
+        disabled,
+    } = props;
     const [open, setOpen] = useState(false);
 
     const dateValue = value ? parseDateLocal(value) : undefined;
@@ -75,7 +100,12 @@ function DatePickerField(props: {
 
     return (
         <div className="space-y-1.5">
-            <FieldLabel icon={icon} label={label} required={required} optional={optional} />
+            <FieldLabel
+                icon={icon}
+                label={label}
+                required={required}
+                optional={optional}
+            />
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
@@ -83,17 +113,23 @@ function DatePickerField(props: {
                         className="w-full justify-start text-left font-normal"
                         disabled={disabled}
                     >
-                        {dateValue ? dateValue.toLocaleDateString() : "Select date"}
+                        {dateValue
+                            ? dateValue.toLocaleDateString()
+                            : "Select date"}
                         <ChevronDownIcon className="ml-auto h-4 w-4" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 overflow-hidden" align="start">
+                <PopoverContent
+                    className="w-auto p-0 overflow-hidden"
+                    align="start"
+                >
                     <CalendarComponent
                         mode="single"
                         selected={dateValue}
                         captionLayout="dropdown"
                         disabled={(d) =>
-                            d > new Date() || (minDateObj ? d < minDateObj : false)
+                            d > new Date() ||
+                            (minDateObj ? d < minDateObj : false)
                         }
                         onSelect={(date) => {
                             onChange(date ? toDateString(date) : "");
@@ -107,9 +143,18 @@ function DatePickerField(props: {
 }
 
 const POSITIONS = [
-    "Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII",
-    "Master Teacher I", "Master Teacher II", "Master Teacher III",
-    "Principal", "Administrative Staff",
+    "Teacher I",
+    "Teacher II",
+    "Teacher III",
+    "Teacher IV",
+    "Teacher V",
+    "Teacher VI",
+    "Teacher VII",
+    "Master Teacher I",
+    "Master Teacher II",
+    "Master Teacher III",
+    "Principal",
+    "Administrative Staff",
 ];
 
 const REASONS = [
@@ -143,8 +188,12 @@ export function RequestHRChangeModal(props: {
         employeeId: currentData.employeeId ?? "",
         position: currentData.position ?? "",
         plantillaNo: currentData.plantillaNo ?? "",
-        dateOfOriginalAppointment: toDateString(currentData.dateOfOriginalAppointment),
-        dateOfLatestAppointment: toDateString(currentData.dateOfLatestAppointment),
+        dateOfOriginalAppointment: toDateString(
+            currentData.dateOfOriginalAppointment,
+        ),
+        dateOfLatestAppointment: toDateString(
+            currentData.dateOfLatestAppointment,
+        ),
         reason: "",
     });
 
@@ -155,8 +204,12 @@ export function RequestHRChangeModal(props: {
                 employeeId: currentData.employeeId ?? "",
                 position: currentData.position ?? "",
                 plantillaNo: currentData.plantillaNo ?? "",
-                dateOfOriginalAppointment: toDateString(currentData.dateOfOriginalAppointment),
-                dateOfLatestAppointment: toDateString(currentData.dateOfLatestAppointment),
+                dateOfOriginalAppointment: toDateString(
+                    currentData.dateOfOriginalAppointment,
+                ),
+                dateOfLatestAppointment: toDateString(
+                    currentData.dateOfLatestAppointment,
+                ),
                 reason: "",
             });
         }
@@ -198,42 +251,58 @@ export function RequestHRChangeModal(props: {
                         <SheetTitle>Request Employment Info Change</SheetTitle>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Fill in only the fields you want changed. An admin will review before applying.
+                        Fill in only the fields you want changed. An admin will
+                        review before applying.
                     </p>
                 </SheetHeader>
 
                 {/* ── Body ── */}
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-
                     <div className="space-y-1.5">
                         <FieldLabel icon={FileText} label="Employee ID" />
                         <Input
                             value={form.employeeId}
                             onChange={(e) => set("employeeId")(e.target.value)}
-                            placeholder={currentData.employeeId || "Current value"}
+                            placeholder={
+                                currentData.employeeId || "Current value"
+                            }
                         />
                     </div>
 
                     <div className="space-y-1.5">
-                        <FieldLabel icon={Briefcase} label="Position / Designation" />
-                        <Select value={form.position} onValueChange={set("position")}>
+                        <FieldLabel
+                            icon={Briefcase}
+                            label="Position / Designation"
+                        />
+                        <Select
+                            value={form.position}
+                            onValueChange={set("position")}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select position" />
                             </SelectTrigger>
                             <SelectContent>
                                 {POSITIONS.map((p) => (
-                                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                                    <SelectItem key={p} value={p}>
+                                        {p}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
 
                     <div className="space-y-1.5">
-                        <FieldLabel icon={FileText} label="Plantilla No." optional />
+                        <FieldLabel
+                            icon={FileText}
+                            label="Plantilla No."
+                            optional
+                        />
                         <Input
                             value={form.plantillaNo}
                             onChange={(e) => set("plantillaNo")(e.target.value)}
-                            placeholder={currentData.plantillaNo || "Current value"}
+                            placeholder={
+                                currentData.plantillaNo || "Current value"
+                            }
                         />
                     </div>
 
@@ -244,7 +313,11 @@ export function RequestHRChangeModal(props: {
                             value={form.dateOfOriginalAppointment}
                             onChange={(d) => {
                                 set("dateOfOriginalAppointment")(d);
-                                if (form.dateOfLatestAppointment && d && form.dateOfLatestAppointment < d) {
+                                if (
+                                    form.dateOfLatestAppointment &&
+                                    d &&
+                                    form.dateOfLatestAppointment < d
+                                ) {
                                     set("dateOfLatestAppointment")("");
                                 }
                             }}
@@ -260,9 +333,19 @@ export function RequestHRChangeModal(props: {
                     </div>
 
                     <div className="space-y-2">
-                        <FieldLabel icon={ClipboardList} label="Reason for Change" required />
+                        <FieldLabel
+                            icon={ClipboardList}
+                            label="Reason for Change"
+                            required
+                        />
                         <Select
-                            value={REASONS.includes(form.reason) ? form.reason : form.reason ? "__custom__" : ""}
+                            value={
+                                REASONS.includes(form.reason)
+                                    ? form.reason
+                                    : form.reason
+                                      ? "__custom__"
+                                      : ""
+                            }
                             onValueChange={(val) => {
                                 if (val === "__custom__") {
                                     set("reason")("");
@@ -276,13 +359,17 @@ export function RequestHRChangeModal(props: {
                             </SelectTrigger>
                             <SelectContent>
                                 {REASONS.map((r) => (
-                                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                                    <SelectItem key={r} value={r}>
+                                        {r}
+                                    </SelectItem>
                                 ))}
-                                <SelectItem value="__custom__">Other (specify below)</SelectItem>
+                                <SelectItem value="__custom__">
+                                    Other (specify below)
+                                </SelectItem>
                             </SelectContent>
                         </Select>
 
-                        {(!REASONS.includes(form.reason)) && (
+                        {!REASONS.includes(form.reason) && (
                             <textarea
                                 className="w-full px-3 py-2 text-sm border border-border rounded-md bg-transparent resize-none focus:outline-none focus:ring-2 focus:ring-ring"
                                 rows={3}
@@ -302,9 +389,11 @@ export function RequestHRChangeModal(props: {
                         disabled={submitting || !form.reason.trim()}
                         className="gap-2 flex-1"
                     >
-                        {submitting
-                            ? <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                            : <Send size={16} />}
+                        {submitting ? (
+                            <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Send size={16} />
+                        )}
                         {submitting ? "Submitting..." : "Submit Request"}
                     </Button>
                     <Button

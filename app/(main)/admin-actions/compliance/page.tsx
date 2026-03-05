@@ -5,7 +5,13 @@ import { AdminComplianceClient } from "@/features/compliance/components/admin-co
 
 import { ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
+const ALLOWED = [
+    "ADMIN",
+    "HR_ADMIN",
+    "PRINCIPAL",
+    "SUPER_ADMIN",
+    "HR",
+] as const;
 
 function currentSchoolYear() {
     const now = new Date();

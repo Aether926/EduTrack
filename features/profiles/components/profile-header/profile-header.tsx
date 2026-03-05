@@ -226,7 +226,6 @@ export default function ProfileHeader({
                                 </>
                             ) : (
                                 <>
-                                    
                                     <ProfileShareMenu
                                         onOpenQr={() => qr.setQrOpen(true)}
                                         onCopyLink={() => void qr.copyQrLink()}

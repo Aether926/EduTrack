@@ -66,7 +66,7 @@ export default function ProfilePage() {
     // ─────────────────────────────────────────────────────────────────────────
 
     const [savedFirstName, setSavedFirstName] = React.useState(
-        tempProfileData.firstName
+        tempProfileData.firstName,
     );
 
     React.useEffect(() => {
@@ -76,7 +76,8 @@ export default function ProfilePage() {
     }, [tempProfileData.firstName, openCard]);
 
     const { preview, previewImage } = useProfileImage();
-    const { trainings, trainingsLoading, loadTrainings } = useProfileTrainings();
+    const { trainings, trainingsLoading, loadTrainings } =
+        useProfileTrainings();
 
     useEffect(() => {
         if (!userId) return;
@@ -141,7 +142,10 @@ export default function ProfilePage() {
                         isSaving={isSaving}
                     />
                     <div className="hidden md:flex md:flex-col md:gap-4">
-                        <TrainingsCard trainings={trainings} loading={trainingsLoading} />
+                        <TrainingsCard
+                            trainings={trainings}
+                            loading={trainingsLoading}
+                        />
                         <ServiceRecordCard data={tempProfileData} />
                     </div>
                 </div>
@@ -164,9 +168,7 @@ export default function ProfilePage() {
                         isEditing={openCard === "employment"}
                         onInputChange={handleInputChange}
                         onDateChange={handleDateChange}
-                        
                         isOwnProfile={true}
-                        
                         viewerRole="TEACHER"
                         from="profile"
                     />
@@ -210,7 +212,10 @@ export default function ProfilePage() {
 
             {/* Trainings & Service Record — mobile only */}
             <div className="md:hidden flex flex-col gap-4 px-4 pb-4">
-                <TrainingsCard trainings={trainings} loading={trainingsLoading} />
+                <TrainingsCard
+                    trainings={trainings}
+                    loading={trainingsLoading}
+                />
                 <ServiceRecordCard data={tempProfileData} />
             </div>
         </div>

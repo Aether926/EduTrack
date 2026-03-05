@@ -20,7 +20,9 @@ async function getTrainingsForTeacher(
 
     const { data: attendanceRows, error: aErr } = await db
         .from("Attendance")
-        .select("id, training_id, status, result, proof_url, proof_path, created_at")
+        .select(
+            "id, training_id, status, result, proof_url, proof_path, created_at",
+        )
         .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false });
 
@@ -46,7 +48,9 @@ async function getTrainingsForTeacher(
 
     const { data: pdRows } = await db
         .from("ProfessionalDevelopment")
-        .select("id, title, type, level, start_date, end_date, total_hours, sponsoring_agency")
+        .select(
+            "id, title, type, level, start_date, end_date, total_hours, sponsoring_agency",
+        )
         .in("id", trainingIds);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

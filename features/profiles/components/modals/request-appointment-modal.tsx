@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Send, X, Briefcase, ClipboardList, Calendar, School, FileText } from "lucide-react";
+import {
+    Send,
+    X,
+    Briefcase,
+    ClipboardList,
+    Calendar,
+    School,
+    FileText,
+} from "lucide-react";
 import { ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +57,12 @@ function toDateString(d?: Date): string {
 
 // ── Field label ───────────────────────────────────────────────────────────────
 
-function FieldLabel({ icon: Icon, label, required, optional }: {
+function FieldLabel({
+    icon: Icon,
+    label,
+    required,
+    optional,
+}: {
     icon?: React.ComponentType<{ size?: number; className?: string }>;
     label: string;
     required?: boolean;
@@ -60,7 +73,11 @@ function FieldLabel({ icon: Icon, label, required, optional }: {
             {Icon && <Icon size={14} className="text-blue-600" />}
             {label}
             {required && <span className="text-red-500 ml-0.5">*</span>}
-            {optional && <span className="text-muted-foreground font-normal ml-1">(optional)</span>}
+            {optional && (
+                <span className="text-muted-foreground font-normal ml-1">
+                    (optional)
+                </span>
+            )}
         </label>
     );
 }
@@ -77,7 +94,16 @@ function DatePickerField(props: {
     minDate?: string;
     disabled?: boolean;
 }) {
-    const { label, icon, value, onChange, required, optional, minDate, disabled } = props;
+    const {
+        label,
+        icon,
+        value,
+        onChange,
+        required,
+        optional,
+        minDate,
+        disabled,
+    } = props;
     const [open, setOpen] = useState(false);
 
     const dateValue = value ? parseDateLocal(value) : undefined;
@@ -85,7 +111,12 @@ function DatePickerField(props: {
 
     return (
         <div className="space-y-1.5">
-            <FieldLabel icon={icon} label={label} required={required} optional={optional} />
+            <FieldLabel
+                icon={icon}
+                label={label}
+                required={required}
+                optional={optional}
+            />
             <Popover open={open && !disabled} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
@@ -93,16 +124,21 @@ function DatePickerField(props: {
                         className="w-full justify-start text-left font-normal"
                         disabled={disabled}
                     >
-                        {dateValue ? dateValue.toLocaleDateString() : "Select date"}
+                        {dateValue
+                            ? dateValue.toLocaleDateString()
+                            : "Select date"}
                         <ChevronDownIcon className="ml-auto h-4 w-4" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 overflow-hidden" align="start">
+                <PopoverContent
+                    className="w-auto p-0 overflow-hidden"
+                    align="start"
+                >
                     <CalendarComponent
                         mode="single"
                         selected={dateValue}
                         captionLayout="dropdown"
-                        disabled={(d) => minDateObj ? d < minDateObj : false}
+                        disabled={(d) => (minDateObj ? d < minDateObj : false)}
                         onSelect={(date) => {
                             onChange(date ? toDateString(date) : "");
                             setOpen(false);
@@ -117,9 +153,18 @@ function DatePickerField(props: {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const POSITIONS = [
-    "Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII",
-    "Master Teacher I", "Master Teacher II", "Master Teacher III",
-    "Principal", "Administrative Staff",
+    "Teacher I",
+    "Teacher II",
+    "Teacher III",
+    "Teacher IV",
+    "Teacher V",
+    "Teacher VI",
+    "Teacher VII",
+    "Master Teacher I",
+    "Master Teacher II",
+    "Master Teacher III",
+    "Principal",
+    "Administrative Staff",
 ];
 
 const REASONS = [
@@ -174,8 +219,8 @@ export function RequestAppointmentModal(props: {
     const dropdownValue = REASONS.includes(form.remarks)
         ? form.remarks
         : form.remarks
-        ? "__custom__"
-        : "";
+          ? "__custom__"
+          : "";
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -195,23 +240,32 @@ export function RequestAppointmentModal(props: {
                         <SheetTitle>Request Appointment Change</SheetTitle>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Submit a request for an appointment change. An admin will review before any changes are applied.
+                        Submit a request for an appointment change. An admin
+                        will review before any changes are applied.
                     </p>
                 </SheetHeader>
 
                 {/* ── Body ── */}
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-
                     {/* Position */}
                     <div className="space-y-1.5">
-                        <FieldLabel icon={Briefcase} label="Position" required />
-                        <Select value={form.position} onValueChange={set("position")}>
+                        <FieldLabel
+                            icon={Briefcase}
+                            label="Position"
+                            required
+                        />
+                        <Select
+                            value={form.position}
+                            onValueChange={set("position")}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select position" />
                             </SelectTrigger>
                             <SelectContent>
                                 {POSITIONS.map((p) => (
-                                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                                    <SelectItem key={p} value={p}>
+                                        {p}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -219,14 +273,23 @@ export function RequestAppointmentModal(props: {
 
                     {/* Appointment Type */}
                     <div className="space-y-1.5">
-                        <FieldLabel icon={FileText} label="Appointment Type" required />
-                        <Select value={form.appointment_type} onValueChange={set("appointment_type")}>
+                        <FieldLabel
+                            icon={FileText}
+                            label="Appointment Type"
+                            required
+                        />
+                        <Select
+                            value={form.appointment_type}
+                            onValueChange={set("appointment_type")}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
                                 {APPOINTMENT_TYPES.map((t) => (
-                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                    <SelectItem key={t} value={t}>
+                                        {t}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -234,7 +297,11 @@ export function RequestAppointmentModal(props: {
 
                     {/* School Name */}
                     <div className="space-y-1.5">
-                        <FieldLabel icon={School} label="School Name" optional />
+                        <FieldLabel
+                            icon={School}
+                            label="School Name"
+                            optional
+                        />
                         <Input
                             value={form.school_name}
                             onChange={(e) => set("school_name")(e.target.value)}
@@ -279,7 +346,11 @@ export function RequestAppointmentModal(props: {
 
                     {/* Remarks / Reason */}
                     <div className="space-y-2">
-                        <FieldLabel icon={ClipboardList} label="Remarks / Reason" required />
+                        <FieldLabel
+                            icon={ClipboardList}
+                            label="Remarks / Reason"
+                            required
+                        />
                         <Select
                             value={dropdownValue}
                             onValueChange={(val) => {
@@ -295,9 +366,13 @@ export function RequestAppointmentModal(props: {
                             </SelectTrigger>
                             <SelectContent>
                                 {REASONS.map((r) => (
-                                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                                    <SelectItem key={r} value={r}>
+                                        {r}
+                                    </SelectItem>
                                 ))}
-                                <SelectItem value="__custom__">Other (specify below)</SelectItem>
+                                <SelectItem value="__custom__">
+                                    Other (specify below)
+                                </SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -318,12 +393,20 @@ export function RequestAppointmentModal(props: {
                 <SheetFooter className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-4 flex flex-row gap-2 shrink-0">
                     <Button
                         onClick={handleSubmit}
-                        disabled={submitting || !form.remarks.trim() || !form.position || !form.appointment_type || !form.start_date}
+                        disabled={
+                            submitting ||
+                            !form.remarks.trim() ||
+                            !form.position ||
+                            !form.appointment_type ||
+                            !form.start_date
+                        }
                         className="gap-2 flex-1"
                     >
-                        {submitting
-                            ? <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                            : <Send size={16} />}
+                        {submitting ? (
+                            <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Send size={16} />
+                        )}
                         {submitting ? "Submitting..." : "Submit Request"}
                     </Button>
                     <Button
