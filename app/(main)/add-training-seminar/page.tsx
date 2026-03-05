@@ -19,7 +19,7 @@ const ALLOWED = [
     "ADMIN",
     "HR_ADMIN",
     "PRINCIPAL",
-    "SUPER_ADMIN",
+    "SUPERADMIN",
     "HR",
 ] as const;
 

@@ -5,6 +5,8 @@ import SalaryEligibilityPageClient from "@/features/salary-eligibility/component
 
 export const dynamic = "force-dynamic";
 
+const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
+
 export default async function SalaryEligibilityPage() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -17,15 +19,17 @@ export default async function SalaryEligibilityPage() {
     .eq("id", auth.user.id)
     .maybeSingle();
 
-  if (me?.role !== "ADMIN") redirect("/dashboard");
+  const roleLabel = (me?.role ?? "USER").toString();
 
-  // fetch all teachers for client-side filtering (no pagination on server)
-  const { data, count } = await getTeacherSalaryEligibility(1, 9999, "eligible_first");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!ALLOWED.includes(roleLabel as any)) redirect("/dashboard");
+
+  const { data } = await getTeacherSalaryEligibility(1, 9999, "eligible_first");
 
   return (
     <SalaryEligibilityPageClient
       initialData={data}
-      roleLabel={me.role}
+      roleLabel={roleLabel}
     />
   );
 }

@@ -53,7 +53,7 @@ const ADMIN_LIKE = [
     "HR",
     "HR_ADMIN",
     "PRINCIPAL",
-    "SUPER_ADMIN",
+    "SUPERADMIN",
 ] as const;
 
 export default async function AdminActionsPage() {

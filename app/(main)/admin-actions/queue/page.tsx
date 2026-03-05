@@ -8,7 +8,7 @@ import { ClipboardList, Users, Briefcase, BookMarked } from "lucide-react";
 
 
 
-const ALLOWED_ROLES = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
+const ALLOWED_ROLES = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
 
 export default async function AdminQueuePage() {
   const supabase = await createClient();

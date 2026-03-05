@@ -8,7 +8,7 @@ import { BookMarked, CheckCircle2, Clock } from "lucide-react";
 
 
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
+const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
 
 export default async function AdminResponsibilitiesPage() {
   const supabase = await createClient();

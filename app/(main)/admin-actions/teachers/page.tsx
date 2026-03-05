@@ -5,7 +5,7 @@ import AdminTeacherTable from "@/features/admin-actions/teachers/components/teac
 import { Badge } from "@/components/ui/badge";
 import { Users, CheckCircle2 } from "lucide-react";
 
-
+const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
 
 export default async function AdminTeachersPage() {
   const supabase = await createClient();
@@ -20,7 +20,8 @@ export default async function AdminTeachersPage() {
 
   const roleLabel = (viewer?.role ?? "USER").toString();
 
-  if (viewer?.role !== "ADMIN") redirect("/");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!ALLOWED.includes(roleLabel as any)) redirect("/");
 
   const admin = createAdminClient();
 
@@ -34,27 +35,22 @@ export default async function AdminTeachersPage() {
   if (safeProfiles.length === 0) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-        {/* header (same style) */}
         <div className="rounded-xl border bg-card p-4 md:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{roleLabel}</Badge>
               <Badge variant="outline">Manage Users</Badge>
             </div>
-
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="gap-2">
-                <Users className="h-3.5 w-3.5" />
-                0 teachers
+                <Users className="h-3.5 w-3.5" />0 teachers
               </Badge>
               <Badge variant="secondary" className="gap-2">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                0 approved
+                <CheckCircle2 className="h-3.5 w-3.5" />0 approved
               </Badge>
             </div>
           </div>
         </div>
-
         <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
           No teachers found.
         </div>
@@ -83,32 +79,26 @@ export default async function AdminTeachersPage() {
   }));
 
   const total = teachers.length;
-  const approved = total; // your table is showing profiles; treat as approved list here
+  const approved = total;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-      {/* header (same style as other pages) */}
       <div className="rounded-xl border bg-card p-4 md:p-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{roleLabel}</Badge>
             <Badge variant="outline">Manage Users</Badge>
           </div>
-
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="gap-2">
-              <Users className="h-3.5 w-3.5" />
-              {total} teachers
+              <Users className="h-3.5 w-3.5" />{total} teachers
             </Badge>
-
             <Badge variant="secondary" className="gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {approved} approved
+              <CheckCircle2 className="h-3.5 w-3.5" />{approved} approved
             </Badge>
           </div>
         </div>
       </div>
-
       <AdminTeacherTable data={teachers} />
     </div>
   );

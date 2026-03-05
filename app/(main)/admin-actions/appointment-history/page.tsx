@@ -6,7 +6,7 @@ import { AppointmentHistoryClient } from "@/features/admin-actions/appointment-h
 import { Badge } from "@/components/ui/badge";
 import { Users, ClipboardList } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
+const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
 
 export default async function AppointmentHistoryPage() {
   const supabase = await createClient();

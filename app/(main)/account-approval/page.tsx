@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Clock, XCircle } from "lucide-react";
 
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
+const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
 
 export default async function AccessRequestPage() {
   const supabase = await createClient();
