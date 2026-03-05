@@ -4,14 +4,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Table,
     TableBody,
@@ -28,9 +29,8 @@ import {
     Trash2,
     RotateCcw,
     AlertTriangle,
-    HourglassIcon,
     FileCheck,
-    FileX,
+    Inbox,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -49,21 +49,6 @@ import type { AdminDocumentRow } from "@/features/documents/types/documents";
 type PendingRequest = Awaited<
     ReturnType<typeof getPendingDocumentRequests>
 >[number];
-
-function FieldLabel({
-    children,
-    required,
-}: {
-    children: React.ReactNode;
-    required?: boolean;
-}) {
-    return (
-        <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-0.5 block">
-            {children}
-            {required && <span className="text-rose-400 ml-0.5">*</span>}
-        </label>
-    );
-}
 
 // ── View button ───────────────────────────────────────────────────────────────
 function ViewButton({ docId }: { docId: string }) {
@@ -86,7 +71,7 @@ function ViewButton({ docId }: { docId: string }) {
         <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 h-7 text-xs"
+            className="gap-1.5"
             onClick={handleView}
             disabled={loading}
         >
@@ -97,59 +82,6 @@ function ViewButton({ docId }: { docId: string }) {
             )}
             {loading ? "Opening..." : "View"}
         </Button>
-    );
-}
-
-// ── Teacher cell ──────────────────────────────────────────────────────────────
-function TeacherCell({
-    firstName,
-    lastName,
-    email,
-    employeeId,
-}: {
-    firstName: string | null;
-    lastName: string | null;
-    email: string | null;
-    employeeId?: string | null;
-}) {
-    return (
-        <div>
-            <p className="font-medium text-sm leading-snug">
-                {firstName} {lastName}
-            </p>
-            <p className="text-[11px] text-muted-foreground font-mono">
-                {email}
-            </p>
-            {employeeId && (
-                <p className="text-[11px] text-muted-foreground font-mono">
-                    {employeeId}
-                </p>
-            )}
-        </div>
-    );
-}
-
-// ── Document cell ─────────────────────────────────────────────────────────────
-function DocCell({ name, code }: { name: string; code: string }) {
-    return (
-        <div>
-            <p className="text-sm font-medium leading-snug">{name}</p>
-            <span className="inline-block rounded border border-border/60 bg-muted/20 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground mt-0.5">
-                {code}
-            </span>
-        </div>
-    );
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-function EmptyState({ message }: { message: string }) {
-    return (
-        <div className="rounded-xl border border-border/60 bg-card py-16 text-center">
-            <div className="mx-auto mb-3 h-10 w-10 rounded-lg border border-border/60 bg-muted/20 flex items-center justify-center">
-                <FileCheck className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground">{message}</p>
-        </div>
     );
 }
 
@@ -235,17 +167,39 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
         }
     };
 
-    if (!docs.length)
-        return <EmptyState message="No pending documents to review." />;
+    if (!docs.length) {
+        return (
+            <div className="rounded-xl border border-border/60 bg-card py-16 text-center text-muted-foreground text-sm">
+                No pending documents to review.
+            </div>
+        );
+    }
 
     return (
         <>
             <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent pointer-events-none" />
+                    <div className="relative flex items-center gap-2.5">
+                        <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 p-2 shrink-0">
+                            <FileCheck className="h-4 w-4 text-orange-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">
+                                Pending Submissions
+                            </p>
+                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+                                {docs.length} document
+                                {docs.length === 1 ? "" : "s"} awaiting review
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div className="w-full overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/30 hover:bg-muted/30">
-                                <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                                <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground pl-5">
                                     Teacher
                                 </TableHead>
                                 <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
@@ -265,114 +219,117 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
+
                         <TableBody>
                             {docs.map((doc) => {
                                 const isLoading = loadingId === doc.id;
                                 const hasFile = !!doc.file_path;
+
                                 return (
-                                    <TableRow
-                                        key={doc.id}
-                                        className="hover:bg-muted/20"
-                                    >
-                                        <TableCell>
-                                            <TeacherCell
-                                                firstName={
-                                                    doc.teacher.firstName
-                                                }
-                                                lastName={doc.teacher.lastName}
-                                                email={doc.teacher.email}
-                                                employeeId={
-                                                    doc.teacher.employeeId
-                                                }
-                                            />
+                                    <TableRow key={doc.id}>
+                                        <TableCell className="pl-5">
+                                            <p className="font-medium text-sm">
+                                                {doc.teacher.firstName}{" "}
+                                                {doc.teacher.lastName}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {doc.teacher.email}
+                                            </p>
+                                            {doc.teacher.employeeId && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {doc.teacher.employeeId}
+                                                </p>
+                                            )}
                                         </TableCell>
+
                                         <TableCell>
-                                            <DocCell
-                                                name={
+                                            <p className="text-sm font-medium">
+                                                {(doc.DocumentType as any)
+                                                    ?.name ?? "—"}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {
                                                     (doc.DocumentType as any)
-                                                        ?.name ?? "—"
+                                                        ?.code
                                                 }
-                                                code={
-                                                    (doc.DocumentType as any)
-                                                        ?.code ?? ""
-                                                }
-                                            />
+                                            </p>
                                         </TableCell>
+
                                         <TableCell className="text-center">
                                             <DocumentStatusBadge
                                                 status={doc.status}
                                             />
                                         </TableCell>
-                                        <TableCell className="text-center text-[11px] text-muted-foreground font-mono">
+
+                                        <TableCell className="text-center text-sm text-muted-foreground">
                                             {doc.submitted_at
                                                 ? new Date(
                                                       doc.submitted_at,
                                                   ).toLocaleDateString("en-PH")
                                                 : "—"}
                                         </TableCell>
+
                                         <TableCell className="text-center">
                                             {hasFile ? (
                                                 <ViewButton docId={doc.id} />
                                             ) : (
-                                                <span className="text-muted-foreground text-xs">
-                                                    —
-                                                </span>
+                                                "—"
                                             )}
                                         </TableCell>
+
                                         <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-1 flex-wrap">
+                                            <div className="flex items-center justify-center gap-1.5">
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                                                    className="gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-500/40"
                                                     onClick={() =>
                                                         handleApprove(doc)
                                                     }
                                                     disabled={isLoading}
                                                 >
                                                     {isLoading ? (
-                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                                     ) : (
-                                                        <CheckCircle2 className="h-3 w-3" />
+                                                        <CheckCircle2 className="h-3.5 w-3.5" />
                                                     )}
                                                     Approve
                                                 </Button>
+
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
+                                                    className="gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 hover:border-rose-500/40"
                                                     onClick={() => {
                                                         setRejectModal(doc);
                                                         setRejectReason("");
                                                     }}
                                                     disabled={isLoading}
                                                 >
-                                                    <XCircle className="h-3 w-3" />
+                                                    <XCircle className="h-3.5 w-3.5" />
                                                     Reject
                                                 </Button>
+
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                                                    className="gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 hover:border-amber-500/40"
                                                     onClick={() => {
                                                         setResubmitModal(doc);
                                                         setResubmitNote("");
                                                     }}
                                                     disabled={isLoading}
                                                 >
-                                                    <RotateCcw className="h-3 w-3" />
-                                                    Resubmit
+                                                    <RotateCcw className="h-3.5 w-3.5" />
+                                                    Request Resubmit
                                                 </Button>
+
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-rose-700/30 text-rose-600 hover:bg-rose-500/10"
+                                                    className="gap-1.5 bg-rose-900/10 text-rose-800 border border-rose-700/60 hover:bg-rose-900/30 hover:border-rose-600/40"
                                                     onClick={() =>
                                                         setDeleteModal(doc)
                                                     }
                                                     disabled={isLoading}
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-3.5 w-3.5" />
                                                     Delete
                                                 </Button>
                                             </div>
@@ -395,49 +352,35 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
                     }
                 }}
             >
-                <DialogContent className="max-w-md w-[90vw] p-0 gap-0">
-                    <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent pointer-events-none" />
-                        <DialogHeader className="relative">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-2">
-                                    <XCircle className="h-4 w-4 text-rose-400" />
-                                </div>
-                                <DialogTitle className="text-sm font-medium text-muted-foreground">
-                                    Reject Document
-                                </DialogTitle>
-                            </div>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Rejecting{" "}
-                                <strong className="text-foreground">
-                                    {(rejectModal?.DocumentType as any)?.name}
-                                </strong>{" "}
-                                from{" "}
-                                <strong className="text-foreground">
-                                    {rejectModal?.teacher.firstName}{" "}
-                                    {rejectModal?.teacher.lastName}
-                                </strong>
-                                .
-                            </p>
-                        </DialogHeader>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Reject Document</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                            Rejecting{" "}
+                            <strong>
+                                {(rejectModal?.DocumentType as any)?.name}
+                            </strong>{" "}
+                            from{" "}
+                            <strong>
+                                {rejectModal?.teacher.firstName}{" "}
+                                {rejectModal?.teacher.lastName}
+                            </strong>
+                            .
+                        </p>
+                        <Textarea
+                            placeholder="Provide a reason..."
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            className="min-h-[100px]"
+                        />
                     </div>
-                    <div className="px-6 py-5 space-y-3">
-                        <div className="space-y-1">
-                            <FieldLabel required>Reason</FieldLabel>
-                            <Textarea
-                                placeholder="Provide a reason..."
-                                value={rejectReason}
-                                onChange={(e) =>
-                                    setRejectReason(e.target.value)
-                                }
-                                className="min-h-[100px] text-sm"
-                            />
-                        </div>
-                    </div>
-                    <div className="px-6 py-4 border-t border-border/60 bg-gradient-to-br from-card to-background flex justify-end gap-2">
+
+                    <DialogFooter>
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => {
                                 setRejectModal(null);
                                 setRejectReason("");
@@ -447,21 +390,19 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
                         </Button>
                         <Button
                             variant="destructive"
-                            size="sm"
                             onClick={handleReject}
                             disabled={!rejectReason.trim() || !!loadingId}
-                            className="gap-1.5"
                         >
-                            {loadingId && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            )}
+                            {loadingId ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
                             Reject
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* Resubmit modal */}
+            {/* Request resubmit modal */}
             <Dialog
                 open={!!resubmitModal}
                 onOpenChange={(o) => {
@@ -471,49 +412,36 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
                     }
                 }}
             >
-                <DialogContent className="max-w-md w-[90vw] p-0 gap-0">
-                    <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
-                        <DialogHeader className="relative">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-2">
-                                    <RotateCcw className="h-4 w-4 text-amber-400" />
-                                </div>
-                                <DialogTitle className="text-sm font-medium text-muted-foreground">
-                                    Request Resubmission
-                                </DialogTitle>
-                            </div>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Requesting{" "}
-                                <strong className="text-foreground">
-                                    {resubmitModal?.teacher.firstName}{" "}
-                                    {resubmitModal?.teacher.lastName}
-                                </strong>{" "}
-                                to resubmit{" "}
-                                <strong className="text-foreground">
-                                    {(resubmitModal?.DocumentType as any)?.name}
-                                </strong>
-                                . The teacher will be notified.
-                            </p>
-                        </DialogHeader>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Request Resubmission</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                            Requesting{" "}
+                            <strong>
+                                {resubmitModal?.teacher.firstName}{" "}
+                                {resubmitModal?.teacher.lastName}
+                            </strong>{" "}
+                            to resubmit their{" "}
+                            <strong>
+                                {(resubmitModal?.DocumentType as any)?.name}
+                            </strong>
+                            . The document will be marked as rejected and the
+                            teacher will be notified.
+                        </p>
+                        <Textarea
+                            placeholder="Reason for resubmission (optional)..."
+                            value={resubmitNote}
+                            onChange={(e) => setResubmitNote(e.target.value)}
+                            className="min-h-[80px]"
+                        />
                     </div>
-                    <div className="px-6 py-5 space-y-3">
-                        <div className="space-y-1">
-                            <FieldLabel>Note (optional)</FieldLabel>
-                            <Textarea
-                                placeholder="Reason for resubmission..."
-                                value={resubmitNote}
-                                onChange={(e) =>
-                                    setResubmitNote(e.target.value)
-                                }
-                                className="min-h-[80px] text-sm"
-                            />
-                        </div>
-                    </div>
-                    <div className="px-6 py-4 border-t border-border/60 bg-gradient-to-br from-card to-background flex justify-end gap-2">
+
+                    <DialogFooter>
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => {
                                 setResubmitModal(null);
                                 setResubmitNote("");
@@ -522,17 +450,15 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
                             Cancel
                         </Button>
                         <Button
-                            size="sm"
                             onClick={handleRequestResubmit}
                             disabled={!!loadingId}
-                            className="gap-1.5"
                         >
-                            {loadingId && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            )}
+                            {loadingId ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
                             Send Request
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
@@ -543,63 +469,57 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
                     if (!o) setDeleteModal(null);
                 }}
             >
-                <DialogContent className="max-w-md w-[90vw] p-0 gap-0">
-                    <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent pointer-events-none" />
-                        <DialogHeader className="relative">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-2">
-                                    <AlertTriangle className="h-4 w-4 text-rose-400" />
-                                </div>
-                                <DialogTitle className="text-sm font-medium text-muted-foreground">
-                                    Permanently Delete Document
-                                </DialogTitle>
-                            </div>
-                            <DialogDescription className="text-[11px] text-rose-400 uppercase tracking-wider font-semibold">
-                                This action cannot be undone
-                            </DialogDescription>
-                        </DialogHeader>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="h-5 w-5" />
+                            Permanently Delete Document
+                        </DialogTitle>
+                        <DialogDescription>
+                            This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-400">
+                        <p className="font-semibold mb-1">⚠ Warning</p>
+                        <p>
+                            You are about to permanently delete{" "}
+                            <strong>
+                                {(deleteModal?.DocumentType as any)?.name}
+                            </strong>{" "}
+                            submitted by{" "}
+                            <strong>
+                                {deleteModal?.teacher.firstName}{" "}
+                                {deleteModal?.teacher.lastName}
+                            </strong>
+                            .
+                        </p>
+                        <p className="mt-1">
+                            The file will be removed from storage and cannot be
+                            recovered.
+                        </p>
                     </div>
-                    <div className="px-6 py-5">
-                        <div className="rounded-md border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm">
-                            <p className="text-rose-300 leading-relaxed">
-                                You are about to permanently delete{" "}
-                                <strong className="text-rose-200">
-                                    {(deleteModal?.DocumentType as any)?.name}
-                                </strong>{" "}
-                                submitted by{" "}
-                                <strong className="text-rose-200">
-                                    {deleteModal?.teacher.firstName}{" "}
-                                    {deleteModal?.teacher.lastName}
-                                </strong>
-                                . The file will be removed from storage and
-                                cannot be recovered.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="px-6 py-4 border-t border-border/60 bg-gradient-to-br from-card to-background flex justify-end gap-2">
+
+                    <DialogFooter>
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => setDeleteModal(null)}
                         >
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
-                            size="sm"
                             onClick={handleDelete}
                             disabled={!!loadingId}
-                            className="gap-1.5"
                         >
                             {loadingId ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-4 w-4 mr-2" />
                             )}
                             Yes, Delete Permanently
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>
@@ -653,128 +573,159 @@ function PendingRequestsTable({
         }
     };
 
-    if (!requests.length)
-        return <EmptyState message="No pending document requests." />;
+    if (!requests.length) {
+        return (
+            <div className="rounded-xl border border-border/60 bg-card py-16 text-center text-muted-foreground text-sm">
+                No pending document requests.
+            </div>
+        );
+    }
 
     return (
         <>
             <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+                    <div className="relative flex items-center gap-2.5">
+                        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-2 shrink-0">
+                            <Inbox className="h-4 w-4 text-amber-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">
+                                Teacher Requests
+                            </p>
+                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+                                {requests.length} pending request
+                                {requests.length === 1 ? "" : "s"}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div className="w-full overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/30 hover:bg-muted/30">
-                                <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                                <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground pl-5">
                                     Teacher
                                 </TableHead>
                                 <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
                                     Document
                                 </TableHead>
                                 <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground text-center">
-                                    Request
+                                    Request Type
                                 </TableHead>
                                 <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
                                     Reason
                                 </TableHead>
                                 <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground text-center">
-                                    Date
+                                    Requested
                                 </TableHead>
                                 <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground text-center">
                                     Actions
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
+
                         <TableBody>
                             {requests.map((req) => {
                                 const isLoading = loadingId === req.id;
                                 const isDelete = req.type === "DELETE";
                                 return (
-                                    <TableRow
-                                        key={req.id}
-                                        className="hover:bg-muted/20"
-                                    >
-                                        <TableCell>
-                                            <TeacherCell
-                                                firstName={
-                                                    req.teacher.firstName
-                                                }
-                                                lastName={req.teacher.lastName}
-                                                email={req.teacher.email}
-                                                employeeId={
-                                                    req.teacher.employeeId
-                                                }
-                                            />
+                                    <TableRow key={req.id}>
+                                        <TableCell className="pl-5">
+                                            <p className="font-medium text-sm">
+                                                {req.teacher.firstName}{" "}
+                                                {req.teacher.lastName}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {req.teacher.email}
+                                            </p>
+                                            {req.teacher.employeeId && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {req.teacher.employeeId}
+                                                </p>
+                                            )}
                                         </TableCell>
+
                                         <TableCell>
-                                            <DocCell
-                                                name={
+                                            <p className="text-sm font-medium">
+                                                {(req.DocumentType as any)
+                                                    ?.name ?? "—"}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {
                                                     (req.DocumentType as any)
-                                                        ?.name ?? "—"
+                                                        ?.code
                                                 }
-                                                code={
-                                                    (req.DocumentType as any)
-                                                        ?.code ?? ""
-                                                }
-                                            />
+                                            </p>
                                         </TableCell>
+
                                         <TableCell className="text-center">
-                                            <span
-                                                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${isDelete ? "bg-rose-500/10 text-rose-400 border-rose-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30"}`}
+                                            <Badge
+                                                variant="outline"
+                                                className={
+                                                    isDelete
+                                                        ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                                                        : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                                }
                                             >
                                                 {isDelete ? (
                                                     <>
-                                                        <Trash2 className="h-3 w-3" />{" "}
+                                                        <Trash2 className="h-3 w-3 mr-1 inline" />
                                                         Delete
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <RotateCcw className="h-3 w-3" />{" "}
+                                                        <RotateCcw className="h-3 w-3 mr-1 inline" />
                                                         Resubmit
                                                     </>
                                                 )}
-                                            </span>
+                                            </Badge>
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground max-w-[180px]">
+
+                                        <TableCell className="text-sm text-muted-foreground max-w-[200px]">
                                             <p
-                                                className="truncate text-[11px]"
+                                                className="truncate"
                                                 title={req.reason ?? ""}
                                             >
                                                 {req.reason ?? "—"}
                                             </p>
                                         </TableCell>
-                                        <TableCell className="text-center text-[11px] text-muted-foreground font-mono">
+
+                                        <TableCell className="text-center text-sm text-muted-foreground">
                                             {new Date(
                                                 req.created_at,
                                             ).toLocaleDateString("en-PH")}
                                         </TableCell>
+
                                         <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-1">
+                                            <div className="flex items-center justify-center gap-1.5">
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                                                    className="gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-500/40"
                                                     onClick={() =>
                                                         handleApprove(req)
                                                     }
                                                     disabled={isLoading}
                                                 >
                                                     {isLoading ? (
-                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                                     ) : (
-                                                        <CheckCircle2 className="h-3 w-3" />
+                                                        <CheckCircle2 className="h-3.5 w-3.5" />
                                                     )}
                                                     Approve
                                                 </Button>
+
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 h-7 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
+                                                    className="gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 hover:border-rose-500/40"
                                                     onClick={() => {
                                                         setRejectModal(req);
                                                         setRejectNote("");
                                                     }}
                                                     disabled={isLoading}
                                                 >
-                                                    <XCircle className="h-3 w-3" />
+                                                    <XCircle className="h-3.5 w-3.5" />
                                                     Reject
                                                 </Button>
                                             </div>
@@ -796,51 +747,42 @@ function PendingRequestsTable({
                     }
                 }}
             >
-                <DialogContent className="max-w-md w-[90vw] p-0 gap-0">
-                    <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent pointer-events-none" />
-                        <DialogHeader className="relative">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-2">
-                                    <XCircle className="h-4 w-4 text-rose-400" />
-                                </div>
-                                <DialogTitle className="text-sm font-medium text-muted-foreground">
-                                    Reject{" "}
-                                    {rejectModal?.type === "DELETE"
-                                        ? "Delete"
-                                        : "Resubmit"}{" "}
-                                    Request
-                                </DialogTitle>
-                            </div>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Rejecting request from{" "}
-                                <strong className="text-foreground">
-                                    {rejectModal?.teacher.firstName}{" "}
-                                    {rejectModal?.teacher.lastName}
-                                </strong>{" "}
-                                for{" "}
-                                <strong className="text-foreground">
-                                    {(rejectModal?.DocumentType as any)?.name}
-                                </strong>
-                                .
-                            </p>
-                        </DialogHeader>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>
+                            Reject{" "}
+                            {rejectModal?.type === "DELETE"
+                                ? "Delete"
+                                : "Resubmit"}{" "}
+                            Request
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                            Rejecting request from{" "}
+                            <strong>
+                                {rejectModal?.teacher.firstName}{" "}
+                                {rejectModal?.teacher.lastName}
+                            </strong>{" "}
+                            for{" "}
+                            <strong>
+                                {(rejectModal?.DocumentType as any)?.name}
+                            </strong>
+                            .
+                        </p>
+
+                        <Textarea
+                            placeholder="Reason for rejecting this request..."
+                            value={rejectNote}
+                            onChange={(e) => setRejectNote(e.target.value)}
+                            className="min-h-[100px]"
+                        />
                     </div>
-                    <div className="px-6 py-5">
-                        <div className="space-y-1">
-                            <FieldLabel required>Reason</FieldLabel>
-                            <Textarea
-                                placeholder="Reason for rejecting this request..."
-                                value={rejectNote}
-                                onChange={(e) => setRejectNote(e.target.value)}
-                                className="min-h-[100px] text-sm"
-                            />
-                        </div>
-                    </div>
-                    <div className="px-6 py-4 border-t border-border/60 bg-gradient-to-br from-card to-background flex justify-end gap-2">
+
+                    <DialogFooter>
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => {
                                 setRejectModal(null);
                                 setRejectNote("");
@@ -848,19 +790,18 @@ function PendingRequestsTable({
                         >
                             Cancel
                         </Button>
+
                         <Button
                             variant="destructive"
-                            size="sm"
                             onClick={handleReject}
                             disabled={!rejectNote.trim() || !!loadingId}
-                            className="gap-1.5"
                         >
-                            {loadingId && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            )}
+                            {loadingId ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
                             Reject Request
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>
@@ -875,35 +816,12 @@ export function AdminDocumentReviewTable({
     docs: AdminDocumentRow[];
     requests?: PendingRequest[];
 }) {
-    return (
-        <Tabs defaultValue="submissions">
-            <TabsList className="mb-4 h-9">
-                <TabsTrigger value="submissions" className="gap-2 text-xs">
-                    <FileCheck className="h-3.5 w-3.5" />
-                    Pending Submissions
-                    {docs.length > 0 && (
-                        <span className="inline-block rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 text-[10px] font-semibold ml-0.5">
-                            {docs.length}
-                        </span>
-                    )}
-                </TabsTrigger>
-                <TabsTrigger value="requests" className="gap-2 text-xs">
-                    <HourglassIcon className="h-3.5 w-3.5" />
-                    Teacher Requests
-                    {requests.length > 0 && (
-                        <span className="inline-block rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 text-[10px] font-semibold ml-0.5">
-                            {requests.length}
-                        </span>
-                    )}
-                </TabsTrigger>
-            </TabsList>
+    const pendingRequestCount = requests.length;
 
-            <TabsContent value="submissions">
-                <PendingSubmissionsTable docs={docs} />
-            </TabsContent>
-            <TabsContent value="requests">
-                <PendingRequestsTable requests={requests} />
-            </TabsContent>
-        </Tabs>
+    return (
+        <div className="space-y-4">
+            <PendingSubmissionsTable docs={docs} />
+            <PendingRequestsTable requests={requests} />
+        </div>
     );
 }
