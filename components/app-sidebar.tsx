@@ -199,18 +199,7 @@ export default function AppSidebar() {
         { title: "Documents", path: "admin-actions/documents", icon: FileText },
     ];
 
-    const principal: PrincipalItem[] = [
-        {
-            title: "Pending Approval",
-            path: "/principal-actions/pending-approval",
-            icon: ShieldAlert,
-        },
-        {
-            title: "Recently Approved",
-            path: "/principal-actions/recently-approved",
-            icon: ShieldCheck,
-        },
-    ];
+    const principal: PrincipalItem[] = [];
 
     const filteredMain = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -346,7 +335,7 @@ export default function AppSidebar() {
                 <ScrollArea className="flex-1 px-2">
                     <div className="pb-4">
                         {filteredMain.length > 0 && (
-                            <SidebarGroup>
+                            <SidebarGroup className={isAdmin ? "pb-0" : ""}>
                                 <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
                                     Main
                                 </div>
@@ -399,11 +388,13 @@ export default function AppSidebar() {
                         {(userRole === "ADMIN" || isSuperAdmin) &&
                         filteredAdmin.length > 0 ? (
                             <>
-                                <Separator className="my-4" />
-                                <SidebarGroup>
-                                    <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
-                                        Admin tools
-                                    </div>
+                                {!isAdmin && <Separator className="my-4" />}
+                                <SidebarGroup className={isAdmin ? "pt-0" : ""}>
+                                    {!isAdmin && (
+                                        <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+                                            Admin tools
+                                        </div>
+                                    )}
                                     <SidebarGroupContent>
                                         <SidebarMenu>
                                             <motion.div
