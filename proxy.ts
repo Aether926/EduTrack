@@ -28,7 +28,6 @@ export async function proxy(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // ── Stale session cleanup ─────────────────────────────────────────────────
-  // Skip cleanup on auth-related routes so sign in/out flow isn't interrupted
   const skipCleanup = ["/signin", "/signUp", "/forgot-password", "/reset-password", "/auth/callback"];
   if (!user && !skipCleanup.some((p) => pathname.startsWith(p))) {
     const hasStaleSession = req.cookies.getAll().some(({ name }) => name.startsWith("sb-"));
@@ -106,6 +105,9 @@ export async function proxy(req: NextRequest) {
   const protectedRoutes = ["/dashboard", "/profile", "/teacher-profiles", "/responsibilities", "/compliance", "/documents", "/settings"];
   const adminRoutes = ["/account-approval", "/add-training-seminar", "/proof-review", "/admin-actions"];
 
+  // Routes only accessible by non-admin roles (e.g. TEACHER)
+  const teacherOnlyRoutes = ["/professional-dev", "/responsibilities", "/compliance", "/documents"];
+
   // if route needs login
   if ([...protectedRoutes, ...adminRoutes].some((p) => pathname.startsWith(p)) && !user) {
     return NextResponse.redirect(new URL("/signin", req.url));
@@ -121,6 +123,15 @@ export async function proxy(req: NextRequest) {
     if (error) return NextResponse.redirect(new URL("/signin", req.url));
     if (!urow) return NextResponse.redirect(new URL("/fillUp", req.url));
 
+    // Block admins from teacher-only routes
+    if (
+      urow.role === "ADMIN" &&
+      teacherOnlyRoutes.some((p) => pathname.startsWith(p))
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Block non-admins from admin routes
     if (adminRoutes.some((p) => pathname.startsWith(p)) && urow.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }

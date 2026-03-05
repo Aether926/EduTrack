@@ -82,7 +82,9 @@ export default function TeacherProfilesPage() {
                 return;
             }
 
-            const tableData: TeacherTableRow[] = (profiles ?? []).map(
+            const tableData: TeacherTableRow[] = (profiles ?? [])
+            .filter((profile: any) => profile.id !== authUser.id)
+            .map(
                 (profile: any) => ({
                     id: profile.id,
                     employeeid: profile.employeeId || "N/A",

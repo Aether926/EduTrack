@@ -8,7 +8,6 @@ import ProofReviewTable from "@/features/proof-review/components/proof-review-ta
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
 

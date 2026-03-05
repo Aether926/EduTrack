@@ -226,10 +226,7 @@ export default function ProfileHeader({
                                 </>
                             ) : (
                                 <>
-                                    <Button onClick={onEdit} className="gap-2">
-                                        <Edit2 size={18} />
-                                        Edit Profile
-                                    </Button>
+                                    
                                     <ProfileShareMenu
                                         onOpenQr={() => qr.setQrOpen(true)}
                                         onCopyLink={() => void qr.copyQrLink()}
