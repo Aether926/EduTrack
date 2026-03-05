@@ -241,7 +241,7 @@ export default function PublicProfileView(props: {
                             isEditing={false}
                             onInputChange={noop}
                             onDateChange={noop}
-                            viewerRole={viewerRole}
+                            
                         />
                     </div>
                     <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
@@ -270,7 +270,6 @@ export default function PublicProfileView(props: {
                                 isEditing={false}
                                 onInputChange={noop}
                                 onDateChange={noop}
-                                viewerRole={viewerRole}
                             />
                             <ContactInfoCard
                                 data={data}
