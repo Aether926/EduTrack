@@ -53,7 +53,7 @@ function teacherProfileHref(id: string) {
   return `/admin-actions/teachers/${id}`;
 }
 
-const ADMIN_LIKE = ["ADMIN", "HR", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN"] as const;
+const ADMIN_LIKE = ["ADMIN", "HR", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN"] as const;
 
 
 export default async function AdminActionsPage() {

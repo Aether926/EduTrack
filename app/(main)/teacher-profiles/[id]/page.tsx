@@ -42,8 +42,7 @@ async function getTrainingsForTeacher(
 
     if (filtered.length === 0) return [];
 
-    const trainingIds = Array.from(new Set(filtered.map((r) => r.training_id)));
-    const trainingIds = Array.from(new Set(filtered.map((r) => r.training_id)));
+    const trainingIds = Array.from(new Set(filtered.map((r) => r.training_id)))
 
     const { data: pdRows } = await db
         .from("ProfessionalDevelopment")
