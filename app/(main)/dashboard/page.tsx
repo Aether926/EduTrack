@@ -14,29 +14,29 @@ export const dynamic = "force-dynamic";
 const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
 
 function fmtServer(dt: string) {
-  try {
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(dt));
-  } catch {
-    return dt;
-  }
+    try {
+        return new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(new Date(dt));
+    } catch {
+        return dt;
+    }
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/signin");
+    const supabase = await createClient();
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) redirect("/signin");
 
-  const { data: userRow } = await supabase
-    .from("User")
-    .select("role")
-    .eq("id", auth.user.id)
-    .single();
+    const { data: userRow } = await supabase
+        .from("User")
+        .select("role")
+        .eq("id", auth.user.id)
+        .single();
 
   const role = userRow?.role ?? null;
   const isAdmin = ADMIN_ROLES.includes(role as any);
@@ -57,17 +57,17 @@ export default async function DashboardPage() {
 
   const db = isAdmin ? createAdminClient() : supabase;
 
-  const q = db
-    .from("ActivityLog")
-    .select(
-      "id, created_at, action, message, meta, target_user_id, actor_id, entity_type, entity_id"
-    )
-    .order("created_at", { ascending: false })
-    .limit(40);
+    const q = db
+        .from("ActivityLog")
+        .select(
+            "id, created_at, action, message, meta, target_user_id, actor_id, entity_type, entity_id",
+        )
+        .order("created_at", { ascending: false })
+        .limit(40);
 
   if (!isAdmin) q.eq("target_user_id", auth.user.id);
 
-  const { data: activityRows } = await q;
+    const { data: activityRows } = await q;
 
   const activity: (ActivityRow & {
     display_time?: string;
