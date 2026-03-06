@@ -35,6 +35,8 @@ async function insertActivity(rows: ActivityInsert[]) {
   if (error) toast.error("ActivityLog insert failed");
 }
 
+const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
+
 async function requireAdmin() {
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -51,7 +53,8 @@ async function requireAdmin() {
 
   if (roleErr) return { ok: false as const, error: roleErr.message, userId: authData.user.id };
 
-  if (roleRow?.role !== "ADMIN") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!ADMIN_ROLES.includes(roleRow?.role as any)) {
     return { ok: false as const, error: "Unauthorized. Admin only.", userId: authData.user.id };
   }
 
@@ -84,7 +87,10 @@ export async function approveProof(attendanceId: string, remarks: string): Promi
     if (pdErr) return { ok: false, error: pdErr.message };
 
     if (!pd?.total_hours || pd.total_hours === 0) {
-      return { ok: false, error: "Training has no hours set. Please update the training before approving." };
+      return {
+        ok: false,
+        error: "Training has no hours set. Please update the training before approving.",
+      };
     }
 
     const { error } = await admin
@@ -95,7 +101,7 @@ export async function approveProof(attendanceId: string, remarks: string): Promi
         remarks: remarks?.trim() ? remarks.trim() : null,
         reviewed_at: now,
         reviewed_by: adminCheck.userId,
-        approved_hours: pd.total_hours, // ← snapshot here
+        approved_hours: pd.total_hours,
       })
       .eq("id", attendanceId);
 
@@ -109,8 +115,8 @@ export async function approveProof(attendanceId: string, remarks: string): Promi
         entity_type: "ATTENDANCE",
         entity_id: attendanceId,
         message: "Your proof was approved.",
-        meta: { 
-          attendanceId, 
+        meta: {
+          attendanceId,
           trainingId: att?.training_id ?? null,
           title: pd?.title ?? null,
         },
@@ -174,7 +180,11 @@ export async function rejectProof(attendanceId: string, remarks: string): Promis
         entity_type: "ATTENDANCE",
         entity_id: attendanceId,
         message: "Your proof was rejected.",
-        meta: { attendanceId, trainingId: att?.training_id ?? null, reason: remarks.trim() },
+        meta: {
+          attendanceId,
+          trainingId: att?.training_id ?? null,
+          reason: remarks.trim(),
+        },
       },
     ]);
 

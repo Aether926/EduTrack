@@ -25,9 +25,8 @@ type ActivityInsert = {
 
 async function insertActivity(rows: ActivityInsert[]) {
   if (!rows.length) return;
-
   const admin = createAdminClient();
-  const { error } = await admin.from("ActivityLog").insert(
+  await admin.from("ActivityLog").insert(
     rows.map((r) => ({
       actor_id: r.actor_id,
       target_user_id: r.target_user_id,
@@ -39,6 +38,8 @@ async function insertActivity(rows: ActivityInsert[]) {
     }))
   );
 }
+
+const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -56,7 +57,8 @@ async function requireAdmin() {
 
   if (roleErr) return { ok: false as const, error: roleErr.message, userId: authData.user.id };
 
-  if (roleRow?.role !== "ADMIN") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!ADMIN_ROLES.includes(roleRow?.role as any)) {
     return { ok: false as const, error: "Unauthorized. Admin only.", userId: authData.user.id };
   }
 
@@ -80,7 +82,6 @@ export async function saveTrainingAssignments(
 
   const admin = createAdminClient();
 
-  // check existing attendance records for these teachers
   const { data: existing } = await admin
     .from("Attendance")
     .select("teacher_id, status")
@@ -91,7 +92,6 @@ export async function saveTrainingAssignments(
     (existing ?? []).map((r) => [r.teacher_id, r.status?.toUpperCase()])
   );
 
-  // only skip ENROLLED, SUBMITTED, APPROVED — allow REJECTED (fresh start)
   const skipped: { teacherId: string; status: string }[] = [];
   const toAssign: string[] = [];
 
@@ -100,26 +100,16 @@ export async function saveTrainingAssignments(
     if (status === "ENROLLED" || status === "SUBMITTED" || status === "APPROVED") {
       skipped.push({ teacherId: id, status });
     } else {
-      // new record OR rejected — assign/reassign
       toAssign.push(id);
     }
   }
 
-  // if everyone is skipped, return early
-  if (toAssign.length === 0) {
-    return {
-      ok: true,
-      assigned: 0,
-      skipped,
-    };
-  }
+  if (toAssign.length === 0) return { ok: true, assigned: 0, skipped };
 
-  // upsert only the safe ones
   const rows = toAssign.map((id) => ({
     teacher_id: id,
     training_id: trainingId,
     status: "ENROLLED",
-    // reset proof fields in case of REJECTED reassignment
     proof_url: null,
     proof_path: null,
     proof_submitted_at: null,
@@ -136,14 +126,12 @@ export async function saveTrainingAssignments(
 
   if (error) return { ok: false, error: error.message };
 
-  // get training title for activity log
   const { data: pd } = await admin
     .from("ProfessionalDevelopment")
     .select("title, type")
     .eq("id", trainingId)
     .single();
 
-  // only log activity for actually assigned teachers
   await insertActivity(
     toAssign.map((teacherId) => ({
       actor_id: adminCheck.userId,
@@ -160,11 +148,7 @@ export async function saveTrainingAssignments(
   revalidatePath("/add-training-seminar");
   revalidatePath("/dashboard");
 
-  return {
-    ok: true,
-    assigned: toAssign.length,
-    skipped,
-  };
+  return { ok: true, assigned: toAssign.length, skipped };
 }
 
 /** TEACHER submits proof */
@@ -204,7 +188,6 @@ export async function submitAttendanceProof(
 
     const { data: pub } = admin.storage.from("certificates").getPublicUrl(path);
     const proofUrl = pub.publicUrl;
-
     const now = new Date().toISOString();
 
     const { error: uErr } = await admin
@@ -219,17 +202,15 @@ export async function submitAttendanceProof(
 
     if (uErr) return { ok: false, error: uErr.message };
 
-    await insertActivity([
-      {
-        actor_id: user.id,
-        target_user_id: user.id,
-        action: "PROOF_SUBMITTED",
-        entity_type: "ATTENDANCE",
-        entity_id: attendanceId,
-        message: "You submitted proof for a training.",
-        meta: { attendanceId, trainingId: attendance.training_id },
-      },
-    ]);
+    await insertActivity([{
+      actor_id: user.id,
+      target_user_id: user.id,
+      action: "PROOF_SUBMITTED",
+      entity_type: "ATTENDANCE",
+      entity_id: attendanceId,
+      message: "You submitted proof for a training.",
+      meta: { attendanceId, trainingId: attendance.training_id },
+    }]);
 
     revalidatePath("/professional-dev");
     revalidatePath(`/professional-dev/${attendanceId}/upload-proof`);
@@ -253,7 +234,6 @@ export async function approveAttendance(
     const admin = createAdminClient();
     const now = new Date().toISOString();
 
-    // get teacher id + training id
     const { data: att, error: attErr } = await admin
       .from("Attendance")
       .select("teacher_id, training_id")
@@ -262,7 +242,6 @@ export async function approveAttendance(
 
     if (attErr) return { ok: false, error: attErr.message };
 
-    // snapshot total_hours from ProfessionalDevelopment at approval time
     const { data: pd, error: pdErr } = await admin
       .from("ProfessionalDevelopment")
       .select("total_hours, title")
@@ -279,27 +258,21 @@ export async function approveAttendance(
         remarks: remarks || null,
         reviewed_at: now,
         reviewed_by: adminCheck.userId,
-        approved_hours: pd?.total_hours ?? 0, // ← snapshot here
+        approved_hours: pd?.total_hours ?? 0,
       })
       .eq("id", attendanceId);
 
     if (error) return { ok: false, error: error.message };
 
-    await insertActivity([
-      {
-        actor_id: adminCheck.userId,
-        target_user_id: String(att?.teacher_id ?? ""),
-        action: "PROOF_APPROVED",
-        entity_type: "ATTENDANCE",
-        entity_id: attendanceId,
-        message: "Your proof was approved.",
-        meta: {
-          attendanceId,
-          trainingId: att?.training_id ?? null,
-          title: pd?.title ?? null,
-        },
-      },
-    ]);
+    await insertActivity([{
+      actor_id: adminCheck.userId,
+      target_user_id: String(att?.teacher_id ?? ""),
+      action: "PROOF_APPROVED",
+      entity_type: "ATTENDANCE",
+      entity_id: attendanceId,
+      message: "Your proof was approved.",
+      meta: { attendanceId, trainingId: att?.training_id ?? null, title: pd?.title ?? null },
+    }]);
 
     revalidatePath("/admin/proof-review");
     revalidatePath("/professional-dev");
@@ -334,10 +307,7 @@ export async function rejectAttendance(
 
     const proofPath = att?.proof_path ?? null;
     if (proofPath) {
-      const { error: delErr } = await admin.storage
-        .from("certificates")
-        .remove([proofPath]);
-
+      await admin.storage.from("certificates").remove([proofPath]);
     }
 
     const { error: updateErr } = await admin
@@ -355,21 +325,15 @@ export async function rejectAttendance(
 
     if (updateErr) return { ok: false, error: updateErr.message };
 
-    await insertActivity([
-      {
-        actor_id: adminCheck.userId,
-        target_user_id: String(att?.teacher_id ?? ""),
-        action: "PROOF_REJECTED",
-        entity_type: "ATTENDANCE",
-        entity_id: attendanceId,
-        message: "Your proof was rejected.",
-        meta: {
-          attendanceId,
-          trainingId: att?.training_id ?? null,
-          reason: remarks.trim(),
-        },
-      },
-    ]);
+    await insertActivity([{
+      actor_id: adminCheck.userId,
+      target_user_id: String(att?.teacher_id ?? ""),
+      action: "PROOF_REJECTED",
+      entity_type: "ATTENDANCE",
+      entity_id: attendanceId,
+      message: "Your proof was rejected.",
+      meta: { attendanceId, trainingId: att?.training_id ?? null, reason: remarks.trim() },
+    }]);
 
     revalidatePath("/admin/proof-review");
     revalidatePath("/professional-dev");

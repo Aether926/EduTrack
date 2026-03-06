@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { CreateProfessionalDevelopmentInput } from '@/lib/user';
 import { toast } from 'sonner';
 
+const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
+
 type UpdatePayload = {
   id: string;
   title: string;
@@ -18,19 +20,25 @@ type UpdatePayload = {
   description?: string;
 };
 
-export async function updateProfessionalDevelopment(payload: UpdatePayload) {
+async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!user) return { ok: false as const, error: "Not authenticated", userId: null as string | null };
 
-  const { data: profile } = await supabase
-    .from("User").select("role").eq("id", user.id).single();
-  if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+  const { data: profile } = await supabase.from("User").select("role").eq("id", user.id).single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!ADMIN_ROLES.includes(profile?.role as any)) return { ok: false as const, error: "Unauthorized", userId: user.id };
+
+  return { ok: true as const, error: null as string | null, userId: user.id };
+}
+
+export async function updateProfessionalDevelopment(payload: UpdatePayload) {
+  const check = await requireAdmin();
+  if (!check.ok) return { success: false, error: check.error };
 
   const adminSupabase = createAdminClient();
   const { id, ...update } = payload;
-  const { error } = await adminSupabase
-    .from("ProfessionalDevelopment").update(update).eq("id", id);
+  const { error } = await adminSupabase.from("ProfessionalDevelopment").update(update).eq("id", id);
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/add-training-seminar");
@@ -38,29 +46,12 @@ export async function updateProfessionalDevelopment(payload: UpdatePayload) {
 }
 
 export async function createProfessionalDevelopment(input: CreateProfessionalDevelopmentInput) {
-  const supabase = await createClient();
-  
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    const check = await requireAdmin();
+    if (!check.ok) return { success: false, error: check.error };
 
-    // Check if user is admin
-    const { data: adminProfile } = await supabase
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const adminSupabase = createAdminClient();
 
-    if (adminProfile?.role !== 'ADMIN') {
-      return { success: false, error: 'Unauthorized. Only admins can create trainings.' };
-    }
-    // Use ADMIN CLIENT to bypass RLS
-    const adminSupabase = await createAdminClient();
-
-    // Create the professional development record
     const { data: training, error: trainingError } = await adminSupabase
       .from('ProfessionalDevelopment')
       .insert({
@@ -73,7 +64,7 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
         end_date: input.end_date || null,
         venue: input.venue || null,
         description: input.description || null,
-        created_by: user.id,
+        created_by: check.userId,
       })
       .select()
       .single();
@@ -83,22 +74,17 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
       return { success: false, error: trainingError.message };
     }
 
-    // If teachers are assigned, create attendance records
     if (input.teacher_ids && input.teacher_ids.length > 0 && training) {
       const attendanceRecords = input.teacher_ids.map(teacherId => ({
         teacher_id: teacherId,
         training_id: training.id,
         status: 'ENROLLED',
       }));
-
-      await adminSupabase
-        .from('Attendance')
-        .insert(attendanceRecords);
+      await adminSupabase.from('Attendance').insert(attendanceRecords);
     }
 
-    // Log activity
     await adminSupabase.from('ActivityLog').insert({
-      user_id: user.id,
+      user_id: check.userId,
       action: 'CREATE_TRAINING',
       entity_type: 'PROFESSIONAL_DEVELOPMENT',
       entity_id: training.id,
@@ -107,41 +93,20 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
 
     revalidatePath('/add-training-seminar');
     revalidatePath('/dashboard');
-    
     return { success: true, data: training };
-  } catch (error) {
+  } catch {
     toast.error('Unexpected error creating training');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
 
 export async function deleteProfessionalDevelopment(id: string) {
-  const supabase = await createClient();
-  
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    const check = await requireAdmin();
+    if (!check.ok) return { success: false, error: check.error };
 
-    const { data: adminProfile } = await supabase
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (adminProfile?.role !== 'ADMIN') {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    // Use admin client
-    const adminSupabase = await createAdminClient();
-
-    const { error } = await adminSupabase
-      .from('ProfessionalDevelopment')
-      .delete()
-      .eq('id', id);
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase.from('ProfessionalDevelopment').delete().eq('id', id);
 
     if (error) {
       toast.error('Error deleting');
@@ -149,7 +114,7 @@ export async function deleteProfessionalDevelopment(id: string) {
     }
 
     await adminSupabase.from('ActivityLog').insert({
-      user_id: user.id,
+      user_id: check.userId,
       action: 'DELETE_TRAINING',
       entity_type: 'PROFESSIONAL_DEVELOPMENT',
       entity_id: id,
@@ -157,41 +122,20 @@ export async function deleteProfessionalDevelopment(id: string) {
 
     revalidatePath('/add-training-seminar');
     revalidatePath('/dashboard');
-    
     return { success: true };
-  } catch (error) {
+  } catch {
     toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
 
 export async function deleteMultipleProfessionalDevelopment(ids: string[]) {
-  const supabase = await createClient();
-  
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    const check = await requireAdmin();
+    if (!check.ok) return { success: false, error: check.error };
 
-    const { data: adminProfile } = await supabase
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (adminProfile?.role !== 'ADMIN') {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    // Use admin client
-    const adminSupabase = await createAdminClient();
-
-    const { error } = await adminSupabase
-      .from('ProfessionalDevelopment')
-      .delete()
-      .in('id', ids);
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase.from('ProfessionalDevelopment').delete().in('id', ids);
 
     if (error) {
       toast.error('Error deleting');
@@ -199,7 +143,7 @@ export async function deleteMultipleProfessionalDevelopment(ids: string[]) {
     }
 
     await adminSupabase.from('ActivityLog').insert({
-      user_id: user.id,
+      user_id: check.userId,
       action: 'DELETE_MULTIPLE_TRAININGS',
       entity_type: 'PROFESSIONAL_DEVELOPMENT',
       details: { count: ids.length, ids }
@@ -207,9 +151,8 @@ export async function deleteMultipleProfessionalDevelopment(ids: string[]) {
 
     revalidatePath('/add-training-seminar');
     revalidatePath('/dashboard');
-    
     return { success: true, count: ids.length };
-  } catch (error) {
+  } catch {
     toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }

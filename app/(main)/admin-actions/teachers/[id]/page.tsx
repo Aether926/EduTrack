@@ -26,7 +26,8 @@ export default async function AdminTeacherEditPage({
         .eq("id", auth.user.id)
         .single();
 
-    if (viewer?.role !== "ADMIN") redirect("/");
+    const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
+    if (!ALLOWED.includes(viewer?.role as any)) redirect("/");
 
     const admin = createAdminClient();
     const { id } = await params;

@@ -3,13 +3,16 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ActionResult } from "../types";
 
+const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
+
 async function requireAdmin() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false as const, error: "Not authenticated" };
   const { data: user } = await supabase
     .from("User").select("role").eq("id", auth.user.id).single();
-  if (user?.role !== "ADMIN") return { ok: false as const, error: "Unauthorized" };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!ADMIN_ROLES.includes(user?.role as any)) return { ok: false as const, error: "Unauthorized" };
   return { ok: true as const, error: null, userId: auth.user.id };
 }
 
@@ -35,7 +38,6 @@ export async function permanentlyDeleteUser(id: string): Promise<ActionResult> {
   const check = await requireAdmin();
   if (!check.ok) return { ok: false, error: check.error };
   const admin = createAdminClient();
-  // Delete from auth — cascades to all DB tables
   const { error } = await admin.auth.admin.deleteUser(id);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
