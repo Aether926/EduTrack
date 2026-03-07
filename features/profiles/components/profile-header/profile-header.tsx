@@ -82,7 +82,8 @@ export default function ProfileHeader({
         : "";
 
     return (
-        <Card className="border-0 rounded-none shadow-lg p-0">
+        // overflow-hidden clips the avatar's negative top margin so it never bleeds outside the card
+        <Card className="border-0 rounded-none shadow-lg p-0 overflow-hidden">
             <BannerImage
                 firstName={savedFirstName || tempProfileData.firstName}
             />
@@ -190,7 +191,8 @@ export default function ProfileHeader({
                                             View Details
                                         </button>
                                     </div>
-                                    <div className="w-48 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                                    {/* fluid width so it never causes x overflow on narrow screens */}
+                                    <div className="w-full max-w-[12rem] bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                                         <div
                                             className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`}
                                             style={{

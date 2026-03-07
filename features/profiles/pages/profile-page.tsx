@@ -87,7 +87,9 @@ export default function ProfilePage() {
     if (!mounted) return null;
 
     return (
-        <div className={`min-h-screen ${bgClass} space-y-6`}>
+        <div
+            className={`min-h-screen w-full overflow-x-hidden ${bgClass} space-y-6`}
+        >
             {/* Header — no more global Edit button, just share/QR/PDF */}
             <ProfileHeader
                 teacherId={userId ?? ""}
@@ -107,9 +109,9 @@ export default function ProfilePage() {
                 // onEdit / onSave / onCancel intentionally omitted — header no longer controls editing
             />
 
-            <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+            <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6 min-w-0">
                 {/* ── Left Column ── */}
-                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px]">
+                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px] min-w-0">
                     <PersonalInfoCard
                         data={tempProfileData}
                         isEditing={openCard === "personal"}
@@ -141,28 +143,6 @@ export default function ProfilePage() {
                         isOwnProfile={true}
                         isSaving={isSaving}
                     />
-                    <div className="hidden md:flex md:flex-col md:gap-4">
-                        <TrainingsCard
-                            trainings={trainings}
-                            loading={trainingsLoading}
-                        />
-                        <ServiceRecordCard data={tempProfileData} />
-                    </div>
-                </div>
-
-                {/* ── Right Column ── */}
-                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px]">
-                    <FamilyBackgroundCard
-                        data={tempProfileData}
-                        isEditing={openCard === "family"}
-                        onInputChange={handleInputChange}
-                        onChildrenChange={handleChildrenChange}
-                        onEdit={() => openEdit("family")}
-                        onSave={handleSave}
-                        onCancel={closeEdit}
-                        isOwnProfile={true}
-                        isSaving={isSaving}
-                    />
                     <EmploymentInfoCard
                         data={tempProfileData}
                         isEditing={openCard === "employment"}
@@ -176,6 +156,28 @@ export default function ProfilePage() {
                         teacherId={userId ?? ""}
                         isOwnProfile={true}
                         from="profile"
+                    />
+                    <div className="hidden md:flex md:flex-col md:gap-4">
+                        <TrainingsCard
+                            trainings={trainings}
+                            loading={trainingsLoading}
+                        />
+                        <ServiceRecordCard data={tempProfileData} />
+                    </div>
+                </div>
+
+                {/* ── Right Column ── */}
+                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px] min-w-0">
+                    <FamilyBackgroundCard
+                        data={tempProfileData}
+                        isEditing={openCard === "family"}
+                        onInputChange={handleInputChange}
+                        onChildrenChange={handleChildrenChange}
+                        onEdit={() => openEdit("family")}
+                        onSave={handleSave}
+                        onCancel={closeEdit}
+                        isOwnProfile={true}
+                        isSaving={isSaving}
                     />
                     <GovernmentIDsCard
                         data={tempProfileData}

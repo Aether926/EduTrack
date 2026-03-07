@@ -163,7 +163,11 @@ const POSITIONS = [
     "Master Teacher I",
     "Master Teacher II",
     "Master Teacher III",
-    "Principal",
+    "Master Teacher IV",
+    "School Principal I",
+    "School Principal II",
+    "School Principal III",
+    "School Principal IV",
     "Administrative Staff",
 ];
 

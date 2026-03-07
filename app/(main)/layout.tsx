@@ -50,7 +50,7 @@ export default function RootLayout({
 
                     <SidebarProvider>
                         <AppSidebar />
-                        <SidebarInset>
+                        <SidebarInset className="min-w-0 overflow-x-hidden">
                             {/* Deletion warning banner — shows on every page if pending */}
                             <DeletionWarningBanner />
                             <main className="min-w-0">
