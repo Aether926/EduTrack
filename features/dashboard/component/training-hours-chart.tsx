@@ -21,52 +21,53 @@ import { GraduationCap } from "lucide-react";
 type MonthPoint = { month: string; hours: number };
 type View = "week" | "month" | "year";
 
-// Hard-coded hex values — no CSS variables, no slash syntax.
-// These are safe to use directly in SVG fill attributes.
-const ACTIVE = "#38bdf8";   // sky-400, clearly visible on dark bg
-const DIM    = "#38bdf828"; // sky-400 at ~16% opacity (hex alpha)
+const ACTIVE = "#38bdf8";
+const DIM = "#38bdf828";
 
 const chartConfig = {
     hours: { label: "Hours", color: ACTIVE },
 } satisfies ChartConfig;
 
 function deriveWeekly(monthly: MonthPoint[]) {
-    // Last 6 months × 4 weeks = 24 bars
     return monthly.slice(-6).flatMap((m) =>
         [1, 2, 3, 4].map((w) => ({
-            label: `${m.month.split(" ")[0]} W${w}`, // "Mar W1"
+            label: `${m.month.split(" ")[0]} W${w}`,
             hours: Math.round(m.hours / 4),
-        }))
+        })),
     );
 }
 
 function deriveYearly(monthly: MonthPoint[]) {
     const map = new Map<string, number>();
     monthly.forEach((m) => {
-        // m.month is like "Mar 25" — expand "25" → "2025"
         const shortYear = m.month.split(" ")[1] ?? "00";
-        const fullYear  = `20${shortYear}`;
+        const fullYear = `20${shortYear}`;
         map.set(fullYear, (map.get(fullYear) ?? 0) + m.hours);
     });
 
-    // Ensure at least 5 years are shown (pad missing years with 0)
     const currentYear = new Date().getFullYear();
     for (let y = currentYear - 4; y <= currentYear; y++) {
         const key = String(y);
         if (!map.has(key)) map.set(key, 0);
     }
 
-    // Return sorted by year
     return Array.from(map.entries())
         .sort(([a], [b]) => Number(a) - Number(b))
         .map(([label, hours]) => ({ label, hours }));
 }
 
 const VIEW_LABEL: Record<View, string> = {
-    week:  "Last 3 months by week",
+    week: "Last 3 months by week",
     month: "Last 12 months by month",
-    year:  "All time by year",
+    year: "All time by year",
 };
+
+// Show at most ~6 labels regardless of data length
+function getInterval(dataLength: number, view: View) {
+    if (view === "year") return 0; // always few bars
+    if (view === "week") return Math.ceil(dataLength / 6);
+    return Math.ceil(dataLength / 6); // month: show ~6 ticks
+}
 
 export default function TrainingHoursChart({
     trainingHoursPerMonth,
@@ -76,13 +77,17 @@ export default function TrainingHoursChart({
     const [view, setView] = useState<View>("month");
 
     const data = useMemo(() => {
-        if (view === "week")  return deriveWeekly(trainingHoursPerMonth);
-        if (view === "year")  return deriveYearly(trainingHoursPerMonth);
-        return trainingHoursPerMonth.map((m) => ({ label: m.month, hours: m.hours }));
+        if (view === "week") return deriveWeekly(trainingHoursPerMonth);
+        if (view === "year") return deriveYearly(trainingHoursPerMonth);
+        return trainingHoursPerMonth.map((m) => ({
+            label: m.month,
+            hours: m.hours,
+        }));
     }, [view, trainingHoursPerMonth]);
 
-    const maxHours   = Math.max(...data.map((d) => d.hours), 1);
+    const maxHours = Math.max(...data.map((d) => d.hours), 1);
     const totalHours = data.reduce((s, d) => s + d.hours, 0);
+    const xInterval = getInterval(data.length, view);
 
     return (
         <Card className="bg-card/80 border-border/50">
@@ -90,7 +95,10 @@ export default function TrainingHoursChart({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="space-y-0.5">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <GraduationCap className="h-4 w-4" style={{ color: ACTIVE }} />
+                            <GraduationCap
+                                className="h-4 w-4"
+                                style={{ color: ACTIVE }}
+                            />
                             Training Hours Rendered
                         </CardTitle>
                         <CardDescription className="text-sm">
@@ -118,15 +126,23 @@ export default function TrainingHoursChart({
                 </div>
 
                 <div className="flex items-baseline gap-2 pt-1">
-                    <span className="text-2xl font-bold tabular-nums" style={{ color: ACTIVE }}>
+                    <span
+                        className="text-2xl font-bold tabular-nums"
+                        style={{ color: ACTIVE }}
+                    >
                         {totalHours.toLocaleString()}h
                     </span>
-                    <span className="text-xs text-muted-foreground">total approved</span>
+                    <span className="text-xs text-muted-foreground">
+                        total approved
+                    </span>
                 </div>
             </CardHeader>
 
             <CardContent className="px-2 pb-4 pt-2">
-                <ChartContainer config={chartConfig} className="h-[220px] w-full">
+                <ChartContainer
+                    config={chartConfig}
+                    className="h-[220px] w-full"
+                >
                     <BarChart
                         accessibilityLayer
                         data={data}
@@ -143,20 +159,35 @@ export default function TrainingHoursChart({
                             tickLine={false}
                             tickMargin={10}
                             axisLine={false}
-                            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                            interval={view === "week" ? 3 : 0}
+                            tick={{
+                                fontSize: 10,
+                                fill: "hsl(var(--muted-foreground))",
+                            }}
+                            interval={xInterval}
                         />
                         <YAxis
                             tickLine={false}
                             axisLine={false}
-                            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                            tick={{
+                                fontSize: 10,
+                                fill: "hsl(var(--muted-foreground))",
+                            }}
                         />
                         <ChartTooltip
-                            cursor={{ fill: "hsl(var(--accent))", opacity: 0.3, radius: 4 }}
+                            cursor={{
+                                fill: "hsl(var(--accent))",
+                                opacity: 0.3,
+                                radius: 4,
+                            }}
                             content={
                                 <ChartTooltipContent
                                     formatter={(value) => (
-                                        <span style={{ color: ACTIVE, fontWeight: 600 }}>
+                                        <span
+                                            style={{
+                                                color: ACTIVE,
+                                                fontWeight: 600,
+                                            }}
+                                        >
                                             {value}h
                                         </span>
                                     )}
@@ -167,7 +198,9 @@ export default function TrainingHoursChart({
                             {data.map((entry, i) => (
                                 <Cell
                                     key={i}
-                                    fill={entry.hours === maxHours ? ACTIVE : DIM}
+                                    fill={
+                                        entry.hours === maxHours ? ACTIVE : DIM
+                                    }
                                 />
                             ))}
                         </Bar>

@@ -10,6 +10,7 @@ export type CalendarEvent = {
 };
 
 export type AdminCalendarEvent = CalendarEvent & {
+  type: string | null;
   teachers: { id: string; name: string; avatarUrl: string | null }[];
 };
 
@@ -18,6 +19,7 @@ export type AdminCalendarEvent = CalendarEvent & {
 type PdRow = {
   id: string;
   title: string | null;
+  type: string | null;
   start_date: string | null;
   end_date: string | null;
 };
@@ -92,7 +94,7 @@ export async function getAllUpcomingEvents(): Promise<AdminCalendarEvent[]> {
   // Step 2 — fetch training details
   const { data: pdData, error: pdError } = await admin
     .from("ProfessionalDevelopment")
-    .select("id, title, start_date, end_date")
+    .select("id, title, type, start_date, end_date")
     .in("id", trainingIds);
 
   if (pdError || !pdData) return [];
@@ -104,7 +106,7 @@ export async function getAllUpcomingEvents(): Promise<AdminCalendarEvent[]> {
     .in("id", teacherIds);
 
   // Build lookup maps
-  const pdMap = new Map<string, { id: string; title: string | null; start_date: string | null; end_date: string | null }>(
+  const pdMap = new Map<string, { id: string; title: string | null; type: string | null; start_date: string | null; end_date: string | null }>(
     (pdData ?? []).map((pd: any) => [pd.id, pd])
   );
   const userMap = new Map<string, { id: string; name: string; avatarUrl: null }>(
@@ -138,6 +140,7 @@ export async function getAllUpcomingEvents(): Promise<AdminCalendarEvent[]> {
         id: pd.id,
         trainingId: pd.id,
         title: pd.title ?? "(no title)",
+        type: pd.type ?? null,
         start: pd.start_date,
         end: pd.end_date ?? null,
         teachers: teacher ? [teacher] : [],
