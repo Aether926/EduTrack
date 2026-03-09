@@ -1,7 +1,9 @@
+"use server";
 /* eslint-disable prefer-const */
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/server";
 
 export async function fetchMyCompliance() {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("TeacherTrainingCompliance")
     .select("*")
@@ -12,6 +14,7 @@ export async function fetchMyCompliance() {
 }
 
 export async function fetchMyComplianceAlerts() {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("ComplianceAlert")
     .select("*")
@@ -22,8 +25,9 @@ export async function fetchMyComplianceAlerts() {
 }
 
 export async function fetchMyCountedTrainings(schoolYear: string) {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return [];
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
 
   const { data: policy } = await supabase
     .from("TrainingCompliancePolicy")
@@ -32,12 +36,12 @@ export async function fetchMyCountedTrainings(schoolYear: string) {
     .limit(1)
     .single();
 
-  let query = supabase
+  const { data } = await supabase
     .from("Attendance")
     .select("id, status, result, training_id, ProfessionalDevelopment(title, type, start_date, end_date, total_hours, sponsoring_agency)")
-    .eq("teacher_id", auth.user.id)
+    .eq("teacher_id", user.id)
     .eq("status", "APPROVED")
     .eq("result", "PASSED");
 
-  return (await query).data ?? [];
+  return data ?? [];
 }

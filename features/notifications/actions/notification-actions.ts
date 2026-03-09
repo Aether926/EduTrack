@@ -1,26 +1,9 @@
-import { supabase } from "@/lib/supabaseClient";
-
-async function getUserRole(): Promise<string | null> {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return null;
-  const { data } = await supabase
-    .from("User")
-    .select("role")
-    .eq("id", auth.user.id)
-    .single();
-  return data?.role ?? null;
-}
+"use server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function fetchNotifications() {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return [];
-
-  const role = await getUserRole();
-  const isPrivileged =
-    role === "ADMIN" || role === "SUPERADMIN" || role === "PRINCIPAL";
-
-  // Build the base query
-  const base = supabase
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from("ActivityLog")
     .select("id, action, message, meta, created_at, read_at, actor_id, target_user_id")
     .order("created_at", { ascending: false })
@@ -36,15 +19,17 @@ export async function fetchNotifications() {
 }
 
 export async function markAllRead() {
+  const supabase = await createClient();
   await supabase.rpc("mark_notifications_read");
 }
 
 export async function clearAllNotifications() {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
   await supabase
     .from("ActivityLog")
     .delete()
-    .eq("target_user_id", auth.user.id);
+    .eq("target_user_id", user.id);
 }

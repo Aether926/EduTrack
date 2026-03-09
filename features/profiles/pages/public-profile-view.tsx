@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useTheme } from "next-themes";
-import { supabase } from "@/lib/supabaseClient";
 
 import ProfileHeader from "@/features/profiles/components/profile-header/profile-header";
 import PersonalInfoCard from "@/features/profiles/components/cards/personal-info-card";
@@ -41,21 +40,13 @@ export default function PublicProfileView(props: {
     from?: FromSource;
     trainings?: TrainingRow[];
     viewerRole: ViewerRole;
+    // Pass hasSession from the server so we don't need a Supabase call here
+    hasSession?: boolean;
 }) {
-    const { profile, from = "teacher", trainings = [], viewerRole } = props;
+    const { profile, from = "teacher", trainings = [], viewerRole, hasSession = false } = props;
 
     const { theme } = useTheme();
     const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
-
-    const [hasSession, setHasSession] = useState(false);
-
-    useEffect(() => {
-        const run = async () => {
-            const { data } = await supabase.auth.getSession();
-            setHasSession(Boolean(data.session));
-        };
-        void run();
-    }, []);
 
     const data = useMemo<ProfileState>(
         () => ({
@@ -77,9 +68,7 @@ export default function PublicProfileView(props: {
             employeeId: str(profile?.employeeId),
             position: str(profile?.position),
             plantillaNo: str(profile?.plantillaNo),
-            dateOfOriginalAppointment: toDate(
-                profile?.dateOfOriginalAppointment,
-            ),
+            dateOfOriginalAppointment: toDate(profile?.dateOfOriginalAppointment),
             dateOfLatestAppointment: toDate(profile?.dateOfLatestAppointment),
             pagibigNo: str(profile?.pagibigNo),
             philHealthNo: str(profile?.philHealthNo),
@@ -136,27 +125,21 @@ export default function PublicProfileView(props: {
             educationElementaryFrom: str(profile?.educationElementaryFrom),
             educationElementaryTo: str(profile?.educationElementaryTo),
             educationElementaryUnits: str(profile?.educationElementaryUnits),
-            educationElementaryGraduated: str(
-                profile?.educationElementaryGraduated,
-            ),
+            educationElementaryGraduated: str(profile?.educationElementaryGraduated),
             educationElementaryHonors: str(profile?.educationElementaryHonors),
             educationSecondarySchool: str(profile?.educationSecondarySchool),
             educationSecondaryDegree: str(profile?.educationSecondaryDegree),
             educationSecondaryFrom: str(profile?.educationSecondaryFrom),
             educationSecondaryTo: str(profile?.educationSecondaryTo),
             educationSecondaryUnits: str(profile?.educationSecondaryUnits),
-            educationSecondaryGraduated: str(
-                profile?.educationSecondaryGraduated,
-            ),
+            educationSecondaryGraduated: str(profile?.educationSecondaryGraduated),
             educationSecondaryHonors: str(profile?.educationSecondaryHonors),
             educationVocationalSchool: str(profile?.educationVocationalSchool),
             educationVocationalDegree: str(profile?.educationVocationalDegree),
             educationVocationalFrom: str(profile?.educationVocationalFrom),
             educationVocationalTo: str(profile?.educationVocationalTo),
             educationVocationalUnits: str(profile?.educationVocationalUnits),
-            educationVocationalGraduated: str(
-                profile?.educationVocationalGraduated,
-            ),
+            educationVocationalGraduated: str(profile?.educationVocationalGraduated),
             educationVocationalHonors: str(profile?.educationVocationalHonors),
             educationCollegeSchool: str(profile?.educationCollegeSchool),
             educationCollegeDegree: str(profile?.educationCollegeDegree),
@@ -170,9 +153,7 @@ export default function PublicProfileView(props: {
             educationGraduateFrom: str(profile?.educationGraduateFrom),
             educationGraduateTo: str(profile?.educationGraduateTo),
             educationGraduateUnits: str(profile?.educationGraduateUnits),
-            educationGraduateGraduated: str(
-                profile?.educationGraduateGraduated,
-            ),
+            educationGraduateGraduated: str(profile?.educationGraduateGraduated),
             educationGraduateHonors: str(profile?.educationGraduateHonors),
             emergencyName: str(profile?.emergencyName),
             emergencyRelationship: str(profile?.emergencyRelationship),
@@ -193,20 +174,13 @@ export default function PublicProfileView(props: {
                 <div className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
                     <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
                         <div className="text-sm opacity-80">
-                            Viewing a teacher profile via QR. Sign in to access
-                            more features.
+                            Viewing a teacher profile via QR. Sign in to access more features.
                         </div>
                         <div className="flex gap-2">
-                            <a
-                                href="/signin"
-                                className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm"
-                            >
+                            <a href="/signin" className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm">
                                 Login
                             </a>
-                            <a
-                                href="/signUp"
-                                className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground"
-                            >
+                            <a href="/signUp" className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground">
                                 Sign up
                             </a>
                         </div>
@@ -232,112 +206,41 @@ export default function PublicProfileView(props: {
                 onEdit={noop}
             />
 
-            {/* ── TEACHER view ── */}
             {isTeacher && (
                 <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
                     <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                        <PersonalInfoCard
-                            data={data}
-                            isEditing={false}
-                            onInputChange={noop}
-                            onDateChange={noop}
-                        />
+                        <PersonalInfoCard data={data} isEditing={false} onInputChange={noop} onDateChange={noop} />
                     </div>
                     <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                        <ContactInfoCard
-                            data={data}
-                            isEditing={false}
-                            onInputChange={noop}
-                        />
-                        <EmergencyContactCard
-                            data={data}
-                            isEditing={false}
-                            onInputChange={noop}
-                        />
+                        <ContactInfoCard data={data} isEditing={false} onInputChange={noop} />
+                        <EmergencyContactCard data={data} isEditing={false} onInputChange={noop} />
                     </div>
                 </div>
             )}
 
-            {/* ── ADMIN view ── */}
             {isAdmin && (
                 <>
                     <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
-                        {/* Left Column */}
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <PersonalInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onDateChange={noop}
-                            />
-                            <ContactInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EmergencyContactCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            {/* Trainings & Service Record — tablet/desktop: after emergency contact */}
+                            <PersonalInfoCard data={data} isEditing={false} onInputChange={noop} onDateChange={noop} />
+                            <ContactInfoCard data={data} isEditing={false} onInputChange={noop} />
+                            <EmergencyContactCard data={data} isEditing={false} onInputChange={noop} />
                             <div className="hidden md:flex md:flex-col md:gap-4">
-                                <TrainingsCard
-                                    trainings={trainings}
-                                    loading={false}
-                                    viewerRole={viewerRole}
-                                />
+                                <TrainingsCard trainings={trainings} loading={false} viewerRole={viewerRole} />
                                 <ServiceRecordCard data={data} />
                             </div>
                         </div>
-
-                        {/* Right Column */}
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <FamilyBackgroundCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onChildrenChange={noop}
-                            />
-                            <EmploymentInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onDateChange={noop}
-                                viewerRole={viewerRole}
-                                from={from}
-                                isOwnProfile={false}
-                            />
-                            <AppointmentHistoryCard
-                                teacherId={str(profile?.id)}
-                                isOwnProfile={false}
-                                from={from}
-                            />
-                            <GovernmentIDsCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EducationCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EducationBackgroundCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
+                            <FamilyBackgroundCard data={data} isEditing={false} onInputChange={noop} onChildrenChange={noop} />
+                            <EmploymentInfoCard data={data} isEditing={false} onInputChange={noop} onDateChange={noop} viewerRole={viewerRole} from={from} isOwnProfile={false} />
+                            <AppointmentHistoryCard teacherId={str(profile?.id)} isOwnProfile={false} from={from} />
+                            <GovernmentIDsCard data={data} isEditing={false} onInputChange={noop} />
+                            <EducationCard data={data} isEditing={false} onInputChange={noop} />
+                            <EducationBackgroundCard data={data} isEditing={false} onInputChange={noop} />
                         </div>
                     </div>
-
-                    {/* Trainings & Service Record — mobile only, at the very bottom */}
                     <div className="md:hidden flex flex-col gap-4 px-4 pb-4">
-                        <TrainingsCard
-                            trainings={trainings}
-                            loading={false}
-                            viewerRole={viewerRole}
-                        />
+                        <TrainingsCard trainings={trainings} loading={false} viewerRole={viewerRole} />
                         <ServiceRecordCard data={data} />
                     </div>
                 </>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getUser, createAdminClient } from "@/lib/supabase/server";
 
 import AccessRequestPanel from "@/features/account-approval/components/access-request-panel";
 
@@ -10,37 +10,23 @@ import { Users, Clock, XCircle, ShieldCheck } from "lucide-react";
 const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
 
 export default async function AccessRequestPage() {
-    const supabase = await createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) redirect("/signin");
+    const user = await getUser();
+    if (!user) redirect("/signin");
+
+    // Role from metadata — zero DB call
+    const roleLabel = (user.user_metadata?.role ?? "USER").toString();
+    if (!ALLOWED.includes(roleLabel as any)) redirect("/dashboard");
 
     const admin = createAdminClient();
-    const { data: me } = await admin
-        .from("User")
-        .select("role")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-
-    const roleLabel = (me?.role ?? "USER").toString();
-    if (!ALLOWED.includes(roleLabel as any)) redirect("/dashboard");
 
     const [
         { count: pendingCount },
         { count: rejectedCount },
         { count: totalCount },
     ] = await Promise.all([
-        admin
-            .from("User")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "PENDING"),
-        admin
-            .from("User")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "REJECTED"),
-        admin
-            .from("User")
-            .select("*", { count: "exact", head: true })
-            .in("status", ["PENDING", "REJECTED"]),
+        admin.from("User").select("*", { count: "exact", head: true }).eq("status", "PENDING"),
+        admin.from("User").select("*", { count: "exact", head: true }).eq("status", "REJECTED"),
+        admin.from("User").select("*", { count: "exact", head: true }).in("status", ["PENDING", "REJECTED"]),
     ]);
 
     const pending = pendingCount ?? 0;
@@ -49,7 +35,6 @@ export default async function AccessRequestPage() {
 
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-            {/* header card — emerald theme matching compliance page pattern */}
             <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 pointer-events-none" />
                 <div className="relative px-5 py-5 md:px-6 md:py-6">
@@ -63,8 +48,7 @@ export default async function AccessRequestPage() {
                                     Account Approval
                                 </h1>
                                 <p className="text-[13px] text-muted-foreground mt-0.5">
-                                    Review and manage user registration
-                                    requests.
+                                    Review and manage user registration requests.
                                 </p>
                             </div>
                         </div>
@@ -76,17 +60,11 @@ export default async function AccessRequestPage() {
                                 <Users className="h-3.5 w-3.5" />
                                 {total} total
                             </Badge>
-                            <Badge
-                                variant="outline"
-                                className="gap-1.5 text-amber-400 border-amber-500/30"
-                            >
+                            <Badge variant="outline" className="gap-1.5 text-amber-400 border-amber-500/30">
                                 <Clock className="h-3.5 w-3.5" />
                                 {pending} pending
                             </Badge>
-                            <Badge
-                                variant="outline"
-                                className="gap-1.5 text-rose-400 border-rose-500/30"
-                            >
+                            <Badge variant="outline" className="gap-1.5 text-rose-400 border-rose-500/30">
                                 <XCircle className="h-3.5 w-3.5" />
                                 {rejected} rejected
                             </Badge>

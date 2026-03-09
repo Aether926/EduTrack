@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/server";
 
 import TrainingsSeminars from "@/components/trainings-seminars";
 import { getMyTrainingSeminars } from "@/lib/database/trainings";
@@ -7,20 +7,13 @@ import { getMyTrainingSeminars } from "@/lib/database/trainings";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap, CheckCircle2 } from "lucide-react";
 
+export const revalidate = 60;
+
 export default async function ProfessionalDevelopmentPage() {
-    const supabase = await createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) redirect("/signin");
+    const user = await getUser();
+    if (!user) redirect("/signin");
 
-    const { data: userRow } = await supabase
-        .from("User")
-        .select("role")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-
-    const roleLabel = (userRow?.role ?? "USER").toString();
-
-    const rows = await getMyTrainingSeminars();
+    const rows = await getMyTrainingSeminars(user.id);
 
     const total = rows.length;
     const approved = rows.filter(
@@ -32,7 +25,6 @@ export default async function ProfessionalDevelopmentPage() {
             {/* Header */}
             <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{roleLabel}</Badge>
                     <Badge variant="outline">Training / Seminar Records</Badge>
                 </div>
 

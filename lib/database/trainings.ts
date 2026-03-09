@@ -34,17 +34,13 @@ type PDRow = {
   sponsoring_agency: string | null;
 };
 
-export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
+export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingSeminarRow[]> {
   const supabase = await createClient();
-
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  const user = authData.user;
-  if (authError || !user) return [];
 
   const { data: attendance, error: aErr } = await supabase
     .from("Attendance")
     .select("id, training_id, status, created_at, approved_hours") 
-    .eq("teacher_id", user.id)
+    .eq("teacher_id", userId)
     .order("created_at", { ascending: false });
 
   if (aErr) {

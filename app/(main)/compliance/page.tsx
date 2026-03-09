@@ -1,17 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getUser, createClient } from "@/lib/supabase/server";
 import { CompliancePageClient } from "@/features/compliance/components/compliance-page-client";
-
 import { Badge } from "@/components/ui/badge";
-import {
-    CalendarRange,
-    CheckCircle2,
-    ClipboardCheck,
-    Layers3,
-} from "lucide-react";
+import { CalendarRange, CheckCircle2, ClipboardCheck, Layers3 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 function currentSchoolYear() {
     const now = new Date();
@@ -34,45 +28,33 @@ function fmtDate(d: string | null | undefined) {
 }
 
 export default async function CompliancePage() {
+    const user = await getUser();
+    if (!user) redirect("/signin");
+
     const supabase = await createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) redirect("/signin");
-
-    // role badge (dynamic)
-    const admin = createAdminClient();
-    const { data: me } = await admin
-        .from("User")
-        .select("role")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-
-    const roleLabel = (me?.role ?? "USER").toString();
-
     const schoolYear = currentSchoolYear();
 
-    // policy period
-    const { data: policy } = await supabase
-        .from("TrainingCompliancePolicy")
-        .select("period_start, period_end")
-        .eq("school_year", schoolYear)
-        .maybeSingle();
-
-    // compliance row
-    const { data: compliance } = await supabase
-        .from("TeacherTrainingCompliance")
-        .select("*")
-        .eq("teacher_id", auth.user.id)
-        .maybeSingle();
-
-    // trainings (approved + passed)
-    const { data: allTrainings } = await supabase
-        .from("Attendance")
-        .select(
-            "id, status, result, training_id, approved_hours, ProfessionalDevelopment(title, type, start_date, end_date, total_hours, sponsoring_agency)",
-        )
-        .eq("teacher_id", auth.user.id)
-        .eq("status", "APPROVED")
-        .eq("result", "PASSED");
+    const [{ data: policy }, { data: compliance }, { data: allTrainings }] =
+        await Promise.all([
+            supabase
+                .from("TrainingCompliancePolicy")
+                .select("period_start, period_end")
+                .eq("school_year", schoolYear)
+                .maybeSingle(),
+            supabase
+                .from("TeacherTrainingCompliance")
+                .select("*")
+                .eq("teacher_id", user.id)
+                .maybeSingle(),
+            supabase
+                .from("Attendance")
+                .select(
+                    "id, status, result, training_id, approved_hours, ProfessionalDevelopment(title, type, start_date, end_date, total_hours, sponsoring_agency)",
+                )
+                .eq("teacher_id", user.id)
+                .eq("status", "APPROVED")
+                .eq("result", "PASSED"),
+        ]);
 
     const periodStart = policy?.period_start ?? null;
     const periodEnd = policy?.period_end ?? null;
@@ -107,19 +89,12 @@ export default async function CompliancePage() {
                                     My Compliance
                                 </h1>
                                 <p className="text-[13px] text-muted-foreground mt-0.5">
-                                    Track your training hours and compliance
-                                    status — {schoolYear}
+                                    Track your training hours and compliance status — {schoolYear}
                                 </p>
                             </div>
                         </div>
                         <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:justify-end">
-                            <span className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {roleLabel}
-                            </span>
-                            <Badge
-                                variant="outline"
-                                className="gap-1.5 text-amber-400 border-amber-500/30"
-                            >
+                            <Badge variant="outline" className="gap-1.5 text-amber-400 border-amber-500/30">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 {countedTrainings.length} counted
                             </Badge>
@@ -141,9 +116,7 @@ export default async function CompliancePage() {
                             <ClipboardCheck className="h-4 w-4 text-amber-400" />
                         </div>
                         <div>
-                            <p className="text-xl font-bold tabular-nums leading-tight">
-                                {schoolYear}
-                            </p>
+                            <p className="text-xl font-bold tabular-nums leading-tight">{schoolYear}</p>
                             <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
                                 Current school year
                             </p>
@@ -186,7 +159,6 @@ export default async function CompliancePage() {
                 </div>
             </div>
 
-            {/* existing client UI */}
             <CompliancePageClient
                 compliance={compliance}
                 countedTrainings={countedTrainings}

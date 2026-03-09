@@ -174,7 +174,9 @@ export default function EmploymentInfoCard(props: {
         viewerRole = "TEACHER",
     } = props;
     const isAdmin = viewerRole === "ADMIN";
+    const isTeacher = viewerRole === "TEACHER";
     const isOwnProfile = props.from === "profile";
+
     const [modalOpen, setModalOpen] = useState(false);
 
     const {

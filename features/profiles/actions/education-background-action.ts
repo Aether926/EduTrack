@@ -1,5 +1,6 @@
+"use server";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/server";
 import type { ProfileState } from "@/features/profiles/types/profile";
 import { mapEducationToState, mapStateToEducation } from "@/features/profiles/lib/map-profile";
 
@@ -16,32 +17,26 @@ function hasAnyEducationValue(row: any) {
 }
 
 export async function fetchEducationBackgroundToState(profileId: string): Promise<Partial<ProfileState>> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("ProfileEducation")
     .select("*")
     .eq("profileId", profileId);
 
   if (error) throw new Error(error.message);
-
   return mapEducationToState(data ?? []);
 }
 
-/**
- * Save education background from ProfileState into ProfileEducation.
- * Reliable approach: delete all rows for profileId, then insert only non-empty levels.
- */
 export async function saveEducationBackgroundFromState(profileId: string, state: ProfileState): Promise<void> {
+  const supabase = await createClient();
   const rows = mapStateToEducation(state, profileId).filter(hasAnyEducationValue);
 
-  // delete existing
   const { error: delErr } = await supabase
     .from("ProfileEducation")
     .delete()
     .eq("profileId", profileId);
 
   if (delErr) throw new Error(delErr.message);
-
-  // insert new (only if user filled anything)
   if (rows.length === 0) return;
 
   const { error: insErr } = await supabase.from("ProfileEducation").insert(rows);

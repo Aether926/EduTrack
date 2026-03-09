@@ -1,11 +1,12 @@
-import { supabase } from "@/lib/supabaseClient";
+"use server";
+import { createClient } from "@/lib/supabase/server";
 import type { AppointmentRequestForm } from "@/features/profiles/appointment/types/appointment";
 
 export type AppointmentChangeRequestForm = AppointmentRequestForm & {
   position: string | null;
   appointment_type: string | null;
-  start_date: string | null; // "YYYY-MM-DD"
-  end_date: string | null;   // "YYYY-MM-DD"
+  start_date: string | null;
+  end_date: string | null;
   memo_no: string | null;
   remarks: string | null;
   school_name: string | null;
@@ -15,40 +16,29 @@ export async function submitAppointmentRequest(
   teacherId: string,
   form: AppointmentChangeRequestForm
 ) {
-  const { data: sessionData, error: sessionError } =
-    await supabase.auth.getSession();
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (sessionError) throw new Error(sessionError.message);
-
-  const requestedBy = sessionData.session?.user.id;
-  if (!requestedBy) throw new Error("not authenticated");
-
-  const {
-    position,
-    appointment_type,
-    start_date,
-    end_date,
-    memo_no,
-    remarks,
-    school_name,
-  } = form;
+  if (authError) throw new Error(authError.message);
+  if (!user) throw new Error("not authenticated");
 
   const { error } = await supabase.rpc("insert_appointment_change_request", {
     p_teacher_id: teacherId,
-    p_requested_by: requestedBy,
-    p_position: position,
-    p_appointment_type: appointment_type,
-    p_start_date: start_date,
-    p_end_date: end_date,
-    p_memo_no: memo_no,
-    p_remarks: remarks,
-    p_payload: { school_name },
+    p_requested_by: user.id,
+    p_position: form.position,
+    p_appointment_type: form.appointment_type,
+    p_start_date: form.start_date,
+    p_end_date: form.end_date,
+    p_memo_no: form.memo_no,
+    p_remarks: form.remarks,
+    p_payload: { school_name: form.school_name },
   });
 
   if (error) throw new Error(error.message);
 }
 
 export async function fetchLastAppointmentRequest(teacherId: string) {
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_last_appointment_request", {
     p_teacher_id: teacherId,
   });
@@ -57,6 +47,7 @@ export async function fetchLastAppointmentRequest(teacherId: string) {
 }
 
 export async function fetchAppointmentHistory(teacherId: string) {
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_appointment_history", {
     p_teacher_id: teacherId,
   });

@@ -1,17 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getUser, createAdminClient } from "@/lib/supabase/server";
 import { AdminComplianceClient } from "@/features/compliance/components/admin-compliance-client";
-
 import { ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
 
-const ALLOWED = [
-    "ADMIN",
-    "HR_ADMIN",
-    "PRINCIPAL",
-    "SUPER_ADMIN",
-    "HR",
-] as const;
+const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
 
 function currentSchoolYear() {
     const now = new Date();
@@ -21,60 +14,34 @@ function currentSchoolYear() {
 }
 
 export default async function AdminCompliancePage() {
-    const supabase = await createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) redirect("/signin");
+    const user = await getUser();
+    if (!user) redirect("/signin");
 
-    const admin = createAdminClient();
-
-    const { data: viewer } = await admin
-        .from("User")
-        .select("role")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-
-    const roleLabel = (viewer?.role ?? "USER").toString();
+    const roleLabel = (user.user_metadata?.role ?? "TEACHER").toString();
     if (!ALLOWED.includes(roleLabel as any)) redirect("/dashboard");
 
+    const admin = createAdminClient();
     const schoolYear = currentSchoolYear();
 
     const [{ data: schools }, { data: policies }, { data: compliance }] =
         await Promise.all([
-            admin
-                .from("School")
-                .select("id,name")
-                .order("name", { ascending: true }),
-            admin
-                .from("TrainingCompliancePolicy")
-                .select("*")
-                .order("school_year", { ascending: false }),
-            admin
-                .from("TeacherTrainingCompliance")
-                .select(
-                    `
-          *,
-          teacher:Profile(id, firstName, lastName, email),
-          school:School(id, name)
-        `,
-                )
+            admin.from("School").select("id,name").order("name", { ascending: true }),
+            admin.from("TrainingCompliancePolicy").select("*").order("school_year", { ascending: false }),
+            admin.from("TeacherTrainingCompliance")
+                .select("*, teacher:Profile(id, firstName, lastName, email), school:School(id, name)")
                 .eq("school_year", schoolYear)
                 .order("remaining_hours", { ascending: false }),
         ]);
 
     const safeCompliance = (compliance ?? []) as any[];
-
     const counts = {
-        NON_COMPLIANT: safeCompliance.filter(
-            (c) => c.status === "NON_COMPLIANT",
-        ).length,
+        NON_COMPLIANT: safeCompliance.filter((c) => c.status === "NON_COMPLIANT").length,
         AT_RISK: safeCompliance.filter((c) => c.status === "AT_RISK").length,
-        COMPLIANT: safeCompliance.filter((c) => c.status === "COMPLIANT")
-            .length,
+        COMPLIANT: safeCompliance.filter((c) => c.status === "COMPLIANT").length,
     };
 
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-            {/* header card */}
             <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 pointer-events-none" />
                 <div className="relative px-5 py-5 md:px-6 md:py-6">
@@ -84,12 +51,9 @@ export default async function AdminCompliancePage() {
                                 <ShieldCheck className="h-5 w-5 text-amber-400" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-semibold tracking-tight leading-tight">
-                                    Training Compliance
-                                </h1>
+                                <h1 className="text-lg font-semibold tracking-tight leading-tight">Training Compliance</h1>
                                 <p className="text-[13px] text-muted-foreground mt-0.5">
-                                    Monitor compliance and hour requirements —{" "}
-                                    {schoolYear}
+                                    Monitor compliance and hour requirements — {schoolYear}
                                 </p>
                             </div>
                         </div>
@@ -98,22 +62,18 @@ export default async function AdminCompliancePage() {
                                 {roleLabel}
                             </span>
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
-                                <ShieldCheck className="h-3 w-3" />
-                                {counts.COMPLIANT} compliant
+                                <ShieldCheck className="h-3 w-3" />{counts.COMPLIANT} compliant
                             </span>
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-                                <ShieldAlert className="h-3 w-3" />
-                                {counts.AT_RISK} at risk
+                                <ShieldAlert className="h-3 w-3" />{counts.AT_RISK} at risk
                             </span>
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-rose-400">
-                                <ShieldX className="h-3 w-3" />
-                                {counts.NON_COMPLIANT} non-compliant
+                                <ShieldX className="h-3 w-3" />{counts.NON_COMPLIANT} non-compliant
                             </span>
                         </div>
                     </div>
                 </div>
             </div>
-
             <AdminComplianceClient
                 compliance={safeCompliance as any}
                 policies={(policies ?? []) as any}

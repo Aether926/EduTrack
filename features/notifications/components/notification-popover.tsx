@@ -9,8 +9,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useNotifications } from "@/features/notifications/hooks/use-notifications";
-import { supabase } from "@/lib/supabaseClient";
 import { getDisplayMessage } from "@/features/dashboard/component/activity-feed";
+import { supabase } from "@/lib/supabaseClient"; // only for auth state listener
 
 function timeAgo(dateStr: string) {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -23,18 +23,10 @@ function timeAgo(dateStr: string) {
     return "just now";
 }
 
-export function NotificationPopover() {
+export function NotificationPopover({ viewerId }: { viewerId: string }) {
     const { notifications, loading, unreadCount, markRead } =
         useNotifications();
     const [open, setOpen] = useState(false);
-    const [viewerId, setViewerId] = useState<string>("");
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => {
-            if (data.user) setViewerId(data.user.id);
-        });
-    }, []);
 
     const handleOpen = async (isOpen: boolean) => {
         setOpen(isOpen);
