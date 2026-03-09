@@ -2,7 +2,6 @@
 import { redirect } from "next/navigation";
 import { getUser, createAdminClient } from "@/lib/supabase/server";
 import { HRQueueClient } from "@/features/admin-actions/queue/components/queue-client";
-import { ListChecks, Users, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Users, Briefcase, BookMarked } from "lucide-react";
 

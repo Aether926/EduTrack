@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Bell } from "lucide-react";
 import {
     Popover,
@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/popover";
 import { useNotifications } from "@/features/notifications/hooks/use-notifications";
 import { getDisplayMessage } from "@/features/dashboard/component/activity-feed";
-import { supabase } from "@/lib/supabaseClient"; // only for auth state listener
 
 function timeAgo(dateStr: string) {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -27,6 +26,7 @@ export function NotificationPopover({ viewerId }: { viewerId: string }) {
     const { notifications, loading, unreadCount, markRead } =
         useNotifications();
     const [open, setOpen] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     const handleOpen = async (isOpen: boolean) => {
         setOpen(isOpen);
