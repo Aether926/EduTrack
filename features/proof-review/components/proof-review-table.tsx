@@ -2,20 +2,14 @@
 
 import type { ProofReviewRow } from "../types";
 import { useProofReview } from "../hooks/use-proof-review";
-import { fmt, statusBadgeVariant } from "../lib/utils";
+import { fmt } from "../lib/utils";
 
 import { useMemo, useState } from "react";
-import { Search, X, Clock, GraduationCap, User2 } from "lucide-react";
+import { Search, X, Clock, GraduationCap, FileSearch } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from "@/components/ui/card";
+import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
 import { Input } from "@/components/ui/input";
 import {
     Table,
@@ -28,6 +22,30 @@ import {
 
 import ProofReviewSheet from "@/features/proof-review/components/proof-review-sheet";
 
+function StatusBadge({ status }: { status: string }) {
+    const s = (status ?? "").toUpperCase();
+    if (s === "APPROVED")
+        return (
+            <Badge className="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Approved
+            </Badge>
+        );
+    if (s === "REJECTED")
+        return (
+            <Badge className="inline-flex items-center gap-1.5 bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/15">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                Rejected
+            </Badge>
+        );
+    return (
+        <Badge className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/15">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+            {s.charAt(0) + s.slice(1).toLowerCase()}
+        </Badge>
+    );
+}
+
 export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
     const {
         sortedRows,
@@ -39,59 +57,58 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
         onApprove,
         onReject,
     } = useProofReview(rows);
-
     const [q, setQ] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
 
     const filtered = useMemo(() => {
         const s = q.trim().toLowerCase();
         if (!s) return sortedRows;
-        return sortedRows.filter((r) => {
-            return (
+        return sortedRows.filter(
+            (r) =>
                 r.training.title.toLowerCase().includes(s) ||
                 r.teacher.name.toLowerCase().includes(s) ||
-                (r.teacher.email ?? "").toLowerCase().includes(s)
-            );
-        });
+                (r.teacher.email ?? "").toLowerCase().includes(s),
+        );
     }, [q, sortedRows]);
 
     return (
         <>
-            <Card className="min-w-0">
-                <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
-                        <CardTitle className="text-base">
-                            Pending submissions
-                        </CardTitle>
-                        <CardDescription>
-                            Tap a row to review proof and approve or reject.
-                        </CardDescription>
-                    </div>
-
-                    {/* desktop toolbar */}
-                    <div className="hidden md:flex items-center gap-2">
-                        <Input
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                            placeholder="Search teacher, email, training..."
-                            className="w-[320px]"
-                        />
-                        <Badge variant="secondary" className="gap-2">
-                            <Clock className="h-3.5 w-3.5" />
-                            {filtered.length} pending
-                        </Badge>
-                    </div>
-
-                    {/* mobile toolbar */}
-                    <div className="flex md:hidden items-center justify-between gap-2">
-                        <Badge variant="secondary" className="gap-2">
-                            <Clock className="h-3.5 w-3.5" />
-                            {filtered.length} pending
-                        </Badge>
+            <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+                {/* Header band */}
+                <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
+                    <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/5 via-transparent to-transparent pointer-events-none" />
+                    <div className="relative flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="rounded-lg border border-fuchsia-500/20 bg-fuchsia-500/10 p-2 shrink-0">
+                                <FileSearch className="h-4 w-4 text-fuchsia-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold">
+                                    Submissions
+                                </p>
+                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+                                    {filtered.length} result
+                                    {filtered.length === 1 ? "" : "s"} • tap a
+                                    row to review
+                                </p>
+                            </div>
+                        </div>
+                        <div className="hidden md:block">
+                            <Input
+                                value={q}
+                                onChange={(e) => setQ(e.target.value)}
+                                placeholder="Search teacher, training..."
+                                className="w-[260px] h-8 text-sm"
+                            />
+                        </div>
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => setSearchOpen((v) => !v)}
+                            className="md:hidden h-8 w-8 shrink-0"
+                            onClick={() => {
+                                setSearchOpen((v) => !v);
+                                if (searchOpen) setQ("");
+                            }}
                             aria-label="Search"
                         >
                             {searchOpen ? (
@@ -101,144 +118,151 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                             )}
                         </Button>
                     </div>
-                </CardHeader>
-
-                <CardContent className="space-y-3">
-                    {/* mobile inline search */}
-                    {searchOpen && (
-                        <div className="md:hidden">
+                    <div
+                        className="md:hidden"
+                        style={{
+                            maxHeight: searchOpen ? "48px" : "0px",
+                            opacity: searchOpen ? 1 : 0,
+                            overflow: "hidden",
+                            transition:
+                                "max-height 0.25s ease, opacity 0.2s ease",
+                        }}
+                    >
+                        <div className="pt-3">
                             <Input
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
-                                placeholder="Search teacher, email, training..."
+                                placeholder="Search teacher, training..."
+                                className="h-8 text-sm w-full"
+                                tabIndex={searchOpen ? 0 : -1}
                             />
                         </div>
-                    )}
+                    </div>
+                </div>
 
+                {/* Table */}
+                <div className="w-full overflow-x-auto">
                     {filtered.length === 0 ? (
-                        <div className="rounded-lg border bg-muted/20 p-6 text-sm text-muted-foreground text-center">
-                            No pending proofs found.
+                        <div className="py-16 text-center text-sm text-muted-foreground">
+                            No submissions found.
                         </div>
                     ) : (
-                        <div className="overflow-hidden rounded-lg border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Submission</TableHead>
-                                        <TableHead className="hidden lg:table-cell">
-                                            Teacher
-                                        </TableHead>
-                                        <TableHead className="hidden md:table-cell">
-                                            Status
-                                        </TableHead>
-                                        <TableHead className="hidden md:table-cell text-right">
-                                            Submitted
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-
-                                <TableBody>
-                                    {filtered.map((r) => (
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground pl-5">
+                                        Submission
+                                    </TableHead>
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden lg:table-cell">
+                                        Teacher
+                                    </TableHead>
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden md:table-cell">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden md:table-cell">
+                                        Submitted
+                                    </TableHead>
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground text-center">
+                                        Actions
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filtered.map((r) => {
+                                    return (
                                         <TableRow
                                             key={r.attendanceId}
-                                            className="cursor-pointer transition-colors hover:bg-accent/40"
+                                            className="cursor-pointer hover:bg-accent/30 transition-colors"
                                             onClick={() => setSelected(r)}
                                         >
-                                            {/* submission (primary column) */}
-                                            <TableCell className="align-top">
-                                                <div className="min-w-0 space-y-1">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="truncate font-medium">
-                                                            {r.training.title}
-                                                        </span>
-                                                        <span className="hidden md:inline-flex">
-                                                            <Badge
-                                                                variant={statusBadgeVariant(
-                                                                    r.status,
-                                                                )}
-                                                            >
-                                                                {r.status}
-                                                            </Badge>
-                                                        </span>
+                                            <TableCell className="pl-5 align-top pt-3 pb-2 min-w-0 max-w-0 w-full">
+                                                <div className="space-y-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">
+                                                        {r.training.title}
+                                                    </p>
+                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                        <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+                                                        {r.training.type} •{" "}
+                                                        {r.training.level} •{" "}
+                                                        {r.training.totalHours}{" "}
+                                                        hrs
                                                     </div>
-                                                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <GraduationCap className="h-3.5 w-3.5" />
-                                                            {r.training.type} •{" "}
-                                                            {r.training.level} •{" "}
-                                                            {
-                                                                r.training
-                                                                    .totalHours
-                                                            }{" "}
-                                                            hrs
-                                                        </span>
-                                                    </div>
-
-                                                    {/* mobile teacher + status + submitted */}
-                                                    <div className="md:hidden flex flex-wrap items-center gap-2 pt-1 text-xs text-muted-foreground">
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <User2 className="h-3.5 w-3.5" />
-                                                            {r.teacher.name}
-                                                        </span>
-                                                        <Badge
-                                                            variant={statusBadgeVariant(
-                                                                r.status,
-                                                            )}
-                                                            className="ml-auto"
-                                                        >
-                                                            {r.status}
-                                                        </Badge>
-                                                        <span className="w-full inline-flex items-center gap-1">
-                                                            <Clock className="h-3.5 w-3.5" />
-                                                            {fmt(r.submittedAt)}
-                                                        </span>
-                                                        {r.teacher.email && (
-                                                            <span className="w-full truncate">
-                                                                {
+                                                    <div className="md:hidden space-y-1.5 pt-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <InitialAvatar
+                                                                name={
                                                                     r.teacher
-                                                                        .email
+                                                                        .name
                                                                 }
+                                                                className="h-6 w-6 text-[10px] shrink-0"
+                                                            />
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {r.teacher.name}
                                                             </span>
-                                                        )}
+                                                        </div>
+                                                        <StatusBadge
+                                                            status={r.status}
+                                                        />
+                                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                            <Clock className="h-3 w-3 shrink-0" />
+                                                            {fmt(r.submittedAt)}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
-
-                                            {/* teacher (desktop) */}
-                                            <TableCell className="hidden lg:table-cell align-top">
-                                                <div className="min-w-0">
-                                                    <div className="font-medium">
-                                                        {r.teacher.name}
-                                                    </div>
-                                                    <div className="text-xs text-muted-foreground truncate">
-                                                        {r.teacher.email ?? "—"}
+                                            <TableCell className="hidden lg:table-cell align-top py-3">
+                                                <div className="flex items-center gap-2.5">
+                                                    <InitialAvatar
+                                                        name={r.teacher.name}
+                                                        className="h-8 w-8 text-xs shrink-0"
+                                                    />
+                                                    <div className="leading-tight min-w-0">
+                                                        <p className="text-sm font-medium">
+                                                            {r.teacher.name}
+                                                        </p>
+                                                        <p className="text-[11px] text-muted-foreground truncate">
+                                                            {r.teacher.email ??
+                                                                "—"}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </TableCell>
-
-                                            {/* status (desktop) */}
-                                            <TableCell className="hidden md:table-cell align-top">
-                                                <Badge
-                                                    variant={statusBadgeVariant(
-                                                        r.status,
-                                                    )}
-                                                >
-                                                    {r.status}
-                                                </Badge>
+                                            <TableCell className="hidden md:table-cell align-middle py-3">
+                                                <StatusBadge
+                                                    status={r.status}
+                                                />
                                             </TableCell>
-
-                                            {/* submitted (desktop) */}
-                                            <TableCell className="hidden md:table-cell align-top text-right text-sm text-muted-foreground">
+                                            <TableCell className="hidden md:table-cell align-middle py-3 text-xs text-muted-foreground font-mono">
                                                 {fmt(r.submittedAt)}
                                             </TableCell>
+                                            <TableCell
+                                                className="align-middle py-3 text-center w-px pl-4"
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                            >
+                                                <Button
+                                                    size="sm"
+                                                    className="gap-1.5 bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/25 hover:bg-fuchsia-500/20 hover:border-fuchsia-500/40"
+                                                    onClick={() =>
+                                                        setSelected(r)
+                                                    }
+                                                    disabled={
+                                                        loadingId ===
+                                                        r.attendanceId
+                                                    }
+                                                >
+                                                    Review
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             <ProofReviewSheet
                 row={selected}
