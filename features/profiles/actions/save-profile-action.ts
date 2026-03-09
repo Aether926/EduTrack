@@ -17,7 +17,6 @@ export async function saveProfileData(state: ProfileState): Promise<void> {
 
   const uid = user.id;
 
-  // 1. Profile table
   const profileFields = mapStateToDb(state);
   const { error: profileError } = await supabase
     .from("Profile")
@@ -47,4 +46,5 @@ export async function saveProfileData(state: ProfileState): Promise<void> {
   await supabase
     .from("ProfileEmergencyContact")
     .upsert({ ...mapStateToEmergency(state), profileId: uid }, { onConflict: "profileId" });
+    
 }
