@@ -105,12 +105,8 @@ export async function getTeacherSalaryEligibility(
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return { data: [], count: 0 };
 
-    const { data: userRow } = await supabase
-      .from("User")
-      .select("role")
-      .eq("id", auth.user.id)
-      .single();
-    if (userRow?.role !== "ADMIN") return { data: [], count: 0 };
+    const role = auth.user.user_metadata?.role ?? "TEACHER";
+    if (!["ADMIN", "SUPERADMIN"].includes(role)) return { data: [], count: 0 };
 
     const admin = createAdminClient();
 
@@ -276,12 +272,8 @@ export async function markSalaryIncreaseGiven(
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return { ok: false, error: "Not authenticated" };
 
-    const { data: userRow } = await supabase
-      .from("User")
-      .select("role")
-      .eq("id", auth.user.id)
-      .single();
-    if (userRow?.role !== "ADMIN") return { ok: false, error: "Unauthorized" };
+    const role = auth.user.user_metadata?.role ?? "TEACHER";
+    if (!["ADMIN", "SUPERADMIN"].includes(role)) return { ok: false, error: "Unauthorized" };
 
     const admin = createAdminClient();
 

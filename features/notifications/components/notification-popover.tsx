@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNotifications } from "@/features/notifications/hooks/use-notifications";
-import { supabase } from "@/lib/supabaseClient";
 import { getDisplayMessage } from "@/features/dashboard/component/activity-feed";
+import { supabase } from "@/lib/supabaseClient"; // only for auth state listener
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -19,16 +19,9 @@ function timeAgo(dateStr: string) {
   return "just now";
 }
 
-export function NotificationPopover() {
+export function NotificationPopover({ viewerId }: { viewerId: string }) {
   const { notifications, loading, unreadCount, markRead } = useNotifications();
-  const [open, setOpen]       = useState(false);
-  const [viewerId, setViewerId] = useState<string>("");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setViewerId(data.user.id);
-    });
-  }, []);
+  const [open, setOpen] = useState(false);
 
   const handleOpen = async (isOpen: boolean) => {
     setOpen(isOpen);
@@ -58,16 +51,11 @@ export function NotificationPopover() {
 
         <div className="max-h-[400px] overflow-y-auto">
           {loading ? (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Loading...
-            </div>
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading...</div>
           ) : notifications.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-              No notifications yet.
-            </div>
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">No notifications yet.</div>
           ) : (
             notifications.map((n) => {
-              // Build a FeedRow-compatible object for getDisplayMessage
               const feedRow = {
                 ...n,
                 actor_id:       n.actor_id       ?? null,
@@ -94,9 +82,7 @@ export function NotificationPopover() {
                       <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                         {timeAgo(n.created_at)}
                       </span>
-                      {!n.read_at && (
-                        <span className="w-2 h-2 rounded-full bg-blue-500" />
-                      )}
+                      {!n.read_at && <span className="w-2 h-2 rounded-full bg-blue-500" />}
                     </div>
                   </div>
                 </div>

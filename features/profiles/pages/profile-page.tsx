@@ -19,8 +19,8 @@ import AppointmentHistoryCard from "@/features/profiles/components/cards/appoint
 import { useProfile } from "@/features/profiles/hooks/use-profile";
 import { useProfileTrainings } from "@/features/profiles/hooks/use-profile-trainings";
 import { useProfileImage } from "@/features/profiles/hooks/use-profile-image";
+import type { ProfileState } from "@/features/profiles/types/profile";
 
-// All cards that support individual sheet editing
 type EditableCard =
     | "personal"
     | "contact"
@@ -31,13 +31,17 @@ type EditableCard =
     | "education"
     | "educationBg";
 
-export default function ProfilePage() {
+export default function ProfilePage({
+    userId,
+    initialProfile,
+}: {
+    userId: string;
+    initialProfile: ProfileState;
+}) {
     const { theme } = useTheme();
     const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
 
     const {
-        mounted,
-        userId,
         isSaving,
         profileData,
         tempProfileData,
@@ -46,24 +50,21 @@ export default function ProfilePage() {
         handleChildrenChange,
         cancelEditing,
         saveProfile,
-    } = useProfile();
+    } = useProfile(initialProfile);
 
-    // ── Per-card Sheet state ──────────────────────────────────────────────────
     const [openCard, setOpenCard] = useState<EditableCard | null>(null);
 
     const openEdit = (card: EditableCard) => setOpenCard(card);
 
     const closeEdit = () => {
-        cancelEditing(); // resets tempProfileData back to saved profileData
+        cancelEditing();
         setOpenCard(null);
     };
 
     const handleSave = async () => {
         await saveProfile();
-        setOpenCard(null); // close sheet after successful save
+        setOpenCard(null);
     };
-
-    // ─────────────────────────────────────────────────────────────────────────
 
     const [savedFirstName, setSavedFirstName] = React.useState(
         tempProfileData.firstName,
@@ -76,21 +77,16 @@ export default function ProfilePage() {
     }, [tempProfileData.firstName, openCard]);
 
     const { preview, previewImage } = useProfileImage();
-    const { trainings, trainingsLoading, loadTrainings } =
-        useProfileTrainings();
+    const { trainings, trainingsLoading, loadTrainings } = useProfileTrainings();
 
     useEffect(() => {
-        if (!userId) return;
         void loadTrainings(userId);
     }, [userId, loadTrainings]);
 
-    if (!mounted) return null;
-
     return (
         <div className={`min-h-screen ${bgClass} space-y-6`}>
-            {/* Header — no more global Edit button, just share/QR/PDF */}
             <ProfileHeader
-                teacherId={userId ?? ""}
+                teacherId={userId}
                 preview={preview}
                 isEditing={false}
                 savedFirstName={savedFirstName}
@@ -104,7 +100,6 @@ export default function ProfilePage() {
                 profileData={profileData}
                 onImageChange={previewImage}
                 showActions={true}
-                // onEdit / onSave / onCancel intentionally omitted — header no longer controls editing
             />
 
             <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
@@ -173,7 +168,7 @@ export default function ProfilePage() {
                         from="profile"
                     />
                     <AppointmentHistoryCard
-                        teacherId={userId ?? ""}
+                        teacherId={userId}
                         isOwnProfile={true}
                         from="profile"
                     />
@@ -210,12 +205,8 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* Trainings & Service Record — mobile only */}
             <div className="md:hidden flex flex-col gap-4 px-4 pb-4">
-                <TrainingsCard
-                    trainings={trainings}
-                    loading={trainingsLoading}
-                />
+                <TrainingsCard trainings={trainings} loading={trainingsLoading} />
                 <ServiceRecordCard data={tempProfileData} />
             </div>
         </div>

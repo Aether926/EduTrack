@@ -19,9 +19,29 @@ async function requireAdmin() {
 export async function approveUser(id: string): Promise<ActionResult> {
   const check = await requireAdmin();
   if (!check.ok) return { ok: false, error: check.error };
+
   const admin = createAdminClient();
-  const { error } = await admin.from("User").update({ status: "APPROVED" }).eq("id", id);
-  if (error) return { ok: false, error: error.message };
+
+  // Get the user's role from the User table
+  const { data: userData } = await admin
+    .from("User")
+    .select("role")
+    .eq("id", id)
+    .single();
+
+  const role = userData?.role ?? "TEACHER";
+
+  // Update status in DB and sync role to Auth metadata in parallel
+  const [{ error: dbError }, { error: metaError }] = await Promise.all([
+    admin.from("User").update({ status: "APPROVED" }).eq("id", id),
+    admin.auth.admin.updateUserById(id, {
+      user_metadata: { role },
+    }),
+  ]);
+
+  if (dbError) return { ok: false, error: dbError.message };
+  if (metaError) return { ok: false, error: metaError.message };
+
   return { ok: true };
 }
 
@@ -47,18 +67,25 @@ export async function fetchUsersByStatus(status: "PENDING" | "REJECTED") {
   const check = await requireAdmin();
   if (!check.ok) return [];
   const admin = createAdminClient();
+
   const { data, error } = await admin
     .from("User")
     .select("id, email, role, status, created_at")
     .eq("status", status)
     .order("created_at", { ascending: false });
-  if (error) return [];
-  const rows = await Promise.all((data ?? []).map(async (u) => {
-    const { data: profile } = await admin
-      .from("Profile")
-      .select("firstName, lastName, middleInitial, contactNumber")
-      .eq("id", u.id)
-      .single();
+
+  if (error || !data?.length) return [];
+
+  const ids = data.map((u) => u.id);
+  const { data: profiles } = await admin
+    .from("Profile")
+    .select("id, firstName, lastName, middleInitial, contactNumber")
+    .in("id", ids);
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+  return data.map((u) => {
+    const profile = profileMap.get(u.id);
     return {
       id: u.id,
       email: u.email,
@@ -71,6 +98,5 @@ export async function fetchUsersByStatus(status: "PENDING" | "REJECTED") {
       contactNumber: profile?.contactNumber || "",
       employeeId: "",
     };
-  }));
-  return rows;
+  });
 }

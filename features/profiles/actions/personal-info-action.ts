@@ -1,33 +1,18 @@
-import { supabase } from "@/lib/supabaseClient";
+"use server";
+import { createClient } from "@/lib/supabase/server";
 import type { PersonalInfoPDSPayload } from "@/features/profiles/types/personal-info";
 
 export async function fetchPersonalInfoPDS(profileId: string) {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("Profile")
     .select(`
-      nameExtension,
-      placeOfBirth,
-      height,
-      weight,
-      bloodType,
-      citizenship,
-      dualCitizenshipType,
-      dualCitizenshipCountry,
-      telephoneNo,
-      residentialHouseNo,
-      residentialStreet,
-      residentialSubdivision,
-      residentialBarangay,
-      residentialCity,
-      residentialProvince,
-      residentialZipCode,
-      permanentHouseNo,
-      permanentStreet,
-      permanentSubdivision,
-      permanentBarangay,
-      permanentCity,
-      permanentProvince,
-      permanentZipCode,
+      nameExtension, placeOfBirth, height, weight, bloodType,
+      citizenship, dualCitizenshipType, dualCitizenshipCountry, telephoneNo,
+      residentialHouseNo, residentialStreet, residentialSubdivision,
+      residentialBarangay, residentialCity, residentialProvince, residentialZipCode,
+      permanentHouseNo, permanentStreet, permanentSubdivision,
+      permanentBarangay, permanentCity, permanentProvince, permanentZipCode,
       sameAsResidential
     `)
     .eq("id", profileId)
@@ -37,14 +22,8 @@ export async function fetchPersonalInfoPDS(profileId: string) {
   return data;
 }
 
-/**
- * Save (upsert) the PDS personal info fields.
- * Only touches new PDS columns — does not overwrite existing base fields.
- */
-export async function savePersonalInfoPDS(
-  profileId: string,
-  payload: PersonalInfoPDSPayload
-) {
+export async function savePersonalInfoPDS(profileId: string, payload: PersonalInfoPDSPayload) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("Profile")
     .update({

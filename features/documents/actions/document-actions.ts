@@ -82,10 +82,8 @@ export async function getDocumentSignedUrl(
 
     if (!doc?.file_path) return { ok: false, error: "Document not found" };
 
-    const { data: user } = await supabase
-      .from("User").select("role").eq("id", auth.user.id).single();
+    const isAdmin = ["ADMIN", "SUPERADMIN"].includes(auth.user.user_metadata?.role ?? "");
 
-    const isAdmin = user?.role === "ADMIN";
     const isOwner = doc.teacher_id === auth.user.id;
     if (!isAdmin && !isOwner) return { ok: false, error: "Unauthorized" };
 

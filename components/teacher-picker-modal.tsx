@@ -2,12 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Search, Check } from "lucide-react";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
+import { fetchTeacherOptions } from "@/features/responsibilities/actions/teacher-picker-actions";
 
 export type TeacherOption = {
   id: string;
@@ -30,47 +27,19 @@ export function TeacherPickerModal(props: {
     if (!open) return;
     const load = async () => {
       setLoading(true);
-
-      // fetch only TEACHER role users
-      const { data: users } = await supabase
-        .from("User")
-        .select("id")
-        .eq("role", "TEACHER");
-
-      const ids = (users ?? []).map((u) => u.id);
-      if (!ids.length) { setTeachers([]); setLoading(false); return; }
-
-      const { data: profiles } = await supabase
-        .from("Profile")
-        .select("id, firstName, lastName")
-        .in("id", ids)
-        .order("lastName", { ascending: true });
-
-      const { data: hrRows } = await supabase
-        .from("ProfileHR")
-        .select("id, employeeId")
-        .in("id", ids);
-
-      const hrMap = new Map((hrRows ?? []).map((h) => [h.id, h.employeeId ?? ""]));
-
-      const mapped = (profiles ?? []).map((p) => ({
-        id: p.id,
-        fullName: `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim(),
-        employeeId: hrMap.get(p.id) ?? "—",
-      }));
-
-      setTeachers(mapped);
-      setLoading(false);
+      try {
+        const options = await fetchTeacherOptions();
+        setTeachers(options);
+      } finally {
+        setLoading(false);
+      }
     };
-    load();
+    void load();
   }, [open]);
 
   const filtered = teachers.filter((t) => {
     const q = search.toLowerCase();
-    return (
-      t.fullName.toLowerCase().includes(q) ||
-      t.employeeId.toLowerCase().includes(q)
-    );
+    return t.fullName.toLowerCase().includes(q) || t.employeeId.toLowerCase().includes(q);
   });
 
   return (
@@ -80,7 +49,6 @@ export function TeacherPickerModal(props: {
           <DialogTitle>Select Teacher</DialogTitle>
         </DialogHeader>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -91,26 +59,17 @@ export function TeacherPickerModal(props: {
           />
         </div>
 
-        {/* Table */}
         <div className="flex-1 overflow-y-auto border border-border rounded-md">
           {loading ? (
-            <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-              Loading...
-            </div>
+            <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-              No teachers found.
-            </div>
+            <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">No teachers found.</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/40 sticky top-0">
                 <tr>
-                  <th className="text-left px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Full Name
-                  </th>
-                  <th className="text-left px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Employee ID
-                  </th>
+                  <th className="text-left px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Full Name</th>
+                  <th className="text-left px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Employee ID</th>
                   <th className="w-8" />
                 </tr>
               </thead>
@@ -121,11 +80,9 @@ export function TeacherPickerModal(props: {
                     <tr
                       key={t.id}
                       onClick={() => { onSelect(t); onOpenChange(false); }}
-                      className={`cursor-pointer border-b border-border last:border-0 transition-colors
-                        ${isSelected
-                          ? "bg-blue-50 dark:bg-blue-950/30"
-                          : "hover:bg-muted/50"
-                        }`}
+                      className={`cursor-pointer border-b border-border last:border-0 transition-colors ${
+                        isSelected ? "bg-blue-50 dark:bg-blue-950/30" : "hover:bg-muted/50"
+                      }`}
                     >
                       <td className="px-4 py-2.5 font-medium">{t.fullName}</td>
                       <td className="px-4 py-2.5 text-muted-foreground">{t.employeeId}</td>

@@ -356,8 +356,6 @@ function StatCard({
     );
 }
 
-// ── MiniTile ──────────────────────────────────────────────────────────────────
-
 const miniAccentMap = {
     blue:    { border: "border-blue-500/30",    value: "text-blue-400"    },
     violet:  { border: "border-violet-500/30",  value: "text-violet-400"  },

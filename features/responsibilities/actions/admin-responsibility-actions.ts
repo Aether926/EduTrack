@@ -1,27 +1,28 @@
-import { supabase } from "@/lib/supabaseClient";
+"use server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { AddResponsibilityForm } from "@/features/responsibilities/types/responsibility";
 
 export async function addResponsibility(form: AddResponsibilityForm) {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) throw new Error("Not authenticated");
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase.from("TeacherResponsibility").insert({
+  const admin = createAdminClient();
+  const { error } = await admin.from("TeacherResponsibility").insert({
     teacher_id: form.teacher_id,
     type: form.type,
     title: form.title,
     details: form.details,
     status: "ACTIVE",
-    created_by: auth.user.id,
+    created_by: user.id,
   });
 
   if (error) throw new Error(error.message);
 }
 
-export async function updateResponsibilityStatus(
-  id: string,
-  status: "ACTIVE" | "ENDED"
-) {
-  const { error } = await supabase
+export async function updateResponsibilityStatus(id: string, status: "ACTIVE" | "ENDED") {
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("TeacherResponsibility")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -30,7 +31,9 @@ export async function updateResponsibilityStatus(
 }
 
 export async function approveChangeRequest(id: string, note?: string) {
-  const { data: req } = await supabase
+  const admin = createAdminClient();
+
+  const { data: req } = await admin
     .from("ResponsibilityChangeRequest")
     .select("*")
     .eq("id", id)
@@ -38,7 +41,7 @@ export async function approveChangeRequest(id: string, note?: string) {
 
   if (!req) throw new Error("Request not found");
 
-  const { error: updateReqError } = await supabase
+  const { error: updateReqError } = await admin
     .from("ResponsibilityChangeRequest")
     .update({
       status: "APPROVED",
@@ -49,9 +52,8 @@ export async function approveChangeRequest(id: string, note?: string) {
 
   if (updateReqError) throw new Error(updateReqError.message);
 
-  // apply changes to the responsibility
   const changes = req.requested_changes as Record<string, unknown>;
-  const { error: updateError } = await supabase
+  const { error: updateError } = await admin
     .from("TeacherResponsibility")
     .update({
       ...(changes.title ? { title: changes.title } : {}),
@@ -64,7 +66,8 @@ export async function approveChangeRequest(id: string, note?: string) {
 }
 
 export async function rejectChangeRequest(id: string, note: string) {
-  const { error } = await supabase
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("ResponsibilityChangeRequest")
     .update({
       status: "REJECTED",

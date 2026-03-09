@@ -1,8 +1,11 @@
-import { supabase } from "@/lib/supabaseClient";
+"use server";
+
+import { createAdminClient } from "@/lib/supabase/server";
 import type { TeacherHRFields } from "@/features/admin-actions/teachers/types/manage-profile";
 
 export async function saveTeacherHR(teacherId: string, fields: TeacherHRFields) {
-  const { error } = await supabase
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("ProfileHR")
     .upsert({
       id: teacherId,

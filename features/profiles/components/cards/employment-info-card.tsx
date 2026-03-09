@@ -77,7 +77,7 @@ export default function EmploymentInfoCard(props: {
     onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
     viewerRole?: "ADMIN" | "TEACHER" | "GUEST";
     from?: "profile" | "qr" | "teacher";
-    isOwnProfile?: boolean; // add this
+    isOwnProfile?: boolean;
 }) {
     const {
         data,
@@ -88,7 +88,7 @@ export default function EmploymentInfoCard(props: {
     } = props;
     const isAdmin = viewerRole === "ADMIN";
     const isTeacher = viewerRole === "TEACHER";
-    const isOwnProfile = props.from === "profile"; // add this
+    const isOwnProfile = props.from === "profile"; 
 
     const [modalOpen, setModalOpen] = useState(false);
 

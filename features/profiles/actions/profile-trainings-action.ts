@@ -1,16 +1,14 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { TrainingRow } from "@/features/profiles/types/trainings";
 
-export async function getMyTrainings(): Promise<TrainingRow[]> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+export async function getProfileTrainings(teacherId: string): Promise<TrainingRow[]> {
+  const admin = createAdminClient();
 
-  const { data: attendanceRows, error: aErr } = await supabase
+  const { data: attendanceRows, error: aErr } = await admin
     .from("Attendance")
-    .select("id, training_id, status, result, proof_url, proof_path, created_at")
-    .eq("teacher_id", user.id)
+    .select("id, training_id, status, result, proof_url, proof_path, created_at, approved_hours")
+    .eq("teacher_id", teacherId)
     .order("created_at", { ascending: false });
 
   if (aErr || !attendanceRows?.length) return [];
@@ -23,13 +21,14 @@ export async function getMyTrainings(): Promise<TrainingRow[]> {
     proof_url: string | null;
     proof_path: string | null;
     created_at: string;
+    approved_hours: number | null;
   }>;
 
   const trainingIds = Array.from(new Set(attendance.map((r) => r.training_id)));
 
-  const { data: pdRows } = await supabase
+  const { data: pdRows } = await admin
     .from("ProfessionalDevelopment")
-    .select("id, title, type, level, start_date, end_date, total_hours, approved_hours, sponsoring_agency")
+    .select("id, title, type, level, start_date, end_date, total_hours, sponsoring_agency")
     .in("id", trainingIds);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,7 +47,7 @@ export async function getMyTrainings(): Promise<TrainingRow[]> {
       startDate: pd?.start_date ?? "",
       endDate: pd?.end_date ?? "",
       totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
-      approvedHours: pd?.approved_hours ?? null,
+      approvedHours: a.approved_hours != null ? String(a.approved_hours) : null,
       sponsor: pd?.sponsoring_agency ?? "",
       status: a.status ?? "",
       result: a.result ?? null,

@@ -17,8 +17,8 @@ async function requireAdmin() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false as const, error: "Not authenticated", userId: null as string | null };
-  const { data: user } = await supabase.from("User").select("role").eq("id", auth.user.id).single();
-  if (user?.role !== "ADMIN") return { ok: false as const, error: "Unauthorized", userId: auth.user.id };
+  const role = auth.user.user_metadata?.role ?? "TEACHER";
+  if (!["ADMIN", "SUPERADMIN"].includes(role)) return { ok: false as const, error: "Unauthorized", userId: auth.user.id };
   return { ok: true as const, error: null as string | null, userId: auth.user.id };
 }
 
