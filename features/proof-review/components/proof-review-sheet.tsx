@@ -78,7 +78,7 @@ function FullscreenOverlay({
                 />
             )}
         </motion.div>,
-        document.body
+        document.body,
     );
 }
 
@@ -130,7 +130,9 @@ export default function ProofReviewSheet({
                                     {row.training.title}
                                 </SheetTitle>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <Badge variant={statusBadgeVariant(row.status)}>
+                                    <Badge
+                                        variant={statusBadgeVariant(row.status)}
+                                    >
                                         {row.status}
                                     </Badge>
                                     <span className="text-xs text-muted-foreground">
@@ -153,28 +155,39 @@ export default function ProofReviewSheet({
 
                     {/* ── Body ── */}
                     <div className="flex-1 px-5 py-4 space-y-5">
-
                         {/* Training details */}
                         <div className="space-y-1 text-sm">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                                 Training
                             </div>
                             <div className="text-muted-foreground">
-                                <span className="font-medium text-foreground">Type / Level:</span>{" "}
-                                {row.training.type} • {row.training.level} • {row.training.totalHours} hrs
+                                <span className="font-medium text-foreground">
+                                    Type / Level:
+                                </span>{" "}
+                                {row.training.type} • {row.training.level} •{" "}
+                                {row.training.totalHours} hrs
                             </div>
                             <div className="text-muted-foreground">
-                                <span className="font-medium text-foreground">Dates:</span>{" "}
+                                <span className="font-medium text-foreground">
+                                    Dates:
+                                </span>{" "}
                                 {row.training.startDate}
-                                {row.training.endDate ? ` → ${row.training.endDate}` : ""}
+                                {row.training.endDate
+                                    ? ` → ${row.training.endDate}`
+                                    : ""}
                             </div>
                             <div className="text-muted-foreground">
-                                <span className="font-medium text-foreground">Sponsor / Venue:</span>{" "}
-                                {row.training.sponsor ?? "—"} • {row.training.venue ?? "—"}
+                                <span className="font-medium text-foreground">
+                                    Sponsor / Venue:
+                                </span>{" "}
+                                {row.training.sponsor ?? "—"} •{" "}
+                                {row.training.venue ?? "—"}
                             </div>
                             {row.training.description && (
                                 <div className="text-muted-foreground">
-                                    <span className="font-medium text-foreground">Description:</span>{" "}
+                                    <span className="font-medium text-foreground">
+                                        Description:
+                                    </span>{" "}
                                     {row.training.description}
                                 </div>
                             )}
@@ -187,7 +200,9 @@ export default function ProofReviewSheet({
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                                 Teacher
                             </div>
-                            <div className="font-medium">{row.teacher.name}</div>
+                            <div className="font-medium">
+                                {row.teacher.name}
+                            </div>
                             {row.teacher.employeeId && (
                                 <div className="text-xs text-muted-foreground">
                                     ID: {row.teacher.employeeId}
@@ -274,7 +289,9 @@ export default function ProofReviewSheet({
                             disabled={isLoading}
                             className="gap-2 flex-1"
                         >
-                            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {isLoading && (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
                             Approve
                         </Button>
                         <Button
@@ -283,7 +300,9 @@ export default function ProofReviewSheet({
                             disabled={isLoading}
                             className="gap-2 flex-1"
                         >
-                            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {isLoading && (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
                             Reject
                         </Button>
                     </div>
