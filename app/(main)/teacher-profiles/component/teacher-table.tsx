@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -18,11 +17,11 @@ import {
 } from "@tanstack/react-table";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown, Search, X, UserRound, ChevronRight } from "lucide-react";
+import { ArrowUpDown, Search, X, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import InitialAvatar from "@/app/(main)/teacher-profiles/component/avatar-color";
+import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
 
 import {
     Card,

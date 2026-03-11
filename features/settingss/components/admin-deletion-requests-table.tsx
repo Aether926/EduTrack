@@ -27,8 +27,8 @@ import {
     Loader2,
     Clock,
     CheckCircle2,
-    User,
 } from "lucide-react";
+import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
 import { toast } from "sonner";
 import {
     adminFinalizeDeleteAccount,
@@ -135,12 +135,17 @@ function RequestRow({
             <TableRow className="hover:bg-muted/30">
                 <TableCell className="pl-5">
                     <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-full bg-muted/50 border border-border/60 flex items-center justify-center shrink-0">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                        </div>
+                        <InitialAvatar
+                            name={`${req.user.firstName} ${req.user.lastName}`.trim()}
+                            className="h-8 w-8 shrink-0"
+                        />
                         <div>
                             <p className="font-medium text-sm leading-tight">
-                                {req.user.firstName} {req.user.lastName}
+                                {req.user.firstName}
+                                {req.user.middleName
+                                    ? ` ${req.user.middleName[0]}.`
+                                    : ""}{" "}
+                                {req.user.lastName}
                             </p>
                             <p className="text-xs text-muted-foreground">
                                 {req.user.email}

@@ -6,7 +6,7 @@ import { fmtDate, fullName } from "../lib/utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
 import {
     Table,
     TableBody,
@@ -205,20 +205,19 @@ export default function UserApprovalTable({
 
                             <TableBody>
                                 {users.map((u) => {
-                                    const name = fullName(u);
-                                    const initials =
-                                        `${u.firstName?.[0] ?? ""}${u.lastName?.[0] ?? ""}`.toUpperCase();
+                                    const name = fullName(u)
+                                        .replace(/\b([A-Z])\.\s*/g, "$1")
+                                        .trim();
                                     const isLoading = loadingId === u.id;
 
                                     return (
                                         <TableRow key={u.id}>
                                             <TableCell className="pl-5">
                                                 <div className="flex items-center gap-2.5">
-                                                    <Avatar className="h-8 w-8 border border-white/10">
-                                                        <AvatarFallback className="text-[11px] font-semibold bg-gradient-to-br from-slate-600 to-slate-700 text-slate-300">
-                                                            {initials || "U"}
-                                                        </AvatarFallback>
-                                                    </Avatar>
+                                                    <InitialAvatar
+                                                        name={name}
+                                                        className="h-8 w-8 shrink-0"
+                                                    />
                                                     <div className="leading-tight">
                                                         <p className="text-sm font-medium">
                                                             {name ||
