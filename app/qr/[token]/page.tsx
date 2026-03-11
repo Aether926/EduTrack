@@ -238,6 +238,7 @@ export default async function QRPublicProfilePage({
     const { data: auth } = await viewerClient.auth.getUser();
 
     let viewerRole: ViewerRole = "GUEST";
+    const hasSession = !!auth.user?.id;
 
     if (auth.user?.id) {
         const { data: viewer } = await viewerClient
@@ -246,7 +247,8 @@ export default async function QRPublicProfilePage({
             .eq("id", auth.user.id)
             .single();
 
-        if (viewer?.role === "ADMIN") viewerRole = "ADMIN";
+        if (viewer?.role === "ADMIN" || viewer?.role === "SUPERADMIN")
+            viewerRole = "ADMIN";
         else if (viewer?.role === "TEACHER") viewerRole = "TEACHER";
     }
 
@@ -271,6 +273,7 @@ export default async function QRPublicProfilePage({
                 trainings={[]}
                 from="qr"
                 viewerRole={viewerRole}
+                hasSession={hasSession}
             />
         );
     }
@@ -295,6 +298,7 @@ export default async function QRPublicProfilePage({
                 trainings={[]}
                 from="qr"
                 viewerRole={viewerRole}
+                hasSession={hasSession}
             />
         );
     }
@@ -340,6 +344,7 @@ export default async function QRPublicProfilePage({
             trainings={trainings}
             from="qr"
             viewerRole={viewerRole}
+            hasSession={hasSession}
         />
     );
 }

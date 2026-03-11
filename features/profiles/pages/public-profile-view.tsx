@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useTheme } from "next-themes";
 
 import ProfileHeader from "@/features/profiles/components/profile-header/profile-header";
@@ -180,7 +180,7 @@ export default function PublicProfileView(props: {
         [profile],
     );
 
-    const isAdmin = viewerRole === "ADMIN";
+    const isAdmin = ["ADMIN", "SUPERADMIN"].includes(viewerRole);
     const isTeacher = viewerRole === "TEACHER";
     const noop = () => {};
 
@@ -211,51 +211,73 @@ export default function PublicProfileView(props: {
                 </div>
             )}
 
-            <ProfileHeader
-                teacherId={str(profile?.id)}
-                preview={data.profileImage ?? null}
-                isEditing={false}
-                tempProfileData={{
-                    firstName: data.firstName,
-                    middleInitial: data.middleInitial,
-                    lastName: data.lastName,
-                    position: data.position,
-                    username: data.username,
-                }}
-                showActions={false}
-                onImageChange={noop}
-                onSave={noop}
-                onCancel={noop}
-                onEdit={noop}
-            />
+            <div className="space-y-6">
+                <ProfileHeader
+                    teacherId={str(profile?.id)}
+                    preview={data.profileImage ?? null}
+                    isEditing={false}
+                    tempProfileData={{
+                        firstName: data.firstName,
+                        middleInitial: data.middleInitial,
+                        lastName: data.lastName,
+                        position: data.position,
+                        username: data.username,
+                    }}
+                    showActions={false}
+                    onImageChange={noop}
+                    onSave={noop}
+                    onCancel={noop}
+                    onEdit={noop}
+                />
 
-            {isTeacher && (
-                <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
-                    <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                        <PersonalInfoCard
-                            data={data}
-                            isEditing={false}
-                            onInputChange={noop}
-                            onDateChange={noop}
-                        />
+                {/* Not logged in - contact left, emergency right */}
+                {!hasSession && (
+                    <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <ContactInfoCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <EmergencyContactCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                            />
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                        <ContactInfoCard
-                            data={data}
-                            isEditing={false}
-                            onInputChange={noop}
-                        />
-                        <EmergencyContactCard
-                            data={data}
-                            isEditing={false}
-                            onInputChange={noop}
-                        />
-                    </div>
-                </div>
-            )}
+                )}
 
-            {isAdmin && (
-                <>
+                {/* Logged in non-admin - personal left, contact + emergency right */}
+                {hasSession && !isAdmin && (
+                    <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <PersonalInfoCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                                onDateChange={noop}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <ContactInfoCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                            />
+                            <EmergencyContactCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Full view - Admin/Superadmin only */}
+                {isAdmin && (
                     <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
                             <PersonalInfoCard
@@ -274,22 +296,6 @@ export default function PublicProfileView(props: {
                                 isEditing={false}
                                 onInputChange={noop}
                             />
-                            <div className="hidden md:flex md:flex-col md:gap-4">
-                                <TrainingsCard
-                                    trainings={trainings}
-                                    loading={false}
-                                    viewerRole={viewerRole}
-                                />
-                                <ServiceRecordCard data={data} />
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <FamilyBackgroundCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onChildrenChange={noop}
-                            />
                             <EmploymentInfoCard
                                 data={data}
                                 isEditing={false}
@@ -303,6 +309,20 @@ export default function PublicProfileView(props: {
                                 teacherId={str(profile?.id)}
                                 isOwnProfile={false}
                                 from={from}
+                            />
+                            <TrainingsCard
+                                trainings={trainings}
+                                loading={false}
+                                viewerRole={viewerRole}
+                            />
+                            <ServiceRecordCard data={data} />
+                        </div>
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <FamilyBackgroundCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                                onChildrenChange={noop}
                             />
                             <GovernmentIDsCard
                                 data={data}
@@ -321,16 +341,8 @@ export default function PublicProfileView(props: {
                             />
                         </div>
                     </div>
-                    <div className="md:hidden flex flex-col gap-4 px-4 pb-4">
-                        <TrainingsCard
-                            trainings={trainings}
-                            loading={false}
-                            viewerRole={viewerRole}
-                        />
-                        <ServiceRecordCard data={data} />
-                    </div>
-                </>
-            )}
+                )}
+            </div>
         </div>
     );
 }
