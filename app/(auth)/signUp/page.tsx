@@ -80,7 +80,6 @@ export default function SignUpPage() {
     // });
     // const { exists } = await res.json().catch(() => ({ exists: false }));
     // if (exists) { setMessage("Email already exists."); setSubmitting(false); return; }
-    console.log('redirectTo:', `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/callback`)
 
     const { error } = await supabase.auth.signUp({
       email: emailNorm,

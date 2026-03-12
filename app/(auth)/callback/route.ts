@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
     const requestUrl = new URL(request.url);
     const code = requestUrl.searchParams.get('code');
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? requestUrl.origin;
 
     if (code) {
         const cookieStore = await cookies();
@@ -26,11 +27,17 @@ export async function GET(request: Request) {
             }
         );
 
-        await supabase.auth.exchangeCodeForSession(code);
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-        await new Promise((resolve) => setTimeout(resolve, 1000)); 
+        if (error) {
+            console.error('exchangeCodeForSession error:', error.message);
+            return NextResponse.redirect(new URL('/signin', baseUrl));
+        }
+
+        // Success — session established, go to fillUp
+        return NextResponse.redirect(new URL('/fillUp', baseUrl));
     }
 
-    // After email is confirmed, redirect to fillup
-    return NextResponse.redirect(new URL('/fillUp', request.url));
+    // No code present — back to signin
+    return NextResponse.redirect(new URL('/signin', baseUrl));
 }
