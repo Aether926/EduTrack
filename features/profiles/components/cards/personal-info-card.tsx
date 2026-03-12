@@ -697,7 +697,7 @@ function PersonalInfoForm({
             <SectionDivider label="Nationality & Identity" />
 
             {/* ── Nationality / Religion / Citizenship ── */}
-            <div className="flex flex-col sm:flex-row sm:gap-4 space-y-4">
+            <div className="flex flex-col sm:gap-4 space-y-4 sm:space-y-0">
                 <div className="space-y-1.5">
                     <FieldLabel>Nationality</FieldLabel>
                     {isEditing ? (
@@ -841,7 +841,7 @@ export default function PersonalInfoCard({
     return (
         <>
             {/* ── Read-only Card ── */}
-            <div className="border border-border/60 shadow-lg w-full xl:max-w-[500px] overflow-hidden rounded-xl bg-card">
+            <div className="border border-border/60 shadow-lg w-full overflow-hidden rounded-xl bg-card">
                 {/* Decorative header band */}
                 <div className="relative px-6 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />

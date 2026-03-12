@@ -86,7 +86,7 @@ export default function ProfilePage({
 
     return (
         <div
-            className={`min-h-screen w-full overflow-x-hidden ${bgClass} space-y-6`}
+            className={`min-h-screen w-full max-w-full overflow-x-clip ${bgClass} space-y-6`}
         >
             {/* Header — no more global Edit button, just share/QR/PDF */}
             <ProfileHeader
@@ -106,9 +106,9 @@ export default function ProfilePage({
                 showActions={true}
             />
 
-            <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6 min-w-0">
+            <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6 max-w-full min-w-0">
                 {/* ── Left Column ── */}
-                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px] min-w-0">
+                <div className="flex flex-col gap-4 w-full md:w-1/2 min-w-0 overflow-hidden">
                     <PersonalInfoCard
                         data={tempProfileData}
                         isEditing={openCard === "personal"}
@@ -164,7 +164,7 @@ export default function ProfilePage({
                 </div>
 
                 {/* ── Right Column ── */}
-                <div className="flex flex-col gap-4 w-full md:w-1/2 md:max-w-[500px] min-w-0">
+                <div className="flex flex-col gap-4 w-full md:w-1/2 min-w-0 overflow-hidden">
                     <FamilyBackgroundCard
                         data={tempProfileData}
                         isEditing={openCard === "family"}
@@ -209,7 +209,7 @@ export default function ProfilePage({
                 </div>
             </div>
 
-            <div className="md:hidden flex flex-col gap-4 px-4 pb-4">
+            <div className="md:hidden flex flex-col gap-4 px-4 pb-4 max-w-full min-w-0">
                 <TrainingsCard
                     trainings={trainings}
                     loading={trainingsLoading}

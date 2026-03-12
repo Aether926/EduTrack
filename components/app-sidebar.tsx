@@ -80,7 +80,12 @@ type AppSidebarProps = {
     userId: string;
 };
 
-export default function AppSidebar({ role: userRole, displayName, email, userId }: AppSidebarProps) {
+export default function AppSidebar({
+    role: userRole,
+    displayName,
+    email,
+    userId,
+}: AppSidebarProps) {
     const [query, setQuery] = useState("");
     const pathname = usePathname();
     const router = useRouter();
@@ -91,7 +96,7 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
         router.push("/signin");
     }
 
-    const isAdmin      = userRole === "ADMIN";
+    const isAdmin = userRole === "ADMIN";
     const isSuperAdmin = userRole === "SUPERADMIN";
 
     const items: NavItem[] = [
@@ -99,18 +104,43 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
         { title: "All Profiles", url: "/teacher-profiles", icon: Inbox },
         ...(!isAdmin || isSuperAdmin
             ? ([
-                  { title: "Training / Seminar Records", url: "/professional-dev", icon: Calendar },
-                  { title: "My Responsibilities", url: "/responsibilities", icon: ClipboardListIcon },
-                  { title: "My Compliance", url: "/compliance", icon: ShieldCheck },
+                  {
+                      title: "Training / Seminar Records",
+                      url: "/professional-dev",
+                      icon: Calendar,
+                  },
+                  {
+                      title: "My Responsibilities",
+                      url: "/responsibilities",
+                      icon: ClipboardListIcon,
+                  },
+                  {
+                      title: "My Compliance",
+                      url: "/compliance",
+                      icon: ShieldCheck,
+                  },
                   { title: "Repository", url: "/documents", icon: FileText },
               ] as NavItem[])
             : []),
     ];
 
     const admin: AdminItem[] = [
-        { title: "Manage Users", path: "admin-actions", icon: Users, tag: "HR" },
-        { title: "Account Approval", path: "account-approval", icon: UserCheck },
-        { title: "Trainings / Seminars", path: "add-training-seminar", icon: GraduationCap },
+        {
+            title: "Manage Users",
+            path: "admin-actions",
+            icon: Users,
+            tag: "HR",
+        },
+        {
+            title: "Account Approval",
+            path: "account-approval",
+            icon: UserCheck,
+        },
+        {
+            title: "Trainings / Seminars",
+            path: "add-training-seminar",
+            icon: GraduationCap,
+        },
         { title: "Attendance", path: "proof-review", icon: ClipboardCheck },
         { title: "Documents", path: "admin-actions/documents", icon: FileText },
     ];
@@ -137,7 +167,10 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
 
     const container = {
         hidden: { opacity: 1 },
-        show: { opacity: 1, transition: { staggerChildren: 0.045, delayChildren: 0.02 } },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.045, delayChildren: 0.02 },
+        },
     };
 
     const child = {
@@ -146,7 +179,12 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
     };
 
     function NavRow({
-        href, title, Icon, active, tag, count,
+        href,
+        title,
+        Icon,
+        active,
+        tag,
+        count,
     }: {
         href: string;
         title: string;
@@ -160,21 +198,37 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                 asChild
                 className={[
                     "group relative w-full justify-start transition-colors",
-                    active ? "bg-accent text-accent-foreground shadow-sm" : "hover:bg-accent/60",
+                    active
+                        ? "bg-accent text-accent-foreground shadow-sm"
+                        : "hover:bg-accent/60",
                 ].join(" ")}
             >
-                <Link href={href} prefetch={false} className="flex items-center gap-3">
-                    <Icon className={[
-                        "h-4 w-4 transition-transform duration-200 group-hover:translate-x-[1px]",
-                        active ? "text-foreground" : "text-muted-foreground",
-                    ].join(" ")} />
+                <Link
+                    href={href}
+                    prefetch={false}
+                    className="flex items-center gap-3"
+                >
+                    <Icon
+                        className={[
+                            "h-4 w-4 transition-transform duration-200 group-hover:translate-x-[1px]",
+                            active
+                                ? "text-foreground"
+                                : "text-muted-foreground",
+                        ].join(" ")}
+                    />
                     <span className="truncate">{title}</span>
                     {count && count > 0 ? (
-                        <Badge variant="destructive" className="ml-auto shrink-0 text-[10px]">
+                        <Badge
+                            variant="destructive"
+                            className="ml-auto shrink-0 text-[10px]"
+                        >
                             {count > 99 ? "99+" : count}
                         </Badge>
                     ) : tag ? (
-                        <Badge variant="secondary" className="ml-auto hidden shrink-0 text-[10px] sm:inline-flex">
+                        <Badge
+                            variant="secondary"
+                            className="ml-auto hidden shrink-0 text-[10px] sm:inline-flex"
+                        >
                             {tag}
                         </Badge>
                     ) : null}
@@ -191,10 +245,14 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex min-w-0 items-center gap-2">
                             <div className="grid h-9 w-9 place-items-center rounded-md border bg-card">
-                                <span className="text-sm font-semibold">📚</span>
+                                <span className="text-sm font-semibold">
+                                    📚
+                                </span>
                             </div>
                             <div className="min-w-0">
-                                <div className="truncate text-sm font-semibold">EDUTRACK</div>
+                                <div className="truncate text-sm font-semibold">
+                                    EDUTRACK
+                                </div>
                                 <div className="truncate text-xs text-muted-foreground">
                                     {userRole ?? "—"}
                                 </div>
@@ -233,14 +291,40 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                                 </div>
                                 <SidebarGroupContent>
                                     <SidebarMenu>
-                                        <motion.div variants={container} initial="hidden" animate="show" className="space-y-1">
+                                        <motion.div
+                                            variants={container}
+                                            initial="hidden"
+                                            animate="show"
+                                            className="space-y-1"
+                                        >
                                             {filteredMain.map((item) => {
-                                                const active = pathname === item.url;
+                                                const active =
+                                                    pathname === item.url;
                                                 const Icon = item.icon;
                                                 return (
-                                                    <SidebarMenuItem key={item.title}>
-                                                        <motion.div variants={child} whileHover={{ x: 2 }} transition={{ type: "spring", stiffness: 450, damping: 28 }}>
-                                                            <NavRow href={item.url} title={item.title} Icon={Icon} active={active} tag={item.tag} />
+                                                    <SidebarMenuItem
+                                                        key={item.title}
+                                                    >
+                                                        <motion.div
+                                                            variants={child}
+                                                            whileHover={{
+                                                                x: 2,
+                                                            }}
+                                                            transition={{
+                                                                type: "spring",
+                                                                stiffness: 450,
+                                                                damping: 28,
+                                                            }}
+                                                        >
+                                                            <NavRow
+                                                                href={item.url}
+                                                                title={
+                                                                    item.title
+                                                                }
+                                                                Icon={Icon}
+                                                                active={active}
+                                                                tag={item.tag}
+                                                            />
                                                         </motion.div>
                                                     </SidebarMenuItem>
                                                 );
@@ -251,7 +335,8 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                             </SidebarGroup>
                         )}
 
-                        {(userRole === "ADMIN" || isSuperAdmin) && filteredAdmin.length > 0 ? (
+                        {(userRole === "ADMIN" || isSuperAdmin) &&
+                        filteredAdmin.length > 0 ? (
                             <>
                                 {!isAdmin && <Separator className="my-4" />}
                                 <SidebarGroup className={isAdmin ? "pt-0" : ""}>
@@ -262,15 +347,45 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                                     )}
                                     <SidebarGroupContent>
                                         <SidebarMenu>
-                                            <motion.div variants={container} initial="hidden" animate="show" className="space-y-1">
+                                            <motion.div
+                                                variants={container}
+                                                initial="hidden"
+                                                animate="show"
+                                                className="space-y-1"
+                                            >
                                                 {filteredAdmin.map((item) => {
                                                     const href = `/${item.path}`;
-                                                    const active = pathname === href;
+                                                    const active =
+                                                        pathname === href;
                                                     const Icon = item.icon;
                                                     return (
-                                                        <SidebarMenuItem key={item.path}>
-                                                            <motion.div variants={child} whileHover={{ x: 2 }} transition={{ type: "spring", stiffness: 450, damping: 28 }}>
-                                                                <NavRow href={href} title={item.title} Icon={Icon} active={active} tag={item.tag} />
+                                                        <SidebarMenuItem
+                                                            key={item.path}
+                                                        >
+                                                            <motion.div
+                                                                variants={child}
+                                                                whileHover={{
+                                                                    x: 2,
+                                                                }}
+                                                                transition={{
+                                                                    type: "spring",
+                                                                    stiffness: 450,
+                                                                    damping: 28,
+                                                                }}
+                                                            >
+                                                                <NavRow
+                                                                    href={href}
+                                                                    title={
+                                                                        item.title
+                                                                    }
+                                                                    Icon={Icon}
+                                                                    active={
+                                                                        active
+                                                                    }
+                                                                    tag={
+                                                                        item.tag
+                                                                    }
+                                                                />
                                                             </motion.div>
                                                         </SidebarMenuItem>
                                                     );
@@ -282,7 +397,8 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                             </>
                         ) : null}
 
-                        {(userRole === "PRINCIPAL" || isSuperAdmin) && filteredPrincipal.length > 0 ? (
+                        {(userRole === "PRINCIPAL" || isSuperAdmin) &&
+                        filteredPrincipal.length > 0 ? (
                             <>
                                 <Separator className="my-4" />
                                 <SidebarGroup>
@@ -291,19 +407,57 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                                     </div>
                                     <SidebarGroupContent>
                                         <SidebarMenu>
-                                            <motion.div variants={container} initial="hidden" animate="show" className="space-y-1">
-                                                {filteredPrincipal.map((item) => {
-                                                    const href = item.path;
-                                                    const active = pathname === href;
-                                                    const Icon = item.icon;
-                                                    return (
-                                                        <SidebarMenuItem key={item.path}>
-                                                            <motion.div variants={child} whileHover={{ x: 2 }} transition={{ type: "spring", stiffness: 450, damping: 28 }}>
-                                                                <NavRow href={href} title={item.title} Icon={Icon} active={active} tag={item.tag} />
-                                                            </motion.div>
-                                                        </SidebarMenuItem>
-                                                    );
-                                                })}
+                                            <motion.div
+                                                variants={container}
+                                                initial="hidden"
+                                                animate="show"
+                                                className="space-y-1"
+                                            >
+                                                {filteredPrincipal.map(
+                                                    (item) => {
+                                                        const href = item.path;
+                                                        const active =
+                                                            pathname === href;
+                                                        const Icon = item.icon;
+                                                        return (
+                                                            <SidebarMenuItem
+                                                                key={item.path}
+                                                            >
+                                                                <motion.div
+                                                                    variants={
+                                                                        child
+                                                                    }
+                                                                    whileHover={{
+                                                                        x: 2,
+                                                                    }}
+                                                                    transition={{
+                                                                        type: "spring",
+                                                                        stiffness: 450,
+                                                                        damping: 28,
+                                                                    }}
+                                                                >
+                                                                    <NavRow
+                                                                        href={
+                                                                            href
+                                                                        }
+                                                                        title={
+                                                                            item.title
+                                                                        }
+                                                                        Icon={
+                                                                            Icon
+                                                                        }
+                                                                        active={
+                                                                            active
+                                                                        }
+                                                                        tag={
+                                                                            item.tag
+                                                                        }
+                                                                    />
+                                                                </motion.div>
+                                                            </SidebarMenuItem>
+                                                        );
+                                                    },
+                                                )}
                                             </motion.div>
                                         </SidebarMenu>
                                     </SidebarGroupContent>
@@ -323,20 +477,36 @@ export default function AppSidebar({ role: userRole, displayName, email, userId 
                                 <SidebarMenuButton className="w-full justify-start">
                                     <User2 className="h-4 w-4 text-muted-foreground" />
                                     <div className="ml-2 flex min-w-0 flex-col items-start">
-                                        <span className="truncate text-sm font-semibold">{displayName}</span>
-                                        <span className="truncate text-xs text-muted-foreground">{email || "—"}</span>
+                                        <span className="truncate text-sm font-semibold">
+                                            {displayName}
+                                        </span>
+                                        <span className="truncate text-xs text-muted-foreground">
+                                            {email || "—"}
+                                        </span>
                                     </div>
                                     <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
 
-                            <div className="shrink-0"><NotificationPopover viewerId={userId} /></div>
-                            <div className="shrink-0"><ThemeToggle /></div>
+                            <div className="shrink-0">
+                                <NotificationPopover viewerId={userId} />
+                            </div>
+                            <div className="shrink-0">
+                                <ThemeToggle />
+                            </div>
                         </div>
-                        
-                        <DropdownMenuContent side="top" align="end" className="w-56">
-                            <DropdownRedirect path="/profile">Manage Profile</DropdownRedirect>
-                            <DropdownRedirect path="/settings">Settings</DropdownRedirect>
+
+                        <DropdownMenuContent
+                            side="top"
+                            align="end"
+                            className="w-56"
+                        >
+                            <DropdownRedirect path="/profile">
+                                Manage Profile
+                            </DropdownRedirect>
+                            <DropdownRedirect path="/settings">
+                                Settings
+                            </DropdownRedirect>
                             <button
                                 onClick={handleSignOut}
                                 className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"

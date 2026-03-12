@@ -1,5 +1,6 @@
-import React from "react";
-import { GraduationCap } from "lucide-react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -28,7 +29,7 @@ function TypeChip({ type }: { type: string }) {
         "bg-slate-500/15 text-slate-400 border-slate-500/30";
     return (
         <span
-            className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${cls}`}
+            className={`inline-block rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase tracking-tight leading-tight ${cls}`}
         >
             {type}
         </span>
@@ -52,7 +53,7 @@ function StatusChip({ value }: { value: string }) {
         "bg-slate-500/15 text-slate-400 border-slate-500/30";
     return (
         <span
-            className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${cls}`}
+            className={`inline-block rounded-full border px-1.5 py-px text-[9px] font-semibold uppercase tracking-tight leading-tight ${cls}`}
         >
             {value || "—"}
         </span>
@@ -66,11 +67,16 @@ export default function TrainingsCard(props: {
     loading: boolean;
     viewerRole?: ViewerRole;
 }) {
-    const { trainings, loading, viewerRole = "ADMIN" } = props;
+    const { trainings, loading, viewerRole } = props;
     const showProof = viewerRole === "ADMIN";
 
+    const PAGE_SIZE = 6;
+    const [page, setPage] = useState(1);
+    const totalPages = Math.ceil(trainings.length / PAGE_SIZE);
+    const paginated = trainings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
     return (
-        <div className="border border-border/60 shadow-lg w-full xl:max-w-[500px] overflow-hidden rounded-xl bg-card">
+        <div className="border border-border/60 shadow-lg w-full min-w-0 overflow-hidden rounded-xl bg-card">
             {/* Header band */}
             <div className="relative px-6 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
@@ -95,90 +101,160 @@ export default function TrainingsCard(props: {
                         No trainings found.
                     </div>
                 ) : (
-                    <div className="rounded-md border border-white/8 overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="border-white/8 hover:bg-transparent">
-                                    <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                                        Title
-                                    </TableHead>
-                                    <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                                        Type
-                                    </TableHead>
-                                    <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                                        Dates
-                                    </TableHead>
-                                    <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                                        Status
-                                    </TableHead>
-                                    <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                                        Result
-                                    </TableHead>
-                                    {showProof && (
-                                        <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold text-right">
-                                            Proof
+                    <>
+                        <div className="rounded-md border border-white/8 overflow-hidden w-full">
+                            <Table className="table-fixed w-full">
+                                <TableHeader>
+                                    <TableRow className="border-white/8 hover:bg-transparent">
+                                        <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold w-[60%]">
+                                            Title
                                         </TableHead>
-                                    )}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {trainings.map((t) => (
-                                    <TableRow
-                                        key={t.attendanceId}
-                                        className="border-white/8 hover:bg-white/3"
-                                    >
-                                        <TableCell className="py-3">
-                                            <div className="font-medium text-sm text-foreground">
-                                                {t.title}
-                                            </div>
-                                            <div className="text-[11px] text-muted-foreground mt-0.5">
-                                                {t.level ? `${t.level} • ` : ""}
-                                                {t.sponsor ?? ""}
-                                                {t.totalHours
-                                                    ? ` • ${t.totalHours} hrs`
-                                                    : ""}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="py-3">
-                                            <TypeChip type={t.type || "—"} />
-                                        </TableCell>
-                                        <TableCell className="py-3 font-mono text-xs text-muted-foreground">
-                                            {fmtDateRange(
-                                                t.startDate,
-                                                t.endDate,
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="py-3">
-                                            <StatusChip value={t.status} />
-                                        </TableCell>
-                                        <TableCell className="py-3">
-                                            <StatusChip
-                                                value={t.result ?? "—"}
-                                            />
-                                        </TableCell>
-                                        {showProof && (
-                                            <TableCell className="py-3 text-right">
-                                                {t.proof_url ? (
-                                                    <a
-                                                        href={t.proof_url}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="text-blue-400 hover:text-blue-300 text-sm hover:underline"
-                                                    >
-                                                        View
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-sm text-muted-foreground">
-                                                        —
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                        )}
+                                        <TableHead className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold text-right w-[40%]">
+                                            Type / Status
+                                        </TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                </TableHeader>
+                                <TableBody>
+                                    {paginated.map((t) => (
+                                        <TableRow
+                                            key={t.attendanceId}
+                                            className="border-white/8 hover:bg-white/3"
+                                        >
+                                            <TableCell className="py-3 align-top">
+                                                <div className="font-medium text-sm text-foreground break-words whitespace-normal">
+                                                    {t.title}
+                                                </div>
+                                                <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                    {t.level
+                                                        ? `${t.level} • `
+                                                        : ""}
+                                                    {t.sponsor ?? ""}
+                                                    {t.totalHours
+                                                        ? ` • ${t.totalHours} hrs`
+                                                        : ""}
+                                                </div>
+                                                <div className="text-[11px] text-muted-foreground font-mono mt-1">
+                                                    {fmtDateRange(
+                                                        t.startDate,
+                                                        t.endDate,
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-3 align-top">
+                                                <div className="flex flex-wrap items-start justify-end gap-1">
+                                                    <TypeChip
+                                                        type={t.type || "—"}
+                                                    />
+                                                    <StatusChip
+                                                        value={t.status}
+                                                    />
+                                                    {t.result && (
+                                                        <StatusChip
+                                                            value={t.result}
+                                                        />
+                                                    )}
+                                                    {showProof &&
+                                                        t.proof_url && (
+                                                            <a
+                                                                href={
+                                                                    t.proof_url
+                                                                }
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="text-blue-400 hover:text-blue-300 text-[11px] hover:underline"
+                                                            >
+                                                                View proof
+                                                            </a>
+                                                        )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex flex-col items-center gap-2 mt-3 px-1">
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="text-[11px] text-muted-foreground">
+                                        Page {page} of {totalPages}
+                                    </span>
+                                    {viewerRole !== "ADMIN" && (
+                                        <Link
+                                            href="/professional-dev"
+                                            className="text-[11px] text-blue-400 hover:text-blue-300 hover:underline"
+                                        >
+                                            View All
+                                        </Link>
+                                    )}
+                                </div>
+                                <div className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto w-full pb-1">
+                                    <button
+                                        onClick={() =>
+                                            setPage((p) => Math.max(1, p - 1))
+                                        }
+                                        disabled={page === 1}
+                                        className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                                    >
+                                        <ChevronLeft className="h-3.5 w-3.5" />
+                                    </button>
+                                    {(() => {
+                                        const delta = 1;
+                                        const range: (number | "…")[] = [];
+                                        const left = Math.max(2, page - delta);
+                                        const right = Math.min(
+                                            totalPages - 1,
+                                            page + delta,
+                                        );
+
+                                        range.push(1);
+                                        if (left > 2) range.push("…");
+                                        for (let i = left; i <= right; i++)
+                                            range.push(i);
+                                        if (right < totalPages - 1)
+                                            range.push("…");
+                                        if (totalPages > 1)
+                                            range.push(totalPages);
+
+                                        return range.map((p, idx) =>
+                                            p === "…" ? (
+                                                <span
+                                                    key={`ellipsis-${idx}`}
+                                                    className="inline-flex h-6 w-6 items-center justify-center text-[11px] text-muted-foreground"
+                                                >
+                                                    …
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    key={p}
+                                                    onClick={() => setPage(p)}
+                                                    className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] font-medium transition ${
+                                                        p === page
+                                                            ? "border-blue-500/40 bg-blue-500/20 text-blue-400"
+                                                            : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                                                    }`}
+                                                >
+                                                    {p}
+                                                </button>
+                                            ),
+                                        );
+                                    })()}
+                                    <button
+                                        onClick={() =>
+                                            setPage((p) =>
+                                                Math.min(totalPages, p + 1),
+                                            )
+                                        }
+                                        disabled={page === totalPages}
+                                        className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                                    >
+                                        <ChevronRight className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

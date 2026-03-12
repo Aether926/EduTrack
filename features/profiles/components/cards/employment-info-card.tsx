@@ -165,6 +165,7 @@ export default function EmploymentInfoCard(props: {
     viewerRole?: "ADMIN" | "TEACHER" | "GUEST";
     from?: "profile" | "qr" | "teacher";
     isOwnProfile?: boolean;
+    onRefresh?: () => void;
 }) {
     const {
         data,
@@ -172,10 +173,10 @@ export default function EmploymentInfoCard(props: {
         onInputChange,
         onDateChange,
         viewerRole = "TEACHER",
+        onRefresh,
     } = props;
     const isAdmin = viewerRole === "ADMIN";
-    const isTeacher = viewerRole === "TEACHER";
-    const isOwnProfile = props.from === "profile";
+    const isOwnProfile = props.isOwnProfile ?? props.from === "profile";
 
     const [modalOpen, setModalOpen] = useState(false);
 
@@ -191,6 +192,13 @@ export default function EmploymentInfoCard(props: {
     useEffect(() => {
         if (isOwnProfile && data.id) void fetchLastRequest();
     }, [isOwnProfile, data.id, fetchLastRequest]);
+
+    const handleSubmit: typeof submitRequest = async (...args) => {
+        const result = await submitRequest(...args);
+        await fetchLastRequest();
+        onRefresh?.();
+        return result;
+    };
 
     // ── Admin edit mode ──────────────────────────────────────────────────────
     if (isAdmin && isEditing) {
@@ -303,26 +311,25 @@ export default function EmploymentInfoCard(props: {
     }
 
     // ── Teacher / Guest read-only view ───────────────────────────────────────
-    const requestButton =
-        isOwnProfile && props.from === "profile" ? (
-            hasPendingRequest ? (
-                <span className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full font-medium whitespace-nowrap">
-                    <Clock size={12} />
-                    Request Pending
-                </span>
-            ) : (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 whitespace-nowrap border-white/10 hover:bg-white/5 text-xs"
-                    onClick={() => setModalOpen(true)}
-                    disabled={loadingLastRequest}
-                >
-                    <Pencil size={14} />
-                    Request Change
-                </Button>
-            )
-        ) : undefined;
+    const requestButton = isOwnProfile ? (
+        hasPendingRequest ? (
+            <span className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full font-medium whitespace-nowrap">
+                <Clock size={12} />
+                Request Pending
+            </span>
+        ) : (
+            <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 whitespace-nowrap border-white/10 hover:bg-white/5 text-xs"
+                onClick={() => setModalOpen(true)}
+                disabled={loadingLastRequest}
+            >
+                <Pencil size={14} />
+                Request Change
+            </Button>
+        )
+    ) : undefined;
 
     return (
         <>
@@ -332,7 +339,7 @@ export default function EmploymentInfoCard(props: {
                 headerRight={requestButton}
             >
                 {/* Last request status */}
-                {isOwnProfile && props.from === "profile" && lastRequest && (
+                {isOwnProfile && lastRequest && (
                     <div className="flex items-center gap-2 text-sm">
                         <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
                             Last request:
@@ -387,7 +394,7 @@ export default function EmploymentInfoCard(props: {
                 onOpenChange={setModalOpen}
                 currentData={data}
                 submitting={submitting}
-                onSubmit={submitRequest}
+                onSubmit={handleSubmit}
             />
         </>
     );

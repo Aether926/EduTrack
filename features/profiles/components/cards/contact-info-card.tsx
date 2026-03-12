@@ -157,7 +157,7 @@ export default function ContactInfoCard({
     return (
         <>
             {/* ── Read-only Card ── */}
-            <div className="border border-border/60 shadow-lg w-full xl:max-w-[500px] overflow-hidden rounded-xl bg-card">
+            <div className="border border-border/60 shadow-lg w-full overflow-hidden rounded-xl bg-card">
                 <div className="relative px-6 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
                     <div className="relative flex items-center justify-between">
