@@ -4,9 +4,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
-const PUBLIC_ROUTES = ["/qr/", "/reset-password"];
+const PUBLIC_ROUTES = ["/qr/", "/reset-password", "/callback"];
 const AUTH_ROUTES = ["/signin", "/signUp", "/forgot-password"];
-const SKIP_CLEANUP = ["/signin", "/signUp", "/forgot-password", "/reset-password", "/auth/callback"];
+const SKIP_CLEANUP = ["/signin", "/signUp", "/forgot-password", "/reset-password", "/callback"];
 const PROTECTED_ROUTES = ["/dashboard", "/profile", "/teacher-profiles", "/responsibilities", "/compliance", "/documents", "/settings"];
 const ADMIN_ROUTES = ["/account-approval", "/add-training-seminar", "/proof-review", "/admin-actions"];
 const TEACHER_ONLY_ROUTES = ["/professional-dev", "/responsibilities", "/compliance", "/documents"];
@@ -45,7 +45,6 @@ export async function proxy(req: NextRequest) {
       return cleanResponse;
     }
   }
-
 
   if (AUTH_ROUTES.some((p) => pathname.startsWith(p))) {
     if (!user) return response;
