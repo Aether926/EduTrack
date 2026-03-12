@@ -1,6 +1,6 @@
 "use server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import type { AddResponsibilityForm } from "@/features/responsibilities/types/responsibility";
+import type { AddResponsibilityForm } from "@/features/admin-actions/responsibilities/types/responsibility";
 
 export async function addResponsibility(form: AddResponsibilityForm) {
   const supabase = await createClient();

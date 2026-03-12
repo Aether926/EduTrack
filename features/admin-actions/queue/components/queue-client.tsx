@@ -31,7 +31,7 @@ import type {
 import {
     approveChangeRequest,
     rejectChangeRequest,
-} from "@/features/responsibilities/actions/admin-responsibility-actions";
+} from "@/features/admin-actions/responsibilities/actions/admin-responsibility-actions";
 import { toast } from "sonner";
 
 // ── Status badge ───────────────────────────────────────────────────────────────

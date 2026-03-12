@@ -19,11 +19,11 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { addResponsibility } from "@/features/responsibilities/actions/admin-responsibility-actions";
+import { addResponsibility } from "@/features/admin-actions/responsibilities/actions/admin-responsibility-actions";
 import type {
     AddResponsibilityForm,
     ResponsibilityType,
-} from "@/features/responsibilities/types/responsibility";
+} from "@/features/admin-actions/responsibilities/types/responsibility";
 import {
     TeacherPickerModal,
     type TeacherOption,

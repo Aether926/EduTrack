@@ -51,17 +51,17 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import { AddResponsibilityModal } from "@/features/responsibilities/components/add-responsibility-modal";
+import { AddResponsibilityModal } from "@/features/admin-actions/responsibilities/components/add-responsibility-modal";
 import {
     updateResponsibilityStatus,
     approveChangeRequest,
     rejectChangeRequest,
-} from "@/features/responsibilities/actions/admin-responsibility-actions";
+} from "@/features/admin-actions/responsibilities/actions/admin-responsibility-actions";
 
 import type {
     ResponsibilityWithTeacher,
     ResponsibilityChangeRequest,
-} from "@/features/responsibilities/types/responsibility";
+} from "@/features/admin-actions/responsibilities/types/responsibility";
 
 const TYPE_LABEL: Record<string, string> = {
     TEACHING_LOAD: "Teaching Load",
@@ -71,7 +71,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 const TYPE_COLORS: Record<string, string> = {
     TEACHING_LOAD: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    COORDINATOR: "bg-violet-500/10 text-violet-400 border-violet-500/30",
+    COORDINATOR: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
     OTHER: "bg-orange-500/10 text-orange-400 border-orange-500/30",
 };
 
@@ -519,8 +519,8 @@ export function AdminResponsibilitiesClient(props: {
             <Card className="min-w-0 overflow-hidden">
                 <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div className="flex items-center gap-3">
-                        <div className="rounded-lg border border-violet-500/20 bg-violet-500/10 p-2 shrink-0">
-                            <ClipboardList className="h-4 w-4 text-violet-400" />
+                        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-2 shrink-0">
+                            <ClipboardList className="h-4 w-4 text-emerald-400" />
                         </div>
                         <div>
                             <CardTitle className="text-base">
