@@ -6,9 +6,17 @@ export async function fetchTeacherOptions(): Promise<TeacherOption[]> {
   const admin = createAdminClient();
 
   const [{ data: users }, { data: profiles }, { data: hrRows }] = await Promise.all([
-    admin.from("User").select("id").eq("role", "TEACHER"),
-    admin.from("Profile").select("id, firstName, lastName").order("lastName", { ascending: true }),
-    admin.from("ProfileHR").select("id, employeeId"),
+    admin
+      .from("User")
+      .select("id")
+      .eq("role", "TEACHER"),
+    admin
+      .from("Profile")
+      .select("id, firstName, lastName")
+      .order("lastName", { ascending: true }),
+    admin
+      .from("ProfileHR")
+      .select("id, employeeId"),
   ]);
 
   const ids = new Set((users ?? []).map((u) => u.id));

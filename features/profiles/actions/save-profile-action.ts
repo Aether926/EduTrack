@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   mapStateToDb,
   mapStateToFamily,
@@ -17,7 +18,6 @@ export async function saveProfileData(state: ProfileState): Promise<void> {
 
   const uid = user.id;
 
-  // 1. Profile table
   const profileFields = mapStateToDb(state);
   const { error: profileError } = await supabase
     .from("Profile")
@@ -26,11 +26,9 @@ export async function saveProfileData(state: ProfileState): Promise<void> {
 
   if (profileError) throw new Error(`Profile save failed: ${profileError.message}`);
 
- 
   await supabase
     .from("ProfileFamily")
     .upsert({ ...mapStateToFamily(state), profileId: uid }, { onConflict: "profileId" });
-
 
   await supabase.from("ProfileChildren").delete().eq("profileId", uid);
   const childRows = mapStateToChildren(state, uid);
@@ -38,13 +36,18 @@ export async function saveProfileData(state: ProfileState): Promise<void> {
     await supabase.from("ProfileChildren").insert(childRows);
   }
 
-
   await supabase
     .from("ProfileEducation")
     .upsert(mapStateToEducation(state, uid), { onConflict: "profileId,level" });
 
-
   await supabase
     .from("ProfileEmergencyContact")
     .upsert({ ...mapStateToEmergency(state), profileId: uid }, { onConflict: "profileId" });
+
+  
+  revalidateTag(`profile-${uid}`, "default");
+  revalidatePath("/profile");
+  
+  revalidatePath("/teacher-profiles");
+  revalidatePath("/admin-actions/teachers");    
 }

@@ -302,7 +302,7 @@ export default function TrainingHistory({
         .rows.map((row) => row.original);
 
     const handleDelete = () => {
-        console.log("Deleting:", selectedRows);
+        
     };
 
     return (
