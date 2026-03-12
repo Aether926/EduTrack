@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { getUser, createClient } from "@/lib/supabase/server";
-import { MyResponsibilitiesClient } from "@/features/responsibilities/components/my-responsibilities-client";
+import { MyResponsibilitiesClient } from "@/features/admin-actions/responsibilities/components/my-responsibilities-client";
 import { ClipboardList, GitPullRequest, Clock } from "lucide-react";
 
 export const revalidate = 60;
@@ -51,7 +51,8 @@ export default async function MyResponsibilitiesPage() {
                                     My Responsibilities
                                 </h1>
                                 <p className="text-[13px] text-muted-foreground mt-0.5">
-                                    View and manage your assigned duties and change requests.
+                                    View and manage your assigned duties and
+                                    change requests.
                                 </p>
                             </div>
                         </div>
@@ -68,7 +69,9 @@ export default async function MyResponsibilitiesPage() {
                             <ClipboardList className="h-4 w-4 text-violet-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold tabular-nums">{resp.length}</p>
+                            <p className="text-2xl font-bold tabular-nums">
+                                {resp.length}
+                            </p>
                             <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
                                 Total Responsibilities
                             </p>
@@ -83,7 +86,9 @@ export default async function MyResponsibilitiesPage() {
                             <GitPullRequest className="h-4 w-4 text-blue-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold tabular-nums">{reqs.length}</p>
+                            <p className="text-2xl font-bold tabular-nums">
+                                {reqs.length}
+                            </p>
                             <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
                                 Change Requests
                             </p>
@@ -98,7 +103,9 @@ export default async function MyResponsibilitiesPage() {
                             <Clock className="h-4 w-4 text-amber-400" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold tabular-nums">{pendingRequests}</p>
+                            <p className="text-2xl font-bold tabular-nums">
+                                {pendingRequests}
+                            </p>
                             <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
                                 Pending Requests
                             </p>

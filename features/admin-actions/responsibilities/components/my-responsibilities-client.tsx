@@ -18,8 +18,8 @@ import { toast } from "sonner";
 import type {
     TeacherResponsibility,
     ResponsibilityChangeRequest,
-} from "@/features/responsibilities/types/responsibility";
-import { submitChangeRequest } from "@/features/responsibilities/actions/responsibility-actions";
+} from "@/features/admin-actions/responsibilities/types/responsibility";
+import { submitChangeRequest } from "@/features/admin-actions/responsibilities/actions/responsibility-actions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
