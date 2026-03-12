@@ -79,11 +79,16 @@ export default function LogIn() {
     const userId = data.user?.id;
     if (!userId) { setMessage("Something went wrong. Try again."); setSubmitting(false); return; }
 
-    const { data: profile, error: profErr } = await supabase.from("User").select("status").eq("id", userId).maybeSingle();
+    const { data: profile, error: profErr } = await 
+    supabase
+      .from("User")
+      .select("status")
+      .eq("id", userId)
+      .maybeSingle();
     if (profErr) { setMessage("Something went wrong. Try again."); setSubmitting(false); return; }
 
     if (!profile)                           router.push("/fillUp");
-    else if (profile.status === "PENDING")  router.push("/pending-approval");
+    else if (profile.status === "PENDING")  router.push("/status");
     else if (profile.status === "APPROVED") router.push("/dashboard");
     else setMessage("Your account status is unclear. Please contact support.");
 

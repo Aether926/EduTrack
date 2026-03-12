@@ -50,7 +50,7 @@ export default function FillUpPage() {
                 .single();
 
             if (profile) {
-                router.push("/pending-approval");
+                router.push("/status");
                 return;
             }
 
@@ -127,7 +127,7 @@ export default function FillUpPage() {
             await supabase.rpc("ensure_profile_hr_exists", { p_user_id: user.id });
 
             success = true;
-            router.push("/pending-approval");
+            router.push("/status");
         } catch (error) {
             toast("An error occurred. Please try again.");
             setSubmitting(false);
