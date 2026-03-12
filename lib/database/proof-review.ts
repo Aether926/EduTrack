@@ -13,7 +13,7 @@ export type ProofReviewRow = {
     userId: string;
     email: string | null;
     name: string;
-    firstName: string;       // fixed typo: was "fistName"
+    firstName: string;       
     lastName: string;
     employeeId: string | null;
     profileImage: string | null;

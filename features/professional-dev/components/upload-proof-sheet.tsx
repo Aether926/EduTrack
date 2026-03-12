@@ -34,8 +34,11 @@ function formatBytes(bytes: number) {
 
 function fmtDate(d: string | null | undefined) {
     if (!d) return "—";
-    try { return new Date(d).toISOString().slice(0, 10); }
-    catch { return String(d); }
+    try {
+        return new Date(d).toISOString().slice(0, 10);
+    } catch {
+        return String(d);
+    }
 }
 
 export type UploadProofContext = {
@@ -127,7 +130,9 @@ export default function UploadProofSheet({
                             <div className="space-y-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <Badge variant="secondary">TEACHER</Badge>
-                                    <Badge variant="outline">Upload Proof</Badge>
+                                    <Badge variant="outline">
+                                        Upload Proof
+                                    </Badge>
                                 </div>
                                 <SheetTitle className="text-base leading-snug truncate">
                                     {ctx.training.title}
@@ -151,28 +156,36 @@ export default function UploadProofSheet({
 
                     {/* ── Body ── */}
                     <div className="flex-1 px-5 py-4 space-y-4">
-
                         {/* Training meta */}
                         <div className="grid gap-3 grid-cols-2">
                             <div className="flex items-start gap-2 text-sm">
                                 <CalendarDays className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                                 <div className="min-w-0">
-                                    <div className="text-xs text-muted-foreground">Schedule</div>
-                                    <div className="font-mono text-xs truncate">{dates}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        Schedule
+                                    </div>
+                                    <div className="font-mono text-xs truncate">
+                                        {dates}
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-start gap-2 text-sm">
                                 <Clock className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                                 <div className="min-w-0">
-                                    <div className="text-xs text-muted-foreground">Status</div>
-                                    <div className="text-xs font-medium">{ctx.status}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        Status
+                                    </div>
+                                    <div className="text-xs font-medium">
+                                        {ctx.status}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {ctx.status === "REJECTED" && (
                             <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-400">
-                                Your previous submission was rejected. Upload a new proof and resubmit.
+                                Your previous submission was rejected. Upload a
+                                new proof and resubmit.
                             </div>
                         )}
 
@@ -181,11 +194,16 @@ export default function UploadProofSheet({
                         {/* Upload label */}
                         <div className="space-y-1">
                             <div className="flex items-center justify-between">
-                                <div className="text-sm font-medium">Select file</div>
-                                {file
-                                    ? <Badge variant="secondary">File selected</Badge>
-                                    : <Badge variant="outline">No file</Badge>
-                                }
+                                <div className="text-sm font-medium">
+                                    Select file
+                                </div>
+                                {file ? (
+                                    <Badge variant="secondary">
+                                        File selected
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline">No file</Badge>
+                                )}
                             </div>
                             <div className="text-xs text-muted-foreground">
                                 Allowed: {allowed.join(", ")} • Max {maxMb}MB
@@ -198,7 +216,9 @@ export default function UploadProofSheet({
                             type="file"
                             accept={allowed.join(",")}
                             className="hidden"
-                            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                            onChange={(e) =>
+                                setFile(e.target.files?.[0] ?? null)
+                            }
                         />
 
                         {/* Dropzone — only when no file selected */}
@@ -206,24 +226,45 @@ export default function UploadProofSheet({
                             <div
                                 role="button"
                                 tabIndex={0}
-                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") pickFile(); }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ")
+                                        pickFile();
+                                }}
                                 onClick={pickFile}
-                                onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); }}
-                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); }}
-                                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); }}
+                                onDragEnter={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setDragActive(true);
+                                }}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setDragActive(true);
+                                }}
+                                onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setDragActive(false);
+                                }}
                                 onDrop={onDrop}
                                 className={[
                                     "rounded-lg border border-dashed p-8 text-center",
                                     "cursor-pointer select-none transition-colors",
                                     "bg-muted/10 hover:bg-muted/20",
-                                    dragActive ? "border-primary/60 bg-muted/30" : "border-border/70",
+                                    dragActive
+                                        ? "border-primary/60 bg-muted/30"
+                                        : "border-border/70",
                                 ].join(" ")}
                             >
                                 <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-muted/30">
                                     <Upload className="h-5 w-5 text-muted-foreground" />
                                 </div>
-                                <div className="text-sm font-medium">Click to select file</div>
-                                <div className="mt-1 text-xs text-muted-foreground">or drag and drop here</div>
+                                <div className="text-sm font-medium">
+                                    Click to select file
+                                </div>
+                                <div className="mt-1 text-xs text-muted-foreground">
+                                    or drag and drop here
+                                </div>
                             </div>
                         )}
 
@@ -271,9 +312,12 @@ export default function UploadProofSheet({
                                 {/* File info + remove */}
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <div className="truncate text-sm font-medium">{file.name}</div>
+                                        <div className="truncate text-sm font-medium">
+                                            {file.name}
+                                        </div>
                                         <div className="text-xs text-muted-foreground">
-                                            {file.type || "file"} • {formatBytes(file.size)}
+                                            {file.type || "file"} •{" "}
+                                            {formatBytes(file.size)}
                                         </div>
                                     </div>
                                     <Button
@@ -308,7 +352,9 @@ export default function UploadProofSheet({
                             disabled={loading || !file}
                             className="flex-1 gap-2"
                         >
-                            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {loading && (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
                             {loading ? "Uploading..." : "Submit"}
                         </Button>
                     </div>

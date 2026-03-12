@@ -12,16 +12,10 @@ function addDaysIso(days: number) {
 }
 
 function makeToken() {
-  // url-safe token
+ 
   return crypto.randomBytes(24).toString("base64url");
 }
 
-/**
- * Creates a new token for the CURRENT signed-in user.
- * Cooldown: 60 seconds per generate to avoid spamming.
- * Deletes old tokens for that user so the table doesn't fill up.
- * New token expires in 30 days.
- */
 export async function rotateQRTokenForCurrentUser(): Promise<string> {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -31,7 +25,7 @@ export async function rotateQRTokenForCurrentUser(): Promise<string> {
 
   const admin = createAdminClient();
 
-  // 1) cooldown check (look at most recent token)
+
   const { data: lastRow, error: lastErr } = await admin
     .from("ProfileQRCode")
     .select("created_at")
@@ -53,7 +47,6 @@ export async function rotateQRTokenForCurrentUser(): Promise<string> {
     }
   }
 
-  // 2) delete ALL old tokens for this user (invalidate old QR + no trash rows)
   const { error: delErr } = await admin
     .from("ProfileQRCode")
     .delete()
@@ -61,7 +54,6 @@ export async function rotateQRTokenForCurrentUser(): Promise<string> {
 
   if (delErr) throw new Error(delErr.message);
 
-  // 3) insert new token
   const token = makeToken();
 
   const { error: insErr } = await admin.from("ProfileQRCode").insert({
@@ -80,13 +72,6 @@ export async function rotateQRTokenForCurrentUser(): Promise<string> {
   return token;
 }
 
-/**
- * Validates token:
- * - exists
- * - is_active = true
- * - not expired
- * Returns the profile row (and updates scan stats).
- */
 export async function getProfileByQRToken(token: string) {
   if (!token?.trim()) return null;
 
@@ -112,7 +97,6 @@ export async function getProfileByQRToken(token: string) {
 
   if (pErr || !profile) return null;
 
-  // update scan stats (best-effort)
   await admin
     .from("ProfileQRCode")
     .update({

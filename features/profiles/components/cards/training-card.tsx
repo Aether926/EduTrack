@@ -141,18 +141,20 @@ export default function TrainingsCard(props: {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-3 align-top">
-                                                <div className="flex flex-wrap items-start justify-end gap-1">
-                                                    <TypeChip
-                                                        type={t.type || "—"}
-                                                    />
-                                                    <StatusChip
-                                                        value={t.status}
-                                                    />
-                                                    {t.result && (
-                                                        <StatusChip
-                                                            value={t.result}
+                                                <div className="flex flex-col items-end gap-2 sm:gap-1.5">
+                                                    <div className="flex flex-wrap items-start justify-end gap-1">
+                                                        <TypeChip
+                                                            type={t.type || "—"}
                                                         />
-                                                    )}
+                                                        <StatusChip
+                                                            value={t.status}
+                                                        />
+                                                        {t.result && (
+                                                            <StatusChip
+                                                                value={t.result}
+                                                            />
+                                                        )}
+                                                    </div>
                                                     {showProof &&
                                                         t.proof_url && (
                                                             <a
