@@ -1,4 +1,8 @@
-import { getUser, createClient, createAdminClient } from "@/lib/supabase/server";
+import {
+    getUser,
+    createClient,
+    createAdminClient,
+} from "@/lib/supabase/server";
 import PublicProfileView from "@/components/public-profile-view";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import type { TrainingRow } from "@/features/profiles/types/trainings";
@@ -21,7 +25,9 @@ async function getTrainingsForTeacher(
 
     const { data: attendanceRows, error: aErr } = await db
         .from("Attendance")
-        .select("id, training_id, status, result, proof_url, proof_path, created_at")
+        .select(
+            "id, training_id, status, result, proof_url, proof_path, created_at",
+        )
         .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false });
 
@@ -37,14 +43,18 @@ async function getTrainingsForTeacher(
         created_at: string;
     }>;
 
-    const filtered = adminMode ? attendance : attendance.filter(isPublicSafeTraining);
+    const filtered = adminMode
+        ? attendance
+        : attendance.filter(isPublicSafeTraining);
     if (filtered.length === 0) return [];
 
     const trainingIds = Array.from(new Set(filtered.map((r) => r.training_id)));
 
     const { data: pdRows } = await db
         .from("ProfessionalDevelopment")
-        .select("id, title, type, level, start_date, end_date, total_hours, sponsoring_agency")
+        .select(
+            "id, title, type, level, start_date, end_date, total_hours, sponsoring_agency",
+        )
         .in("id", trainingIds);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,18 +92,26 @@ export default async function TeacherPublicProfilePage({
     const { id } = await params;
 
     const user = await getUser();
-    if (!user) return <div className="p-6">not authenticated</div>;
 
-    const supabase = await createClient();
-    const { data: viewer } = await supabase
-        .from("User")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+    // ── Resolve viewer role (mirrors QR page logic) ───────────────────────────
+    let viewerRole: ViewerRole = "GUEST";
+    const hasSession = !!user;
 
-    const viewerRole: ViewerRole = viewer?.role === "ADMIN" ? "ADMIN" : "TEACHER";
+    if (user) {
+        const supabase = await createClient();
+        const { data: viewer } = await supabase
+            .from("User")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+
+        if (viewer?.role === "ADMIN" || viewer?.role === "SUPERADMIN")
+            viewerRole = "ADMIN";
+        else if (viewer?.role === "TEACHER") viewerRole = "TEACHER";
+    }
+
     const adminMode = viewerRole === "ADMIN";
-    const db = adminMode ? createAdminClient() : supabase;
+    const db = adminMode ? createAdminClient() : await createClient();
 
     const [{ data: profile, error }, { data: profileHR }, trainings] =
         await Promise.all([
@@ -112,6 +130,7 @@ export default async function TeacherPublicProfilePage({
             from="teacher"
             viewerRole={viewerRole}
             trainings={trainings}
+            hasSession={hasSession}
         />
     );
 }
