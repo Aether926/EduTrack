@@ -186,13 +186,6 @@ export default function EmploymentInfoCard(props: {
         return result;
     };
 
-    const handleSubmit: typeof submitRequest = async (...args) => {
-        const result = await submitRequest(...args);
-        await fetchLastRequest();
-        onRefresh?.();
-        return result;
-    };
-
     if (isAdmin && isEditing) {
         return (
             <CardShell icon={Briefcase} title="Employment Information">
