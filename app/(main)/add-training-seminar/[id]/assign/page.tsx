@@ -42,8 +42,6 @@ export default async function AssignPage({
       </div>
     );
   }
-console.log("ROLE:", user.user_metadata?.role);
-console.log("ALLOWED:", ALLOWED);
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
       <div className="rounded-xl border bg-card p-4 md:p-6">

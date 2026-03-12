@@ -23,12 +23,35 @@ function getCachedProfileData(userId: string) {
         { data: education },
         { data: emergency },
       ] = await Promise.all([
-        supabase.from("Profile").select("*").eq("id", userId).single(),
-        supabase.from("ProfileHR").select("*").eq("id", userId).single(),
-        supabase.from("ProfileFamily").select("*").eq("profileId", userId).single(),
-        supabase.from("ProfileChildren").select("*").eq("profileId", userId).order("createdAt", { ascending: true }),
-        supabase.from("ProfileEducation").select("*").eq("profileId", userId),
-        supabase.from("ProfileEmergencyContact").select("*").eq("profileId", userId).single(),
+        supabase
+          .from("Profile")
+          .select("*")
+          .eq("id", userId)
+          .single(),
+        supabase
+          .from("ProfileHR")
+          .select("*")
+          .eq("id", userId)
+          .single(),
+        supabase
+          .from("ProfileFamily")
+          .select("*")
+          .eq("profileId", userId)
+          .single(),
+        supabase
+          .from("ProfileChildren")
+          .select("*")
+          .eq("profileId", userId)
+          .order("createdAt", { ascending: true }),
+        supabase
+          .from("ProfileEducation")
+          .select("*")
+          .eq("profileId", userId),
+        supabase
+          .from("ProfileEmergencyContact")
+          .select("*")
+          .eq("profileId", userId)
+          .single(),
       ]);
 
       const base = getInitialProfileState();

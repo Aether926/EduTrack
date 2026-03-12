@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import type { PersonalInfoPDSPayload } from "@/features/profiles/types/personal-info";
 
 export async function fetchPersonalInfoPDS(profileId: string) {
@@ -55,4 +56,6 @@ export async function savePersonalInfoPDS(profileId: string, payload: PersonalIn
     .eq("id", profileId);
 
   if (error) throw new Error(error.message);
+  revalidateTag(`profile-${profileId}`, "default");
+  revalidatePath("/profile");
 }
