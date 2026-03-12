@@ -13,8 +13,6 @@ import { RequestHRChangeModal } from "@/features/profiles/components/modals/requ
 import { useEmploymentHR } from "@/features/profiles/hooks/use-employment-info";
 import type { ProfileState } from "@/features/profiles/types/profile";
 
-// ── Constants ──────────────────────────────────────────────────────────────────
-
 const POSITIONS = [
     "Teacher I",
     "Teacher II",
@@ -40,8 +38,6 @@ const STATUS_COLORS: Record<string, string> = {
     REJECTED: "bg-rose-500/15 text-rose-400 border-rose-500/30",
 };
 
-// ── Display value ──────────────────────────────────────────────────────────────
-
 function DisplayValue({ value }: { value?: string | null }) {
     return (
         <div className="px-3 py-2 rounded-md bg-white/5 border border-white/8 text-sm font-medium text-foreground break-words">
@@ -49,8 +45,6 @@ function DisplayValue({ value }: { value?: string | null }) {
         </div>
     );
 }
-
-// ── Field label ────────────────────────────────────────────────────────────────
 
 function FieldLabel({
     icon: Icon,
@@ -67,8 +61,6 @@ function FieldLabel({
     );
 }
 
-// ── Section divider ────────────────────────────────────────────────────────────
-
 function SectionDivider({ label }: { label: string }) {
     return (
         <div className="flex items-center gap-3 py-1">
@@ -80,8 +72,6 @@ function SectionDivider({ label }: { label: string }) {
         </div>
     );
 }
-
-// ── ReadOnlyField ──────────────────────────────────────────────────────────────
 
 function ReadOnlyField({
     label,
@@ -121,8 +111,6 @@ function ReadOnlyDate({
     );
 }
 
-// ── Card wrapper ───────────────────────────────────────────────────────────────
-
 function CardShell({
     icon: Icon,
     title,
@@ -154,8 +142,6 @@ function CardShell({
         </div>
     );
 }
-
-// ── Main export ────────────────────────────────────────────────────────────────
 
 export default function EmploymentInfoCard(props: {
     data: ProfileState;
@@ -192,7 +178,6 @@ export default function EmploymentInfoCard(props: {
         if (isOwnProfile && data.id) void fetchLastRequest();
     }, [isOwnProfile, data.id, fetchLastRequest]);
 
-    // ── Admin edit mode ──────────────────────────────────────────────────────
     if (isAdmin && isEditing) {
         return (
             <CardShell icon={Briefcase} title="Employment Information">
@@ -302,7 +287,6 @@ export default function EmploymentInfoCard(props: {
         );
     }
 
-    // ── Teacher / Guest read-only view ───────────────────────────────────────
     const requestButton =
         isOwnProfile && props.from === "profile" ? (
             hasPendingRequest ? (

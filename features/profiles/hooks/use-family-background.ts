@@ -24,7 +24,7 @@ export function useFamilyBackground(profileId: string) {
   // ─── Fetch ──────────────────────────────────────────────────────────────────
 
   const fetchData = useCallback(async () => {
-    console.log("fetchFamilyBackground profileId:", profileId);
+    
     setLoading(true);
     try {
       const result = await fetchFamilyBackground(profileId);

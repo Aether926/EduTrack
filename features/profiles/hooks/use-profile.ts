@@ -72,7 +72,7 @@ export function useProfile(initialProfile?: ProfileState) {
       toast.success("Profile saved successfully.");
     } catch (err) {
       toast.error("Failed to save profile. Please try again.");
-      console.error(err);
+      
     } finally {
       setIsSaving(false);
     }
