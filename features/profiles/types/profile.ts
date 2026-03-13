@@ -39,6 +39,7 @@ export type ProfileState = {
   plantillaNo: string;
   dateOfOriginalAppointment?: Date;
   dateOfLatestAppointment?: Date;
+  dateOfOriginalDeployment?: Date;
 
   // ── Government IDs ──
   pagibigNo: string;

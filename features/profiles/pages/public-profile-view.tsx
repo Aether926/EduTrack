@@ -78,6 +78,7 @@ export default function PublicProfileView(props: {
                 profile?.dateOfOriginalAppointment,
             ),
             dateOfLatestAppointment: toDate(profile?.dateOfLatestAppointment),
+            dateOfOriginalDeployment: toDate(profile?.dateOfOriginalDeployment),
             pagibigNo: str(profile?.pagibigNo),
             philHealthNo: str(profile?.philHealthNo),
             gsisNo: str(profile?.gsisNo),

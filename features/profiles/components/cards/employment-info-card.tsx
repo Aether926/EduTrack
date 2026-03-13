@@ -97,16 +97,20 @@ function ReadOnlyDate({
     value,
 }: {
     label: string;
-    value: Date | undefined;
+    value: Date | string | undefined;
 }) {
+    const formatted = value
+        ? typeof value === "string"
+            ? new Date(value.includes("T") ? value : value + "T00:00:00").toLocaleDateString()
+            : value.toLocaleDateString()
+        : undefined;
+
     return (
         <div className="space-y-1.5">
             <FieldLabel icon={Calendar as React.ElementType}>
                 {label}
             </FieldLabel>
-            <DisplayValue
-                value={value ? value.toLocaleDateString() : undefined}
-            />
+            <DisplayValue value={formatted} />
         </div>
     );
 }
@@ -251,16 +255,14 @@ export default function EmploymentInfoCard(props: {
                             value={
                                 data.dateOfOriginalAppointment
                                     ? data.dateOfOriginalAppointment
-                                          .toISOString()
-                                          .split("T")[0]
+                                        .toISOString()
+                                        .split("T")[0]
                                     : ""
                             }
                             onChange={(e) =>
                                 onDateChange(
                                     "dateOfOriginalAppointment",
-                                    e.target.value
-                                        ? new Date(e.target.value)
-                                        : undefined,
+                                    e.target.value ? new Date(e.target.value) : undefined,
                                 )
                             }
                             className="bg-white/5 border-white/10 focus:border-blue-500/50"
@@ -275,16 +277,36 @@ export default function EmploymentInfoCard(props: {
                             value={
                                 data.dateOfLatestAppointment
                                     ? data.dateOfLatestAppointment
-                                          .toISOString()
-                                          .split("T")[0]
+                                        .toISOString()
+                                        .split("T")[0]
                                     : ""
                             }
                             onChange={(e) =>
                                 onDateChange(
                                     "dateOfLatestAppointment",
-                                    e.target.value
-                                        ? new Date(e.target.value)
-                                        : undefined,
+                                    e.target.value ? new Date(e.target.value) : undefined,
+                                )
+                            }
+                            className="bg-white/5 border-white/10 focus:border-blue-500/50"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <FieldLabel icon={Calendar as React.ElementType}>
+                            Date of Original Deployment
+                        </FieldLabel>
+                        <Input
+                            type="date"
+                            value={
+                                data.dateOfOriginalDeployment
+                                    ? data.dateOfOriginalDeployment
+                                        .toISOString()
+                                        .split("T")[0]
+                                    : ""
+                            }
+                            onChange={(e) =>
+                                onDateChange(
+                                    "dateOfOriginalDeployment",
+                                    e.target.value ? new Date(e.target.value) : undefined,
                                 )
                             }
                             className="bg-white/5 border-white/10 focus:border-blue-500/50"
@@ -370,6 +392,10 @@ export default function EmploymentInfoCard(props: {
                     <ReadOnlyDate
                         label="Date of Latest Appointment"
                         value={data.dateOfLatestAppointment}
+                    />
+                    <ReadOnlyDate
+                        label="Date of Original Deployment"
+                        value={data.dateOfOriginalDeployment}
                     />
                 </div>
             </CardShell>

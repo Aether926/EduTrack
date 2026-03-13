@@ -2,6 +2,8 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ActionResult } from "../types";
+import { revalidatePath, unstable_cache } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
 
@@ -42,6 +44,7 @@ export async function approveUser(id: string): Promise<ActionResult> {
   if (dbError) return { ok: false, error: dbError.message };
   if (metaError) return { ok: false, error: metaError.message };
 
+  revalidatePath("access-requests");
   return { ok: true };
 }
 
@@ -49,8 +52,13 @@ export async function rejectUser(id: string): Promise<ActionResult> {
   const check = await requireAdmin();
   if (!check.ok) return { ok: false, error: check.error };
   const admin = createAdminClient();
-  const { error } = await admin.from("User").update({ status: "REJECTED" }).eq("id", id);
+  const { error } = await admin
+    .from("User")
+    .update({ status: "REJECTED" })
+    .eq("id", id);
   if (error) return { ok: false, error: error.message };
+
+  revalidatePath("access-requests");
   return { ok: true };
 }
 
@@ -60,43 +68,57 @@ export async function permanentlyDeleteUser(id: string): Promise<ActionResult> {
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.deleteUser(id);
   if (error) return { ok: false, error: error.message };
+
+  revalidatePath("access-requests");
   return { ok: true };
 }
 
 export async function fetchUsersByStatus(status: "PENDING" | "REJECTED") {
-  const check = await requireAdmin();
-  if (!check.ok) return [];
-  const admin = createAdminClient();
+    const check = await requireAdmin();
+    if (!check.ok) return [];
+    const admin = createAdminClient();
 
-  const { data, error } = await admin
-    .from("User")
-    .select("id, email, role, status, created_at")
-    .eq("status", status)
-    .order("created_at", { ascending: false });
+    const { data, error } = await admin
+        .from("User")
+        .select("id, email, role, status, created_at")
+        .eq("status", status)
+        .order("created_at", { ascending: false });
 
-  if (error || !data?.length) return [];
+    if (error || !data?.length) return [];
 
-  const ids = data.map((u) => u.id);
-  const { data: profiles } = await admin
-    .from("Profile")
-    .select("id, firstName, lastName, middleInitial, contactNumber")
-    .in("id", ids);
+    const ids = data.map((u) => u.id);
 
-  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const [{ data: profiles }, { data: hrProfiles }] = await Promise.all([
+        admin
+            .from("Profile")
+            .select("id, firstName, lastName, middleInitial, contactNumber")
+            .in("id", ids),
+        admin
+            .from("ProfileHR")
+            .select("id, employeeId, position, dateOfOriginalAppointment, dateOfOriginalDeployment")
+            .in("id", ids),
+    ]);
 
-  return data.map((u) => {
-    const profile = profileMap.get(u.id);
-    return {
-      id: u.id,
-      email: u.email,
-      role: u.role,
-      status: u.status,
-      createdAt: u.created_at,
-      firstName: profile?.firstName || "",
-      lastName: profile?.lastName || "",
-      middleInitial: profile?.middleInitial || "",
-      contactNumber: profile?.contactNumber || "",
-      employeeId: "",
-    };
-  });
+    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const hrMap = new Map((hrProfiles ?? []).map((p) => [p.id, p]));
+
+    return data.map((u) => {
+        const profile = profileMap.get(u.id);
+        const hr = hrMap.get(u.id);
+        return {
+            id: u.id,
+            email: u.email,
+            role: u.role,
+            status: u.status,
+            createdAt: u.created_at,
+            firstName: profile?.firstName || "",
+            lastName: profile?.lastName || "",
+            middleInitial: profile?.middleInitial || "",
+            contactNumber: profile?.contactNumber || "",
+            employeeId: hr?.employeeId || "",
+            position: hr?.position || "",
+            dateOfOriginalAppointment: hr?.dateOfOriginalAppointment || null,
+            dateOfOriginalDeployment: hr?.dateOfOriginalDeployment || null,
+        };
+    });
 }

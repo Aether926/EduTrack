@@ -78,7 +78,7 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                             <div className="sm:text-right shrink-0 pl-9 sm:pl-0">
                                 <p className="text-2xl font-bold text-foreground tabular-nums leading-tight">
                                     {calculateServiceYears(
-                                        data.dateOfOriginalAppointment,
+                                        data.dateOfOriginalDeployment,
                                     )}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground flex items-center sm:justify-end gap-1 mt-0.5">

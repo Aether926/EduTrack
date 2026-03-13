@@ -3,6 +3,7 @@
 import * as React from "react";
 import type { PendingUser } from "../types";
 import { fmtDate, fullName } from "../lib/utils";
+import UserDetailSheet from "./user-detail-sheet";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import {
     ShieldCheck,
     UserX,
 } from "lucide-react";
+import { useState } from "react";
 
 /* ── Status badge ─────────────────────────────────────────────────────────── */
 function StatusBadge({ status }: { status: string }) {
@@ -107,12 +109,15 @@ export default function UserApprovalTable({
     onReject: (id: string) => void | Promise<void>;
     onDelete?: (id: string) => void | Promise<void>;
 }) {
+    
     const [loadingId, setLoadingId] = React.useState<string | null>(null);
     const [confirm, setConfirm] = React.useState<
         | null
         | { type: "reject"; user: PendingUser }
         | { type: "delete"; user: PendingUser }
     >(null);
+    const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
+    const [sheetOpen, setSheetOpen] = useState(false);
 
     async function handleApprove(u: PendingUser) {
         setLoadingId(u.id);
@@ -211,7 +216,14 @@ export default function UserApprovalTable({
                                     const isLoading = loadingId === u.id;
 
                                     return (
-                                        <TableRow key={u.id}>
+                                        <TableRow
+                                            key={u.id}
+                                            className="cursor-pointer hover:bg-muted/40 transition-colors"
+                                            onClick={() => {
+                                                setSelectedUser(u);
+                                                setSheetOpen(true);
+                                            }}
+                                        >
                                             <TableCell className="pl-5">
                                                 <div className="flex items-center gap-2.5">
                                                     <InitialAvatar
@@ -254,7 +266,10 @@ export default function UserApprovalTable({
                                                 {fmtDate(u.createdAt)}
                                             </TableCell>
 
-                                            <TableCell className="text-center">
+                                            <TableCell 
+                                                className="text-center"
+                                                onClick={(e) => e.stopPropagation()}
+                                                >
                                                 <div className="flex items-center justify-center gap-1.5">
                                                     <Button
                                                         size="sm"
@@ -424,6 +439,14 @@ export default function UserApprovalTable({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <UserDetailSheet
+                user={selectedUser}
+                open={sheetOpen}
+                onOpenChange={setSheetOpen}
+                onApprove={onApprove}
+                onReject={onReject}
+                variant={variant}
+            />
         </>
     );
 }

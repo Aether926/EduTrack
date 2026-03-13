@@ -334,7 +334,7 @@ export function RequestAppointmentModal(props: {
                             onChange={set("end_date")}
                             minDate={form.start_date}
                             disabled={!form.start_date}
-                            optional
+                            required
                         />
                     </div>
 
