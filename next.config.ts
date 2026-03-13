@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
   turbopack: {},
 
   ...(process.env.NODE_ENV === "development" && {
-    allowedDevOrigins: ["192.168.1.6"],
+    allowedDevOrigins: ["192.168.1.9"],
   }),
 };
 

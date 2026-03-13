@@ -8,8 +8,10 @@ export async function getDashboardStats(userId: string) {
   try {
     // Total Profiles (global)
     const { count: profileCount } = await supabase
-      .from("Profile")
-      .select("*", { count: "exact", head: true });
+      .from("User")
+      .select("*", { count: "exact", head: true })
+      .eq("role", "TEACHER")
+      .eq("status", "APPROVED");
 
     // Trainings assigned to THIS user (Attendance -> ProfessionalDevelopment)
     const { count: trainingCount } = await supabase

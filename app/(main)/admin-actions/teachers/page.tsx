@@ -15,11 +15,21 @@ export default async function AdminTeachersPage() {
 
     const admin = createAdminClient();
 
+    const { data: users } = await admin
+        .from("User")
+        .select("id")
+        .eq("status", "APPROVED")
+        .eq("role", "TEACHER");
+
+    const approvedTeacherIds = (users ?? []).map((u) => u.id);
+
+    if (approvedTeacherIds.length === 0) {
+    }
+
     const { data: profiles } = await admin
         .from("Profile")
-        .select(
-            "id, firstName, lastName, middleInitial, email, profileImage, contactNumber",
-        )
+        .select("id, firstName, lastName, middleInitial, email, profileImage, contactNumber")
+        .in("id", approvedTeacherIds)
         .order("lastName", { ascending: true });
 
     const safeProfiles = profiles ?? [];
