@@ -90,9 +90,10 @@ export default function LogIn() {
     if (!profile)                           router.push("/fillUp");
     else if (profile.status === "PENDING")  router.push("/status");
     else if (profile.status === "APPROVED") router.push("/dashboard");
-    else setMessage("Your account status is unclear. Please contact support.");
-
-    setSubmitting(false);
+    else { 
+        setMessage("Your account status is unclear. Please contact support.");
+        setSubmitting(false);
+    }
   }
 
   return (

@@ -98,7 +98,6 @@ export default function ResetPasswordPage() {
     setIsSuccess(true);
     setSubmitting(false);
 
-    // Sign out and redirect after short delay
     setTimeout(async () => {
       await supabase.auth.signOut();
       router.push("/signin");
