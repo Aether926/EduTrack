@@ -8,7 +8,7 @@ import AddTrainingAndSeminar from "@/app/(main)/add-training-seminar/component/a
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, GraduationCap, Users } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
+const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
 
 export default async function AddTrainingSeminarPage() {
     const user = await getUser();

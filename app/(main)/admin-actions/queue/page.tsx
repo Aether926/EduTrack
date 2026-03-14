@@ -7,10 +7,7 @@ import { Users, Briefcase, BookMarked, ClipboardList } from "lucide-react";
 
 const ALLOWED_ROLES = new Set([
     "ADMIN",
-    "HR_ADMIN",
-    "PRINCIPAL",
     "SUPERADMIN",
-    "HR",
 ]);
 
 export default async function AdminQueuePage() {

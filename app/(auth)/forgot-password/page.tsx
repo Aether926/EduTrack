@@ -44,7 +44,6 @@ export default function ForgotPasswordPage() {
       redirectTo: `${window.location.origin}/reset-password`,
     });
 
-    // Always show success — don't reveal if email exists or not
     if (error && !error.message.toLowerCase().includes("rate")) {
       setIsSuccess(true);
     } else if (error?.message.toLowerCase().includes("rate")) {

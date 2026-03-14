@@ -20,7 +20,6 @@ export default function ResetPasswordPage() {
   const glowRef      = useRef<HTMLDivElement>(null);
   const spotlightRef = useRef<HTMLDivElement>(null);
 
-  // Supabase sends the token via URL hash — we need to detect the session
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
@@ -28,11 +27,9 @@ export default function ResetPasswordPage() {
       }
     });
 
-    // Also check if already in recovery session
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setSessionReady(true);
       else {
-        // Give it 2 seconds for the hash to be processed
         setTimeout(() => {
           supabase.auth.getSession().then(({ data: d }) => {
             if (d.session) setSessionReady(true);

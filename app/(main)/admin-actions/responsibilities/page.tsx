@@ -5,7 +5,7 @@ import { AdminResponsibilitiesClient } from "@/features/admin-actions/responsibi
 import { Badge } from "@/components/ui/badge";
 import { BookMarked, CheckCircle2, Clock } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
+const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
 
 export default async function AdminResponsibilitiesPage() {
     const user = await getUser();

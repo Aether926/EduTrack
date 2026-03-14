@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { supabase } from "@/lib/supabaseClient"; // only used for signOut
+import { supabase } from "@/lib/supabaseClient"; 
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -51,6 +51,7 @@ import {
 
 import DropdownRedirect from "@/components/dropdown-redirect";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { logSignOut } from "@/app/actions/auth-log-actions";
 
 type NavItem = {
     title: string;
@@ -92,6 +93,7 @@ export default function AppSidebar({
     const { toggleSidebar } = useSidebar();
 
     async function handleSignOut() {
+        await logSignOut();
         await supabase.auth.signOut({ scope: "local"});
         router.push("/signin");
     }

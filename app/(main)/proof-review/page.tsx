@@ -6,7 +6,7 @@ import ProofReviewTable from "@/features/proof-review/components/proof-review-ta
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, FileCheck, XCircle } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
+const ALLOWED = ["ADMIN", "SUPERADMIN", ] as const;
 
 export default async function ProofReviewPage() {
     const user = await getUser();

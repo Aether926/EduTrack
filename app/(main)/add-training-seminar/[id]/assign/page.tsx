@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { GraduationCap } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "PRINCIPAL", "SUPERADMIN"] as const;
+const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
 
 export default async function AssignPage({
   params,

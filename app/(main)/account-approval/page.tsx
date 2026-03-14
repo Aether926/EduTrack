@@ -7,7 +7,7 @@ import AccessRequestPanel from "@/features/account-approval/components/access-re
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, XCircle, ShieldCheck } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPERADMIN", "HR"] as const;
+const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
 
 export default async function AccessRequestPage() {
     const user = await getUser();

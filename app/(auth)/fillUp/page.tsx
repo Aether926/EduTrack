@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { logSignUp } from "@/app/actions/auth-log-actions";
 
 export default function FillUpPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,6 +180,7 @@ export default function FillUpPage() {
             }
 
             success = true;
+            await logSignUp(user.id, user.email ?? "")
             router.push("/status");
         } catch (error) {
             toast.error("An error occurred. Please try again.");

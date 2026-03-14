@@ -4,7 +4,7 @@ import AdminTeacherTable from "@/features/admin-actions/teachers/components/teac
 import { Badge } from "@/components/ui/badge";
 import { Users, CheckCircle2 } from "lucide-react";
 
-const ALLOWED = new Set(["ADMIN", "PRINCIPAL", "SUPERADMIN"]);
+const ALLOWED = new Set(["ADMIN", "SUPERADMIN"]);
 
 export default async function AdminTeachersPage() {
     const user = await getUser();

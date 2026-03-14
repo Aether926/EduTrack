@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2, BookOpen, Users, Award, ClipboardList } from "lucide-react";
+import { logSignIn } from "@/app/actions/auth-log-actions";
 
 const FEATURES = [
   { icon: BookOpen,      label: "Digital 201 Files",      desc: "Paperless teacher records, always up to date"   },
@@ -42,18 +43,24 @@ export default function LogIn() {
   }, []);
 
   async function emailExistsInUserTable(emailNorm: string) {
-    const { data, error } = await supabase.from("User").select("id").eq("email", emailNorm).maybeSingle();
+    const { data, error } = await supabase
+      .from("User")
+      .select("id")
+      .eq("email", emailNorm).maybeSingle();
+
     if (error) return null;
     return !!data;
   }
 
   async function handleSubmit(e: React.FormEvent) {
+    
     e.preventDefault();
     setMessage("");
     const emailNorm = email.trim().toLowerCase();
     if (!emailNorm && !password) return setMessage("Invalid credentials.");
     if (!emailNorm) return setMessage("Email is required.");
     if (!password)  return setMessage("Password is required.");
+    
     setSubmitting(true);
 
     const { error, data } = await supabase.auth.signInWithPassword({ email: emailNorm, password });
@@ -78,6 +85,7 @@ export default function LogIn() {
 
     const userId = data.user?.id;
     if (!userId) { setMessage("Something went wrong. Try again."); setSubmitting(false); return; }
+    await logSignIn(userId, emailNorm);
 
     const { data: profile, error: profErr } = await 
     supabase
