@@ -75,7 +75,7 @@ export function useSuperadminUsers() {
         const res = await changeUserRole(id, role);
         if (!res.ok) { toast.error(res.error); return; }
         toast.success("Role updated.");
-        refresh();
+        await refresh();
     }
 
     return {
