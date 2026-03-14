@@ -1,4 +1,4 @@
-"use server";
+
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";

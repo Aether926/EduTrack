@@ -85,7 +85,11 @@ export default function LogIn() {
 
     const userId = data.user?.id;
     if (!userId) { setMessage("Something went wrong. Try again."); setSubmitting(false); return; }
-    await logSignIn(userId, emailNorm);
+    try {
+    await logSignIn(userId, emailNorm); 
+    }catch {
+      
+    }
 
     const { data: profile, error: profErr } = await 
     supabase
