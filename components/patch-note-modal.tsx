@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 
 // ── Change this version string whenever you deploy new features ──
-const CURRENT_PATCH = "v1.0.2";
+const CURRENT_PATCH = "v1.0.3";
 const STORAGE_KEY = `edutrack_patch_seen_${CURRENT_PATCH}`;
 
 const PATCH_NOTES = [
@@ -33,6 +33,7 @@ const PATCH_NOTES = [
             "fillUp form now collects employment information.",
             "Account approval sheet shows full user details.",
             "Teacher directory now filters approved teachers only.",
+            "Loading skeleton for pages"
         ],
     },
     {

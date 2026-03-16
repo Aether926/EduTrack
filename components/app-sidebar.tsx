@@ -131,7 +131,6 @@ export default function AppSidebar({
             title: "Manage Users",
             path: "admin-actions",
             icon: Users,
-            tag: "HR",
         },
         {
             title: "Account Approval",

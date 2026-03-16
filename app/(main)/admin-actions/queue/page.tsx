@@ -77,7 +77,7 @@ export default async function AdminQueuePage() {
                             </div>
                             <div>
                                 <h1 className="text-lg font-semibold tracking-tight leading-tight">
-                                    HR Change Requests
+                                    Change Requests
                                 </h1>
                                 <p className="text-[13px] text-muted-foreground mt-0.5">
                                     Review and approve employment info change
