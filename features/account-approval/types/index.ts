@@ -12,6 +12,7 @@ export type PendingUser = {
   position: string;
   dateOfOriginalAppointment: string | null;
   dateOfOriginalDeployment: string | null;
+  profileImage: string | null;
 };
 export type ActionResult =
   | { ok: true }

@@ -91,7 +91,7 @@ export async function fetchUsersByStatus(status: "PENDING" | "REJECTED") {
     const [{ data: profiles }, { data: hrProfiles }] = await Promise.all([
         admin
             .from("Profile")
-            .select("id, firstName, lastName, middleInitial, contactNumber")
+            .select("id, firstName, lastName, middleInitial, contactNumber, profileImage")
             .in("id", ids),
         admin
             .from("ProfileHR")
@@ -119,6 +119,7 @@ export async function fetchUsersByStatus(status: "PENDING" | "REJECTED") {
             position: hr?.position || "",
             dateOfOriginalAppointment: hr?.dateOfOriginalAppointment || null,
             dateOfOriginalDeployment: hr?.dateOfOriginalDeployment || null,
+            profileImage: profile?.profileImage ?? null,
         };
     });
 }

@@ -7,6 +7,7 @@ export type RequestWithTeacher = ProfileHRChangeRequest & {
     firstName: string;
     lastName: string;
     email: string;
+    profileImage: string | null;
   } | null;
 };
 
@@ -16,6 +17,7 @@ export type AppointmentRequestWithTeacher = AppointmentChangeRequest & {
     firstName: string;
     lastName: string;
     email: string;
+    profileImage: string | null;
   } | null;
 };
 
@@ -25,5 +27,6 @@ export type ResponsibilityRequestWithTeacher = ResponsibilityChangeRequest & {
     firstName: string;
     lastName: string;
     email: string;
+    profileImage: string | null;
   } | null;
 };

@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { logSignUp } from "@/app/actions/auth-log-actions";
+import { generateUsername } from "@/features/profiles/actions/username-action";
 
 export default function FillUpPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,7 +125,9 @@ export default function FillUpPage() {
 
         try {
             // 1. Create User row
-            const { error: userError } = await supabase.from("User").upsert({
+            const { error: userError } = await supabase
+            .from("User")
+            .upsert({
                 id: user.id,
                 auth_id: user.id,
                 email: user.email,
@@ -137,6 +140,7 @@ export default function FillUpPage() {
                 setSubmitting(false);
                 return;
             }
+            const autoUsername = await generateUsername(formData.firstName, formData.lastName);
 
             // 2. Create Profile row
             const { error: profileError } = await supabase
@@ -149,6 +153,7 @@ export default function FillUpPage() {
                         lastName: formData.lastName,
                         middleInitial: formData.middleInitial,
                         contactNumber: formData.contactNumber,
+                        username: autoUsername,
                     },
                     { onConflict: "id" },
                 );

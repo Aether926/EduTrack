@@ -15,7 +15,12 @@ type ActionItem = {
     title: string; description: string; href: string; icon: React.ReactNode; badge?: string;
     color: { icon: string; glow: string; border: string; open: string; };
 };
-type TeacherItem = { id: string; fullName: string; email: string | null; };
+type TeacherItem = {
+        id: string;
+        fullName: string;
+        email: string | null;
+        profileImage: string | null;  
+    };
 
 function teacherProfileHref(id: string) { return `/admin-actions/teachers/${id}`; }
 
@@ -31,14 +36,19 @@ export default async function AdminActionsPage() {
     const admin = createAdminClient();
 
     const [{ data: users }, deletionRequests] = await Promise.all([
-        admin.from("User").select("id, role, status").eq("role", "TEACHER").eq("status", "APPROVED"),
+        admin
+            .from("User")
+            .select("id, role, status")
+            .eq("role", "TEACHER")
+            .eq("status", "APPROVED"),
+
         getAllDeletionRequests(),
     ]);
 
     const teacherIds = (users ?? []).map((u) => u.id);
     const { data: teacherProfiles } = await admin
         .from("Profile")
-        .select("id, firstName, lastName, email")
+        .select("id, firstName, lastName, email, profileImage")
         .in("id", teacherIds.length ? teacherIds : ["__none__"])
         .order("lastName", { ascending: true });
 
@@ -46,6 +56,7 @@ export default async function AdminActionsPage() {
         id: String(p.id),
         fullName: `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim() || p.email || "(unknown)",
         email: p.email ?? null,
+        profileImage: p.profileImage ?? null,
     }));
 
     const actions: ActionItem[] = [
@@ -141,7 +152,10 @@ export default async function AdminActionsPage() {
                                         ) : (
                                             recentTeachers.map((t) => (
                                                 <Link key={t.id} href={teacherProfileHref(t.id)} prefetch={false} className="group flex items-center gap-3 rounded-lg border border-border/50 bg-muted/10 px-3 py-2.5 hover:bg-muted/20 hover:border-border/80 transition-colors">
-                                                    <InitialAvatar name={t.fullName} className="h-8 w-8 shrink-0" />
+                                                    <InitialAvatar
+                                                        name={t.fullName}
+                                                        src={t.profileImage}
+                                                        className="h-8 w-8 shrink-0" />
                                                     <div className="min-w-0 flex-1">
                                                         <p className="text-sm font-medium truncate leading-tight">{t.fullName}</p>
                                                         <p className="text-[11px] text-muted-foreground truncate">{t.email ?? "—"}</p>

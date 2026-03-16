@@ -76,7 +76,18 @@ export default function ProfilePage({
         }
     }, [tempProfileData.firstName, openCard]);
 
-    const { preview, previewImage } = useProfileImage();
+    const {
+        preview,
+        setPreview,
+        previewImage,
+        cropSrc,
+        cropOpen,
+        setCropOpen,
+        uploading,
+        fileInputRef,
+        handleCropComplete,
+        handleDeleteImage,
+    } = useProfileImage(initialProfile.profileImage);
     const { trainings, trainingsLoading, loadTrainings } =
         useProfileTrainings();
 
@@ -93,16 +104,24 @@ export default function ProfilePage({
                 teacherId={userId}
                 preview={preview}
                 isEditing={false}
+                isOwnProfile={true}
                 savedFirstName={savedFirstName}
                 tempProfileData={{
-                    firstName: tempProfileData.firstName,
+                    firstName:     tempProfileData.firstName,
                     middleInitial: tempProfileData.middleInitial,
-                    lastName: tempProfileData.lastName,
-                    position: tempProfileData.position,
-                    username: tempProfileData.username,
+                    lastName:      tempProfileData.lastName,
+                    position:      tempProfileData.position,
+                    username:      tempProfileData.username,
                 }}
                 profileData={profileData}
                 onImageChange={previewImage}
+                onDeleteImage={handleDeleteImage}
+                onCropComplete={handleCropComplete}
+                cropSrc={cropSrc}
+                cropOpen={cropOpen}
+                onCropOpenChange={setCropOpen}
+                uploading={uploading}
+                fileInputRef={fileInputRef}
                 showActions={true}
             />
 
