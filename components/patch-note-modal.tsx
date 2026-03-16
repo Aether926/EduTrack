@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 
 // ── Change this version string whenever you deploy new features ──
-const CURRENT_PATCH = "v1.0.0";
+const CURRENT_PATCH = "v1.0.1";
 const STORAGE_KEY = `edutrack_patch_seen_${CURRENT_PATCH}`;
 
 const PATCH_NOTES = [
@@ -41,6 +41,7 @@ const PATCH_NOTES = [
             "Service record date calculation timezone issue.",
             "Dashboard profile count now shows teachers only.",
             "Exit button now goes back properly when viewing images.",
+            "Employee ID and Position now correctly dispayed in Teacher Profiles directory",
         ],
     },
 ];
