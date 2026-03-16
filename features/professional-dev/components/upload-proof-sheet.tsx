@@ -14,6 +14,7 @@ import {
     SheetTitle,
     SheetDescription,
 } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -275,14 +276,17 @@ export default function UploadProofSheet({
                                 {file.type.startsWith("image/") && (
                                     <button
                                         type="button"
-                                        onClick={() => setFullscreen(true)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFullscreen(true);
+                                        }}
                                         className="group relative w-full overflow-hidden rounded-lg border bg-muted/20 hover:border-border transition-colors"
                                         aria-label="View fullscreen"
                                     >
                                         <img
                                             src={URL.createObjectURL(file)}
                                             alt="Preview"
-                                            className="w-full max-h-48 object-contain"
+                                            className="w-full max-h-64 object-contain block"
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors rounded-lg">
                                             <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -361,42 +365,48 @@ export default function UploadProofSheet({
                 </SheetContent>
             </Sheet>
 
-            {/* ── Fullscreen overlay — rendered outside Sheet so z-index works ── */}
-            <AnimatePresence>
-                {fullscreen && file && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.18 }}
-                        className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center"
-                        onClick={() => setFullscreen(false)}
-                    >
-                        <button
-                            onClick={() => setFullscreen(false)}
-                            className="absolute top-4 right-4 z-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors p-2 text-white"
-                            aria-label="Close fullscreen"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
-                        {file.type.startsWith("image/") ? (
+            {/* ── Fullscreen preview ── */}
+            <Dialog
+                open={fullscreen && !!file}
+                onOpenChange={(open) => {
+                    if (!open) setFullscreen(false);
+                }}
+            >
+                <DialogContent className="max-w-screen w-screen h-screen p-0 border-0 bg-black/90 flex items-center justify-center rounded-none [&>button.absolute]:hidden">
+                    <DialogTitle className="sr-only">Image Preview</DialogTitle>
+                    {file?.type.startsWith("image/") ? (
+                        <div className="relative inline-block">
                             <img
-                                src={URL.createObjectURL(file)}
+                                src={file ? URL.createObjectURL(file) : ""}
                                 alt="Fullscreen preview"
-                                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-                                onClick={(e) => e.stopPropagation()}
+                                className="max-h-[90vh] max-w-[90vw] w-auto h-auto object-contain rounded-lg shadow-2xl block"
                             />
-                        ) : (
+                            <button
+                                onClick={() => setFullscreen(false)}
+                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
+                                aria-label="Close fullscreen"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ) : file ? (
+                        <div className="relative inline-block">
                             <iframe
                                 src={URL.createObjectURL(file)}
-                                className="w-[90vw] h-[90vh] rounded-lg shadow-2xl bg-white"
+                                className="w-[90vw] h-[90vh] rounded-lg bg-white"
                                 title="Fullscreen preview"
-                                onClick={(e) => e.stopPropagation()}
                             />
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            <button
+                                onClick={() => setFullscreen(false)}
+                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
+                                aria-label="Close fullscreen"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ) : null}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

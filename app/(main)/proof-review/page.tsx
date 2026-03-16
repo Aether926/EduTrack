@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/supabase/server";
-import { getPendingProofs } from "@/features/proof-review/lib/queries";
-import ProofReviewTable from "@/features/proof-review/components/proof-review-table";
+import { getPendingProofs } from "@/features/admin-actions/proof-review/lib/queries";
+import ProofReviewTable from "@/features/admin-actions/proof-review/components/proof-review-table";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, FileCheck, XCircle } from "lucide-react";
 
-const ALLOWED = ["ADMIN", "SUPERADMIN", ] as const;
+const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
 
 export default async function ProofReviewPage() {
     const user = await getUser();

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,40 +14,41 @@ import { Sparkles } from "lucide-react";
 
 // ── Change this version string whenever you deploy new features ──
 const CURRENT_PATCH = "v1.0.0";
-const STORAGE_KEY   = `edutrack_patch_seen_${CURRENT_PATCH}`;
+const STORAGE_KEY = `edutrack_patch_seen_${CURRENT_PATCH}`;
 
 const PATCH_NOTES = [
     {
         category: "New",
         items: [
-            "Superadmin role with user and security management",
-            "Account suspension with reason",
-            "Role promotion and demotion system",
-            "Security activity log",
-            "Date of Original Deployment tracking",
+            "Superadmin role with user and security management.",
+            "Account suspension with reason.",
+            "Role promotion and demotion system.",
+            "Security activity log.",
+            "Date of Original Deployment tracking.",
         ],
     },
     {
         category: "Improved",
         items: [
-            "fillUp form now collects employment information",
-            "Account approval sheet shows full user details",
-            "Teacher directory now filters approved teachers only",
+            "fillUp form now collects employment information.",
+            "Account approval sheet shows full user details.",
+            "Teacher directory now filters approved teachers only.",
         ],
     },
     {
         category: "Fixed",
         items: [
-            "Service record date calculation timezone issue",
-            "Dashboard profile count now shows teachers only",
+            "Service record date calculation timezone issue.",
+            "Dashboard profile count now shows teachers only.",
+            "Exit button now goes back properly when viewing images.",
         ],
     },
 ];
 
 const categoryColors: Record<string, string> = {
-    New:      "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    New: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     Improved: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    Fixed:    "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    Fixed: "bg-amber-500/15 text-amber-400 border-amber-500/30",
 };
 
 export default function PatchNoteModal() {
@@ -63,7 +63,12 @@ export default function PatchNoteModal() {
     }
 
     return (
-        <Dialog open={open} onOpenChange={(o) => { if (!o) handleDismiss(); }}>
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                if (!o) handleDismiss();
+            }}
+        >
             <DialogContent className="max-w-md w-[90vw] p-0 gap-0 overflow-hidden">
                 {/* Header */}
                 <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">

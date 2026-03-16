@@ -117,7 +117,7 @@ function ProofUpload({
     const isPdf = file?.type === "application/pdf";
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 min-w-0 w-full overflow-hidden">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Proof of Attendance <span className="text-rose-400">*</span>
             </p>
@@ -159,12 +159,15 @@ function ProofUpload({
 
             {/* Preview — when file is selected */}
             {file && previewUrl && (
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0 overflow-hidden">
                     {/* Image preview */}
                     {isImage && (
                         <button
                             type="button"
-                            onClick={() => onFullscreen(file)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onFullscreen(file);
+                            }}
                             className="group relative w-full overflow-hidden rounded-lg border bg-muted/20 hover:border-border transition-colors"
                             aria-label="View fullscreen"
                         >
@@ -172,7 +175,7 @@ function ProofUpload({
                             <img
                                 src={previewUrl}
                                 alt="Preview"
-                                className="w-full h-auto block"
+                                className="w-full max-h-64 object-contain block"
                             />
                             <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors rounded-lg">
                                 <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -190,7 +193,10 @@ function ProofUpload({
                             />
                             <button
                                 type="button"
-                                onClick={() => onFullscreen(file)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onFullscreen(file);
+                                }}
                                 className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
                                 aria-label="Expand"
                             >
@@ -407,8 +413,7 @@ export default function SelfEnrollModal({
     return (
         <>
             <Dialog open={open} onOpenChange={handleClose}>
-                <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto p-0 gap-0">
-                    {/* Header */}
+                <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 gap-0">
                     <div className="px-6 pt-6 pb-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                         <DialogHeader>
                             <div className="flex items-center gap-2 mb-2">
@@ -756,7 +761,7 @@ export default function SelfEnrollModal({
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -8 }}
                                 transition={{ duration: 0.15 }}
-                                className="px-6 py-5 space-y-5"
+                                className="px-6 py-5 space-y-5 min-w-0 overflow-hidden"
                             >
                                 {/* Training summary card */}
                                 <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
@@ -873,46 +878,53 @@ export default function SelfEnrollModal({
                 </Dialog>
             )}
 
-            {/* ── Fullscreen proof preview — outside dialogs so z-index works ── */}
-            <AnimatePresence>
-                {fullscreenFile && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.18 }}
-                        className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setFullscreenFile(null);
-                        }}
-                    >
-                        <button
-                            onClick={() => setFullscreenFile(null)}
-                            className="absolute top-4 right-4 z-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors p-2 text-white"
-                            aria-label="Close fullscreen"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
-                        {fullscreenFile.type.startsWith("image/") ? (
-                            // eslint-disable-next-line @next/next/no-img-element
+            {/* ── Fullscreen proof preview ── */}
+            <Dialog
+                open={!!fullscreenFile}
+                onOpenChange={(open) => {
+                    if (!open) setFullscreenFile(null);
+                }}
+            >
+                <DialogContent className="max-w-screen w-screen h-screen p-0 border-0 bg-black/90 flex items-center justify-center rounded-none [&>button.absolute]:hidden">
+                    <DialogTitle className="sr-only">Image Preview</DialogTitle>
+                    {fullscreenFile?.type.startsWith("image/") ? (
+                        <div className="relative inline-block">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                                src={URL.createObjectURL(fullscreenFile)}
+                                src={
+                                    fullscreenFile
+                                        ? URL.createObjectURL(fullscreenFile)
+                                        : ""
+                                }
                                 alt="Fullscreen preview"
-                                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-                                onClick={(e) => e.stopPropagation()}
+                                className="max-h-[90vh] max-w-[90vw] w-auto h-auto object-contain rounded-lg shadow-2xl block"
                             />
-                        ) : (
+                            <button
+                                onClick={() => setFullscreenFile(null)}
+                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
+                                aria-label="Close fullscreen"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ) : fullscreenFile ? (
+                        <div className="relative inline-block">
                             <iframe
                                 src={URL.createObjectURL(fullscreenFile)}
-                                className="w-[90vw] h-[90vh] rounded-lg shadow-2xl bg-white"
+                                className="w-[90vw] h-[90vh] rounded-lg bg-white"
                                 title="Fullscreen preview"
-                                onClick={(e) => e.stopPropagation()}
                             />
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            <button
+                                onClick={() => setFullscreenFile(null)}
+                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
+                                aria-label="Close fullscreen"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ) : null}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

@@ -20,7 +20,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import ProofReviewSheet from "@/features/proof-review/components/proof-review-sheet";
+import ProofReviewSheet from "@/features/admin-actions/proof-review/components/proof-review-sheet";
 
 function StatusBadge({ status }: { status: string }) {
     const s = (status ?? "").toUpperCase();
@@ -78,11 +78,11 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                 <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/5 via-transparent to-transparent pointer-events-none" />
                     <div className="relative flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
                             <div className="rounded-lg border border-fuchsia-500/20 bg-fuchsia-500/10 p-2 shrink-0">
                                 <FileSearch className="h-4 w-4 text-fuchsia-400" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-sm font-semibold">
                                     Submissions
                                 </p>
@@ -147,22 +147,22 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                             No submissions found.
                         </div>
                     ) : (
-                        <Table>
+                        <Table className="table-fixed w-full">
                             <TableHeader>
                                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground pl-5">
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground pl-5 w-[30%]">
                                         Submission
                                     </TableHead>
-                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden lg:table-cell">
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden lg:table-cell w-[22%]">
                                         Teacher
                                     </TableHead>
-                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden md:table-cell">
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden md:table-cell w-[14%]">
                                         Status
                                     </TableHead>
-                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden md:table-cell">
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground hidden md:table-cell w-[20%]">
                                         Submitted
                                     </TableHead>
-                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground text-center">
+                                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground text-center w-[14%]">
                                         Actions
                                     </TableHead>
                                 </TableRow>
@@ -175,7 +175,7 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                             className="cursor-pointer hover:bg-accent/30 transition-colors"
                                             onClick={() => setSelected(r)}
                                         >
-                                            <TableCell className="pl-5 align-top pt-3 pb-2 min-w-0 max-w-0 w-full">
+                                            <TableCell className="pl-5 align-top pt-3 pb-2 overflow-hidden">
                                                 <div className="space-y-1 min-w-0">
                                                     <p className="text-sm font-medium truncate">
                                                         {r.training.title}
@@ -210,17 +210,17 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="hidden lg:table-cell align-top py-3">
-                                                <div className="flex items-center gap-2.5">
+                                            <TableCell className="hidden lg:table-cell align-top py-3 overflow-hidden">
+                                                <div className="flex items-start gap-2.5 min-w-0">
                                                     <InitialAvatar
                                                         name={r.teacher.name}
                                                         className="h-8 w-8 text-xs shrink-0"
                                                     />
                                                     <div className="leading-tight min-w-0">
-                                                        <p className="text-sm font-medium">
+                                                        <p className="text-sm font-medium break-words">
                                                             {r.teacher.name}
                                                         </p>
-                                                        <p className="text-[11px] text-muted-foreground truncate">
+                                                        <p className="text-[11px] text-muted-foreground break-all">
                                                             {r.teacher.email ??
                                                                 "—"}
                                                         </p>
@@ -232,7 +232,7 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                                     status={r.status}
                                                 />
                                             </TableCell>
-                                            <TableCell className="hidden md:table-cell align-middle py-3 text-xs text-muted-foreground font-mono">
+                                            <TableCell className="hidden md:table-cell align-middle py-3 text-xs text-muted-foreground font-mono whitespace-normal">
                                                 {fmt(r.submittedAt)}
                                             </TableCell>
                                             <TableCell
