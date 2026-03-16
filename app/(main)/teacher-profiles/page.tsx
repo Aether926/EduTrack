@@ -36,7 +36,6 @@ export default function TeacherProfilesPage() {
                 return;
             }
 
-            // get current user's role + status
             const { data: userRow, error: userErr } = await supabase
                 .from("User")
                 .select("role,status")
@@ -52,27 +51,23 @@ export default function TeacherProfilesPage() {
 
             if (userRow) setUserRole(userRow.role as "ADMIN" | "TEACHER");
 
-            // if current user is PENDING (or not approved), don't fetch teacher rows at all
             if (!userRow || userRow.status !== "APPROVED") {
                 setTeachers([]);
                 setLoading(false);
                 return;
             }
 
-            // fetch approved TEACHER profiles only, exclude own profile row
             const { data: profiles, error } = await supabase
                 .from("Profile")
-                .select(
-                    `
-          *,
-          User!inner (
-            status,
-            role
-          )
-        `,
-                )
+                .select(`
+                    *,
+                    User!inner (
+                        status,
+                        role
+                    )
+                `)
                 .eq("User.status", "APPROVED")
-                .eq("User.role", "TEACHER") // don't include ADMIN in table
+                .eq("User.role", "TEACHER")
                 .order("lastName", { ascending: true });
 
             if (error) {
@@ -82,22 +77,33 @@ export default function TeacherProfilesPage() {
                 return;
             }
 
+            const profileIds = (profiles ?? []).map((p: any) => p.id);
+            const { data: hrProfiles } = await supabase
+                .from("ProfileHR")
+                .select("id, employeeId, position")
+                .in("id", profileIds);
+
+            const hrMap = new Map((hrProfiles ?? []).map((hr: any) => [hr.id, hr]));
+
             const tableData: TeacherTableRow[] = (profiles ?? [])
                 .filter((profile: any) => profile.id !== authUser.id)
-                .map((profile: any) => ({
-                    id: profile.id,
-                    employeeid: profile.employeeId || "N/A",
-                    fullname: `${profile.firstName} ${
-                        profile.middleInitial
-                            ? profile.middleInitial.replace(/\.+$/, "") + ". "
-                            : ""
-                    }${profile.lastName}`,
-                    position: profile.position || "N/A",
-                    contact: profile.contactNumber || "N/A",
-                    email: profile.email,
-                    profileImage: profile.profileImage || null,
-                    status: profile.User.status,
-                }));
+                .map((profile: any) => {
+                    const hr = hrMap.get(profile.id);
+                    return {
+                        id:           profile.id,
+                        employeeid:   hr?.employeeId    || "N/A",
+                        fullname:     `${profile.firstName} ${
+                            profile.middleInitial
+                                ? profile.middleInitial.replace(/\.+$/, "") + ". "
+                                : ""
+                        }${profile.lastName}`,
+                        position:     hr?.position      || "N/A",
+                        contact:      profile.contactNumber || "N/A",
+                        email:        profile.email,
+                        profileImage: profile.profileImage  || null,
+                        status:       profile.User.status,
+                    };
+                });
 
             setTeachers(tableData);
             setLoading(false);

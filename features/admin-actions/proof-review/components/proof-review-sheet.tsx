@@ -2,11 +2,9 @@
 "use client";
 
 import * as React from "react";
-import { createPortal } from "react-dom";
 import type { ProofReviewRow } from "../types";
 import { fmt, statusBadgeVariant } from "../lib/utils";
 import { Loader2, X, ZoomIn } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,70 +14,13 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 function isImage(url: string) {
     return /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(url);
-}
-
-function FullscreenOverlay({
-    url,
-    onClose,
-}: {
-    url: string;
-    onClose: () => void;
-}) {
-    const image = isImage(url);
-
-    const handleBackdrop = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) onClose();
-    };
-
-    React.useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
-    }, [onClose]);
-
-    return createPortal(
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
-            onClick={handleBackdrop}
-        >
-            <button
-                onClick={onClose}
-                className="absolute top-4 right-4 z-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors p-2 text-white"
-                aria-label="Close fullscreen"
-            >
-                <X className="h-5 w-5" />
-            </button>
-
-            {image ? (
-                <img
-                    src={url}
-                    alt="Proof fullscreen"
-                    className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                />
-            ) : (
-                <iframe
-                    src={url}
-                    className="w-[90vw] h-[90vh] rounded-lg shadow-2xl bg-white"
-                    title="Proof PDF"
-                    onClick={(e) => e.stopPropagation()}
-                />
-            )}
-        </motion.div>,
-        document.body,
-    );
 }
 
 export default function ProofReviewSheet({
@@ -227,14 +168,17 @@ export default function ProofReviewSheet({
                                 </div>
                             ) : proofIsImage ? (
                                 <button
-                                    onClick={() => setFullscreen(true)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFullscreen(true);
+                                    }}
                                     className="group relative w-full overflow-hidden rounded-lg border bg-muted/20 hover:border-border transition-colors"
                                     aria-label="View proof fullscreen"
                                 >
                                     <img
                                         src={row.proofUrl!}
                                         alt="Proof"
-                                        className="w-full max-h-56 object-contain"
+                                        className="w-full h-auto block"
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors rounded-lg">
                                         <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -310,14 +254,48 @@ export default function ProofReviewSheet({
             </Sheet>
 
             {/* ── Fullscreen overlay ── */}
-            <AnimatePresence>
-                {fullscreen && row.proofUrl && (
-                    <FullscreenOverlay
-                        url={row.proofUrl}
-                        onClose={() => setFullscreen(false)}
-                    />
-                )}
-            </AnimatePresence>
+            <Dialog
+                open={fullscreen && !!row.proofUrl}
+                onOpenChange={(open) => {
+                    if (!open) setFullscreen(false);
+                }}
+            >
+                <DialogContent className="max-w-screen w-screen h-screen p-0 border-0 bg-black/90 flex items-center justify-center rounded-none [&>button.absolute]:hidden">
+                    <DialogTitle className="sr-only">Proof Preview</DialogTitle>
+                    {row.proofUrl && isImage(row.proofUrl) ? (
+                        <div className="relative inline-block">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={row.proofUrl}
+                                alt="Proof fullscreen"
+                                className="max-h-[90vh] max-w-[90vw] w-auto h-auto object-contain rounded-lg shadow-2xl block"
+                            />
+                            <button
+                                onClick={() => setFullscreen(false)}
+                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
+                                aria-label="Close fullscreen"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ) : row.proofUrl ? (
+                        <div className="relative inline-block">
+                            <iframe
+                                src={row.proofUrl}
+                                className="w-[90vw] h-[90vh] rounded-lg bg-white"
+                                title="Proof PDF fullscreen"
+                            />
+                            <button
+                                onClick={() => setFullscreen(false)}
+                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
+                                aria-label="Close fullscreen"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ) : null}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

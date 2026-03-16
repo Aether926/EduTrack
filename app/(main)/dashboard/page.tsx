@@ -8,6 +8,7 @@ import { getTeacherSalaryEligibility } from "@/lib/database/salary-eligibility";
 import { getAdminDashboardStats } from "@/lib/database/admin-dashboard";
 import DashboardView from "@/features/dashboard/component/dashboard-view";
 import { redirect } from "next/navigation";
+import PatchNoteModal from "@/components/patch-note-modal";
 
 function getCachedAdminStats() {
   return unstable_cache(
@@ -106,6 +107,7 @@ export default async function DashboardPage() {
   }));
 
   return (
+    <>
     <DashboardView
       role={role}
       viewerId={user.id}
@@ -115,7 +117,8 @@ export default async function DashboardPage() {
       eligibilityData={eligibility.data}
       eligibilityCount={eligibility.count}
       adminStats={adminStats}
-      adminEvents={adminEvents}
-    />
+      adminEvents={adminEvents} />
+      <PatchNoteModal />
+      </>
   );
 }
