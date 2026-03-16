@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 
 // ── Change this version string whenever you deploy new features ──
-const CURRENT_PATCH = "v1.0.1";
+const CURRENT_PATCH = "v1.0.2";
 const STORAGE_KEY = `edutrack_patch_seen_${CURRENT_PATCH}`;
 
 const PATCH_NOTES = [
