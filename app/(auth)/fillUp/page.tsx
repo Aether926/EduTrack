@@ -180,7 +180,11 @@ export default function FillUpPage() {
             }
 
             success = true;
+            try {
             await logSignUp(user.id, user.email ?? "")
+            } catch {
+
+            }
             router.push("/status");
         } catch (error) {
             toast.error("An error occurred. Please try again.");
