@@ -81,7 +81,7 @@ export async function getTeachersForPicker(): Promise<TeacherTableRow[]> {
     // 2) Fetch Profile rows by teacher id
     const { data: profiles, error: profErr } = await supabase
       .from("Profile")
-      .select("id, firstName, lastName, middleInitial, contactNumber, email, profileImage")
+      .select("id, firstName, lastName, middleInitial, contactNumber, email, profileImage, subjectSpecialization")
       .in("id", teacherIds);
 
     if (profErr) {
@@ -125,6 +125,7 @@ export async function getTeachersForPicker(): Promise<TeacherTableRow[]> {
         email: p.email ?? emailById.get(id) ?? "",
         profileImage: p.profileImage ?? null,
         status: "APPROVED",
+        subjectSpecialization: p.subjectSpecialization ?? null,
       };
     });
 

@@ -95,6 +95,7 @@ export default function TeacherProfilesPage() {
                         email:        profile.email,
                         profileImage: profile.profileImage  || null,
                         status:       profile.User.status,
+                        subjectSpecialization: profile.subjectSpecialization  || null,
                     };
                 });
 

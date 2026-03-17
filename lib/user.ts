@@ -46,6 +46,7 @@ export type TeacherTableRow = {
   email: string;
   profileImage: string | null;
   status: string;
+  subjectSpecialization: string | null;
 };
 
 export type ProfessionalDevelopment = {

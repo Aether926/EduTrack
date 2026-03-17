@@ -2,6 +2,7 @@
 
 import {
     Loader2, Plus, Pencil, Eye, CalendarIcon, X,
+    Trash2, UserPlus, Lock,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type Mode = "create" | "edit" | "view";
 
@@ -54,7 +61,11 @@ interface PdFormSheetProps {
     setFormData: (data: FormData) => void;
     onSubmit: (e: React.FormEvent) => void;
     isSubmitting: boolean;
-    extraFooter?: React.ReactNode;
+    // View mode extras
+    isPast?: boolean;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    onAssign?: () => void;
 }
 
 const modeConfig = {
@@ -85,7 +96,7 @@ const modeConfig = {
         iconBg: "bg-violet-500/10 border-violet-500/20",
         iconColor: "text-violet-400",
         badge: "bg-violet-500/10 text-violet-400 border-violet-500/30",
-        badgeLabel: "Viewing",
+        badgeLabel: "Details",
         title: "Training/Seminar Details",
         submitLabel: "",
         submittingLabel: "",
@@ -102,74 +113,6 @@ function FieldLabel({ children, optional }: { children: React.ReactNode; optiona
     );
 }
 
-function DatePickerField({
-    label,
-    value,
-    onChange,
-    disabled,
-    optional,
-}: {
-    label: string;
-    value: Date | undefined;
-    onChange: (d: Date | undefined) => void;
-    disabled?: boolean;
-    optional?: boolean;
-}) {
-    if (disabled) {
-        return (
-            <div>
-                <FieldLabel optional={optional}>{label}</FieldLabel>
-                <div className="rounded-lg border bg-muted/20 px-3 py-2 text-sm text-foreground h-9 flex items-center">
-                    {value
-                        ? <span className="font-mono">{format(value, "PPP")}</span>
-                        : <span className="text-muted-foreground">—</span>
-                    }
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-1.5">
-                <FieldLabel optional={optional}>{label}</FieldLabel>
-                {value && (
-                    <button
-                        type="button"
-                        onClick={() => onChange(undefined)}
-                        className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
-                    >
-                        <X className="h-3 w-3" /> Clear
-                    </button>
-                )}
-            </div>
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !value && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {value ? format(value, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        mode="single"
-                        selected={value}
-                        onSelect={onChange}
-                        initialFocus
-                    />
-                </PopoverContent>
-            </Popover>
-        </div>
-    );
-}
-
 export default function PdFormSheet({
     open,
     onOpenChange,
@@ -178,7 +121,10 @@ export default function PdFormSheet({
     setFormData,
     onSubmit,
     isSubmitting,
-    extraFooter,
+    isPast = false,
+    onEdit,
+    onDelete,
+    onAssign,
 }: PdFormSheetProps) {
     const isMobile = useIsMobile();
     const isReadOnly = mode === "view";
@@ -211,22 +157,56 @@ export default function PdFormSheet({
                                     <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cfg.badge}`}>
                                         {cfg.badgeLabel}
                                     </span>
+                                    {/* Past badge */}
+                                    {isPast && (
+                                        <span className="inline-flex items-center gap-1 rounded-full border border-muted-foreground/20 bg-muted/40 px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                                            <Lock className="h-2.5 w-2.5" /> Expired
+                                        </span>
+                                    )}
                                 </div>
-                                <SheetTitle className="text-base leading-snug">
-                                    {cfg.title}
+                                <SheetTitle className="text-base leading-snug break-words whitespace-normal">
+                                    {(mode === "view" || mode === "edit") && formData.title
+                                        ? formData.title
+                                        : cfg.title}
                                 </SheetTitle>
                             </div>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0 h-7 w-7"
-                            onClick={handleClose}
-                            disabled={isSubmitting}
-                            aria-label="Close"
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1 shrink-0">
+                            {/* Edit button — only in view mode */}
+                            {mode === "view" && onEdit && (
+                                <TooltipProvider delayDuration={200}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={onEdit}
+                                                    disabled={isPast}
+                                                    aria-label="Edit"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                            {isPast ? "Cannot edit — training has already passed" : "Edit details"}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={handleClose}
+                                disabled={isSubmitting}
+                                aria-label="Close"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                 </SheetHeader>
 
@@ -309,7 +289,7 @@ export default function PdFormSheet({
 
                         <Separator />
 
-                        {/* Start + End Date */}
+                        {/* Date Range */}
                         <div>
                             <div className="flex items-center justify-between mb-1.5">
                                 <FieldLabel>Date Range</FieldLabel>
@@ -390,31 +370,74 @@ export default function PdFormSheet({
                                 disabled={isReadOnly}
                             />
                         </div>
-
-                        {extraFooter}
                     </div>
 
-                    {/* ── Footer — sticky at bottom ── */}
-                    <div className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-3 flex gap-2">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={handleClose}
-                            disabled={isSubmitting}
-                            className="flex-1"
-                        >
-                            {mode === "view" ? "Close" : "Cancel"}
-                        </Button>
-                        {mode !== "view" && (
-                            <Button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className={cn("flex-1 gap-2", cfg.submitCls)}
-                            >
-                                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                                {isSubmitting ? cfg.submittingLabel : cfg.submitLabel}
-                            </Button>
+                    {/* ── Footer ── */}
+                    <div className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-3 space-y-2">
+                        {/* View mode: Assign + Delete actions */}
+                        {mode === "view" && (onAssign || onDelete) && (
+                            <div className="flex gap-2">
+                                {onAssign && (
+                                    <TooltipProvider delayDuration={200}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <span className="flex-1">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="w-full gap-2"
+                                                        onClick={onAssign}
+                                                        disabled={isPast}
+                                                    >
+                                                        <UserPlus className="h-4 w-4" />
+                                                        Assign Teachers
+                                                    </Button>
+                                                </span>
+                                            </TooltipTrigger>
+                                            {isPast && (
+                                                <TooltipContent side="top">
+                                                    Training has already passed
+                                                </TooltipContent>
+                                            )}
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                                {onDelete && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="gap-2 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                                        onClick={onDelete}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                        Delete
+                                    </Button>
+                                )}
+                            </div>
                         )}
+
+                        {/* Close / Submit row */}
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={handleClose}
+                                disabled={isSubmitting}
+                                className="flex-1"
+                            >
+                                {mode === "view" ? "Close" : "Cancel"}
+                            </Button>
+                            {mode !== "view" && (
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className={cn("flex-1 gap-2", cfg.submitCls)}
+                                >
+                                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    {isSubmitting ? cfg.submittingLabel : cfg.submitLabel}
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </form>
             </SheetContent>

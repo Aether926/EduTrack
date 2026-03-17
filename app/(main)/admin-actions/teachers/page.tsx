@@ -28,7 +28,7 @@ export default async function AdminTeachersPage() {
 
     const { data: profiles } = await admin
         .from("Profile")
-        .select("id, firstName, lastName, middleInitial, email, profileImage, contactNumber")
+        .select("id, firstName, lastName, middleInitial, email, profileImage, contactNumber, subjectSpecialization")
         .in("id", approvedTeacherIds)
         .order("lastName", { ascending: true });
 
@@ -94,6 +94,7 @@ export default async function AdminTeachersPage() {
         employeeid: hrMap.get(p.id)?.employeeId ?? "",
         position: hrMap.get(p.id)?.position ?? "",
         status: "active",
+        subjectSpecialization: p.subjectSpecialization ?? null
     }));
 
     return (
