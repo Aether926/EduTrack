@@ -195,11 +195,29 @@ export async function superadminDeleteUser(id: string): Promise<ActionResult> {
         .eq("id", id)
         .single();
 
-    // Cannot delete another superadmin
     if (target?.role === "SUPERADMIN") {
         return { ok: false, error: "Cannot delete a Superadmin." };
     }
 
+    // Delete storage files first
+    const buckets = ["profile-picture", "teacher-documents", "qr-codes", "certificates"];
+    for (const bucket of buckets) {
+        const { data: files } = await admin.storage.from(bucket).list(id);
+        if (files && files.length > 0) {
+            const paths = files.map((f) => `${id}/${f.name}`);
+            await admin.storage.from(bucket).remove(paths);
+        }
+    }
+
+    // Delete related rows
+    await admin.from("Attendance").delete().eq("teacher_id", id);
+    await admin.from("DocumentSubmission").delete().eq("teacher_id", id);
+    await admin.from("SecurityLog").delete().eq("user_id", id);
+    await admin.from("Profile").delete().eq("id", id);
+    await admin.from("ProfileHR").delete().eq("id", id);
+    await admin.from("User").delete().eq("id", id);
+
+    // Finally delete from auth
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) return { ok: false, error: error.message };
 
