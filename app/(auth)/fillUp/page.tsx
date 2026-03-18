@@ -30,7 +30,6 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { logSignUp } from "@/app/actions/auth-log-actions";
-import { generateUsername } from "@/features/profiles/actions/username-action";
 
 export default function FillUpPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -103,10 +102,29 @@ export default function FillUpPage() {
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, []);
 
+    // Generate username client-side to avoid server action auth issues
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const generateUsernameClient = async (firstName: string, lastName: string): Promise<string> => {
+        const base = `${firstName.toLowerCase().trim()}.${lastName.toLowerCase().trim()}`
+            .replace(/\s+/g, "")
+            .replace(/[^a-z0-9.]/g, "");
+
+        const { data } = await supabase
+            .from("Profile")
+            .select("username")
+            .ilike("username", `${base}%`);
+
+        const taken = (data ?? []).map((r: any) => r.username); // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (!taken.includes(base)) return base;
+
+        let i = 1;
+        while (taken.includes(`${base}${i}`)) i++;
+        return `${base}${i}`;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate dates
         if (!dateOfOriginalAppointment) {
             toast.error("Please select your Date of Original Appointment.");
             return;
@@ -126,23 +144,23 @@ export default function FillUpPage() {
         try {
             // 1. Create User row
             const { error: userError } = await supabase
-            .from("User")
-            .upsert({
-                id: user.id,
-                auth_id: user.id,
-                email: user.email,
-                role: "TEACHER",
-                status: "PENDING",
-            });
-
+                .from("User")
+                .upsert({
+                    id: user.id,
+                    auth_id: user.id,
+                    email: user.email,
+                    role: "TEACHER",
+                    status: "PENDING",
+                });
             if (userError) {
                 toast.error(`Error creating user: ${userError.message}`);
-                setSubmitting(false);
                 return;
             }
-            const autoUsername = await generateUsername(formData.firstName, formData.lastName);
 
-            // 2. Create Profile row
+            // 2. Generate username client-side
+            const autoUsername = await generateUsernameClient(formData.firstName, formData.lastName);
+
+            // 3. Create Profile row
             const { error: profileError } = await supabase
                 .from("Profile")
                 .upsert(
@@ -157,18 +175,21 @@ export default function FillUpPage() {
                     },
                     { onConflict: "id" },
                 );
-
             if (profileError) {
                 toast.error(`Error creating profile: ${profileError.message}`);
-                setSubmitting(false);
                 return;
             }
 
-            // 3. Ensure ProfileHR row exists
-            await supabase.rpc("ensure_profile_hr_exists", { p_user_id: user.id });
+            // 4. Ensure ProfileHR row exists
+            const { error: rpcError } = await supabase
+                .rpc("ensure_profile_hr_exists", { p_user_id: user.id });
+            if (rpcError) {
+                toast.error(`Error initializing HR record: ${rpcError.message}`);
+                return;
+            }
 
-            // 4. Update ProfileHR with employment details
-            const { error: hrError } = await supabase
+            // 5. Update ProfileHR with employment details
+            const { data: hrData, error: hrError } = await supabase
                 .from("ProfileHR")
                 .update({
                     employeeId: formData.employeeId,
@@ -176,23 +197,29 @@ export default function FillUpPage() {
                     dateOfOriginalAppointment: format(dateOfOriginalAppointment, "yyyy-MM-dd"),
                     dateOfOriginalDeployment: format(dateOfOriginalDeployment, "yyyy-MM-dd"),
                 })
-                .eq("id", user.id);
-
+                .eq("id", user.id)
+                .select();
             if (hrError) {
                 toast.error(`Error saving employment details: ${hrError.message}`);
-                setSubmitting(false);
+                return;
+            }
+            if (!hrData || hrData.length === 0) {
+                toast.error("HR record not found. Please try again.");
                 return;
             }
 
-            success = true;
+            // 6. Log signup (non-fatal)
             try {
-            await logSignUp(user.id, user.email ?? "")
+                await logSignUp(user.id, user.email ?? "");
             } catch {
-
+                // ignore log errors
             }
+
+            success = true;
             router.push("/status");
         } catch (error) {
-            toast.error("An error occurred. Please try again.");
+            console.error("CAUGHT UNEXPECTED ERROR:", error);
+            toast.error("An unexpected error occurred. Please try again.");
         } finally {
             if (!success) setSubmitting(false);
         }
@@ -412,7 +439,6 @@ export default function FillUpPage() {
                                         </SelectContent>
                                     </Select>
 
-                                    {/* Custom position input */}
                                     {formData.position === "Other" && (
                                         <div className="mt-2">
                                             <Input
