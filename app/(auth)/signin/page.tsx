@@ -69,13 +69,22 @@ export default function LogIn() {
       const msg = (error.message || "").toLowerCase();
       if (msg.includes("invalid login credentials")) {
         const exists = await emailExistsInUserTable(emailNorm);
+
         if (exists === false)     setMessage("Email doesn't exist.");
+
         else if (exists === true) setMessage("Wrong password.");
-        else                      setMessage("Invalid credentials.");
+
+        else setMessage("Invalid credentials.");
+
       } else if (msg.includes("email not confirmed")) {
         setMessage("Please confirm your email first.");
+
+      } else if (msg.includes("user is banned") || msg.includes("banned")) { 
+        setMessage("Your account has been archived. Please contact your administrator.");
+
       } else if (msg.includes("too many requests") || msg.includes("rate")) {
         setMessage("Too many attempts. Try again later.");
+
       } else {
         setMessage("Something went wrong. Try again.");
       }

@@ -105,6 +105,8 @@ export default function ProfilePage({
                 preview={preview}
                 isEditing={false}
                 isOwnProfile={true}
+                showShareMenu={true}
+                showRecordsButton={false}
                 savedFirstName={savedFirstName}
                 tempProfileData={{
                     firstName:     tempProfileData.firstName,

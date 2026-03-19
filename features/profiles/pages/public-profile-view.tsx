@@ -20,6 +20,7 @@ import type { TrainingRow } from "@/features/profiles/types/trainings";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import type { ProfileState } from "@/features/profiles/types/profile";
 
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyProfile = Record<string, any>;
 type FromSource = "qr" | "teacher";
@@ -40,8 +41,9 @@ export default function PublicProfileView(props: {
     from?: FromSource;
     trainings?: TrainingRow[];
     viewerRole: ViewerRole;
-    // Pass hasSession from the server so we don't need a Supabase call here
     hasSession?: boolean;
+    showRecordButton?: boolean;
+    isArchived?: boolean;
 }) {
     const {
         profile,
@@ -49,6 +51,8 @@ export default function PublicProfileView(props: {
         trainings = [],
         viewerRole,
         hasSession = false,
+        showRecordButton = false,
+        isArchived = false
     } = props;
 
     const { theme } = useTheme();
@@ -211,7 +215,6 @@ export default function PublicProfileView(props: {
                     </div>
                 </div>
             )}
-
             <div className="space-y-6">
                 <ProfileHeader
                     teacherId={str(profile?.id)}
@@ -224,7 +227,9 @@ export default function PublicProfileView(props: {
                         position: data.position,
                         username: data.username,
                     }}
-                    showActions={false}
+                    showActions={true}
+                    showRecordsButton={isAdmin}
+                    showShareMenu={false}
                     onImageChange={noop}
                     onSave={noop}
                     onCancel={noop}

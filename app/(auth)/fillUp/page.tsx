@@ -218,7 +218,7 @@ export default function FillUpPage() {
             success = true;
             router.push("/status");
         } catch (error) {
-            console.error("CAUGHT UNEXPECTED ERROR:", error);
+            
             toast.error("An unexpected error occurred. Please try again.");
         } finally {
             if (!success) setSubmitting(false);

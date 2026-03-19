@@ -125,12 +125,15 @@ export default async function TeacherPublicProfilePage({
     const fullProfile = { ...profile, ...profileHR };
 
     return (
-        <PublicProfileView
-            profile={fullProfile}
-            from="teacher"
-            viewerRole={viewerRole}
-            trainings={trainings}
-            hasSession={hasSession}
-        />
+        <>
+            <PublicProfileView
+                profile={fullProfile}
+                from="teacher"
+                viewerRole={viewerRole}
+                trainings={trainings}
+                hasSession={hasSession}
+                showRecordButton={adminMode}
+            />
+        </>
     );
 }

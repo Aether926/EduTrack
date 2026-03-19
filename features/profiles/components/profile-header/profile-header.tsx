@@ -4,10 +4,11 @@ import React, { useState } from "react";
 import { useTheme } from "next-themes";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Save, User, X } from "lucide-react";
+import { Save, User, X, FileText } from "lucide-react";
 import { updateUsername } from "@/features/profiles/actions/username-action";
 import { toast } from "sonner";
 
+import TeacherRecordsSheet from "@/components/teacher-records-sheet";
 import ProfileShareMenu from "@/features/profiles/components/profile-share-menu";
 import ProfileQrModal from "@/features/profiles/components/profile-qr-modal";
 import ProfileCompletionModal from "@/features/profiles/components/modals/profile-completion-modal";
@@ -43,6 +44,9 @@ interface ProfileHeaderProps {
     onCancel?: () => void;
     onEdit?: () => void;
     showActions?: boolean;
+    showShareMenu?: boolean;
+    showRecordsButton?: boolean;
+    isArchived?: boolean;
     onInputChange?: (field: string, value: string) => void;
     isOwnProfile?: boolean;
     uploading?: boolean;
@@ -66,6 +70,9 @@ export default function ProfileHeader({
     onCancel,
     onEdit,
     showActions = true,
+    showShareMenu = false,
+    showRecordsButton = false,
+    isArchived = false,
     onInputChange,
     isOwnProfile,
     uploading,
@@ -81,6 +88,8 @@ export default function ProfileHeader({
 
     const [usernameValue, setUsernameValue] = useState(tempProfileData.username ?? "");
     const [savingUsername, setSavingUsername] = useState(false);
+    const [completionOpen, setCompletionOpen] = useState(false);
+    const [recordsOpen, setRecordsOpen] = useState(false);
 
     async function handleUsernameSave() {
         if (!usernameValue.trim()) return;
@@ -99,9 +108,7 @@ export default function ProfileHeader({
         }
     }
 
-    const bgImage =
-        theme === "light" ? "border-gray-100" : "border-neutral-900";
-    const [completionOpen, setCompletionOpen] = useState(false);
+    const bgImage = theme === "light" ? "border-gray-100" : "border-neutral-900";
 
     const fullName = (() => {
         const middle = tempProfileData.middleInitial
@@ -164,7 +171,7 @@ export default function ProfileHeader({
                                 {tempProfileData.position}
                             </p>
 
-                            {/* Username — editable only on own profile */}
+                            {/* Username */}
                             {isOwnProfile ? (
                                 <div className="mt-1 flex items-center gap-2 justify-center md:justify-start">
                                     <input
@@ -223,7 +230,7 @@ export default function ProfileHeader({
                     </div>
 
                     {/* ── Action Buttons ── */}
-                    {showActions ? (
+                    {showActions && (
                         <div className="flex gap-2 flex-wrap md:flex-nowrap justify-center md:justify-end flex-shrink-0 md:mt-16">
                             {isEditing ? (
                                 <>
@@ -237,17 +244,42 @@ export default function ProfileHeader({
                                     </Button>
                                 </>
                             ) : (
-                                <ProfileShareMenu
-                                    onOpenQr={() => qr.setQrOpen(true)}
-                                    onCopyLink={() => void qr.copyQrLink()}
-                                    onDownloadPdf={generate}
-                                    pdfGenerating={generating}
-                                />
+                                <>
+                                    {showRecordsButton && (
+                                        <Button
+                                            variant="outline"
+                                            className="gap-2"
+                                            onClick={() => setRecordsOpen(true)}
+                                        >
+                                            <FileText size={16} />
+                                            View Records
+                                        </Button>
+                                    )}
+                                    {showShareMenu && (
+                                        <ProfileShareMenu
+                                            onOpenQr={() => qr.setQrOpen(true)}
+                                            onCopyLink={() => void qr.copyQrLink()}
+                                            onDownloadPdf={generate}
+                                            pdfGenerating={generating}
+                                        />
+                                    )}
+                                </>
                             )}
                         </div>
-                    ) : null}
+                    )}
                 </div>
             </CardContent>
+
+            {/* ── Records Sheet ── */}
+            {showRecordsButton && (
+                <TeacherRecordsSheet
+                    key={teacherId}
+                    open={recordsOpen}
+                    onOpenChange={setRecordsOpen}
+                    teacherId={teacherId}
+                    isArchived={isArchived}
+                />
+            )}
 
             {/* ── QR Modal ── */}
             <ProfileQrModal

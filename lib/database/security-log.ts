@@ -13,6 +13,9 @@ export type SecurityAction =
     | "ACCOUNT_REJECTED"
     | "ACCOUNT_SUSPENDED"
     | "ACCOUNT_UNSUSPENDED"
+    | "ACCOUNT_ARCHIVED"       
+    | "ACCOUNT_RESTORED"           
+    | "ACCOUNT_PERMANENTLY_DELETED"
     | "ROLE_PROMOTED"
     | "ROLE_DEMOTED"
     | "SUPERADMIN_PROMOTED";
@@ -48,6 +51,6 @@ export async function logSecurityEvent({
             ip_address: ip,
         });
     } catch (error) {
-        console.error("SecurityLog error:", error);
+        
     }
 }

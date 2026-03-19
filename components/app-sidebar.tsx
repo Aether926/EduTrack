@@ -22,6 +22,7 @@ import {
     ClipboardCheck,
     Search,
     FileText,
+    Archive,
 } from "lucide-react";
 
 import { NotificationPopover } from "@/features/notifications/components/notification-popover";
@@ -144,6 +145,7 @@ export default function AppSidebar({
         },
         { title: "Attendance", path: "proof-review", icon: ClipboardCheck },
         { title: "Documents", path: "admin-actions/documents", icon: FileText },
+        { title: "Archive", path: "archive", icon: Archive },
     ];
 
     const principal: PrincipalItem[] = [];
