@@ -9,7 +9,8 @@ export async function fetchTeacherOptions(): Promise<TeacherOption[]> {
     admin
       .from("User")
       .select("id")
-      .eq("role", "TEACHER"),
+      .eq("role", "TEACHER")
+      .eq("status", "APPROVED"),
     admin
       .from("Profile")
       .select("id, firstName, lastName, email, profileImage")

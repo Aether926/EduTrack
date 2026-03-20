@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useTheme } from "next-themes";
+import { EyeOff } from "lucide-react";
 
 import ProfileHeader from "@/features/profiles/components/profile-header/profile-header";
 import PersonalInfoCard from "@/features/profiles/components/cards/personal-info-card";
@@ -19,7 +20,7 @@ import AppointmentHistoryCard from "@/features/profiles/components/cards/appoint
 import type { TrainingRow } from "@/features/profiles/types/trainings";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import type { ProfileState } from "@/features/profiles/types/profile";
-
+import type { PrivacySettings } from "@/features/profiles/actions/privacy-actions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyProfile = Record<string, any>;
@@ -36,14 +37,41 @@ function str(v: unknown): string {
     return String(v);
 }
 
+// ── Private section placeholder ────────────────────────────────────────────────
+function PrivateSectionCard({ label }: { label: string }) {
+    return (
+        <div className="rounded-xl border border-border/40 bg-muted/10 px-5 py-6 flex items-center gap-3 text-muted-foreground">
+            <EyeOff className="h-4 w-4 shrink-0" />
+            <div>
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-[12px] mt-0.5">This section is set to private.</p>
+            </div>
+        </div>
+    );
+}
+
+// ── Default privacy settings ───────────────────────────────────────────────────
+const DEFAULT_PRIVACY: PrivacySettings = {
+    personalInfo:        false,
+    contactInfo:         false,
+    address:             false,
+    familyBackground:    false,
+    governmentIds:       false,
+    emergencyContact:    false,
+    educationCredentials: true,
+    educationBackground:  true,
+    employmentInfo:      true,
+    trainings:           true,
+};
+
 export default function PublicProfileView(props: {
-    profile: AnyProfile;
-    from?: FromSource;
-    trainings?: TrainingRow[];
-    viewerRole: ViewerRole;
-    hasSession?: boolean;
+    profile:          AnyProfile;
+    from?:            FromSource;
+    trainings?:       TrainingRow[];
+    viewerRole:       ViewerRole;
+    hasSession?:      boolean;
     showRecordButton?: boolean;
-    isArchived?: boolean;
+    isArchived?:      boolean;
 }) {
     const {
         profile,
@@ -52,7 +80,7 @@ export default function PublicProfileView(props: {
         viewerRole,
         hasSession = false,
         showRecordButton = false,
-        isArchived = false
+        isArchived = false,
     } = props;
 
     const { theme } = useTheme();
@@ -60,134 +88,132 @@ export default function PublicProfileView(props: {
 
     const data = useMemo<ProfileState>(
         () => ({
-            id: str(profile?.id),
-            firstName: str(profile?.firstName),
-            middleInitial: str(profile?.middleInitial),
-            lastName: str(profile?.lastName),
-            username: str(profile?.username),
-            age: str(profile?.age),
-            gender: str(profile?.gender),
-            dateOfBirth: toDate(profile?.dateOfBirth),
-            civilStatus: str(profile?.civilStatus),
-            nationality: str(profile?.nationality),
-            religion: str(profile?.religion),
-            contactNumber: str(profile?.contactNumber),
-            address: str(profile?.address),
-            email: str(profile?.email),
-            telephoneNo: str(profile?.telephoneNo),
-            employeeId: str(profile?.employeeId),
-            position: str(profile?.position),
-            plantillaNo: str(profile?.plantillaNo),
-            dateOfOriginalAppointment: toDate(
-                profile?.dateOfOriginalAppointment,
-            ),
-            dateOfLatestAppointment: toDate(profile?.dateOfLatestAppointment),
-            dateOfOriginalDeployment: toDate(profile?.dateOfOriginalDeployment),
-            pagibigNo: str(profile?.pagibigNo),
-            philHealthNo: str(profile?.philHealthNo),
-            gsisNo: str(profile?.gsisNo),
-            tinNo: str(profile?.tinNo),
-            sssNo: str(profile?.sssNo),
-            umidNo: str(profile?.umidNo),
-            philSysNo: str(profile?.philSysNo),
-            agencyEmployeeNo: str(profile?.agencyEmployeeNo),
-            subjectSpecialization: str(profile?.subjectSpecialization),
-            bachelorsDegree: str(profile?.bachelorsDegree),
-            postGraduate: str(profile?.postGraduate),
-            nameExtension: str(profile?.nameExtension),
-            placeOfBirth: str(profile?.placeOfBirth),
-            height: str(profile?.height),
-            weight: str(profile?.weight),
-            bloodType: str(profile?.bloodType),
-            citizenship: str(profile?.citizenship),
-            dualCitizenshipType: str(profile?.dualCitizenshipType),
-            dualCitizenshipCountry: str(profile?.dualCitizenshipCountry),
-            residentialHouseNo: str(profile?.residentialHouseNo),
-            residentialStreet: str(profile?.residentialStreet),
-            residentialSubdivision: str(profile?.residentialSubdivision),
-            residentialBarangay: str(profile?.residentialBarangay),
-            residentialCity: str(profile?.residentialCity),
-            residentialProvince: str(profile?.residentialProvince),
-            residentialZipCode: str(profile?.residentialZipCode),
-            permanentHouseNo: str(profile?.permanentHouseNo),
-            permanentStreet: str(profile?.permanentStreet),
-            permanentSubdivision: str(profile?.permanentSubdivision),
-            permanentBarangay: str(profile?.permanentBarangay),
-            permanentCity: str(profile?.permanentCity),
-            permanentProvince: str(profile?.permanentProvince),
-            permanentZipCode: str(profile?.permanentZipCode),
-            sameAsResidential: Boolean(profile?.sameAsResidential),
-            spouseSurname: str(profile?.spouseSurname),
-            spouseFirstName: str(profile?.spouseFirstName),
-            spouseMiddleName: str(profile?.spouseMiddleName),
-            spouseNameExtension: str(profile?.spouseNameExtension),
-            spouseOccupation: str(profile?.spouseOccupation),
-            spouseEmployerName: str(profile?.spouseEmployerName),
-            spouseBusinessAddress: str(profile?.spouseBusinessAddress),
-            spouseTelephoneNo: str(profile?.spouseTelephoneNo),
-            fatherSurname: str(profile?.fatherSurname),
-            fatherFirstName: str(profile?.fatherFirstName),
-            fatherMiddleName: str(profile?.fatherMiddleName),
-            fatherNameExtension: str(profile?.fatherNameExtension),
-            motherSurname: str(profile?.motherSurname),
-            motherFirstName: str(profile?.motherFirstName),
-            motherMiddleName: str(profile?.motherMiddleName),
-            children: Array.isArray(profile?.children) ? profile.children : [],
-            educationElementarySchool: str(profile?.educationElementarySchool),
-            educationElementaryDegree: str(profile?.educationElementaryDegree),
-            educationElementaryFrom: str(profile?.educationElementaryFrom),
-            educationElementaryTo: str(profile?.educationElementaryTo),
-            educationElementaryUnits: str(profile?.educationElementaryUnits),
-            educationElementaryGraduated: str(
-                profile?.educationElementaryGraduated,
-            ),
-            educationElementaryHonors: str(profile?.educationElementaryHonors),
-            educationSecondarySchool: str(profile?.educationSecondarySchool),
-            educationSecondaryDegree: str(profile?.educationSecondaryDegree),
-            educationSecondaryFrom: str(profile?.educationSecondaryFrom),
-            educationSecondaryTo: str(profile?.educationSecondaryTo),
-            educationSecondaryUnits: str(profile?.educationSecondaryUnits),
-            educationSecondaryGraduated: str(
-                profile?.educationSecondaryGraduated,
-            ),
-            educationSecondaryHonors: str(profile?.educationSecondaryHonors),
-            educationVocationalSchool: str(profile?.educationVocationalSchool),
-            educationVocationalDegree: str(profile?.educationVocationalDegree),
-            educationVocationalFrom: str(profile?.educationVocationalFrom),
-            educationVocationalTo: str(profile?.educationVocationalTo),
-            educationVocationalUnits: str(profile?.educationVocationalUnits),
-            educationVocationalGraduated: str(
-                profile?.educationVocationalGraduated,
-            ),
-            educationVocationalHonors: str(profile?.educationVocationalHonors),
-            educationCollegeSchool: str(profile?.educationCollegeSchool),
-            educationCollegeDegree: str(profile?.educationCollegeDegree),
-            educationCollegeFrom: str(profile?.educationCollegeFrom),
-            educationCollegeTo: str(profile?.educationCollegeTo),
-            educationCollegeUnits: str(profile?.educationCollegeUnits),
-            educationCollegeGraduated: str(profile?.educationCollegeGraduated),
-            educationCollegeHonors: str(profile?.educationCollegeHonors),
-            educationGraduateSchool: str(profile?.educationGraduateSchool),
-            educationGraduateDegree: str(profile?.educationGraduateDegree),
-            educationGraduateFrom: str(profile?.educationGraduateFrom),
-            educationGraduateTo: str(profile?.educationGraduateTo),
-            educationGraduateUnits: str(profile?.educationGraduateUnits),
-            educationGraduateGraduated: str(
-                profile?.educationGraduateGraduated,
-            ),
-            educationGraduateHonors: str(profile?.educationGraduateHonors),
-            emergencyName: str(profile?.emergencyName),
-            emergencyRelationship: str(profile?.emergencyRelationship),
-            emergencyAddress: str(profile?.emergencyAddress),
-            emergencyTelephoneNo: str(profile?.emergencyTelephoneNo),
-            profileImage: profile?.profileImage ?? null,
+            id:                          str(profile?.id),
+            firstName:                   str(profile?.firstName),
+            middleInitial:               str(profile?.middleInitial),
+            lastName:                    str(profile?.lastName),
+            username:                    str(profile?.username),
+            age:                         str(profile?.age),
+            gender:                      str(profile?.gender),
+            dateOfBirth:                 toDate(profile?.dateOfBirth),
+            civilStatus:                 str(profile?.civilStatus),
+            nationality:                 str(profile?.nationality),
+            religion:                    str(profile?.religion),
+            contactNumber:               str(profile?.contactNumber),
+            address:                     str(profile?.address),
+            email:                       str(profile?.email),
+            telephoneNo:                 str(profile?.telephoneNo),
+            employeeId:                  str(profile?.employeeId),
+            position:                    str(profile?.position),
+            plantillaNo:                 str(profile?.plantillaNo),
+            dateOfOriginalAppointment:   toDate(profile?.dateOfOriginalAppointment),
+            dateOfLatestAppointment:     toDate(profile?.dateOfLatestAppointment),
+            dateOfOriginalDeployment:    toDate(profile?.dateOfOriginalDeployment),
+            pagibigNo:                   str(profile?.pagibigNo),
+            philHealthNo:                str(profile?.philHealthNo),
+            gsisNo:                      str(profile?.gsisNo),
+            tinNo:                       str(profile?.tinNo),
+            sssNo:                       str(profile?.sssNo),
+            umidNo:                      str(profile?.umidNo),
+            philSysNo:                   str(profile?.philSysNo),
+            agencyEmployeeNo:            str(profile?.agencyEmployeeNo),
+            subjectSpecialization:       str(profile?.subjectSpecialization),
+            bachelorsDegree:             str(profile?.bachelorsDegree),
+            postGraduate:                str(profile?.postGraduate),
+            nameExtension:               str(profile?.nameExtension),
+            placeOfBirth:                str(profile?.placeOfBirth),
+            height:                      str(profile?.height),
+            weight:                      str(profile?.weight),
+            bloodType:                   str(profile?.bloodType),
+            citizenship:                 str(profile?.citizenship),
+            dualCitizenshipType:         str(profile?.dualCitizenshipType),
+            dualCitizenshipCountry:      str(profile?.dualCitizenshipCountry),
+            residentialHouseNo:          str(profile?.residentialHouseNo),
+            residentialStreet:           str(profile?.residentialStreet),
+            residentialSubdivision:      str(profile?.residentialSubdivision),
+            residentialBarangay:         str(profile?.residentialBarangay),
+            residentialCity:             str(profile?.residentialCity),
+            residentialProvince:         str(profile?.residentialProvince),
+            residentialZipCode:          str(profile?.residentialZipCode),
+            permanentHouseNo:            str(profile?.permanentHouseNo),
+            permanentStreet:             str(profile?.permanentStreet),
+            permanentSubdivision:        str(profile?.permanentSubdivision),
+            permanentBarangay:           str(profile?.permanentBarangay),
+            permanentCity:               str(profile?.permanentCity),
+            permanentProvince:           str(profile?.permanentProvince),
+            permanentZipCode:            str(profile?.permanentZipCode),
+            sameAsResidential:           Boolean(profile?.sameAsResidential),
+            spouseSurname:               str(profile?.spouseSurname),
+            spouseFirstName:             str(profile?.spouseFirstName),
+            spouseMiddleName:            str(profile?.spouseMiddleName),
+            spouseNameExtension:         str(profile?.spouseNameExtension),
+            spouseOccupation:            str(profile?.spouseOccupation),
+            spouseEmployerName:          str(profile?.spouseEmployerName),
+            spouseBusinessAddress:       str(profile?.spouseBusinessAddress),
+            spouseTelephoneNo:           str(profile?.spouseTelephoneNo),
+            fatherSurname:               str(profile?.fatherSurname),
+            fatherFirstName:             str(profile?.fatherFirstName),
+            fatherMiddleName:            str(profile?.fatherMiddleName),
+            fatherNameExtension:         str(profile?.fatherNameExtension),
+            motherSurname:               str(profile?.motherSurname),
+            motherFirstName:             str(profile?.motherFirstName),
+            motherMiddleName:            str(profile?.motherMiddleName),
+            children:                    Array.isArray(profile?.children) ? profile.children : [],
+            educationElementarySchool:   str(profile?.educationElementarySchool),
+            educationElementaryDegree:   str(profile?.educationElementaryDegree),
+            educationElementaryFrom:     str(profile?.educationElementaryFrom),
+            educationElementaryTo:       str(profile?.educationElementaryTo),
+            educationElementaryUnits:    str(profile?.educationElementaryUnits),
+            educationElementaryGraduated:str(profile?.educationElementaryGraduated),
+            educationElementaryHonors:   str(profile?.educationElementaryHonors),
+            educationSecondarySchool:    str(profile?.educationSecondarySchool),
+            educationSecondaryDegree:    str(profile?.educationSecondaryDegree),
+            educationSecondaryFrom:      str(profile?.educationSecondaryFrom),
+            educationSecondaryTo:        str(profile?.educationSecondaryTo),
+            educationSecondaryUnits:     str(profile?.educationSecondaryUnits),
+            educationSecondaryGraduated: str(profile?.educationSecondaryGraduated),
+            educationSecondaryHonors:    str(profile?.educationSecondaryHonors),
+            educationVocationalSchool:   str(profile?.educationVocationalSchool),
+            educationVocationalDegree:   str(profile?.educationVocationalDegree),
+            educationVocationalFrom:     str(profile?.educationVocationalFrom),
+            educationVocationalTo:       str(profile?.educationVocationalTo),
+            educationVocationalUnits:    str(profile?.educationVocationalUnits),
+            educationVocationalGraduated:str(profile?.educationVocationalGraduated),
+            educationVocationalHonors:   str(profile?.educationVocationalHonors),
+            educationCollegeSchool:      str(profile?.educationCollegeSchool),
+            educationCollegeDegree:      str(profile?.educationCollegeDegree),
+            educationCollegeFrom:        str(profile?.educationCollegeFrom),
+            educationCollegeTo:          str(profile?.educationCollegeTo),
+            educationCollegeUnits:       str(profile?.educationCollegeUnits),
+            educationCollegeGraduated:   str(profile?.educationCollegeGraduated),
+            educationCollegeHonors:      str(profile?.educationCollegeHonors),
+            educationGraduateSchool:     str(profile?.educationGraduateSchool),
+            educationGraduateDegree:     str(profile?.educationGraduateDegree),
+            educationGraduateFrom:       str(profile?.educationGraduateFrom),
+            educationGraduateTo:         str(profile?.educationGraduateTo),
+            educationGraduateUnits:      str(profile?.educationGraduateUnits),
+            educationGraduateGraduated:  str(profile?.educationGraduateGraduated),
+            educationGraduateHonors:     str(profile?.educationGraduateHonors),
+            emergencyName:               str(profile?.emergencyName),
+            emergencyRelationship:       str(profile?.emergencyRelationship),
+            emergencyAddress:            str(profile?.emergencyAddress),
+            emergencyTelephoneNo:        str(profile?.emergencyTelephoneNo),
+            profileImage:                profile?.profileImage ?? null,
+            privacySettings:             profile?.privacySettings ?? null,
         }),
         [profile],
     );
 
-    const isAdmin = ["ADMIN", "SUPERADMIN"].includes(viewerRole);
+    const isAdmin   = ["ADMIN", "SUPERADMIN"].includes(viewerRole);
     const isTeacher = viewerRole === "TEACHER";
-    const noop = () => {};
+    const noop      = () => {};
+
+    // ── Privacy settings — only applies to teacher viewing teacher ────────────
+    const privacy: PrivacySettings = isTeacher
+        ? { ...DEFAULT_PRIVACY, ...(data.privacySettings ?? {}) }
+        : DEFAULT_PRIVACY;
+
+    const can = (key: keyof PrivacySettings) => isAdmin || privacy[key];
 
     return (
         <div className={`min-h-screen ${bgClass}`}>
@@ -195,156 +221,117 @@ export default function PublicProfileView(props: {
                 <div className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
                     <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
                         <div className="text-sm opacity-80">
-                            Viewing a teacher profile via QR. Sign in to access
-                            more features.
+                            Viewing a teacher profile via QR. Sign in to access more features.
                         </div>
                         <div className="flex gap-2">
-                            <a
-                                href="/signin"
-                                className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm"
-                            >
+                            <a href="/signin" className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm">
                                 Login
                             </a>
-                            <a
-                                href="/signUp"
-                                className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground"
-                            >
+                            <a href="/signUp" className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground">
                                 Sign up
                             </a>
                         </div>
                     </div>
                 </div>
             )}
+
             <div className="space-y-6">
                 <ProfileHeader
                     teacherId={str(profile?.id)}
                     preview={data.profileImage ?? null}
                     isEditing={false}
                     tempProfileData={{
-                        firstName: data.firstName,
+                        firstName:     data.firstName,
                         middleInitial: data.middleInitial,
-                        lastName: data.lastName,
-                        position: data.position,
-                        username: data.username,
+                        lastName:      data.lastName,
+                        position:      data.position,
+                        username:      data.username,
                     }}
                     showActions={true}
                     showRecordsButton={isAdmin}
                     showShareMenu={false}
+                    isArchived={isArchived}
                     onImageChange={noop}
                     onSave={noop}
                     onCancel={noop}
                     onEdit={noop}
                 />
 
-                {/* Not logged in - contact left, emergency right */}
+                {/* ── Not logged in — contact + emergency only ── */}
                 {!hasSession && (
                     <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <ContactInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
+                            <ContactInfoCard data={data} isEditing={false} onInputChange={noop} />
                         </div>
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <EmergencyContactCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
+                            <EmergencyContactCard data={data} isEditing={false} onInputChange={noop} />
                         </div>
                     </div>
                 )}
 
-                {/* Logged in non-admin - personal left, contact + emergency right */}
-                {hasSession && !isAdmin && (
+                {/* ── Teacher viewing teacher — privacy controlled ── */}
+                {hasSession && isTeacher && (
                     <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <PersonalInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onDateChange={noop}
-                            />
+                            {can("personalInfo")
+                                ? <PersonalInfoCard data={data} isEditing={false} onInputChange={noop} onDateChange={noop} />
+                                : <PrivateSectionCard label="Personal Information" />
+                            }
+                            {can("contactInfo")
+                                ? <ContactInfoCard data={data} isEditing={false} onInputChange={noop} />
+                                : <PrivateSectionCard label="Contact Information" />
+                            }
+                            {can("emergencyContact")
+                                ? <EmergencyContactCard data={data} isEditing={false} onInputChange={noop} />
+                                : <PrivateSectionCard label="Emergency Contact" />
+                            }
+                            {can("employmentInfo")
+                                ? <EmploymentInfoCard data={data} isEditing={false} onInputChange={noop} onDateChange={noop} viewerRole={viewerRole} from={from} isOwnProfile={false} />
+                                : <PrivateSectionCard label="Employment Information" />
+                            }
+                            {can("trainings")
+                                ? <TrainingsCard trainings={trainings} loading={false} viewerRole={viewerRole} />
+                                : <PrivateSectionCard label="Trainings & Seminars" />
+                            }
                         </div>
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <ContactInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EmergencyContactCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
+                            {can("familyBackground")
+                                ? <FamilyBackgroundCard data={data} isEditing={false} onInputChange={noop} onChildrenChange={noop} />
+                                : <PrivateSectionCard label="Family Background" />
+                            }
+                            {can("governmentIds")
+                                ? <GovernmentIDsCard data={data} isEditing={false} onInputChange={noop} />
+                                : <PrivateSectionCard label="Government IDs" />
+                            }
+                            {can("educationCredentials")
+                                ? <EducationCard data={data} isEditing={false} onInputChange={noop} />
+                                : <PrivateSectionCard label="Education Credentials" />
+                            }                           
+                            {can("educationBackground")
+                                ? <EducationBackgroundCard data={data} isEditing={false} onInputChange={noop} />
+                                : <PrivateSectionCard label="Education History" />
+                            }
                         </div>
                     </div>
                 )}
 
-                {/* Full view - Admin/Superadmin only */}
+                {/* ── Admin — sees everything ── */}
                 {isAdmin && (
                     <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <PersonalInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onDateChange={noop}
-                            />
-                            <ContactInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EmergencyContactCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EmploymentInfoCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onDateChange={noop}
-                                viewerRole={viewerRole}
-                                from={from}
-                                isOwnProfile={false}
-                            />
-                            <AppointmentHistoryCard
-                                teacherId={str(profile?.id)}
-                                isOwnProfile={false}
-                                from={from}
-                            />
-                            <TrainingsCard
-                                trainings={trainings}
-                                loading={false}
-                                viewerRole={viewerRole}
-                            />
+                            <PersonalInfoCard data={data} isEditing={false} onInputChange={noop} onDateChange={noop} />
+                            <ContactInfoCard data={data} isEditing={false} onInputChange={noop} />
+                            <EmergencyContactCard data={data} isEditing={false} onInputChange={noop} />
+                            <EmploymentInfoCard data={data} isEditing={false} onInputChange={noop} onDateChange={noop} viewerRole={viewerRole} from={from} isOwnProfile={false} />
+                            <AppointmentHistoryCard teacherId={str(profile?.id)} isOwnProfile={false} from={from} />
+                            <TrainingsCard trainings={trainings} loading={false} viewerRole={viewerRole} />
                             <ServiceRecordCard data={data} />
                         </div>
                         <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                            <FamilyBackgroundCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                                onChildrenChange={noop}
-                            />
-                            <GovernmentIDsCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EducationCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
-                            <EducationBackgroundCard
-                                data={data}
-                                isEditing={false}
-                                onInputChange={noop}
-                            />
+                            <FamilyBackgroundCard data={data} isEditing={false} onInputChange={noop} onChildrenChange={noop} />
+                            <GovernmentIDsCard data={data} isEditing={false} onInputChange={noop} />
+                            <EducationCard data={data} isEditing={false} onInputChange={noop} />
+                            <EducationBackgroundCard data={data} isEditing={false} onInputChange={noop} />
                         </div>
                     </div>
                 )}

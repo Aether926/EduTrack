@@ -23,6 +23,7 @@ import {
 } from "@/features/profiles/lib/profile-completion";
 import type { ProfileState } from "@/features/profiles/types/profile";
 import BannerImage from "@/features/profiles/components/profile-header/banner-image";
+import { PrivacySettings } from "../../actions/privacy-actions";
 
 type TempProfileData = {
     firstName: string;
@@ -56,6 +57,7 @@ interface ProfileHeaderProps {
     onCropComplete?: (blob: Blob) => Promise<void>;
     onDeleteImage?: () => Promise<void>;
     fileInputRef?: React.RefObject<HTMLInputElement | null>;
+    privacySettings?: PrivacySettings | null;
 }
 
 export default function ProfileHeader({
@@ -82,6 +84,7 @@ export default function ProfileHeader({
     onCropComplete,
     onDeleteImage,
     fileInputRef,
+    privacySettings = null,
 }: ProfileHeaderProps) {
     const { generating, generate } = useServiceRecord(teacherId);
     const { theme } = useTheme();
@@ -261,6 +264,7 @@ export default function ProfileHeader({
                                             onCopyLink={() => void qr.copyQrLink()}
                                             onDownloadPdf={generate}
                                             pdfGenerating={generating}
+                                            privacySettings={privacySettings}
                                         />
                                     )}
                                 </>

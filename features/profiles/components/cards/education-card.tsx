@@ -140,7 +140,7 @@ export default function EducationCard({
                                 <Book className="h-4 w-4 text-blue-400" />
                             </div>
                             <span className="text-base font-semibold text-foreground">
-                                Educational Background
+                                Education Credential
                             </span>
                         </div>
                         {isOwnProfile && (
@@ -188,7 +188,7 @@ export default function EducationCard({
                                 <Book className="h-4 w-4 text-blue-400" />
                             </div>
                             <SheetTitle className="text-sm font-medium text-muted-foreground">
-                                Edit Educational Background
+                                Edit Education Redential
                             </SheetTitle>
                         </div>
                     </SheetHeader>

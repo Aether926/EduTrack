@@ -125,6 +125,7 @@ export default function ProfilePage({
                 uploading={uploading}
                 fileInputRef={fileInputRef}
                 showActions={true}
+                privacySettings={profileData.privacySettings ?? null}
             />
 
             <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6 max-w-full min-w-0">

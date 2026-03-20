@@ -17,24 +17,37 @@ export default async function AppointmentHistoryPage() {
 
     const admin = createAdminClient();
 
-    const [{ data: history }, { data: profiles }] = await Promise.all([
+    const [{ data: history }, { data: profiles }, { data: hrRows }] = await Promise.all([
         admin
             .from("AppointmentHistory")
             .select(
-                "id, teacher_id, position, appointment_type, start_date, end_date, memo_no, remarks, created_by, created_at, approved_by, approved_at, status, school_id",
+                "id, teacher_id, position, appointment_type, start_date, end_date, memo_no, remarks, created_by, created_at, approved_by, approved_at, status, school_id, school_name",
             )
             .order("created_at", { ascending: false }),
         admin
             .from("Profile")
-            .select("id, firstName, lastName")
+            .select("id, firstName, lastName, email, profileImage")
             .order("lastName", { ascending: true }),
+        admin
+            .from("ProfileHR")
+            .select("id, employeeId"),
     ]);
 
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
-    const merged = (history ?? []).map((row: any) => ({
-        ...row,
-        teacher: profileMap.get(row.teacher_id) ?? null,
-    }));
+    const hrMap = new Map((hrRows ?? []).map((h: any) => [h.id, h.employeeId ?? "—"]));
+
+    const merged = (history ?? []).map((row: any) => {
+        const profile = profileMap.get(row.teacher_id) ?? null;
+        return {
+            ...row,
+            teacher: profile
+                ? {
+                    ...profile,
+                    employeeId: hrMap.get(row.teacher_id) ?? "—",
+                }
+                : null,
+        };
+    });
 
     const teachers = (profiles ?? []).map((p: any) => ({
         id: p.id,
@@ -66,13 +79,11 @@ export default async function AppointmentHistoryPage() {
                             </span>
                             <Badge variant="outline" className="gap-1.5">
                                 <ClipboardList className="h-3.5 w-3.5" />
-                                {merged.length} record
-                                {merged.length === 1 ? "" : "s"}
+                                {merged.length} record{merged.length === 1 ? "" : "s"}
                             </Badge>
                             <Badge variant="outline" className="gap-1.5">
                                 <Users className="h-3.5 w-3.5" />
-                                {teachers.length} teacher
-                                {teachers.length === 1 ? "" : "s"}
+                                {teachers.length} teacher{teachers.length === 1 ? "" : "s"}
                             </Badge>
                         </div>
                     </div>
