@@ -89,7 +89,9 @@ export default function ProfileHeader({
     const { generating, generate } = useServiceRecord(teacherId);
     const { theme } = useTheme();
 
-    const [usernameValue, setUsernameValue] = useState(tempProfileData.username ?? "");
+    const [usernameValue, setUsernameValue] = useState(
+        tempProfileData.username ?? "",
+    );
     const [savingUsername, setSavingUsername] = useState(false);
     const [completionOpen, setCompletionOpen] = useState(false);
     const [recordsOpen, setRecordsOpen] = useState(false);
@@ -111,8 +113,6 @@ export default function ProfileHeader({
         }
     }
 
-    
-
     const fullName = (() => {
         const middle = tempProfileData.middleInitial
             ? `${tempProfileData.middleInitial} `
@@ -125,22 +125,26 @@ export default function ProfileHeader({
     const completion = profileData
         ? calculateProfileCompletion(profileData)
         : null;
-    const barColor = completion ? getCompletionColor(completion.percentage) : "";
-    const textColor = completion ? getCompletionTextColor(completion.percentage) : "";
+    const barColor = completion
+        ? getCompletionColor(completion.percentage)
+        : "";
+    const textColor = completion
+        ? getCompletionTextColor(completion.percentage)
+        : "";
 
     return (
         <Card className="border-0 rounded-none shadow-lg p-0 overflow-hidden">
-            <BannerImage firstName={savedFirstName || tempProfileData.firstName} />
+            <BannerImage
+                firstName={savedFirstName || tempProfileData.firstName}
+            />
 
             <CardContent className="px-4 md:px-10 py-6">
                 <div className="flex flex-col md:flex-row gap-6 md:gap-4 items-center md:items-start -mt-[90px] md:-mt-16">
                     <div className="flex flex-col md:flex-row w-full gap-2 md:gap-4 lg:gap-8 relative min-w-0">
-
                         {/* ── Profile Image ── */}
                         <div className="flex justify-center shrink-0">
                             <div className="relative w-40 h-40 md:w-36 md:h-36 lg:w-40 lg:h-40">
                                 <div className="w-full h-full border-gray-100 dark:border-neutral-900 rounded-full border-4 overflow-hidden bg-gray-200 dark:bg-gray-800">
-
                                     {preview ? (
                                         <img
                                             src={preview}
@@ -149,7 +153,10 @@ export default function ProfileHeader({
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                            <User size={48} className="text-gray-400" />
+                                            <User
+                                                size={48}
+                                                className="text-gray-400"
+                                            />
                                         </div>
                                     )}
                                 </div>
@@ -159,7 +166,9 @@ export default function ProfileHeader({
                                         hasImage={!!preview}
                                         uploading={uploading ?? false}
                                         onFileSelect={onImageChange!}
-                                        onDelete={onDeleteImage ?? (async () => {})}
+                                        onDelete={
+                                            onDeleteImage ?? (async () => {})
+                                        }
                                         fileInputRef={fileInputRef}
                                     />
                                 )}
@@ -181,18 +190,23 @@ export default function ProfileHeader({
                                     <input
                                         type="text"
                                         value={usernameValue}
-                                        onChange={(e) => setUsernameValue(e.target.value)}
+                                        onChange={(e) =>
+                                            setUsernameValue(e.target.value)
+                                        }
                                         placeholder="Enter username"
                                         className="text-xs md:text-sm text-gray-300 bg-transparent border-b border-gray-500 focus:border-blue-400 outline-none w-40 text-center md:text-left pb-0.5 placeholder:text-gray-500"
                                     />
-                                    {usernameValue !== tempProfileData.username && (
+                                    {usernameValue !==
+                                        tempProfileData.username && (
                                         <button
                                             type="button"
                                             onClick={handleUsernameSave}
                                             disabled={savingUsername}
                                             className="text-[11px] text-blue-400 hover:text-blue-300 font-medium disabled:opacity-50"
                                         >
-                                            {savingUsername ? "Saving..." : "Save"}
+                                            {savingUsername
+                                                ? "Saving..."
+                                                : "Save"}
                                         </button>
                                     )}
                                 </div>
@@ -206,17 +220,25 @@ export default function ProfileHeader({
                             {completion && !isEditing && (
                                 <div className="mt-3 flex flex-col items-center md:items-start gap-1.5">
                                     <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
-                                        <span className={`text-xs font-bold ${textColor}`}>
-                                            Profile {completion.percentage}% complete
+                                        <span
+                                            className={`text-xs font-bold ${textColor}`}
+                                        >
+                                            Profile {completion.percentage}%
+                                            complete
                                         </span>
                                         {completion.percentage < 100 && (
                                             <span className="text-xs text-gray-400">
-                                                ({completion.totalCount - completion.completedCount} sections missing)
+                                                (
+                                                {completion.totalCount -
+                                                    completion.completedCount}{" "}
+                                                sections missing)
                                             </span>
                                         )}
                                         <button
                                             type="button"
-                                            onClick={() => setCompletionOpen(true)}
+                                            onClick={() =>
+                                                setCompletionOpen(true)
+                                            }
                                             className="text-xs text-blue-500 hover:text-blue-700 underline underline-offset-2 transition-colors"
                                         >
                                             View Details
@@ -225,7 +247,9 @@ export default function ProfileHeader({
                                     <div className="w-full max-w-[12rem] bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                                         <div
                                             className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`}
-                                            style={{ width: `${completion.percentage}%` }}
+                                            style={{
+                                                width: `${completion.percentage}%`,
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -238,11 +262,18 @@ export default function ProfileHeader({
                         <div className="flex gap-2 flex-wrap md:flex-nowrap justify-center md:justify-end flex-shrink-0 md:mt-16">
                             {isEditing ? (
                                 <>
-                                    <Button onClick={onSave} className="gap-2 bg-green-600 hover:bg-green-700">
+                                    <Button
+                                        onClick={onSave}
+                                        className="gap-2 bg-green-600 hover:bg-green-700"
+                                    >
                                         <Save size={18} />
                                         Save
                                     </Button>
-                                    <Button onClick={onCancel} variant="secondary" className="gap-2">
+                                    <Button
+                                        onClick={onCancel}
+                                        variant="secondary"
+                                        className="gap-2"
+                                    >
                                         <X size={18} />
                                         Cancel
                                     </Button>
@@ -262,10 +293,14 @@ export default function ProfileHeader({
                                     {showShareMenu && (
                                         <ProfileShareMenu
                                             onOpenQr={() => qr.setQrOpen(true)}
-                                            onCopyLink={() => void qr.copyQrLink()}
+                                            onCopyLink={() =>
+                                                void qr.copyQrLink()
+                                            }
                                             onDownloadPdf={generate}
                                             pdfGenerating={generating}
                                             privacySettings={privacySettings}
+                                            hasQr={!!qr.qrToken}
+                                            qrUrl={qr.qrUrl}
                                         />
                                     )}
                                 </>
@@ -297,9 +332,9 @@ export default function ProfileHeader({
                 cooldownUntil={qr.cooldownUntil}
                 onGenerate={() => void qr.generateQr()}
                 onDownload={() => void qr.downloadQrPng(fullName)}
+                onCopyLink={() => void qr.copyQrLink()}
                 qrCanvasWrapperRef={qr.qrCanvasWrapperRef}
             />
-
 
             {/* ── Completion Modal ── */}
             {profileData && (

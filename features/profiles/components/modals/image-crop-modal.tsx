@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from "react-image-crop";
+import ReactCrop, {
+    type Crop,
+    centerCrop,
+    makeAspectCrop,
+} from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import {
     Dialog,
@@ -26,7 +30,12 @@ function centerAspectCrop(
     aspect: number,
 ) {
     return centerCrop(
-        makeAspectCrop({ unit: "%", width: 90 }, aspect, mediaWidth, mediaHeight),
+        makeAspectCrop(
+            { unit: "%", width: 90 },
+            aspect,
+            mediaWidth,
+            mediaHeight,
+        ),
         mediaWidth,
         mediaHeight,
     );
@@ -38,52 +47,73 @@ export default function ImageCropModal({
     imageSrc,
     onCropComplete,
 }: ImageCropModalProps) {
-    const [crop, setCrop]         = useState<Crop>();
-    const [saving, setSaving]     = useState(false);
-    const imgRef                  = useRef<HTMLImageElement>(null);
+    const [crop, setCrop] = useState<Crop>();
+    const [saving, setSaving] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
 
-    const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-        const { naturalWidth: width, naturalHeight: height } = e.currentTarget;
-        setCrop(centerAspectCrop(width, height, 1));
-    }, []);
+    const onImageLoad = useCallback(
+        (e: React.SyntheticEvent<HTMLImageElement>) => {
+            const { naturalWidth: width, naturalHeight: height } =
+                e.currentTarget;
+            setCrop(centerAspectCrop(width, height, 1));
+        },
+        [],
+    );
 
     async function handleSave() {
         if (!imgRef.current || !crop) return;
         setSaving(true);
 
         try {
-            const canvas  = document.createElement("canvas");
-            const scaleX  = imgRef.current.naturalWidth  / imgRef.current.width;
-            const scaleY  = imgRef.current.naturalHeight / imgRef.current.height;
-            const size    = 400; // output 400x400px
-            canvas.width  = size;
+            const canvas = document.createElement("canvas");
+            const img = imgRef.current;
+            const size = 400;
+            canvas.width = size;
             canvas.height = size;
 
             const ctx = canvas.getContext("2d");
             if (!ctx) return;
 
+            // crop values are in % — convert to natural pixel coordinates
+            const cropX = (crop.x / 100) * img.naturalWidth;
+            const cropY = (crop.y / 100) * img.naturalHeight;
+            const cropWidth = (crop.width / 100) * img.naturalWidth;
+            const cropHeight = (crop.height / 100) * img.naturalHeight;
+
             ctx.drawImage(
-                imgRef.current,
-                (crop.x  ?? 0) * scaleX,
-                (crop.y  ?? 0) * scaleY,
-                (crop.width  ?? 0) * scaleX,
-                (crop.height ?? 0) * scaleY,
-                0, 0, size, size,
+                img,
+                cropX,
+                cropY,
+                cropWidth,
+                cropHeight,
+                0,
+                0,
+                size,
+                size,
             );
 
-            canvas.toBlob(async (blob) => {
-                if (!blob) return;
-                await onCropComplete(blob);
-                setSaving(false);
-                onOpenChange(false);
-            }, "image/jpeg", 0.92);
+            canvas.toBlob(
+                async (blob) => {
+                    if (!blob) return;
+                    await onCropComplete(blob);
+                    setSaving(false);
+                    onOpenChange(false);
+                },
+                "image/jpeg",
+                0.92,
+            );
         } catch {
             setSaving(false);
         }
     }
 
     return (
-        <Dialog open={open} onOpenChange={(o) => { if (!saving) onOpenChange(o); }}>
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                if (!saving) onOpenChange(o);
+            }}
+        >
             <DialogContent className="max-w-lg w-[90vw] p-0 gap-0 overflow-hidden">
                 {/* Header */}
                 <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
@@ -98,7 +128,8 @@ export default function ImageCropModal({
                             </DialogTitle>
                         </div>
                         <p className="text-[12px] text-muted-foreground mt-1">
-                            Drag to adjust the crop area. Image will be saved as 1:1 square.
+                            Drag to adjust the crop area. Image will be saved as
+                            1:1 square.
                         </p>
                     </DialogHeader>
                 </div>
@@ -138,10 +169,14 @@ export default function ImageCropModal({
                         disabled={saving}
                         className="gap-1.5"
                     >
-                        {saving
-                            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...</>
-                            : "Save Photo"
-                        }
+                        {saving ? (
+                            <>
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />{" "}
+                                Saving...
+                            </>
+                        ) : (
+                            "Save Photo"
+                        )}
                     </Button>
                 </DialogFooter>
             </DialogContent>

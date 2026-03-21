@@ -89,10 +89,12 @@ function Field(props: {
 function ContactInfoForm({
     data,
     isEditing,
+    isOwnProfile,
     onInputChange,
 }: {
     data: ProfileState;
     isEditing: boolean;
+    isOwnProfile: boolean;
     onInputChange: (field: keyof ProfileState, value: string) => void;
 }) {
     return (
@@ -105,7 +107,7 @@ function ContactInfoForm({
                 icon={Phone}
                 isEditing={isEditing}
                 onInputChange={onInputChange}
-                required
+                required={isOwnProfile}
             />
             <Field
                 label="Telephone No. (Landline)"
@@ -186,6 +188,7 @@ export default function ContactInfoCard({
                     <ContactInfoForm
                         data={data}
                         isEditing={false}
+                        isOwnProfile={isOwnProfile}
                         onInputChange={onInputChange}
                     />
                 </div>
@@ -222,6 +225,7 @@ export default function ContactInfoCard({
                         <ContactInfoForm
                             data={data}
                             isEditing={true}
+                            isOwnProfile={isOwnProfile}
                             onInputChange={onInputChange}
                         />
                     </div>

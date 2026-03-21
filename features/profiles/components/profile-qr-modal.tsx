@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, QrCode } from "lucide-react";
+import { Download, RefreshCw, QrCode, Copy, Check } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,9 +20,10 @@ type Props = {
     qrToken: string | null;
     qrUrl: string;
     loading: boolean;
-    cooldownUntil: number | null; // pass cooldownUntil instead of cooldownLeftMs
+    cooldownUntil: number | null;
     onGenerate: () => void;
     onDownload: () => void;
+    onCopyLink?: () => void;
     qrCanvasWrapperRef: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -33,11 +39,20 @@ export default function ProfileQrModal({
     cooldownUntil,
     onGenerate,
     onDownload,
+    onCopyLink,
     qrCanvasWrapperRef,
 }: Props) {
     const isMobile = useIsMobile();
     const [now, setNow] = useState(() => Date.now());
+    const [copied, setCopied] = useState(false);
 
+    function handleCopy() {
+        onCopyLink?.();
+        navigator.clipboard.writeText(qrUrl).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    }
 
     // Tick every second to update countdown
     useEffect(() => {
@@ -59,7 +74,9 @@ export default function ProfileQrModal({
                 side={isMobile ? "bottom" : "right"}
                 className={cn(
                     "flex flex-col gap-0 p-0",
-                    isMobile ? "h-[90vh] rounded-t-2xl" : "w-[400px] sm:w-[440px]",
+                    isMobile
+                        ? "h-[90vh] rounded-t-2xl"
+                        : "w-[400px] sm:w-[440px]",
                 )}
             >
                 {/* Header */}
@@ -69,7 +86,9 @@ export default function ProfileQrModal({
                             <QrCode className="h-4 w-4 text-violet-400" />
                         </div>
                         <div>
-                            <SheetTitle className="text-base">Profile QR Code</SheetTitle>
+                            <SheetTitle className="text-base">
+                                Profile QR Code
+                            </SheetTitle>
                             <p className="text-xs text-muted-foreground mt-0.5">
                                 Links to your public profile
                             </p>
@@ -79,7 +98,6 @@ export default function ProfileQrModal({
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col items-center gap-6">
-
                     {/* QR display */}
                     {qrToken ? (
                         <div className="flex flex-col items-center gap-4 w-full">
@@ -87,24 +105,50 @@ export default function ProfileQrModal({
                                 ref={qrCanvasWrapperRef}
                                 className="rounded-2xl border border-border/60 bg-white p-4 shadow-sm"
                             >
-                                <QRCodeCanvas value={qrUrl || " "} size={220} includeMargin />
+                                <QRCodeCanvas
+                                    value={qrUrl || " "}
+                                    size={220}
+                                    includeMargin
+                                />
                             </div>
 
                             {/* Owner name */}
                             <div className="text-center">
-                                <p className="text-sm font-semibold">{fullName || "—"}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5 break-all max-w-[280px]">{qrUrl}</p>
+                                <p className="text-sm font-semibold">
+                                    {fullName || "—"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5 break-all max-w-[280px]">
+                                    {qrUrl}
+                                </p>
                             </div>
 
                             {/* Action buttons */}
                             <div className="flex gap-2 w-full">
                                 <Button
                                     variant="outline"
-                                    className="w-full gap-2"
+                                    className="flex-1 gap-2"
                                     onClick={onDownload}
                                 >
                                     <Download className="h-4 w-4" />
                                     Download PNG
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 gap-2"
+                                    onClick={handleCopy}
+                                    disabled={!qrUrl}
+                                >
+                                    {copied ? (
+                                        <>
+                                            <Check className="h-4 w-4 text-emerald-400" />{" "}
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="h-4 w-4" /> Copy
+                                            Link
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </div>
@@ -113,7 +157,9 @@ export default function ProfileQrModal({
                             <div className="rounded-2xl border border-dashed border-border/60 bg-muted/10 p-8">
                                 <QrCode className="h-12 w-12 text-muted-foreground/30 mx-auto" />
                             </div>
-                            <p className="text-sm text-muted-foreground">No QR generated yet.</p>
+                            <p className="text-sm text-muted-foreground">
+                                No QR generated yet.
+                            </p>
                         </div>
                     )}
 
@@ -122,12 +168,16 @@ export default function ProfileQrModal({
                         <div className="w-full space-y-1.5">
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span>Cooldown</span>
-                                <span className="font-mono">{cooldownSec}s</span>
+                                <span className="font-mono">
+                                    {cooldownSec}s
+                                </span>
                             </div>
                             <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
                                 <div
                                     className="h-full rounded-full bg-violet-500/60 transition-all duration-1000"
-                                    style={{ width: `${Math.max(0, cooldownProgress)}%` }}
+                                    style={{
+                                        width: `${Math.max(0, cooldownProgress)}%`,
+                                    }}
                                 />
                             </div>
                         </div>
@@ -141,8 +191,16 @@ export default function ProfileQrModal({
                         disabled={loading || isCooldown}
                         className="w-full gap-2"
                     >
-                        <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-                        {loading ? "Generating..." : isCooldown ? `Wait ${cooldownSec}s` : qrToken ? "Regenerate QR" : "Generate QR"}
+                        <RefreshCw
+                            className={cn("h-4 w-4", loading && "animate-spin")}
+                        />
+                        {loading
+                            ? "Generating..."
+                            : isCooldown
+                              ? `Wait ${cooldownSec}s`
+                              : qrToken
+                                ? "Regenerate QR"
+                                : "Generate QR"}
                     </Button>
                 </div>
             </SheetContent>

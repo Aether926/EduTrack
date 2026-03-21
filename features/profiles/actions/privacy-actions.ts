@@ -4,16 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export type PrivacySettings = {
-    personalInfo:        boolean;
-    contactInfo:         boolean;
-    address:             boolean;
-    familyBackground:    boolean;
-    governmentIds:       boolean;
-    emergencyContact:    boolean;
-    educationCredentials:boolean;
-    educationBackground: boolean;
-    employmentInfo:      boolean;
-    trainings:           boolean;
+    contactInfo:          boolean;
+    emergencyContact:     boolean;
+    educationCredentials: boolean;
+    educationBackground:  boolean;
 };
 
 export async function savePrivacySettings(

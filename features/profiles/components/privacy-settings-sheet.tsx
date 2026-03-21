@@ -12,23 +12,48 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Eye, EyeOff, Shield } from "lucide-react";
 import { toast } from "sonner";
-import { savePrivacySettings, type PrivacySettings } from "@/features/profiles/actions/privacy-actions";
+import {
+    savePrivacySettings,
+    type PrivacySettings,
+} from "@/features/profiles/actions/privacy-actions";
 
-const PRIVACY_SECTIONS: { key: keyof PrivacySettings; label: string; description: string }[] = [
-    { key: "personalInfo",        label: "Personal Information",  description: "Date of birth, age, gender, civil status, religion" },
-    { key: "contactInfo",         label: "Contact Information",   description: "Contact number, email, telephone"                   },
-    { key: "familyBackground",    label: "Family Background",     description: "Spouse, children, parents"                          },
-    { key: "governmentIds",       label: "Government IDs",        description: "GSIS, TIN, SSS, PhilHealth, Pag-IBIG"               },
-    { key: "emergencyContact",    label: "Emergency Contact",     description: "Emergency contact name and details"                 },
-    { key: "educationCredentials",label: "Education Credentials", description: "Bachelor's degree, subject specialization, post graduate" },
-    { key: "educationBackground", label: "Education History",  description: "Elementary, secondary, college, graduate"           },
-    { key: "employmentInfo",      label: "Employment Information",description: "Position, appointment dates, plantilla"             },
-    { key: "trainings",           label: "Trainings & Seminars",  description: "Professional development records"                   },
+const PRIVACY_SECTIONS: {
+    key: keyof PrivacySettings;
+    label: string;
+    description: string;
+}[] = [
+    {
+        key: "contactInfo",
+        label: "Contact Information",
+        description: "Contact number, email, telephone",
+    },
+    {
+        key: "emergencyContact",
+        label: "Emergency Contact",
+        description: "Emergency contact name and details",
+    },
+    {
+        key: "educationCredentials",
+        label: "Education Credentials",
+        description: "Bachelor's degree, subject specialization, post graduate",
+    },
+    {
+        key: "educationBackground",
+        label: "Education History",
+        description: "Elementary, secondary, college, graduate",
+    },
 ];
 
+const DEFAULT_PRIVACY: PrivacySettings = {
+    contactInfo: false,
+    emergencyContact: false,
+    educationCredentials: false,
+    educationBackground: false,
+};
+
 interface PrivacySettingsSheetProps {
-    open:            boolean;
-    onOpenChange:    (open: boolean) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
     initialSettings: PrivacySettings;
 }
 
@@ -37,23 +62,32 @@ export default function PrivacySettingsSheet({
     onOpenChange,
     initialSettings,
 }: PrivacySettingsSheetProps) {
-    const [settings, setSettings] = useState<PrivacySettings>(initialSettings);
-    const [saving, setSaving]     = useState(false);
+    const [settings, setSettings] = useState<PrivacySettings>(() => ({
+        ...DEFAULT_PRIVACY,
+        ...initialSettings,
+    }));
+    const [saving, setSaving] = useState(false);
 
     function toggle(key: keyof PrivacySettings) {
         setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
     }
 
     function makeAllPublic() {
-        const all = {} as PrivacySettings;
-        PRIVACY_SECTIONS.forEach(({ key }) => (all[key] = true));
-        setSettings(all);
+        setSettings({
+            contactInfo: true,
+            emergencyContact: true,
+            educationCredentials: true,
+            educationBackground: true,
+        });
     }
 
     function makeAllPrivate() {
-        const all = {} as PrivacySettings;
-        PRIVACY_SECTIONS.forEach(({ key }) => (all[key] = false));
-        setSettings(all);
+        setSettings({
+            contactInfo: false,
+            emergencyContact: false,
+            educationCredentials: false,
+            educationBackground: false,
+        });
     }
 
     async function handleSave() {
@@ -81,9 +115,12 @@ export default function PrivacySettingsSheet({
                             <Shield className="h-4 w-4 text-blue-400" />
                         </div>
                         <div>
-                            <SheetTitle className="text-sm">Privacy Settings</SheetTitle>
+                            <SheetTitle className="text-sm">
+                                Privacy Settings
+                            </SheetTitle>
                             <SheetDescription className="text-[12px] mt-0.5">
-                                Control what other teachers can see on your profile.
+                                Control what other teachers can see on your
+                                profile.
                             </SheetDescription>
                         </div>
                     </div>
@@ -123,11 +160,14 @@ export default function PrivacySettingsSheet({
                         >
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    {settings[key]
-                                        ? <Eye className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                        : <EyeOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                    }
-                                    <p className="text-sm font-medium">{label}</p>
+                                    {settings[key] ? (
+                                        <Eye className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                    ) : (
+                                        <EyeOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    )}
+                                    <p className="text-sm font-medium">
+                                        {label}
+                                    </p>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground mt-0.5 ml-5">
                                     {description}
@@ -143,7 +183,11 @@ export default function PrivacySettingsSheet({
                     {/* Admin note */}
                     <div className="mt-4 rounded-lg border border-border/40 bg-muted/10 px-4 py-3">
                         <p className="text-[11px] text-muted-foreground">
-                            <span className="font-semibold text-foreground">Note:</span> Admins and Superadmins always see your full profile regardless of these settings.
+                            <span className="font-semibold text-foreground">
+                                Note:
+                            </span>{" "}
+                            Admins and Superadmins always see your full profile
+                            regardless of these settings.
                         </p>
                     </div>
                 </div>
@@ -155,10 +199,14 @@ export default function PrivacySettingsSheet({
                         onClick={handleSave}
                         disabled={saving}
                     >
-                        {saving
-                            ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
-                            : "Save Settings"
-                        }
+                        {saving ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                                Saving...
+                            </>
+                        ) : (
+                            "Save Settings"
+                        )}
                     </Button>
                 </div>
             </SheetContent>
