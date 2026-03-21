@@ -1,60 +1,86 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
-  return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-      {/* header card skeleton */}
-      <div className="rounded-xl border bg-card p-4 md:p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-6 w-40 rounded-full" />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-6 w-32 rounded-full" />
-            <Skeleton className="h-6 w-32 rounded-full" />
-          </div>
-        </div>
-      </div>
-
-      {/* table card skeleton */}
-      <div className="rounded-xl border bg-card">
-        <div className="p-4 md:p-6 space-y-3">
-          <Skeleton className="h-6 w-56" />
-          <Skeleton className="h-4 w-72" />
-          <Skeleton className="h-10 w-[360px] max-w-full rounded-md" />
-
-          <div className="rounded-lg border overflow-hidden">
-            <div className="p-3 border-b flex gap-3">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-4 w-28 hidden md:block" />
-              <Skeleton className="h-4 w-28 hidden md:block" />
-              <Skeleton className="h-4 w-28 hidden md:block" />
-            </div>
-
-            <div className="p-3 space-y-3">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between gap-3">
-                  <div className="space-y-2 min-w-0">
-                    <Skeleton className="h-4 w-60 max-w-[60vw]" />
-                    <Skeleton className="h-3 w-40 max-w-[40vw]" />
-                  </div>
-                  <Skeleton className="h-9 w-24 rounded-md hidden sm:block" />
+    return (
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
+            {/* ── Page header band ── */}
+            <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background px-5 py-5 md:px-6 md:py-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    {/* Left: icon + title + description */}
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-5 w-44" />
+                            <Skeleton className="h-3.5 w-56" />
+                        </div>
+                    </div>
+                    {/* Right: role badge + 2 stat counts */}
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-7 w-16 rounded-full" />
+                        <Skeleton className="h-7 w-24 rounded-full" />
+                        <Skeleton className="h-7 w-24 rounded-full" />
+                    </div>
                 </div>
-              ))}
             </div>
-          </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <Skeleton className="h-4 w-24" />
-            <div className="flex gap-2">
-              <Skeleton className="h-9 w-20 rounded-md" />
-              <Skeleton className="h-9 w-20 rounded-md" />
+            {/* ── Table panel ── */}
+            <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
+                {/* Panel header: title + result count */}
+                <div className="px-5 py-4 border-b border-border/60 space-y-1">
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-3.5 w-44" />
+                </div>
+
+                {/* Search + Add Entry button */}
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-border/60">
+                    <Skeleton className="h-9 flex-1 max-w-xs rounded-lg" />
+                    <Skeleton className="h-9 w-28 rounded-lg" />
+                </div>
+
+                {/* Filter dropdowns */}
+                <div className="flex items-center gap-3 px-5 py-3 border-b border-border/60">
+                    <Skeleton className="h-9 w-36 rounded-lg" />
+                    <Skeleton className="h-9 w-36 rounded-lg" />
+                </div>
+
+                {/* Table header */}
+                <div className="grid grid-cols-7 gap-3 px-5 py-3 border-b border-border/60 bg-muted/30">
+                    <Skeleton className="h-3.5 w-20" />
+                    <Skeleton className="h-3.5 w-12" />
+                    <Skeleton className="h-3.5 w-16" />
+                    <Skeleton className="h-3.5 w-12" />
+                    <Skeleton className="h-3.5 w-10" />
+                    <Skeleton className="h-3.5 w-16" />
+                    <Skeleton className="h-3.5 w-16" />
+                </div>
+
+                {/* Table rows */}
+                <div className="divide-y divide-border/60">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="grid grid-cols-7 gap-3 px-5 py-3.5 items-center">
+                            <div className="space-y-1.5">
+                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-3 w-8" />
+                            </div>
+                            <Skeleton className="h-5 w-20 rounded-full" />
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-4 w-32" />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-5 py-3.5 border-t border-border/60">
+                    <Skeleton className="h-4 w-24" />
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-8 w-16 rounded-md" />
+                        <Skeleton className="h-8 w-16 rounded-md" />
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }

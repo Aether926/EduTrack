@@ -191,18 +191,97 @@ export async function superadminDeleteUser(id: string): Promise<ActionResult> {
 
     const { data: target } = await admin
         .from("User")
-        .select("email, role")
+        .select("email, role, status")
         .eq("id", id)
         .single();
 
-    // Cannot delete another superadmin
-    if (target?.role === "SUPERADMIN") {
+    if (!target) return { ok: false, error: "User not found." };
+    if (target.role === "SUPERADMIN") {
         return { ok: false, error: "Cannot delete a Superadmin." };
     }
 
+    // Only allow permanent deletion of archived users
+    if (target.status !== "ARCHIVED") {
+        return { ok: false, error: "Only archived users can be permanently deleted." };
+    }
+
+    // Delete storage files first
+    const buckets = ["profile-picture", "teacher-documents", "qr-codes", "certificates"];
+    for (const bucket of buckets) {
+        const { data: files } = await admin.storage.from(bucket).list(id);
+        if (files && files.length > 0) {
+            const paths = files.map((f) => `${id}/${f.name}`);
+            await admin.storage.from(bucket).remove(paths);
+        }
+    }
+
+    // Delete related rows
+    await admin.from("Attendance").delete().eq("teacher_id", id);
+    await admin.from("DocumentSubmission").delete().eq("teacher_id", id);
+    await admin.from("SecurityLog").delete().eq("user_id", id);
+    await admin.from("Profile").delete().eq("id", id);
+    await admin.from("ProfileHR").delete().eq("id", id);
+    await admin.from("User").delete().eq("id", id);
+
+    // Finally delete from auth
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) return { ok: false, error: error.message };
 
+    await logSecurityEvent({
+        userId:  id,
+        actorId: check.user.id,
+        email:   target.email,
+        action:  "ACCOUNT_PERMANENTLY_DELETED",
+        meta:    { deleted_by: check.user.email },
+    });
+
+    revalidatePath("/superadmin/users");
+    revalidatePath("/superadmin/archive");
+    return { ok: true };
+}
+export async function restoreUser(id: string): Promise<ActionResult> {
+    const check = await requireSuperadmin();
+    if (!check.ok) return { ok: false, error: check.error };
+
+    const admin = createAdminClient();
+
+    const { data: target } = await admin
+        .from("User")
+        .select("email, role, status")
+        .eq("id", id)
+        .single();
+
+    if (!target) return { ok: false, error: "User not found." };
+    if (target.status !== "ARCHIVED") {
+        return { ok: false, error: "User is not archived." };
+    }
+
+    const { error } = await admin
+        .from("User")
+        .update({
+            status:        "APPROVED",
+            archivedAt:    null,
+            archiveReason: null,
+        })
+        .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    // Restore JWT metadata
+    await admin.auth.admin.updateUserById(id, {
+        ban_duration:  "none",
+        user_metadata: { role: target.role },
+    });
+
+    await logSecurityEvent({
+        userId:  id,
+        actorId: check.user.id,
+        email:   target.email,
+        action:  "ACCOUNT_RESTORED",
+        meta:    { restored_by: check.user.email },
+    });
+
+    revalidatePath("/superadmin/archive");
     revalidatePath("/superadmin/users");
     return { ok: true };
 }

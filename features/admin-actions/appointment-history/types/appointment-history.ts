@@ -2,6 +2,7 @@ export type AppointmentHistoryRow = {
   id: string;
   teacher_id: string;
   school_id: string | null;
+  school_name: string | null;
   position: string;
   appointment_type: string;
   start_date: string;

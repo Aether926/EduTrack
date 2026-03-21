@@ -194,6 +194,7 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                                                     r.teacher
                                                                         .name
                                                                 }
+                                                                src={r.teacher.profileImage}
                                                                 className="h-6 w-6 text-[10px] shrink-0"
                                                             />
                                                             <span className="text-xs text-muted-foreground">
@@ -214,6 +215,7 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                                 <div className="flex items-start gap-2.5 min-w-0">
                                                     <InitialAvatar
                                                         name={r.teacher.name}
+                                                        src={r.teacher.profileImage}
                                                         className="h-8 w-8 text-xs shrink-0"
                                                     />
                                                     <div className="leading-tight min-w-0">

@@ -202,6 +202,7 @@ export function useProfileQr({ expiryDays = 30, cooldownMs = 60_000 }: UseProfil
     qrToken,
     qrGeneratedAt,
     qrUrl,
+    cooldownUntil,
 
     // loading + cooldown
     qrLoading,

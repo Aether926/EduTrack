@@ -11,6 +11,7 @@ import {
     ChevronUp,
     User2,
     Shield,
+    Archive,
 } from "lucide-react";
 
 import {
@@ -26,7 +27,6 @@ import {
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -39,6 +39,7 @@ import { logSignOut } from "@/app/actions/auth-log-actions";
 const NAV_ITEMS = [
     { title: "Dashboard", url: "/superadmin/dashboard", icon: LayoutDashboard },
     { title: "User Management", url: "/superadmin/users", icon: Users },
+    { title: "Archive",         url: "/superadmin/archive",   icon: Archive },
 ];
 
 type SuperadminSidebarProps = {

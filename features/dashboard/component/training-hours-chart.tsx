@@ -58,7 +58,7 @@ function deriveYearly(monthly: MonthPoint[]) {
 }
 
 const VIEW_LABEL: Record<View, string> = {
-    week: "Last 3 months by week",
+    week: "Last 5 months by week",
     month: "Last 12 months by month",
     year: "All time by year",
 };

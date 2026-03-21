@@ -24,17 +24,21 @@ type Stats = {
 // ── Action label map ───────────────────────────────────────────────────────────
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
-    SIGNED_IN:           { label: "Signed in",           color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
-    SIGNED_OUT:          { label: "Signed out",          color: "bg-slate-500/15 text-slate-400 border-slate-500/30"       },
-    SIGNED_UP:           { label: "Signed up",           color: "bg-blue-500/15 text-blue-400 border-blue-500/30"          },
-    PASSWORD_CHANGED:    { label: "Password changed",    color: "bg-amber-500/15 text-amber-400 border-amber-500/30"       },
-    ACCOUNT_APPROVED:    { label: "Account approved",    color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
-    ACCOUNT_REJECTED:    { label: "Account rejected",    color: "bg-rose-500/15 text-rose-400 border-rose-500/30"          },
-    ACCOUNT_SUSPENDED:   { label: "Account suspended",   color: "bg-orange-500/15 text-orange-400 border-orange-500/30"   },
+    SIGNED_IN: { label: "Signed in", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+    SIGNED_OUT: { label: "Signed out", color: "bg-slate-500/15 text-slate-400 border-slate-500/30" },
+    SIGNED_UP: { label: "Signed up", color: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+    PASSWORD_CHANGED: { label: "Password changed", color: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+    ACCOUNT_APPROVED: { label: "Account approved", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+    ACCOUNT_REJECTED: { label: "Account rejected", color: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
+    ACCOUNT_SUSPENDED: { label: "Account suspended", color: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
     ACCOUNT_UNSUSPENDED: { label: "Account unsuspended", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
-    ROLE_PROMOTED:       { label: "Role promoted",       color: "bg-violet-500/15 text-violet-400 border-violet-500/30"   },
-    ROLE_DEMOTED:        { label: "Role demoted",        color: "bg-amber-500/15 text-amber-400 border-amber-500/30"       },
-    SUPERADMIN_PROMOTED: { label: "Superadmin promoted", color: "bg-rose-500/15 text-rose-400 border-rose-500/30"          },
+    ROLE_PROMOTED: { label: "Role promoted", color: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
+    ROLE_DEMOTED: { label: "Role demoted", color: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+    SUPERADMIN_PROMOTED: { label: "Superadmin promoted", color: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
+    ACCOUNT_ARCHIVED: { label: "Account archived", color: "bg-slate-500/15 text-slate-400 border-slate-500/30" },
+    ACCOUNT_RESTORED: { label: "Account restored", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+    ACCOUNT_PERMANENTLY_DELETED: { label: "Permanently deleted", color: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
+              
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ export type SuperadminUser = {
     employeeId: string;
     position: string;
     suspensionReason: string | null;
+    profileImage: string | null;
 };
 
 export type SecurityLogEntry = {

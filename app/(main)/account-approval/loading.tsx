@@ -1,58 +1,78 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
-  return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-      {/* header card skeleton */}
-      <div className="rounded-xl border bg-card p-4 md:p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-6 w-40 rounded-full" />
-          </div>
+    return (
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
+            {/* ── Page header band ── */}
+            <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background px-5 py-5 md:px-6 md:py-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    {/* Left: icon + title + role badge + description */}
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="h-5 w-40" />
+                                <Skeleton className="h-5 w-16 rounded-full" />
+                            </div>
+                            <Skeleton className="h-3.5 w-64" />
+                        </div>
+                    </div>
+                    {/* Right: 3 stat pill badges */}
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-7 w-20 rounded-full" />
+                        <Skeleton className="h-7 w-24 rounded-full" />
+                        <Skeleton className="h-7 w-24 rounded-full" />
+                    </div>
+                </div>
+            </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-6 w-24 rounded-full" />
-            <Skeleton className="h-6 w-28 rounded-full" />
-            <Skeleton className="h-6 w-28 rounded-full" />
-          </div>
+            {/* ── Access requests panel ── */}
+            <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
+                {/* Panel header: title + subtitle + search */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
+                    <div className="space-y-1.5">
+                        <Skeleton className="h-5 w-36" />
+                        <Skeleton className="h-3.5 w-52" />
+                    </div>
+                    <Skeleton className="h-9 w-56 rounded-lg" />
+                </div>
+
+                {/* Pending / Rejected tabs */}
+                <div className="grid grid-cols-2 border-b border-border/60">
+                    <Skeleton className="h-11 w-full rounded-none" />
+                    <div className="flex items-center justify-center py-3 border-l border-border/60">
+                        <Skeleton className="h-4 w-24" />
+                    </div>
+                </div>
+
+                {/* Sub-header card */}
+                <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border/60">
+                    <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+                    <div className="space-y-1.5">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-3 w-44" />
+                    </div>
+                </div>
+
+                {/* Rows */}
+                <div className="divide-y divide-border/60">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="flex items-center justify-between px-5 py-4 gap-4">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                                <div className="space-y-1.5 min-w-0">
+                                    <Skeleton className="h-4 w-40" />
+                                    <Skeleton className="h-3 w-52" />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <Skeleton className="h-8 w-20 rounded-lg" />
+                                <Skeleton className="h-8 w-20 rounded-lg" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
-      </div>
-
-      {/* panel skeleton */}
-      <div className="rounded-xl border bg-card">
-        <div className="p-4 md:p-6 space-y-3">
-          <Skeleton className="h-6 w-44" />
-          <Skeleton className="h-4 w-72" />
-
-          <div className="flex gap-2">
-            <Skeleton className="h-10 w-full" />
-          </div>
-
-          <div className="rounded-lg border overflow-hidden">
-            <div className="p-3 border-b flex gap-3">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-4 w-24 hidden sm:block" />
-              <Skeleton className="h-4 w-24 hidden sm:block" />
-            </div>
-
-            <div className="p-3 space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full rounded-lg" />
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <Skeleton className="h-4 w-24" />
-            <div className="flex gap-2">
-              <Skeleton className="h-9 w-20 rounded-md" />
-              <Skeleton className="h-9 w-20 rounded-md" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }

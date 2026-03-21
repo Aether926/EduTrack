@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -17,11 +18,23 @@ import {
 } from "@tanstack/react-table";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown, Search, X, ChevronRight } from "lucide-react";
+import {
+    ArrowUpDown,
+    Search,
+    X,
+    ChevronRight,
+    ChevronDown,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import {
     Card,
@@ -50,6 +63,26 @@ export default function TeacherTable({ data }: TeacherTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
+    const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
+    const [positionFilter, setPositionFilter] = useState<string | null>(null);
+
+    // Derive unique values for filter options from data
+    const subjectOptions = useMemo(() => {
+        const set = new Set<string>();
+        for (const row of data) {
+            const val = (row as any).subjectSpecialization;
+            if (val) set.add(val);
+        }
+        return Array.from(set).sort();
+    }, [data]);
+
+    const positionOptions = useMemo(() => {
+        const set = new Set<string>();
+        for (const row of data) {
+            if (row.position) set.add(row.position);
+        }
+        return Array.from(set).sort();
+    }, [data]);
 
     const columns = useMemo<ColumnDef<TeacherTableRow>[]>(
         () => [
@@ -98,12 +131,10 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                                 src={profileImage}
                                 className="h-8 w-8 shrink-0"
                             />
-
                             <div className="min-w-0">
                                 <div className="truncate font-medium">
                                     {fullname}
                                 </div>
-
                                 <div className="md:hidden mt-1 space-y-0.5 min-w-0">
                                     <div className="truncate text-xs text-muted-foreground">
                                         {position || "N/A"}
@@ -152,8 +183,21 @@ export default function TeacherTable({ data }: TeacherTableProps) {
         [],
     );
 
+    // Combined filtered data: apply dropdown filters on top of table's global filter
+    const filteredData = useMemo(() => {
+        return data.filter((row) => {
+            if (
+                subjectFilter &&
+                (row as any).subjectSpecialization !== subjectFilter
+            )
+                return false;
+            if (positionFilter && row.position !== positionFilter) return false;
+            return true;
+        });
+    }, [data, subjectFilter, positionFilter]);
+
     const table = useReactTable({
-        data,
+        data: filteredData,
         columns,
         state: { sorting, globalFilter },
         onSortingChange: setSorting,
@@ -163,12 +207,10 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                 .toLowerCase()
                 .trim();
             if (!v) return true;
-
             const full = String(row.original.fullname ?? "").toLowerCase();
             const emp = String(row.original.employeeid ?? "").toLowerCase();
             const pos = String(row.original.position ?? "").toLowerCase();
             const contact = String(row.original.contact ?? "").toLowerCase();
-
             return (
                 full.includes(v) ||
                 emp.includes(v) ||
@@ -185,7 +227,7 @@ export default function TeacherTable({ data }: TeacherTableProps) {
 
     useEffect(() => {
         table.setPageIndex(0);
-    }, [globalFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [globalFilter, subjectFilter, positionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const filteredCount = table.getFilteredRowModel().rows.length;
     const pageIndex = table.getState().pagination.pageIndex;
@@ -193,60 +235,149 @@ export default function TeacherTable({ data }: TeacherTableProps) {
 
     return (
         <Card className="min-w-0 overflow-hidden">
-            <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
-                <div className="space-y-1">
-                    <CardTitle className="text-base">Teachers</CardTitle>
-                    <CardDescription>
-                        {filteredCount} result{filteredCount === 1 ? "" : "s"} •
-                        10 per page
-                    </CardDescription>
+            <CardHeader className="gap-3">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div className="space-y-1">
+                        <CardTitle className="text-base">Teachers</CardTitle>
+                        <CardDescription>
+                            {filteredCount} result
+                            {filteredCount === 1 ? "" : "s"} • 10 per page
+                        </CardDescription>
+                    </div>
+
+                    {/* Desktop search */}
+                    <div className="hidden md:block w-[280px]">
+                        <Input
+                            value={globalFilter ?? ""}
+                            onChange={(e) => setGlobalFilter(e.target.value)}
+                            placeholder="Search name, email, ID..."
+                        />
+                    </div>
+
+                    {/* Mobile search toggle */}
+                    <div className="flex md:hidden items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setSearchOpen((v) => !v)}
+                            aria-label="Search"
+                        >
+                            {searchOpen ? (
+                                <X className="h-4 w-4" />
+                            ) : (
+                                <Search className="h-4 w-4" />
+                            )}
+                        </Button>
+                        <AnimatePresence initial={false}>
+                            {searchOpen && (
+                                <motion.div
+                                    initial={{ width: 0, opacity: 0 }}
+                                    animate={{
+                                        width: "min(240px, 55vw)",
+                                        opacity: 1,
+                                    }}
+                                    exit={{ width: 0, opacity: 0 }}
+                                    transition={{ duration: 0.18 }}
+                                    className="overflow-hidden"
+                                >
+                                    <Input
+                                        value={globalFilter ?? ""}
+                                        onChange={(e) =>
+                                            setGlobalFilter(e.target.value)
+                                        }
+                                        placeholder="Search..."
+                                        className="h-9"
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
-                <div className="hidden md:block w-[320px]">
-                    <Input
-                        value={globalFilter ?? ""}
-                        onChange={(e) => setGlobalFilter(e.target.value)}
-                        placeholder="Search name, id, position, contact..."
-                    />
-                </div>
-
-                <div className="flex md:hidden items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setSearchOpen((v) => !v)}
-                        aria-label="Search"
-                    >
-                        {searchOpen ? (
-                            <X className="h-4 w-4" />
-                        ) : (
-                            <Search className="h-4 w-4" />
-                        )}
-                    </Button>
-
-                    <AnimatePresence initial={false}>
-                        {searchOpen ? (
-                            <motion.div
-                                initial={{ width: 0, opacity: 0 }}
-                                animate={{
-                                    width: "min(240px, 55vw)",
-                                    opacity: 1,
-                                }}
-                                exit={{ width: 0, opacity: 0 }}
-                                transition={{ duration: 0.18 }}
-                                className="overflow-hidden"
+                {/* Filter dropdowns row */}
+                <div className="flex flex-wrap gap-2">
+                    {/* Subject Specialization filter */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 min-w-[160px] justify-between"
                             >
-                                <Input
-                                    value={globalFilter ?? ""}
-                                    onChange={(e) =>
-                                        setGlobalFilter(e.target.value)
-                                    }
-                                    placeholder="Search..."
-                                    className="h-9"
-                                />
-                            </motion.div>
-                        ) : null}
-                    </AnimatePresence>
+                                <span className="truncate">
+                                    {subjectFilter ?? "All Subjects"}
+                                </span>
+                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="start"
+                            className="max-h-60 overflow-y-auto"
+                        >
+                            <DropdownMenuItem
+                                onClick={() => setSubjectFilter(null)}
+                            >
+                                All Subjects
+                            </DropdownMenuItem>
+                            {subjectOptions.map((s) => (
+                                <DropdownMenuItem
+                                    key={s}
+                                    onClick={() => setSubjectFilter(s)}
+                                >
+                                    {s}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Position filter */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 min-w-[140px] justify-between"
+                            >
+                                <span className="truncate">
+                                    {positionFilter ?? "All Positions"}
+                                </span>
+                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="start"
+                            className="max-h-60 overflow-y-auto"
+                        >
+                            <DropdownMenuItem
+                                onClick={() => setPositionFilter(null)}
+                            >
+                                All Positions
+                            </DropdownMenuItem>
+                            {positionOptions.map((p) => (
+                                <DropdownMenuItem
+                                    key={p}
+                                    onClick={() => setPositionFilter(p)}
+                                >
+                                    {p}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Clear filters — only show when a filter is active */}
+                    {(subjectFilter || positionFilter) && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                setSubjectFilter(null);
+                                setPositionFilter(null);
+                            }}
+                            className="text-muted-foreground gap-1"
+                        >
+                            <X className="h-3.5 w-3.5" /> Clear filters
+                        </Button>
+                    )}
                 </div>
             </CardHeader>
 
@@ -258,16 +389,13 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                                 <TableRow key={hg.id}>
                                     {hg.headers.map((header) => {
                                         const colId = header.column.id;
-
                                         const hideOnSmall =
                                             colId === "position" ||
                                             colId === "contact"
                                                 ? "hidden md:table-cell"
                                                 : "";
-
                                         const viewCol =
                                             colId === "view" ? "w-[1%]" : "";
-
                                         return (
                                             <TableHead
                                                 key={header.id}
@@ -312,7 +440,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                                                 colId === "contact"
                                                     ? "hidden md:table-cell"
                                                     : "";
-
                                             return (
                                                 <TableCell
                                                     key={cell.id}
@@ -346,7 +473,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                     <div className="text-xs text-muted-foreground">
                         Page {pageIndex + 1} of {pageCount}
                     </div>
-
                     <div className="flex gap-2">
                         <Button
                             variant="outline"

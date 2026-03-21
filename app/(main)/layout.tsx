@@ -6,6 +6,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/app-sidebar";
+import { MobileTopbar } from "@/components/mobile-topbar";
 import { DeletionWarningBanner } from "@/features/settingss/components/deletion-warning-banner";
 import { getUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -53,10 +54,8 @@ export default async function MainLayout({
                     />
                     <SidebarInset>
                         <DeletionWarningBanner />
+                        <MobileTopbar userId={user.id} displayName={displayName} />
                         <main className="min-w-0">
-                            <div className="absolute top-2 left-2 z-50">
-                                <SidebarTrigger className="fixed hover:bg-gray-200" />
-                            </div>
                             {children}
                         </main>
                     </SidebarInset>

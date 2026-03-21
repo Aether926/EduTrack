@@ -40,11 +40,18 @@ export type AddResponsibilityForm = {
   type: ResponsibilityType | "";
   title: string;
   details: {
+    // Teaching Load
     subject?: string;
-    section?: string;
+    customSubject?: string;
     grade?: string;
+    section?: string;
     schedule?: string;
+    days?: string[];
+    startTime?: string;
+    endTime?: string;
+    // Coordinator
     role?: string;
+    // Other
     organization?: string;
     description?: string;
   };

@@ -28,7 +28,12 @@ type ActionItem = {
     badge?: string;
     color: { icon: string; glow: string; border: string; open: string };
 };
-type TeacherItem = { id: string; fullName: string; email: string | null };
+type TeacherItem = {
+    id: string;
+    fullName: string;
+    email: string | null;
+    profileImage: string | null;
+};
 
 function teacherProfileHref(id: string) {
     return `/admin-actions/teachers/${id}`;
@@ -51,13 +56,14 @@ export default async function AdminActionsPage() {
             .select("id, role, status")
             .eq("role", "TEACHER")
             .eq("status", "APPROVED"),
+
         getAllDeletionRequests(),
     ]);
 
     const teacherIds = (users ?? []).map((u) => u.id);
     const { data: teacherProfiles } = await admin
         .from("Profile")
-        .select("id, firstName, lastName, email")
+        .select("id, firstName, lastName, email, profileImage")
         .in("id", teacherIds.length ? teacherIds : ["__none__"])
         .order("lastName", { ascending: true });
 
@@ -68,11 +74,12 @@ export default async function AdminActionsPage() {
             p.email ||
             "(unknown)",
         email: p.email ?? null,
+        profileImage: p.profileImage ?? null,
     }));
 
     const actions: ActionItem[] = [
         {
-            title: "HR Change Requests",
+            title: "Change Requests",
             description: "Review and approve employment info change requests.",
             href: "/admin-actions/queue",
             icon: <ClipboardList className="h-5 w-5" />,
@@ -313,6 +320,7 @@ export default async function AdminActionsPage() {
                                                 >
                                                     <InitialAvatar
                                                         name={t.fullName}
+                                                        src={t.profileImage}
                                                         className="h-8 w-8 shrink-0"
                                                     />
                                                     <div className="min-w-0 flex-1">

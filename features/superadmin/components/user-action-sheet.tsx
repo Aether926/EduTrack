@@ -255,6 +255,7 @@ export default function UserActionSheet({
                             <div className="flex items-center gap-3 mb-3">
                                 <InitialAvatar
                                     name={name}
+                                    src={user.profileImage}
                                     className="h-10 w-10"
                                 />
                                 <div className="min-w-0">

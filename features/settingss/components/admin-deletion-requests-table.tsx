@@ -136,7 +136,9 @@ function RequestRow({
                 <TableCell className="pl-5">
                     <div className="flex items-center gap-2.5">
                         <InitialAvatar
-                            name={`${req.user.firstName} ${req.user.lastName}`.trim()}
+                            name={`${req.user.firstName}
+                            ${req.user.lastName}`.trim()}
+                            src={req.profileImage}
                             className="h-8 w-8 shrink-0"
                         />
                         <div>

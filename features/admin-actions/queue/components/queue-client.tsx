@@ -95,6 +95,7 @@ function QueueRowShell({
     onToggle,
     children,
     sub,
+    profileImage,
 }: {
     fullName: string;
     email?: string;
@@ -104,6 +105,7 @@ function QueueRowShell({
     onToggle: () => void;
     children: React.ReactNode;
     sub?: React.ReactNode;
+    profileImage?: string | null;
 }) {
     return (
         <div className="rounded-lg border border-border/50 bg-background/50 overflow-hidden transition-colors hover:bg-accent/10">
@@ -112,6 +114,7 @@ function QueueRowShell({
                 <div className="flex gap-3 sm:hidden">
                     <InitialAvatar
                         name={fullName}
+                        src={profileImage}
                         className="h-8 w-8 text-xs shrink-0 mt-0.5"
                     />
                     <div className="min-w-0 flex-1">
@@ -147,6 +150,7 @@ function QueueRowShell({
                 >
                     <InitialAvatar
                         name={fullName}
+                        src={profileImage}
                         className="h-8 w-8 text-xs"
                     />
                     <div className="min-w-0">
@@ -324,6 +328,7 @@ function ResponsibilityQueueRow(props: {
         <QueueRowShell
             fullName={fullName}
             email={teacher?.email}
+            profileImage={teacher?.profileImage}
             status={r.status}
             date={new Date(r.requested_at).toLocaleDateString()}
             expanded={expanded}

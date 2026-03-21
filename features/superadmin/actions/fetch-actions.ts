@@ -30,7 +30,7 @@ export async function fetchAllUsers(): Promise<SuperadminUser[]> {
     const [{ data: profiles }, { data: hrProfiles }] = await Promise.all([
         admin
             .from("Profile")
-            .select("id, firstName, lastName, middleInitial, contactNumber")
+            .select("id, firstName, lastName, middleInitial, contactNumber, profileImage")
             .in("id", ids),
         admin
             .from("ProfileHR")
@@ -45,18 +45,19 @@ export async function fetchAllUsers(): Promise<SuperadminUser[]> {
         const profile = profileMap.get(u.id);
         const hr      = hrMap.get(u.id);
         return {
-            id:               u.id,
-            email:            u.email ?? "",
-            role:             u.role ?? "",
-            status:           u.status ?? "",
-            createdAt:        u.created_at,
-            firstName:        profile?.firstName        ?? "",
-            lastName:         profile?.lastName         ?? "",
-            middleInitial:    profile?.middleInitial    ?? "",
-            contactNumber:    profile?.contactNumber    ?? "",
-            employeeId:       hr?.employeeId            ?? "",
-            position:         hr?.position              ?? "",
+            id: u.id,
+            email: u.email ?? "",
+            role: u.role ?? "",
+            status: u.status ?? "",
+            createdAt: u.created_at,
+            firstName: profile?.firstName        ?? "",
+            lastName: profile?.lastName         ?? "",
+            middleInitial: profile?.middleInitial    ?? "",
+            contactNumber: profile?.contactNumber    ?? "",
+            employeeId: hr?.employeeId            ?? "",
+            position: hr?.position              ?? "",
             suspensionReason: u.suspensionReason        ?? null,
+            profileImage: profile?.profileImage ?? null,
         };
     });
 }

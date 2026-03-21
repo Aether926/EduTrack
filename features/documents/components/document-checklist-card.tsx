@@ -30,7 +30,6 @@ import {
     X,
     ArrowLeft,
     CalendarDays,
-    Eye,
     ZoomIn,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -51,7 +50,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -341,88 +339,9 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                             <div className="shrink-0" />
                                         )}
 
-                                        {/* Mobile dropdown */}
-                                        <div className="sm:hidden">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        aria-label="Actions"
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem
-                                                        onSelect={(e) => {
-                                                            e.preventDefault();
-                                                            openSheet(
-                                                                item,
-                                                                "detail",
-                                                            );
-                                                        }}
-                                                    >
-                                                        <Eye className="h-4 w-4 mr-2" />{" "}
-                                                        View details
-                                                    </DropdownMenuItem>
-                                                    {canUpload && (
-                                                        <DropdownMenuItem
-                                                            onSelect={(e) => {
-                                                                e.preventDefault();
-                                                                openSheet(
-                                                                    item,
-                                                                    "upload",
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Upload className="h-4 w-4 mr-2" />
-                                                            {status ===
-                                                            "REJECTED"
-                                                                ? "Resubmit"
-                                                                : "Upload"}
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                    {canUpload && (
-                                                        <DropdownMenuSeparator />
-                                                    )}
-                                                    {canRequestResubmit && (
-                                                        <DropdownMenuItem
-                                                            onSelect={(e) => {
-                                                                e.preventDefault();
-                                                                openSheet(
-                                                                    item,
-                                                                    "request",
-                                                                    "RESUBMIT",
-                                                                );
-                                                            }}
-                                                        >
-                                                            <RotateCcw className="h-4 w-4 mr-2" />{" "}
-                                                            Request resubmit
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                    {canRequestDelete && (
-                                                        <DropdownMenuItem
-                                                            className="text-destructive focus:text-destructive"
-                                                            onSelect={(e) => {
-                                                                e.preventDefault();
-                                                                openSheet(
-                                                                    item,
-                                                                    "request",
-                                                                    "DELETE",
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 mr-2" />{" "}
-                                                            Request delete
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-
                                         {/* Desktop buttons */}
                                         <div className="hidden sm:flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+
                                             {canUpload && (
                                                 <Button
                                                     size="sm"

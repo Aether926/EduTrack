@@ -227,6 +227,7 @@ export default function UserApprovalTable({
                                                 <div className="flex items-center gap-2.5">
                                                     <InitialAvatar
                                                         name={name}
+                                                        src={u.profileImage}
                                                         className="h-8 w-8 shrink-0"
                                                     />
                                                     <div className="leading-tight">

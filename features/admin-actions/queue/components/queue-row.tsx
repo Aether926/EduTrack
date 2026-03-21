@@ -103,6 +103,7 @@ export function HRQueueRow(props: {
                 <div className="flex gap-3 sm:hidden">
                     <InitialAvatar
                         name={fullName}
+                        src={teacher?.profileImage}
                         className="h-8 w-8 text-xs shrink-0 mt-0.5"
                     />
                     <div className="min-w-0 flex-1">
@@ -140,6 +141,7 @@ export function HRQueueRow(props: {
                 >
                     <InitialAvatar
                         name={fullName}
+                        src={teacher?.profileImage}
                         className="h-8 w-8 text-xs"
                     />
                     <div className="min-w-0">

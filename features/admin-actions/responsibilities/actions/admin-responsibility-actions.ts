@@ -20,6 +20,24 @@ export async function addResponsibility(form: AddResponsibilityForm) {
   if (error) throw new Error(error.message);
 }
 
+export async function updateResponsibility(
+  id: string,
+  data: {
+    teacher_id?: string;
+    type?: string;
+    title?: string;
+    details?: Record<string, unknown>;
+  }
+) {
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("TeacherResponsibility")
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function updateResponsibilityStatus(id: string, status: "ACTIVE" | "ENDED") {
   const admin = createAdminClient();
   const { error } = await admin
