@@ -9,38 +9,60 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import {
-    Popover, PopoverContent, PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle,
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
 } from "@/components/ui/sheet";
 import {
-    Select, SelectContent, SelectItem,
-    SelectTrigger, SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { addAppointmentHistoryEntry } from "@/features/admin-actions/appointment-history/actions/appointment-history-actions";
 import type { AddAppointmentForm } from "@/features/admin-actions/appointment-history/types/appointment-history";
 import {
-    TeacherPickerModal, type TeacherOption,
+    TeacherPickerModal,
+    type TeacherOption,
 } from "@/components/teacher-picker-modal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 
 const POSITIONS = [
-    "Teacher I", "Teacher II", "Teacher III", "Teacher IV",
-    "Teacher V", "Teacher VI", "Teacher VII",
-    "Master Teacher I", "Master Teacher II",
-    "Master Teacher III", "Master Teacher IV",
-    "School Principal I", "School Principal II",
-    "School Principal III", "School Principal IV",
+    "Teacher I",
+    "Teacher II",
+    "Teacher III",
+    "Teacher IV",
+    "Teacher V",
+    "Teacher VI",
+    "Teacher VII",
+    "Master Teacher I",
+    "Master Teacher II",
+    "Master Teacher III",
+    "Master Teacher IV",
+    "School Principal I",
+    "School Principal II",
+    "School Principal III",
+    "School Principal IV",
     "Administrative Staff",
 ];
 
 const APPOINTMENT_TYPES = [
-    "Original", "Promotion", "Reappointment", "Transfer", "Reinstatement",
+    "Original",
+    "Promotion",
+    "Reappointment",
+    "Transfer",
+    "Reinstatement",
 ];
 
 const REMARKS_OPTIONS = [
@@ -66,11 +88,23 @@ const EMPTY: AddAppointmentForm = {
 
 type FormErrors = Partial<Record<keyof AddAppointmentForm, string>>;
 
-function FieldLabel({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
+function FieldLabel({
+    children,
+    optional,
+}: {
+    children: React.ReactNode;
+    optional?: boolean;
+}) {
     return (
         <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{children}</span>
-            {optional && <span className="text-[10px] text-muted-foreground/50 normal-case tracking-normal">optional</span>}
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {children}
+            </span>
+            {optional && (
+                <span className="text-[10px] text-muted-foreground/50 normal-case tracking-normal">
+                    optional
+                </span>
+            )}
         </div>
     );
 }
@@ -81,7 +115,13 @@ function FieldError({ message }: { message?: string }) {
 }
 
 function DatePickerField({
-    label, value, onChange, error, optional, maxDate, minDate,
+    label,
+    value,
+    onChange,
+    error,
+    optional,
+    maxDate,
+    minDate,
 }: {
     label: string;
     value: Date | undefined;
@@ -96,8 +136,11 @@ function DatePickerField({
             <div className="flex items-center justify-between mb-1.5">
                 <FieldLabel optional={optional}>{label}</FieldLabel>
                 {value && (
-                    <button type="button" onClick={() => onChange(undefined)}
-                        className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors">
+                    <button
+                        type="button"
+                        onClick={() => onChange(undefined)}
+                        className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+                    >
                         <X className="h-3 w-3" /> Clear
                     </button>
                 )}
@@ -105,7 +148,8 @@ function DatePickerField({
             <Popover>
                 <PopoverTrigger asChild>
                     <Button
-                        type="button" variant="outline"
+                        type="button"
+                        variant="outline"
                         className={cn(
                             "w-full justify-start text-left font-normal",
                             !value && "text-muted-foreground",
@@ -113,7 +157,11 @@ function DatePickerField({
                         )}
                     >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {value ? format(value, "PPP") : <span>Pick a date</span>}
+                        {value ? (
+                            format(value, "PPP")
+                        ) : (
+                            <span>Pick a date</span>
+                        )}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -138,13 +186,19 @@ function DatePickerField({
     );
 }
 
-function validate(form: AddAppointmentForm, startDate: Date | undefined, endDate: Date | undefined): FormErrors {
+function validate(
+    form: AddAppointmentForm,
+    startDate: Date | undefined,
+    endDate: Date | undefined,
+): FormErrors {
     const errors: FormErrors = {};
     if (!form.teacher_id) errors.teacher_id = "Please select a teacher.";
     if (!form.position) errors.position = "Please select a position.";
-    if (!form.appointment_type) errors.appointment_type = "Please select an appointment type.";
+    if (!form.appointment_type)
+        errors.appointment_type = "Please select an appointment type.";
     if (!startDate) errors.start_date = "Start date is required.";
-    if (startDate && endDate && endDate < startDate) errors.end_date = "End date cannot be before start date.";
+    if (startDate && endDate && endDate < startDate)
+        errors.end_date = "End date cannot be before start date.";
     return errors;
 }
 
@@ -164,11 +218,16 @@ export function AddAppointmentSheet(props: {
     const [errors, setErrors] = useState<FormErrors>({});
     const [submitting, setSubmitting] = useState(false);
     const [pickerOpen, setPickerOpen] = useState(false);
-    const [selectedTeacher, setSelectedTeacher] = useState<TeacherOption | null>(null);
+    const [selectedTeacher, setSelectedTeacher] =
+        useState<TeacherOption | null>(null);
 
     const set = (key: keyof AddAppointmentForm) => (val: string) => {
         setForm((f) => ({ ...f, [key]: val }));
-        setErrors((e) => { const next = { ...e }; delete next[key]; return next; });
+        setErrors((e) => {
+            const next = { ...e };
+            delete next[key];
+            return next;
+        });
     };
 
     const handleClose = () => {
@@ -187,11 +246,15 @@ export function AddAppointmentSheet(props: {
 
     const handleSubmit = async () => {
         const errs = validate(form, startDate, endDate);
-        if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
 
-        const finalRemarks = remarksOption === "Other (specify below)"
-            ? customRemarks.trim()
-            : remarksOption;
+        const finalRemarks =
+            remarksOption === "Other (specify below)"
+                ? customRemarks.trim()
+                : remarksOption;
 
         const payload: AddAppointmentForm = {
             ...form,
@@ -207,7 +270,9 @@ export function AddAppointmentSheet(props: {
             handleClose();
             onSuccess();
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Failed to add entry.");
+            toast.error(
+                e instanceof Error ? e.message : "Failed to add entry.",
+            );
         } finally {
             setSubmitting(false);
         }
@@ -220,7 +285,9 @@ export function AddAppointmentSheet(props: {
                     side={isMobile ? "bottom" : "right"}
                     className={cn(
                         "flex flex-col gap-0 p-0",
-                        isMobile ? "h-[95vh] rounded-t-2xl" : "w-[480px] sm:w-[520px]",
+                        isMobile
+                            ? "h-[95vh] rounded-t-2xl"
+                            : "w-[480px] sm:w-[520px]",
                     )}
                 >
                     <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10">
@@ -234,13 +301,14 @@ export function AddAppointmentSheet(props: {
                                         New Entry
                                     </span>
                                 </div>
-                                <SheetTitle className="text-base leading-snug">Add Appointment History</SheetTitle>
+                                <SheetTitle className="text-base leading-snug">
+                                    Add Appointment History
+                                </SheetTitle>
                             </div>
                         </div>
                     </SheetHeader>
 
                     <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
-
                         {/* Teacher */}
                         <div>
                             <FieldLabel>Teacher</FieldLabel>
@@ -255,10 +323,16 @@ export function AddAppointmentSheet(props: {
                             >
                                 {selectedTeacher ? (
                                     <span className="flex items-center gap-2">
-                                        <InitialAvatar name={selectedTeacher.fullName} src={selectedTeacher.profileImage} className="h-5 w-5" />
+                                        <InitialAvatar
+                                            name={selectedTeacher.fullName}
+                                            src={selectedTeacher.profileImage}
+                                            className="h-5 w-5"
+                                        />
                                         {selectedTeacher.fullName}
                                     </span>
-                                ) : "Select teacher..."}
+                                ) : (
+                                    "Select teacher..."
+                                )}
                             </Button>
                             <FieldError message={errors.teacher_id} />
                         </div>
@@ -268,12 +342,23 @@ export function AddAppointmentSheet(props: {
                         {/* Position */}
                         <div>
                             <FieldLabel>Position</FieldLabel>
-                            <Select value={form.position} onValueChange={set("position")}>
-                                <SelectTrigger className={cn(errors.position && "border-rose-500/50")}>
+                            <Select
+                                value={form.position}
+                                onValueChange={set("position")}
+                            >
+                                <SelectTrigger
+                                    className={cn(
+                                        errors.position && "border-rose-500/50",
+                                    )}
+                                >
                                     <SelectValue placeholder="Select position..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                    {POSITIONS.map((p) => (
+                                        <SelectItem key={p} value={p}>
+                                            {p}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <FieldError message={errors.position} />
@@ -282,12 +367,24 @@ export function AddAppointmentSheet(props: {
                         {/* Appointment Type */}
                         <div>
                             <FieldLabel>Appointment Type</FieldLabel>
-                            <Select value={form.appointment_type} onValueChange={set("appointment_type")}>
-                                <SelectTrigger className={cn(errors.appointment_type && "border-rose-500/50")}>
+                            <Select
+                                value={form.appointment_type}
+                                onValueChange={set("appointment_type")}
+                            >
+                                <SelectTrigger
+                                    className={cn(
+                                        errors.appointment_type &&
+                                            "border-rose-500/50",
+                                    )}
+                                >
                                     <SelectValue placeholder="Select type..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {APPOINTMENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                    {APPOINTMENT_TYPES.map((t) => (
+                                        <SelectItem key={t} value={t}>
+                                            {t}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <FieldError message={errors.appointment_type} />
@@ -300,7 +397,9 @@ export function AddAppointmentSheet(props: {
                             <FieldLabel optional>School Name</FieldLabel>
                             <Input
                                 value={form.school_name}
-                                onChange={(e) => set("school_name")(e.target.value)}
+                                onChange={(e) =>
+                                    set("school_name")(e.target.value)
+                                }
                                 placeholder="e.g. Ormoc City National High School"
                             />
                         </div>
@@ -312,9 +411,14 @@ export function AddAppointmentSheet(props: {
                                 value={startDate}
                                 onChange={(d) => {
                                     setStartDate(d);
-                                    setErrors((e) => { const n = { ...e }; delete n.start_date; return n; });
+                                    setErrors((e) => {
+                                        const n = { ...e };
+                                        delete n.start_date;
+                                        return n;
+                                    });
                                     // Clear end date if it's before the new start
-                                    if (d && endDate && endDate < d) setEndDate(undefined);
+                                    if (d && endDate && endDate < d)
+                                        setEndDate(undefined);
                                 }}
                                 error={errors.start_date}
                             />
@@ -323,7 +427,11 @@ export function AddAppointmentSheet(props: {
                                 value={endDate}
                                 onChange={(d) => {
                                     setEndDate(d);
-                                    setErrors((e) => { const n = { ...e }; delete n.end_date; return n; });
+                                    setErrors((e) => {
+                                        const n = { ...e };
+                                        delete n.end_date;
+                                        return n;
+                                    });
                                 }}
                                 error={errors.end_date}
                                 optional
@@ -346,13 +454,21 @@ export function AddAppointmentSheet(props: {
                         {/* Remarks */}
                         <div className="space-y-2">
                             <FieldLabel optional>Remarks</FieldLabel>
-                            <Select value={remarksOption} onValueChange={(v) => { setRemarksOption(v); setCustomRemarks(""); }}>
+                            <Select
+                                value={remarksOption}
+                                onValueChange={(v) => {
+                                    setRemarksOption(v);
+                                    setCustomRemarks("");
+                                }}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a remark..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {REMARKS_OPTIONS.map((r) => (
-                                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                                        <SelectItem key={r} value={r}>
+                                            {r}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -360,7 +476,9 @@ export function AddAppointmentSheet(props: {
                                 <Textarea
                                     rows={3}
                                     value={customRemarks}
-                                    onChange={(e) => setCustomRemarks(e.target.value)}
+                                    onChange={(e) =>
+                                        setCustomRemarks(e.target.value)
+                                    }
                                     placeholder="Specify remarks..."
                                     autoFocus
                                 />
@@ -369,8 +487,19 @@ export function AddAppointmentSheet(props: {
                     </div>
 
                     <div className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-3 flex gap-2">
-                        <Button variant="secondary" onClick={handleClose} disabled={submitting} className="flex-1">Cancel</Button>
-                        <Button onClick={handleSubmit} disabled={submitting} className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                        <Button
+                            variant="secondary"
+                            onClick={handleClose}
+                            disabled={submitting}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                        >
                             <Send className="h-3.5 w-3.5" />
                             {submitting ? "Saving..." : "Add Entry"}
                         </Button>
@@ -385,7 +514,11 @@ export function AddAppointmentSheet(props: {
                 onSelect={(t) => {
                     setSelectedTeacher(t);
                     setForm((f) => ({ ...f, teacher_id: t.id }));
-                    setErrors((e) => { const n = { ...e }; delete n.teacher_id; return n; });
+                    setErrors((e) => {
+                        const n = { ...e };
+                        delete n.teacher_id;
+                        return n;
+                    });
                 }}
             />
         </>
