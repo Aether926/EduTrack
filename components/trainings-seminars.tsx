@@ -189,7 +189,7 @@ export default function TrainingsSeminars({
                         r.status === "ENROLLED" || r.status === "REJECTED";
                     return (
                         <div className="min-w-0">
-                            <div className="truncate font-medium">
+                            <div className="font-medium text-sm break-words leading-snug">
                                 {r.title}
                             </div>
                             {canUpload && (
@@ -450,7 +450,7 @@ export default function TrainingsSeminars({
     return (
         <>
             <Card className="min-w-0 overflow-hidden">
-                <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
+                <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between overflow-hidden">
                     <div className="space-y-1 shrink-0">
                         <CardTitle className="text-base">
                             Trainings & Seminars
@@ -480,10 +480,10 @@ export default function TrainingsSeminars({
                     </div>
 
                     {/* Mobile search icon → expand */}
-                    <div className="flex md:hidden items-center gap-2">
+                    <div className="flex md:hidden items-center gap-2 min-w-0 overflow-hidden">
                         <Button
                             size="sm"
-                            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                            className="shrink-0 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
                             onClick={() => setSelfEnrollOpen(true)}
                         >
                             <Plus className="h-4 w-4" />
@@ -492,9 +492,9 @@ export default function TrainingsSeminars({
                         <Button
                             variant="outline"
                             size="icon"
+                            className="shrink-0 border-blue-500/50 text-blue-400 hover:bg-blue-500/10 hover:text-blue-400"
                             onClick={() => setSearchOpen((v) => !v)}
                             aria-label="Search"
-                            className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10 hover:text-blue-400"
                         >
                             {searchOpen ? (
                                 <X className="h-4 w-4" />
@@ -507,13 +507,10 @@ export default function TrainingsSeminars({
                             {searchOpen ? (
                                 <motion.div
                                     initial={{ width: 0, opacity: 0 }}
-                                    animate={{
-                                        width: "min(240px, 55vw)",
-                                        opacity: 1,
-                                    }}
+                                    animate={{ width: "100%", opacity: 1 }}
                                     exit={{ width: 0, opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="overflow-hidden"
+                                    className="overflow-hidden min-w-0 flex-1"
                                 >
                                     <Input
                                         value={globalFilter ?? ""}
@@ -521,7 +518,7 @@ export default function TrainingsSeminars({
                                             setGlobalFilter(e.target.value)
                                         }
                                         placeholder="Search..."
-                                        className="h-9"
+                                        className="h-9 w-full"
                                     />
                                 </motion.div>
                             ) : null}
@@ -530,7 +527,13 @@ export default function TrainingsSeminars({
                 </CardHeader>
 
                 <CardContent className="pt-0">
-                    <div className="rounded-md border overflow-x-auto">
+                    <div
+                        className="rounded-md border overflow-x-auto"
+                        style={{
+                            scrollbarWidth: "thin",
+                            scrollbarColor: "hsl(var(--border)) transparent",
+                        }}
+                    >
                         <Table>
                             <TableHeader>
                                 {table.getHeaderGroups().map((hg) => (

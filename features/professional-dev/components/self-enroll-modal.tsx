@@ -413,7 +413,7 @@ export default function SelfEnrollModal({
     return (
         <>
             <Dialog open={open} onOpenChange={handleClose}>
-                <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 gap-0">
+                <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-hidden p-0 gap-0 flex flex-col">
                     <div className="px-6 pt-6 pb-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                         <DialogHeader>
                             <div className="flex items-center gap-2 mb-2">
@@ -448,405 +448,427 @@ export default function SelfEnrollModal({
                     </div>
 
                     {/* ── BROWSE VIEW ── */}
-                    <AnimatePresence mode="wait">
-                        {view === "browse" && (
-                            <motion.div
-                                key="browse"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.15 }}
-                                className="px-6 py-5 space-y-4"
-                            >
-                                {/* Search bar */}
-                                <form
-                                    onSubmit={handleSearchSubmit}
-                                    className="flex gap-2"
+                    <div
+                        className="flex-1 overflow-y-auto min-h-0"
+                        style={{
+                            scrollbarWidth: "thin",
+                            scrollbarColor: "hsl(var(--border)) transparent",
+                        }}
+                    >
+                        <AnimatePresence mode="wait">
+                            {view === "browse" && (
+                                <motion.div
+                                    key="browse"
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="px-6 py-5 space-y-4"
                                 >
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            value={search}
-                                            onChange={(e) =>
-                                                setSearch(e.target.value)
-                                            }
-                                            placeholder="Search by title, sponsor, level..."
-                                            className="pl-9"
-                                        />
-                                    </div>
-                                    <Button
-                                        type="submit"
-                                        disabled={loadingBrowse}
-                                        className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                    {/* Search bar */}
+                                    <form
+                                        onSubmit={handleSearchSubmit}
+                                        className="flex gap-2"
                                     >
-                                        {loadingBrowse ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Search className="h-4 w-4" />
-                                        )}
-                                        Search
-                                    </Button>
-                                </form>
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                value={search}
+                                                onChange={(e) =>
+                                                    setSearch(e.target.value)
+                                                }
+                                                placeholder="Search by title, sponsor, level..."
+                                                className="pl-9"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            disabled={loadingBrowse}
+                                            className="gap-2"
+                                        >
+                                            {loadingBrowse ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Search className="h-4 w-4" />
+                                            )}
+                                            Search
+                                        </Button>
+                                    </form>
 
-                                {/* Results — desktop table */}
-                                {searched && (
-                                    <>
-                                        {loadingBrowse ? (
-                                            <div className="flex items-center justify-center py-12">
-                                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                                            </div>
-                                        ) : results.length === 0 ? (
-                                            <div className="rounded-lg border border-dashed py-10 text-center text-muted-foreground text-sm">
-                                                No trainings found matching your
-                                                search.
-                                            </div>
-                                        ) : (
-                                            <>
-                                                {/* Desktop table */}
-                                                <div className="hidden md:block rounded-md border overflow-x-auto">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                <TableHead>
-                                                                    Type
-                                                                </TableHead>
-                                                                <TableHead>
-                                                                    Title
-                                                                </TableHead>
-                                                                <TableHead>
-                                                                    Level
-                                                                </TableHead>
-                                                                <TableHead>
-                                                                    Date
-                                                                </TableHead>
-                                                                <TableHead>
-                                                                    Hours
-                                                                </TableHead>
-                                                                <TableHead />
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {results.map(
-                                                                (t) => (
-                                                                    <TableRow
-                                                                        key={
-                                                                            t.id
-                                                                        }
-                                                                        className="cursor-pointer hover:bg-accent/50"
-                                                                        onClick={() =>
-                                                                            handleSelectTraining(
-                                                                                t,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <TableCell>
-                                                                            <Chip
-                                                                                label={
-                                                                                    t.type
-                                                                                }
-                                                                                cls={
-                                                                                    typeCls[
-                                                                                        t.type.toLowerCase()
-                                                                                    ] ??
-                                                                                    "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                                }
-                                                                            />
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <div className="font-medium truncate max-w-[200px]">
-                                                                                {
-                                                                                    t.title
-                                                                                }
-                                                                            </div>
-                                                                            <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                                                                                {
-                                                                                    t.sponsoring_agency
-                                                                                }
-                                                                            </div>
-                                                                            {t.source ===
-                                                                                "SELF_REPORTED" && (
-                                                                                <span className="text-[10px] text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-full px-1.5 py-0.5">
-                                                                                    Self-reported
-                                                                                </span>
-                                                                            )}
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <Chip
-                                                                                label={
-                                                                                    t.level
-                                                                                }
-                                                                                cls={
-                                                                                    levelCls[
-                                                                                        t.level.toLowerCase()
-                                                                                    ] ??
-                                                                                    "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                                }
-                                                                            />
-                                                                        </TableCell>
-                                                                        <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                                                                            {
-                                                                                t.start_date
+                                    {/* Results — desktop table */}
+                                    {searched && (
+                                        <>
+                                            {loadingBrowse ? (
+                                                <div className="flex items-center justify-center py-12">
+                                                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                                </div>
+                                            ) : results.length === 0 ? (
+                                                <div className="rounded-lg border border-dashed py-10 text-center text-muted-foreground text-sm">
+                                                    No trainings found matching
+                                                    your search.
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {/* Desktop table */}
+                                                    <div
+                                                        className="hidden md:block rounded-md border overflow-x-auto w-full"
+                                                        style={{
+                                                            scrollbarWidth:
+                                                                "thin",
+                                                            scrollbarColor:
+                                                                "hsl(var(--border)) transparent",
+                                                        }}
+                                                    >
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
+                                                                    <TableHead>
+                                                                        Type
+                                                                    </TableHead>
+                                                                    <TableHead>
+                                                                        Title
+                                                                    </TableHead>
+                                                                    <TableHead>
+                                                                        Level
+                                                                    </TableHead>
+                                                                    <TableHead>
+                                                                        Date
+                                                                    </TableHead>
+                                                                    <TableHead>
+                                                                        Hours
+                                                                    </TableHead>
+                                                                    <TableHead />
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {results.map(
+                                                                    (t) => (
+                                                                        <TableRow
+                                                                            key={
+                                                                                t.id
                                                                             }
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <div className="flex items-center gap-1 text-sm">
-                                                                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                            className="cursor-pointer hover:bg-accent/50"
+                                                                            onClick={() =>
+                                                                                handleSelectTraining(
+                                                                                    t,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <TableCell>
+                                                                                <Chip
+                                                                                    label={
+                                                                                        t.type
+                                                                                    }
+                                                                                    cls={
+                                                                                        typeCls[
+                                                                                            t.type.toLowerCase()
+                                                                                        ] ??
+                                                                                        "bg-slate-500/10 text-slate-400 border-slate-500/40"
+                                                                                    }
+                                                                                />
+                                                                            </TableCell>
+                                                                            <TableCell>
+                                                                                <div className="font-medium text-sm">
+                                                                                    {
+                                                                                        t.title
+                                                                                    }
+                                                                                </div>
+                                                                                <div className="text-xs text-muted-foreground">
+                                                                                    {
+                                                                                        t.sponsoring_agency
+                                                                                    }
+                                                                                </div>
+                                                                                {t.source ===
+                                                                                    "SELF_REPORTED" && (
+                                                                                    <span className="text-[10px] text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-full px-1.5 py-0.5">
+                                                                                        Self-reported
+                                                                                    </span>
+                                                                                )}
+                                                                            </TableCell>
+                                                                            <TableCell>
+                                                                                <Chip
+                                                                                    label={
+                                                                                        t.level
+                                                                                    }
+                                                                                    cls={
+                                                                                        levelCls[
+                                                                                            t.level.toLowerCase()
+                                                                                        ] ??
+                                                                                        "bg-slate-500/10 text-slate-400 border-slate-500/40"
+                                                                                    }
+                                                                                />
+                                                                            </TableCell>
+                                                                            <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                                                                                 {
-                                                                                    t.total_hours
+                                                                                    t.start_date
                                                                                 }
+                                                                            </TableCell>
+                                                                            <TableCell>
+                                                                                <div className="flex items-center gap-1 text-sm">
+                                                                                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                                    {
+                                                                                        t.total_hours
+                                                                                    }
 
-                                                                                h
-                                                                            </div>
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="outline"
-                                                                                className="text-xs h-7"
-                                                                            >
-                                                                                Select
-                                                                            </Button>
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                ),
-                                                            )}
-                                                        </TableBody>
-                                                    </Table>
-                                                </div>
-
-                                                {/* Mobile cards */}
-                                                <div className="md:hidden space-y-2">
-                                                    {results.map((t) => (
-                                                        <button
-                                                            key={t.id}
-                                                            type="button"
-                                                            onClick={() =>
-                                                                handleSelectTraining(
-                                                                    t,
-                                                                )
-                                                            }
-                                                            className="w-full text-left rounded-lg border p-3 hover:bg-accent/50 transition-colors space-y-1.5"
-                                                        >
-                                                            <div className="flex items-start justify-between gap-2">
-                                                                <span className="font-medium text-sm leading-snug">
-                                                                    {t.title}
-                                                                </span>
-                                                                <Chip
-                                                                    label={
-                                                                        t.type
-                                                                    }
-                                                                    cls={
-                                                                        typeCls[
-                                                                            t.type.toLowerCase()
-                                                                        ] ??
-                                                                        "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            <div className="flex flex-wrap gap-1.5 items-center">
-                                                                <Chip
-                                                                    label={
-                                                                        t.level
-                                                                    }
-                                                                    cls={
-                                                                        levelCls[
-                                                                            t.level.toLowerCase()
-                                                                        ] ??
-                                                                        "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                    }
-                                                                />
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {
-                                                                        t.sponsoring_agency
-                                                                    }
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                                <span className="font-mono">
-                                                                    {
-                                                                        t.start_date
-                                                                    }
-                                                                </span>
-                                                                <span className="flex items-center gap-1">
-                                                                    <Clock className="h-3 w-3" />
-                                                                    {
-                                                                        t.total_hours
-                                                                    }
-                                                                    h
-                                                                </span>
-                                                                {t.source ===
-                                                                    "SELF_REPORTED" && (
-                                                                    <span className="text-amber-400">
-                                                                        Self-reported
-                                                                    </span>
+                                                                                    h
+                                                                                </div>
+                                                                            </TableCell>
+                                                                            <TableCell>
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="outline"
+                                                                                    className="text-xs h-7"
+                                                                                >
+                                                                                    Select
+                                                                                </Button>
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    ),
                                                                 )}
-                                                            </div>
-                                                        </button>
-                                                    ))}
-                                                </div>
-
-                                                {/* Pagination */}
-                                                {pageCount > 1 && (
-                                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                        <span>
-                                                            Page {page} of{" "}
-                                                            {pageCount}
-                                                        </span>
-                                                        <div className="flex gap-1">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                disabled={
-                                                                    page <= 1 ||
-                                                                    loadingBrowse
-                                                                }
-                                                                onClick={() =>
-                                                                    doSearch(
-                                                                        search,
-                                                                        page -
-                                                                            1,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <ChevronLeft className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                disabled={
-                                                                    page >=
-                                                                        pageCount ||
-                                                                    loadingBrowse
-                                                                }
-                                                                onClick={() =>
-                                                                    doSearch(
-                                                                        search,
-                                                                        page +
-                                                                            1,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <ChevronRight className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                        </div>
+                                                            </TableBody>
+                                                        </Table>
                                                     </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </>
-                                )}
 
-                                {/* Not found CTA */}
-                                <div className="border-t border-border/60 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                    <p className="text-sm text-muted-foreground">
-                                        Can't find the training you attended?
-                                    </p>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="gap-2 shrink-0"
-                                        onClick={() => setShowCreateModal(true)}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        Add New Training
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        )}
+                                                    {/* Mobile cards */}
+                                                    <div className="md:hidden space-y-2">
+                                                        {results.map((t) => (
+                                                            <button
+                                                                key={t.id}
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleSelectTraining(
+                                                                        t,
+                                                                    )
+                                                                }
+                                                                className="w-full text-left rounded-lg border p-3 hover:bg-accent/50 transition-colors space-y-1.5"
+                                                            >
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <span className="font-medium text-sm leading-snug">
+                                                                        {
+                                                                            t.title
+                                                                        }
+                                                                    </span>
+                                                                    <Chip
+                                                                        label={
+                                                                            t.type
+                                                                        }
+                                                                        cls={
+                                                                            typeCls[
+                                                                                t.type.toLowerCase()
+                                                                            ] ??
+                                                                            "bg-slate-500/10 text-slate-400 border-slate-500/40"
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-1.5 items-center">
+                                                                    <Chip
+                                                                        label={
+                                                                            t.level
+                                                                        }
+                                                                        cls={
+                                                                            levelCls[
+                                                                                t.level.toLowerCase()
+                                                                            ] ??
+                                                                            "bg-slate-500/10 text-slate-400 border-slate-500/40"
+                                                                        }
+                                                                    />
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        {
+                                                                            t.sponsoring_agency
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                                    <span className="font-mono">
+                                                                        {
+                                                                            t.start_date
+                                                                        }
+                                                                    </span>
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Clock className="h-3 w-3" />
+                                                                        {
+                                                                            t.total_hours
+                                                                        }
+                                                                        h
+                                                                    </span>
+                                                                    {t.source ===
+                                                                        "SELF_REPORTED" && (
+                                                                        <span className="text-amber-400">
+                                                                            Self-reported
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                    </div>
 
-                        {/* ── UPLOAD VIEW (enroll existing) ── */}
-                        {view === "upload" && selected && (
-                            <motion.div
-                                key="upload"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.15 }}
-                                className="px-6 py-5 space-y-5 min-w-0 overflow-hidden"
-                            >
-                                {/* Training summary card */}
-                                <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
-                                    <div className="flex flex-wrap gap-1.5">
-                                        <Chip
-                                            label={selected.type}
-                                            cls={
-                                                typeCls[
-                                                    selected.type.toLowerCase()
-                                                ] ??
-                                                "bg-slate-500/10 text-slate-400 border-slate-500/40"
+                                                    {/* Pagination */}
+                                                    {pageCount > 1 && (
+                                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                            <span>
+                                                                Page {page} of{" "}
+                                                                {pageCount}
+                                                            </span>
+                                                            <div className="flex gap-1">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    disabled={
+                                                                        page <=
+                                                                            1 ||
+                                                                        loadingBrowse
+                                                                    }
+                                                                    onClick={() =>
+                                                                        doSearch(
+                                                                            search,
+                                                                            page -
+                                                                                1,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    disabled={
+                                                                        page >=
+                                                                            pageCount ||
+                                                                        loadingBrowse
+                                                                    }
+                                                                    onClick={() =>
+                                                                        doSearch(
+                                                                            search,
+                                                                            page +
+                                                                                1,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <ChevronRight className="h-3.5 w-3.5" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* Not found CTA */}
+                                    <div className="border-t border-border/60 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                        <p className="text-sm text-muted-foreground">
+                                            Can't find the training you
+                                            attended?
+                                        </p>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="gap-2 shrink-0"
+                                            onClick={() =>
+                                                setShowCreateModal(true)
                                             }
-                                        />
-                                        <Chip
-                                            label={selected.level}
-                                            cls={
-                                                levelCls[
-                                                    selected.level.toLowerCase()
-                                                ] ??
-                                                "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                            }
-                                        />
-                                        {selected.source ===
-                                            "SELF_REPORTED" && (
-                                            <span className="inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-400">
-                                                Self-reported
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            Add New Training
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* ── UPLOAD VIEW (enroll existing) ── */}
+                            {view === "upload" && selected && (
+                                <motion.div
+                                    key="upload"
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="px-6 py-5 space-y-5 min-w-0 overflow-hidden"
+                                >
+                                    {/* Training summary card */}
+                                    <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            <Chip
+                                                label={selected.type}
+                                                cls={
+                                                    typeCls[
+                                                        selected.type.toLowerCase()
+                                                    ] ??
+                                                    "bg-slate-500/10 text-slate-400 border-slate-500/40"
+                                                }
+                                            />
+                                            <Chip
+                                                label={selected.level}
+                                                cls={
+                                                    levelCls[
+                                                        selected.level.toLowerCase()
+                                                    ] ??
+                                                    "bg-slate-500/10 text-slate-400 border-slate-500/40"
+                                                }
+                                            />
+                                            {selected.source ===
+                                                "SELF_REPORTED" && (
+                                                <span className="inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-400">
+                                                    Self-reported
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="font-semibold">
+                                            {selected.title}
+                                        </p>
+                                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                                            <span>
+                                                {selected.sponsoring_agency}
                                             </span>
-                                        )}
+                                            <span className="font-mono">
+                                                {selected.start_date}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="h-3 w-3" />
+                                                {selected.total_hours}h
+                                            </span>
+                                        </div>
                                     </div>
-                                    <p className="font-semibold">
-                                        {selected.title}
+
+                                    {/* Proof upload */}
+                                    <ProofUpload
+                                        file={enrollProof}
+                                        onFile={setEnrollProof}
+                                        onFullscreen={setFullscreenFile}
+                                    />
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Your proof will be reviewed by the admin
+                                        before this training is added to your
+                                        profile.
                                     </p>
-                                    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                                        <span>
-                                            {selected.sponsoring_agency}
-                                        </span>
-                                        <span className="font-mono">
-                                            {selected.start_date}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="h-3 w-3" />
-                                            {selected.total_hours}h
-                                        </span>
+
+                                    {/* Footer */}
+                                    <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setView("browse")}
+                                            disabled={isPending}
+                                        >
+                                            Back
+                                        </Button>
+                                        <Button
+                                            onClick={handleEnrollSubmit}
+                                            disabled={isPending || !enrollProof}
+                                            className="gap-2 bg-teal-600 hover:bg-teal-700 text-white"
+                                        >
+                                            {isPending && (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            )}
+                                            {isPending
+                                                ? "Submitting..."
+                                                : "Submit Proof"}
+                                        </Button>
                                     </div>
-                                </div>
-
-                                {/* Proof upload */}
-                                <ProofUpload
-                                    file={enrollProof}
-                                    onFile={setEnrollProof}
-                                    onFullscreen={setFullscreenFile}
-                                />
-
-                                <p className="text-xs text-muted-foreground">
-                                    Your proof will be reviewed by the admin
-                                    before this training is added to your
-                                    profile.
-                                </p>
-
-                                {/* Footer */}
-                                <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setView("browse")}
-                                        disabled={isPending}
-                                    >
-                                        Back
-                                    </Button>
-                                    <Button
-                                        onClick={handleEnrollSubmit}
-                                        disabled={isPending || !enrollProof}
-                                        className="gap-2 bg-teal-600 hover:bg-teal-700 text-white"
-                                    >
-                                        {isPending && (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        )}
-                                        {isPending
-                                            ? "Submitting..."
-                                            : "Submit Proof"}
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </DialogContent>
             </Dialog>
 

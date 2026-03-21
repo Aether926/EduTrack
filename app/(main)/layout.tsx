@@ -52,10 +52,13 @@ export default async function MainLayout({
                         email={email}
                         userId={user.id}
                     />
-                    <SidebarInset>
+                    <SidebarInset className="overflow-x-hidden min-w-0">
                         <DeletionWarningBanner />
-                        <MobileTopbar userId={user.id} displayName={displayName} />
-                        <main className="min-w-0">
+                        <MobileTopbar
+                            userId={user.id}
+                            displayName={displayName}
+                        />
+                        <main className="min-w-0 overflow-x-hidden">
                             {children}
                         </main>
                     </SidebarInset>
