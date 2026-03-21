@@ -3,8 +3,11 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { ArchivedUser } from "../actions/archive-actions";
-import { restoreUser, superadminDeleteUser } from "@/features/superadmin/actions/superadmin-actions";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import {
+    restoreUser,
+    superadminDeleteUser,
+} from "@/features/superadmin/actions/superadmin-actions";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,17 +47,21 @@ function fmtDate(dt: string | null) {
     if (!dt) return "—";
     try {
         return new Date(dt).toLocaleDateString("en-PH", {
-            year: "numeric", month: "short", day: "numeric",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
         });
-    } catch { return dt; }
+    } catch {
+        return dt;
+    }
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface ArchiveTableProps {
-    users:        ArchivedUser[];
+    users: ArchivedUser[];
     isSuperadmin: boolean;
-    basePath:     string; 
+    basePath: string;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -65,19 +72,24 @@ export default function ArchiveTable({
     basePath,
 }: ArchiveTableProps) {
     const router = useRouter();
-    const [q, setQ]                           = useState("");
-    const [loadingId, setLoadingId]           = useState<string | null>(null);
-    const [restoreConfirm, setRestoreConfirm] = useState<ArchivedUser | null>(null);
-    const [deleteConfirm, setDeleteConfirm]   = useState<ArchivedUser | null>(null);
+    const [q, setQ] = useState("");
+    const [loadingId, setLoadingId] = useState<string | null>(null);
+    const [restoreConfirm, setRestoreConfirm] = useState<ArchivedUser | null>(
+        null,
+    );
+    const [deleteConfirm, setDeleteConfirm] = useState<ArchivedUser | null>(
+        null,
+    );
 
     const filtered = useMemo(() => {
         const s = q.trim().toLowerCase();
         if (!s) return users;
-        return users.filter((u) =>
-            fullName(u).toLowerCase().includes(s) ||
-            (u.email ?? "").toLowerCase().includes(s) ||
-            (u.employeeId ?? "").toLowerCase().includes(s) ||
-            (u.position ?? "").toLowerCase().includes(s)
+        return users.filter(
+            (u) =>
+                fullName(u).toLowerCase().includes(s) ||
+                (u.email ?? "").toLowerCase().includes(s) ||
+                (u.employeeId ?? "").toLowerCase().includes(s) ||
+                (u.position ?? "").toLowerCase().includes(s),
         );
     }, [q, users]);
 
@@ -85,7 +97,10 @@ export default function ArchiveTable({
         setLoadingId(u.id);
         try {
             const res = await restoreUser(u.id);
-            if (!res.ok) { toast.error(res.error); return; }
+            if (!res.ok) {
+                toast.error(res.error);
+                return;
+            }
             toast.success(`${fullName(u)} has been restored.`);
             router.refresh();
         } finally {
@@ -98,7 +113,10 @@ export default function ArchiveTable({
         setLoadingId(u.id);
         try {
             const res = await superadminDeleteUser(u.id);
-            if (!res.ok) { toast.error(res.error); return; }
+            if (!res.ok) {
+                toast.error(res.error);
+                return;
+            }
             toast.success(`${fullName(u)} has been permanently deleted.`);
             router.refresh();
         } finally {
@@ -119,9 +137,12 @@ export default function ArchiveTable({
                                 <Archive className="h-4 w-4 text-slate-400" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold">Archived Users</p>
+                                <p className="text-sm font-semibold">
+                                    Archived Users
+                                </p>
                                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
-                                    {filtered.length} result{filtered.length === 1 ? "" : "s"}
+                                    {filtered.length} result
+                                    {filtered.length === 1 ? "" : "s"}
                                 </p>
                             </div>
                         </div>
@@ -166,13 +187,17 @@ export default function ArchiveTable({
                             </TableHeader>
                             <TableBody>
                                 {filtered.map((u) => {
-                                    const name      = fullName(u) || "(no name)";
+                                    const name = fullName(u) || "(no name)";
                                     const isLoading = loadingId === u.id;
                                     return (
                                         <TableRow
                                             key={u.id}
                                             className="cursor-pointer hover:bg-muted/40 transition-colors"
-                                            onClick={() => router.push(`${basePath}/${u.id}`)}
+                                            onClick={() =>
+                                                router.push(
+                                                    `${basePath}/${u.id}`,
+                                                )
+                                            }
                                         >
                                             <TableCell className="pl-5">
                                                 <div className="flex items-center gap-2.5">
@@ -182,7 +207,9 @@ export default function ArchiveTable({
                                                         className="h-8 w-8 shrink-0"
                                                     />
                                                     <div className="leading-tight">
-                                                        <p className="text-sm font-medium">{name}</p>
+                                                        <p className="text-sm font-medium">
+                                                            {name}
+                                                        </p>
                                                         <p className="text-[11px] text-muted-foreground truncate max-w-[200px]">
                                                             {u.email}
                                                         </p>
@@ -202,7 +229,9 @@ export default function ArchiveTable({
                                             </TableCell>
                                             <TableCell
                                                 className="text-center"
-                                                onClick={(e) => e.stopPropagation()}
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
                                             >
                                                 <div className="flex items-center justify-center gap-1.5">
                                                     {isSuperadmin && (
@@ -210,20 +239,33 @@ export default function ArchiveTable({
                                                             <Button
                                                                 size="sm"
                                                                 className="gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
-                                                                onClick={() => setRestoreConfirm(u)}
-                                                                disabled={isLoading}
-                                                            >
-                                                                {isLoading
-                                                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                                    : <RotateCcw className="h-3.5 w-3.5" />
+                                                                onClick={() =>
+                                                                    setRestoreConfirm(
+                                                                        u,
+                                                                    )
                                                                 }
+                                                                disabled={
+                                                                    isLoading
+                                                                }
+                                                            >
+                                                                {isLoading ? (
+                                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                ) : (
+                                                                    <RotateCcw className="h-3.5 w-3.5" />
+                                                                )}
                                                                 Restore
                                                             </Button>
                                                             <Button
                                                                 size="sm"
                                                                 className="gap-1.5 bg-rose-900/20 text-rose-700 border border-rose-700/40 hover:bg-rose-900/30"
-                                                                onClick={() => setDeleteConfirm(u)}
-                                                                disabled={isLoading}
+                                                                onClick={() =>
+                                                                    setDeleteConfirm(
+                                                                        u,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isLoading
+                                                                }
                                                             >
                                                                 <Trash2 className="h-3.5 w-3.5" />
                                                                 Delete
@@ -264,24 +306,35 @@ export default function ArchiveTable({
                                 </DialogTitle>
                             </div>
                             <p className="text-base font-semibold leading-snug">
-                                Restore {restoreConfirm ? fullName(restoreConfirm) : ""}?
+                                Restore{" "}
+                                {restoreConfirm ? fullName(restoreConfirm) : ""}
+                                ?
                             </p>
                             <DialogDescription className="mt-1">
-                                Their account will be reactivated and they can log in again.
+                                Their account will be reactivated and they can
+                                log in again.
                             </DialogDescription>
                         </DialogHeader>
                     </div>
                     <DialogFooter className="px-6 py-4 flex gap-2 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => setRestoreConfirm(null)}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRestoreConfirm(null)}
+                        >
                             Cancel
                         </Button>
                         <Button
                             size="sm"
                             className="bg-emerald-600 hover:bg-emerald-500 text-white"
-                            onClick={() => restoreConfirm && handleRestore(restoreConfirm)}
+                            onClick={() =>
+                                restoreConfirm && handleRestore(restoreConfirm)
+                            }
                             disabled={!!loadingId}
                         >
-                            {loadingId && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                            {loadingId && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                            )}
                             Restore
                         </Button>
                     </DialogFooter>
@@ -306,28 +359,42 @@ export default function ArchiveTable({
                                 </DialogTitle>
                             </div>
                             <p className="text-base font-semibold leading-snug">
-                                Delete {deleteConfirm ? fullName(deleteConfirm) : ""}&apos;s account?
+                                Delete{" "}
+                                {deleteConfirm ? fullName(deleteConfirm) : ""}
+                                &apos;s account?
                             </p>
                             <DialogDescription className="mt-1">
-                                This will permanently remove all data. This cannot be undone.
+                                This will permanently remove all data. This
+                                cannot be undone.
                             </DialogDescription>
                         </DialogHeader>
                     </div>
                     <div className="px-6 py-4 rounded-lg mx-6 mb-2 border border-rose-500/30 bg-rose-500/10 text-sm text-rose-400">
                         <p className="font-semibold mb-0.5">⚠ Warning</p>
-                        <p>All profile data, documents, and records will be permanently removed.</p>
+                        <p>
+                            All profile data, documents, and records will be
+                            permanently removed.
+                        </p>
                     </div>
                     <DialogFooter className="px-6 py-4 flex gap-2 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeleteConfirm(null)}
+                        >
                             Cancel
                         </Button>
                         <Button
                             size="sm"
                             className="bg-rose-600 hover:bg-rose-500 text-white"
-                            onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
+                            onClick={() =>
+                                deleteConfirm && handleDelete(deleteConfirm)
+                            }
                             disabled={!!loadingId}
                         >
-                            {loadingId && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                            {loadingId && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                            )}
                             Delete permanently
                         </Button>
                     </DialogFooter>

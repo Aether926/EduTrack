@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { fetchTeacherOptions } from "@/features/admin-actions/responsibilities/actions/teacher-picker-actions";
 
@@ -56,15 +56,18 @@ export function TeacherPickerModal(props: {
     }, [open]);
 
     // Reset page when search changes
-    useEffect(() => { setPage(0); }, [search]);
+    useEffect(() => {
+        setPage(0);
+    }, [search]);
 
     const filtered = useMemo(() => {
         const q = search.toLowerCase().trim();
         if (!q) return teachers;
-        return teachers.filter((t) =>
-            t.fullName.toLowerCase().includes(q) ||
-            t.employeeId.toLowerCase().includes(q) ||
-            t.position.toLowerCase().includes(q)
+        return teachers.filter(
+            (t) =>
+                t.fullName.toLowerCase().includes(q) ||
+                t.employeeId.toLowerCase().includes(q) ||
+                t.position.toLowerCase().includes(q),
         );
     }, [teachers, search]);
 
@@ -78,7 +81,9 @@ export function TeacherPickerModal(props: {
                 side={isMobile ? "bottom" : "right"}
                 className={[
                     "flex flex-col gap-0 p-0",
-                    isMobile ? "h-[90vh] rounded-t-2xl" : "w-[400px] sm:w-[440px]",
+                    isMobile
+                        ? "h-[90vh] rounded-t-2xl"
+                        : "w-[400px] sm:w-[440px]",
                 ].join(" ")}
             >
                 {/* Header */}
@@ -88,9 +93,12 @@ export function TeacherPickerModal(props: {
                             <Users className="h-4 w-4 text-blue-400" />
                         </div>
                         <div>
-                            <SheetTitle className="text-base leading-snug">Select Teacher</SheetTitle>
+                            <SheetTitle className="text-base leading-snug">
+                                Select Teacher
+                            </SheetTitle>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                {filtered.length} teacher{filtered.length !== 1 ? "s" : ""}
+                                {filtered.length} teacher
+                                {filtered.length !== 1 ? "s" : ""}
                                 {search && ` matching "${search}"`}
                             </p>
                         </div>
@@ -129,12 +137,16 @@ export function TeacherPickerModal(props: {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-full gap-3 py-16">
                             <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground animate-spin" />
-                            <p className="text-sm text-muted-foreground">Loading teachers...</p>
+                            <p className="text-sm text-muted-foreground">
+                                Loading teachers...
+                            </p>
                         </div>
                     ) : paginated.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full gap-3 py-16">
                             <Users className="h-10 w-10 text-muted-foreground/20" />
-                            <p className="text-sm text-muted-foreground">No teachers found.</p>
+                            <p className="text-sm text-muted-foreground">
+                                No teachers found.
+                            </p>
                             {search && (
                                 <button
                                     type="button"
@@ -172,10 +184,14 @@ export function TeacherPickerModal(props: {
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className={[
-                                                    "text-sm font-medium truncate",
-                                                    isSelected ? "text-emerald-400" : "text-foreground",
-                                                ].join(" ")}>
+                                                <span
+                                                    className={[
+                                                        "text-sm font-medium truncate",
+                                                        isSelected
+                                                            ? "text-emerald-400"
+                                                            : "text-foreground",
+                                                    ].join(" ")}
+                                                >
                                                     {t.fullName}
                                                 </span>
                                                 {isSelected && (
@@ -188,9 +204,12 @@ export function TeacherPickerModal(props: {
                                                         {t.position}
                                                     </span>
                                                 )}
-                                                {t.position && t.employeeId !== "—" && (
-                                                    <span className="text-muted-foreground/30 text-xs shrink-0">·</span>
-                                                )}
+                                                {t.position &&
+                                                    t.employeeId !== "—" && (
+                                                        <span className="text-muted-foreground/30 text-xs shrink-0">
+                                                            ·
+                                                        </span>
+                                                    )}
                                                 {t.employeeId !== "—" && (
                                                     <span className="text-xs font-mono text-muted-foreground/60 shrink-0">
                                                         {t.employeeId}
