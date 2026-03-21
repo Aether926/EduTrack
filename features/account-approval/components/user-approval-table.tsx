@@ -7,7 +7,7 @@ import UserDetailSheet from "./user-detail-sheet";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import {
     Table,
     TableBody,
@@ -109,7 +109,6 @@ export default function UserApprovalTable({
     onReject: (id: string) => void | Promise<void>;
     onDelete?: (id: string) => void | Promise<void>;
 }) {
-    
     const [loadingId, setLoadingId] = React.useState<string | null>(null);
     const [confirm, setConfirm] = React.useState<
         | null
@@ -266,10 +265,12 @@ export default function UserApprovalTable({
                                                 {fmtDate(u.createdAt)}
                                             </TableCell>
 
-                                            <TableCell 
+                                            <TableCell
                                                 className="text-center"
-                                                onClick={(e) => e.stopPropagation()}
-                                                >
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                            >
                                                 <div className="flex items-center justify-center gap-1.5">
                                                     <Button
                                                         size="sm"

@@ -21,7 +21,7 @@ import { ArrowUpDown, Search, X, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 
 import {
     Card,

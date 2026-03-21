@@ -43,6 +43,15 @@ import ActivityFeed from "@/features/dashboard/component/activity-feed";
 import TrainingHoursChart from "@/features/dashboard/component/training-hours-chart";
 import AdminTrainingCalendar from "@/features/dashboard/component/admin-training-calendar";
 
+const C = {
+    green: "#4ade80", // green-400
+    red: "#b91c1c", // red-700 — dark, serious
+    amber: "#fbbf24", // amber-400
+    orange: "#d97706", // amber-600 — warm, deep but glowy
+    blue: "#60a5fa", // blue-400
+    muted: "#52525b", // zinc-600
+} as const;
+
 type DonutSlice = { name: string; value: number; color: string };
 
 // ── Compliance Card ────────────────────────────────────────────────────────────
@@ -63,10 +72,8 @@ function ComplianceCard({
     const compliantPct = pct(slices[0]?.value ?? 0);
 
     return (
-        <Card className="flex gap-3 bg-card/80 border-amber-500/20 h-full overflow-hidden">
-            <div className="h-0.5 w-full bg-gradient-to-r from-amber-500/60 to-amber-500/10" />
+        <Card className="flex gap-3 bg-card/80 border-border/60 h-full overflow-hidden">
             <CardHeader className="pb-3 px-5 pt-4">
-                {" "}
                 <div className="flex items-start gap-2">
                     <div className="rounded-lg p-1.5 bg-amber-500/10 mt-1.5">
                         <ShieldAlert className="h-3.5 w-3.5 text-amber-400" />
@@ -155,10 +162,10 @@ function ComplianceCard({
                                                             y={cy - 8}
                                                             textAnchor="middle"
                                                             dominantBaseline="middle"
-                                                            className="fill-emerald-500 dark:fill-emerald-400"
                                                             style={{
                                                                 fontSize: 22,
                                                                 fontWeight: 800,
+                                                                fill: C.green,
                                                             }}
                                                         >
                                                             {compliantPct}%
@@ -259,12 +266,11 @@ function DocumentCard({
     };
 
     return (
-        <Card className="flex gap-3 bg-card/80 border-orange-500/20 h-full overflow-hidden">
-            <div className="h-0.5 w-full bg-gradient-to-r from-orange-500/60 to-orange-500/10" />
+        <Card className="flex gap-3 bg-card/80 border-border/60 h-full overflow-hidden">
             <CardHeader className="pb-3 px-5 pt-4">
                 <div className="flex items-start gap-2">
-                    <div className="rounded-lg p-1.5 bg-orange-500/10 mt-1.5">
-                        <FileText className="h-3.5 w-3.5 text-orange-400" />
+                    <div className="rounded-lg p-1.5 bg-blue-500/10 mt-1.5">
+                        <FileText className="h-3.5 w-3.5 text-blue-400" />
                     </div>
                     <div>
                         <CardTitle className="text-sm font-semibold">
@@ -439,12 +445,11 @@ function SalaryCard({
     const pct = (v: number) => (total > 0 ? Math.round((v / total) * 100) : 0);
 
     return (
-        <Card className="flex gap-3 bg-card/80 border-emerald-500/20 h-full overflow-hidden">
-            <div className="h-0.5 w-full bg-gradient-to-r from-emerald-500/60 to-emerald-500/10" />
+        <Card className="flex gap-3 bg-card/80 border-border/60 h-full overflow-hidden">
             <CardHeader className="pb-3 px-5 pt-4">
                 <div className="flex items-start gap-2">
-                    <div className="rounded-lg p-1.5 bg-emerald-500/10 mt-1.5">
-                        <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                    <div className="rounded-lg p-1.5 bg-green-500/10 mt-1.5">
+                        <TrendingUp className="h-3.5 w-3.5 text-green-400" />
                     </div>
                     <div>
                         <CardTitle className="text-sm font-semibold">
@@ -455,8 +460,8 @@ function SalaryCard({
                         </CardDescription>
                     </div>
                     {eligibleCount > 0 && (
-                        <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
                             {eligibleCount} eligible
                         </span>
                     )}
@@ -588,89 +593,40 @@ function SalaryCard({
     );
 }
 
-// ── Stat card ──────────────────────────────────────────────────────────────────
+// ── Stat card — amber icon only when value > 0 (except Teachers which is always blue) ──
 function StatCard({
     title,
     value,
     desc,
     icon: Icon,
-    accent,
     href,
+    alwaysBlue = false,
 }: {
     title: string;
     value: number;
     desc: string;
     icon: React.ElementType;
-    accent:
-        | "blue"
-        | "violet"
-        | "emerald"
-        | "amber"
-        | "rose"
-        | "sky"
-        | "orange"
-        | "teal";
     href?: string;
+    alwaysBlue?: boolean;
 }) {
-    const styles = {
-        blue: {
-            border: "border-blue-500/20",
-            iconWrap: "bg-blue-500/10 text-blue-400",
-            num: "text-blue-400",
-        },
-        violet: {
-            border: "border-violet-500/20",
-            iconWrap: "bg-violet-500/10 text-violet-400",
-            num: "text-violet-400",
-        },
-        emerald: {
-            border: "border-emerald-500/20",
-            iconWrap: "bg-emerald-500/10 text-emerald-400",
-            num: "text-emerald-400",
-        },
-        amber: {
-            border: "border-amber-500/20",
-            iconWrap: "bg-amber-500/10 text-amber-400",
-            num: "text-amber-400",
-        },
-        rose: {
-            border: "border-rose-500/20",
-            iconWrap: "bg-rose-500/10 text-rose-400",
-            num: "text-rose-400",
-        },
-        sky: {
-            border: "border-sky-500/20",
-            iconWrap: "bg-sky-500/10 text-sky-400",
-            num: "text-sky-400",
-        },
-        orange: {
-            border: "border-orange-500/20",
-            iconWrap: "bg-orange-500/10 text-orange-400",
-            num: "text-orange-400",
-        },
-        teal: {
-            border: "border-teal-500/20",
-            iconWrap: "bg-teal-500/10 text-teal-400",
-            num: "text-teal-400",
-        },
-    } as const;
-    const s = styles[accent];
+    const hasValue = value > 0;
+    const iconCls =
+        alwaysBlue || !hasValue
+            ? "border-blue-500/20 bg-blue-500/10 text-blue-400"
+            : "border-amber-500/25 bg-amber-500/10 text-amber-400";
     const inner = (
         <Card
-            className={`border ${s.border} bg-card/80 overflow-hidden transition-all duration-200 ${href ? "hover:bg-accent/30 cursor-pointer" : ""}`}
+            className={`border border-border/60 bg-card/80 overflow-hidden transition-all duration-200 ${href ? "hover:bg-accent/30 cursor-pointer" : ""}`}
         >
-            <CardContent className="p-3 sm:p-4 h-[96px] flex flex-col justify-between">
-                {/* Top: icon + value + arrow */}
+            <CardContent className="p-3 sm:p-4 flex flex-col justify-between gap-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div
-                            className={`rounded-lg p-1.5 shrink-0 ${s.iconWrap}`}
+                            className={`rounded-lg p-1.5 shrink-0 border ${iconCls}`}
                         >
                             <Icon className="h-3.5 w-3.5" />
                         </div>
-                        <span
-                            className={`text-2xl font-bold tabular-nums tracking-tight leading-none ${s.num}`}
-                        >
+                        <span className="text-2xl font-bold tabular-nums tracking-tight leading-none text-foreground">
                             {value}
                         </span>
                     </div>
@@ -678,7 +634,6 @@ function StatCard({
                         <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
                     )}
                 </div>
-                {/* Bottom: title + desc */}
                 <div>
                     <div className="text-xs font-medium text-foreground/80 leading-tight">
                         {title}
@@ -740,37 +695,26 @@ export default function AdminDashboardView({
         documentBreakdown.rejected +
         documentBreakdown.missing;
 
+    // Palette per requirements
     const COMPLIANCE_DATA: DonutSlice[] = [
         {
             name: "Compliant",
             value: complianceBreakdown.compliant,
-            color: "#10b981",
+            color: C.green,
         },
-        {
-            name: "At Risk",
-            value: complianceBreakdown.atRisk,
-            color: "#f59e0b",
-        },
+        { name: "At Risk", value: complianceBreakdown.atRisk, color: C.amber },
         {
             name: "Non-Compliant",
             value: complianceBreakdown.nonCompliant,
-            color: "#ef4444",
+            color: C.red,
         },
     ];
 
     const DOC_DATA: DonutSlice[] = [
-        {
-            name: "Approved",
-            value: documentBreakdown.approved,
-            color: "#10b981",
-        },
-        { name: "Pending", value: documentBreakdown.pending, color: "#3b82f6" },
-        {
-            name: "Rejected",
-            value: documentBreakdown.rejected,
-            color: "#ef4444",
-        },
-        { name: "Missing", value: documentBreakdown.missing, color: "#f59e0b" },
+        { name: "Approved", value: documentBreakdown.approved, color: C.green },
+        { name: "Pending", value: documentBreakdown.pending, color: C.amber },
+        { name: "Rejected", value: documentBreakdown.rejected, color: C.red },
+        { name: "Missing", value: documentBreakdown.missing, color: C.orange },
     ];
 
     const eligibleCount = eligibilityData.filter(
@@ -785,9 +729,9 @@ export default function AdminDashboardView({
     );
 
     const SALARY_DATA: DonutSlice[] = [
-        { name: "Eligible", value: eligibleCount, color: "#10b981" },
-        { name: "Approaching", value: approachingCount, color: "#f59e0b" },
-        { name: "On track", value: notYet, color: "#06b6d4" },
+        { name: "Eligible", value: eligibleCount, color: C.green },
+        { name: "Approaching", value: approachingCount, color: C.amber },
+        { name: "On track", value: notYet, color: C.blue },
     ];
 
     return (
@@ -804,14 +748,13 @@ export default function AdminDashboardView({
                     value={totalTeachers}
                     desc="Approved accounts"
                     icon={Users}
-                    accent="blue"
+                    alwaysBlue
                 />
                 <StatCard
                     title="HR Requests"
                     value={pendingHRRequests}
                     desc="Change requests"
                     icon={FileClock}
-                    accent="violet"
                     href="/admin-actions/queue"
                 />
                 <StatCard
@@ -819,7 +762,6 @@ export default function AdminDashboardView({
                     value={(adminStats as any).totalAppointments ?? 0}
                     desc="Recorded changes"
                     icon={History}
-                    accent="teal"
                     href="/admin-actions/appointment-history"
                 />
                 <StatCard
@@ -827,7 +769,6 @@ export default function AdminDashboardView({
                     value={pendingAccountApprovals}
                     desc="Need approval"
                     icon={UserCheck}
-                    accent="emerald"
                     href="/account-approval"
                 />
                 <StatCard
@@ -835,7 +776,6 @@ export default function AdminDashboardView({
                     value={pendingProofs}
                     desc="Awaiting review"
                     icon={ClipboardCheck}
-                    accent="amber"
                     href="/proof-review"
                 />
                 <StatCard
@@ -843,7 +783,6 @@ export default function AdminDashboardView({
                     value={pendingDocuments}
                     desc="Pending submission"
                     icon={FileText}
-                    accent="orange"
                     href="/admin-actions"
                 />
             </motion.div>
@@ -864,7 +803,7 @@ export default function AdminDashboardView({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.24, delay: 0.09 }}
                 >
-                    <Card className="h-full bg-card/80 border-border/50 border-dashed flex items-center justify-center min-h-[220px]">
+                    <Card className="h-full bg-card/80 border-border/60 border-dashed flex items-center justify-center min-h-[220px]">
                         <p className="text-sm text-muted-foreground/40">
                             Coming soon
                         </p>

@@ -25,7 +25,7 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import {
     CheckCircle2,
     XCircle,
@@ -52,15 +52,19 @@ function fullName(u: SuperadminUser) {
 function fmtDate(dt: string) {
     try {
         return new Date(dt).toLocaleDateString("en-PH", {
-            year: "numeric", month: "short", day: "numeric",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
         });
-    } catch { return dt; }
+    } catch {
+        return dt;
+    }
 }
 
 function formatMs(ms: number) {
     const hours = Math.floor(ms / (1000 * 60 * 60));
-    const days  = Math.floor(hours / 24);
-    if (days > 0)  return `${days}d ${hours % 24}h`;
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `${days}d ${hours % 24}h`;
     if (hours > 0) return `${hours}h`;
     return "less than an hour";
 }
@@ -106,13 +110,18 @@ function SectionLabel({ label }: { label: string }) {
 function StatusBadge({ status }: { status: string }) {
     const s = status.toUpperCase();
     const styles: Record<string, string> = {
-        APPROVED:  "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-        PENDING:   "bg-amber-500/15 text-amber-400 border-amber-500/30",
-        REJECTED:  "bg-rose-500/15 text-rose-400 border-rose-500/30",
+        APPROVED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+        PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+        REJECTED: "bg-rose-500/15 text-rose-400 border-rose-500/30",
         SUSPENDED: "bg-orange-500/15 text-orange-400 border-orange-500/30",
     };
     return (
-        <Badge className={styles[s] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30"}>
+        <Badge
+            className={
+                styles[s] ??
+                "bg-slate-500/15 text-slate-400 border-slate-500/30"
+            }
+        >
             {status}
         </Badge>
     );
@@ -122,12 +131,15 @@ function StatusBadge({ status }: { status: string }) {
 
 function RoleBadge({ role }: { role: string }) {
     const styles: Record<string, string> = {
-        TEACHER:    "bg-teal-500/10 text-teal-400 border-teal-500/30",
-        ADMIN:      "bg-violet-500/10 text-violet-400 border-violet-500/30",
+        TEACHER: "bg-teal-500/10 text-teal-400 border-teal-500/30",
+        ADMIN: "bg-violet-500/10 text-violet-400 border-violet-500/30",
         SUPERADMIN: "bg-rose-500/10 text-rose-400 border-rose-500/30",
     };
     return (
-        <Badge variant="outline" className={`text-[11px] ${styles[role] ?? ""}`}>
+        <Badge
+            variant="outline"
+            className={`text-[11px] ${styles[role] ?? ""}`}
+        >
             {role}
         </Badge>
     );
@@ -139,12 +151,15 @@ interface UserActionSheetProps {
     user: SuperadminUser | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onApprove:   (id: string) => Promise<void>;
-    onReject:    (id: string) => Promise<void>;
-    onSuspend:   (id: string, reason: string) => Promise<void>;
+    onApprove: (id: string) => Promise<void>;
+    onReject: (id: string) => Promise<void>;
+    onSuspend: (id: string, reason: string) => Promise<void>;
     onUnsuspend: (id: string) => Promise<void>;
-    onDelete:    (id: string) => Promise<void>;
-    onRoleChange:(id: string, role: "TEACHER" | "ADMIN" | "SUPERADMIN") => Promise<void>;
+    onDelete: (id: string) => Promise<void>;
+    onRoleChange: (
+        id: string,
+        role: "TEACHER" | "ADMIN" | "SUPERADMIN",
+    ) => Promise<void>;
     promotionQuota: {
         teacherPromotionsLeft: number;
         superadminCooldownRemaining: number | null;
@@ -166,15 +181,15 @@ export default function UserActionSheet({
     onRoleChange,
     promotionQuota,
 }: UserActionSheetProps) {
-    const [loading, setLoading]               = useState<string | null>(null);
-    const [suspendOpen, setSuspendOpen]       = useState(false);
-    const [deleteConfirm, setDeleteConfirm]   = useState(false);
-    const [rejectConfirm, setRejectConfirm]   = useState(false);
-    const [selectedRole, setSelectedRole]     = useState<string>("");
+    const [loading, setLoading] = useState<string | null>(null);
+    const [suspendOpen, setSuspendOpen] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState(false);
+    const [rejectConfirm, setRejectConfirm] = useState(false);
+    const [selectedRole, setSelectedRole] = useState<string>("");
 
     if (!user) return null;
 
-    const name       = fullName(user) || "(no name)";
+    const name = fullName(user) || "(no name)";
     const isSuperadmin = user.role === "SUPERADMIN";
 
     async function handle(key: string, fn: () => Promise<void>) {
@@ -188,33 +203,44 @@ export default function UserActionSheet({
     }
 
     // Role change options based on current role
-    const roleOptions: { value: string; label: string; disabled: boolean; reason?: string }[] = [
+    const roleOptions: {
+        value: string;
+        label: string;
+        disabled: boolean;
+        reason?: string;
+    }[] = [
         {
-            value:    "TEACHER",
-            label:    "Teacher",
+            value: "TEACHER",
+            label: "Teacher",
             disabled: user.role === "TEACHER" || isSuperadmin,
         },
         {
-            value:    "ADMIN",
-            label:    "Admin",
-            disabled: user.role === "ADMIN" ||
-                      isSuperadmin ||
-                      (user.role === "TEACHER" && promotionQuota.teacherPromotionsLeft === 0),
-            reason: user.role === "TEACHER" && promotionQuota.teacherPromotionsLeft === 0
-                ? `No promotions left this window`
-                : undefined,
+            value: "ADMIN",
+            label: "Admin",
+            disabled:
+                user.role === "ADMIN" ||
+                isSuperadmin ||
+                (user.role === "TEACHER" &&
+                    promotionQuota.teacherPromotionsLeft === 0),
+            reason:
+                user.role === "TEACHER" &&
+                promotionQuota.teacherPromotionsLeft === 0
+                    ? `No promotions left this window`
+                    : undefined,
         },
         {
-            value:    "SUPERADMIN",
-            label:    "Superadmin",
-            disabled: user.role !== "ADMIN" ||
-                      promotionQuota.superadminCount >= 3 ||
-                      promotionQuota.superadminCooldownRemaining !== null,
-            reason: promotionQuota.superadminCooldownRemaining !== null
-                ? `Cooldown: ${formatMs(promotionQuota.superadminCooldownRemaining)}`
-                : promotionQuota.superadminCount >= 3
-                    ? "Max 3 superadmins reached"
-                    : undefined,
+            value: "SUPERADMIN",
+            label: "Superadmin",
+            disabled:
+                user.role !== "ADMIN" ||
+                promotionQuota.superadminCount >= 3 ||
+                promotionQuota.superadminCooldownRemaining !== null,
+            reason:
+                promotionQuota.superadminCooldownRemaining !== null
+                    ? `Cooldown: ${formatMs(promotionQuota.superadminCooldownRemaining)}`
+                    : promotionQuota.superadminCount >= 3
+                      ? "Max 3 superadmins reached"
+                      : undefined,
         },
     ];
 
@@ -222,13 +248,15 @@ export default function UserActionSheet({
         <>
             <Sheet open={open} onOpenChange={onOpenChange}>
                 <SheetContent className="w-full sm:max-w-md overflow-y-auto flex flex-col gap-0 p-0">
-
                     {/* Header */}
                     <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background shrink-0">
                         <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-violet-500/5 pointer-events-none" />
                         <SheetHeader className="relative">
                             <div className="flex items-center gap-3 mb-3">
-                                <InitialAvatar name={name} className="h-10 w-10" />
+                                <InitialAvatar
+                                    name={name}
+                                    className="h-10 w-10"
+                                />
                                 <div className="min-w-0">
                                     <SheetTitle className="text-base leading-tight">
                                         {name}
@@ -250,26 +278,42 @@ export default function UserActionSheet({
 
                     {/* Body */}
                     <div className="flex-1 px-6 py-4 overflow-y-auto space-y-1">
-
                         {/* Suspension reason */}
-                        {user.status === "SUSPENDED" && user.suspensionReason && (
-                            <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 mb-2">
-                                <p className="text-[11px] font-semibold text-orange-400 uppercase tracking-wider mb-1">
-                                    Suspension Reason
-                                </p>
-                                <p className="text-sm text-foreground">
-                                    {user.suspensionReason}
-                                </p>
-                            </div>
-                        )}
+                        {user.status === "SUSPENDED" &&
+                            user.suspensionReason && (
+                                <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 mb-2">
+                                    <p className="text-[11px] font-semibold text-orange-400 uppercase tracking-wider mb-1">
+                                        Suspension Reason
+                                    </p>
+                                    <p className="text-sm text-foreground">
+                                        {user.suspensionReason}
+                                    </p>
+                                </div>
+                            )}
 
                         <SectionLabel label="Personal Information" />
-                        <DetailRow icon={Mail}     label="Email"          value={user.email} />
-                        <DetailRow icon={Phone}    label="Contact Number" value={user.contactNumber} />
+                        <DetailRow
+                            icon={Mail}
+                            label="Email"
+                            value={user.email}
+                        />
+                        <DetailRow
+                            icon={Phone}
+                            label="Contact Number"
+                            value={user.contactNumber}
+                        />
 
                         <SectionLabel label="Employment Information" />
-                        <DetailRow icon={Hash}     label="Employee ID" value={user.employeeId} />
-                        <DetailRow icon={Briefcase} label="Position"   value={user.position} />
+                        <DetailRow
+                            icon={Hash}
+                            label="Employee ID"
+                            value={user.employeeId}
+                        />
+                        <DetailRow
+                            icon={Briefcase}
+                            label="Position"
+                            value={user.position}
+                        />
 
                         {/* Role change — only for non-superadmin users */}
                         {!isSuperadmin && user.status === "APPROVED" && (
@@ -281,7 +325,9 @@ export default function UserActionSheet({
                                         onValueChange={setSelectedRole}
                                     >
                                         <SelectTrigger className="w-full">
-                                            <SelectValue placeholder={`Current: ${user.role}`} />
+                                            <SelectValue
+                                                placeholder={`Current: ${user.role}`}
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {roleOptions.map((opt) => (
@@ -303,35 +349,63 @@ export default function UserActionSheet({
                                         </SelectContent>
                                     </Select>
 
-                                    {selectedRole && selectedRole !== user.role && (
-                                        <Button
-                                            size="sm"
-                                            className="w-full gap-1.5 bg-violet-500/10 text-violet-400 border border-violet-500/25 hover:bg-violet-500/20"
-                                            onClick={() => handle("role", () =>
-                                                onRoleChange(user.id, selectedRole as "TEACHER" | "ADMIN" | "SUPERADMIN")
-                                            )}
-                                            disabled={!!loading}
-                                        >
-                                            {loading === "role"
-                                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                : <ArrowUpCircle className="h-3.5 w-3.5" />
-                                            }
-                                            Change to {selectedRole}
-                                        </Button>
-                                    )}
+                                    {selectedRole &&
+                                        selectedRole !== user.role && (
+                                            <Button
+                                                size="sm"
+                                                className="w-full gap-1.5 bg-violet-500/10 text-violet-400 border border-violet-500/25 hover:bg-violet-500/20"
+                                                onClick={() =>
+                                                    handle("role", () =>
+                                                        onRoleChange(
+                                                            user.id,
+                                                            selectedRole as
+                                                                | "TEACHER"
+                                                                | "ADMIN"
+                                                                | "SUPERADMIN",
+                                                        ),
+                                                    )
+                                                }
+                                                disabled={!!loading}
+                                            >
+                                                {loading === "role" ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <ArrowUpCircle className="h-3.5 w-3.5" />
+                                                )}
+                                                Change to {selectedRole}
+                                            </Button>
+                                        )}
 
                                     {/* Quota info */}
                                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                                         <span>
                                             Teacher→Admin promotions left:{" "}
-                                            <span className={promotionQuota.teacherPromotionsLeft === 0 ? "text-rose-400" : "text-emerald-400"}>
-                                                {promotionQuota.teacherPromotionsLeft}/3
+                                            <span
+                                                className={
+                                                    promotionQuota.teacherPromotionsLeft ===
+                                                    0
+                                                        ? "text-rose-400"
+                                                        : "text-emerald-400"
+                                                }
+                                            >
+                                                {
+                                                    promotionQuota.teacherPromotionsLeft
+                                                }
+                                                /3
                                             </span>
                                         </span>
                                         <span>
                                             Superadmins:{" "}
-                                            <span className={promotionQuota.superadminCount >= 3 ? "text-rose-400" : "text-foreground"}>
-                                                {promotionQuota.superadminCount}/3
+                                            <span
+                                                className={
+                                                    promotionQuota.superadminCount >=
+                                                    3
+                                                        ? "text-rose-400"
+                                                        : "text-foreground"
+                                                }
+                                            >
+                                                {promotionQuota.superadminCount}
+                                                /3
                                             </span>
                                         </span>
                                     </div>
@@ -343,19 +417,23 @@ export default function UserActionSheet({
                     {/* Footer actions */}
                     {!isSuperadmin && (
                         <div className="px-6 py-4 border-t border-border/60 space-y-2 shrink-0">
-
                             {/* PENDING */}
                             {user.status === "PENDING" && (
                                 <div className="flex gap-2">
                                     <Button
                                         className="flex-1 gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
-                                        onClick={() => handle("approve", () => onApprove(user.id))}
+                                        onClick={() =>
+                                            handle("approve", () =>
+                                                onApprove(user.id),
+                                            )
+                                        }
                                         disabled={!!loading}
                                     >
-                                        {loading === "approve"
-                                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                            : <CheckCircle2 className="h-3.5 w-3.5" />
-                                        }
+                                        {loading === "approve" ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                        )}
                                         Approve
                                     </Button>
                                     <Button
@@ -385,13 +463,18 @@ export default function UserActionSheet({
                             {user.status === "SUSPENDED" && (
                                 <Button
                                     className="w-full gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
-                                    onClick={() => handle("unsuspend", () => onUnsuspend(user.id))}
+                                    onClick={() =>
+                                        handle("unsuspend", () =>
+                                            onUnsuspend(user.id),
+                                        )
+                                    }
                                     disabled={!!loading}
                                 >
-                                    {loading === "unsuspend"
-                                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        : <ShieldCheck className="h-3.5 w-3.5" />
-                                    }
+                                    {loading === "unsuspend" ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                        <ShieldCheck className="h-3.5 w-3.5" />
+                                    )}
                                     Unsuspend
                                 </Button>
                             )}
@@ -400,13 +483,18 @@ export default function UserActionSheet({
                             {user.status === "REJECTED" && (
                                 <Button
                                     className="w-full gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
-                                    onClick={() => handle("approve", () => onApprove(user.id))}
+                                    onClick={() =>
+                                        handle("approve", () =>
+                                            onApprove(user.id),
+                                        )
+                                    }
                                     disabled={!!loading}
                                 >
-                                    {loading === "approve"
-                                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        : <CheckCircle2 className="h-3.5 w-3.5" />
-                                    }
+                                    {loading === "approve" ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                    )}
                                     Approve anyway
                                 </Button>
                             )}
@@ -462,7 +550,11 @@ export default function UserActionSheet({
                         </DialogHeader>
                     </div>
                     <DialogFooter className="px-6 py-4 flex gap-2 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => setRejectConfirm(false)}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRejectConfirm(false)}
+                        >
                             Cancel
                         </Button>
                         <Button
@@ -474,7 +566,9 @@ export default function UserActionSheet({
                             }}
                             disabled={!!loading}
                         >
-                            {loading === "reject" && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                            {loading === "reject" && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                            )}
                             Reject
                         </Button>
                     </DialogFooter>
@@ -502,16 +596,24 @@ export default function UserActionSheet({
                                 Delete {name}&apos;s account?
                             </p>
                             <DialogDescription className="mt-1">
-                                This will permanently remove the user and all associated data. This cannot be undone.
+                                This will permanently remove the user and all
+                                associated data. This cannot be undone.
                             </DialogDescription>
                         </DialogHeader>
                     </div>
                     <div className="px-6 py-4 rounded-lg mx-6 mb-2 border border-rose-500/30 bg-rose-500/10 text-sm text-rose-400">
                         <p className="font-semibold mb-0.5">⚠ Warning</p>
-                        <p>All profile data, documents, and records will be permanently removed.</p>
+                        <p>
+                            All profile data, documents, and records will be
+                            permanently removed.
+                        </p>
                     </div>
                     <DialogFooter className="px-6 py-4 flex gap-2 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(false)}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeleteConfirm(false)}
+                        >
                             Cancel
                         </Button>
                         <Button
@@ -523,7 +625,9 @@ export default function UserActionSheet({
                             }}
                             disabled={!!loading}
                         >
-                            {loading === "delete" && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                            {loading === "delete" && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                            )}
                             Delete permanently
                         </Button>
                     </DialogFooter>

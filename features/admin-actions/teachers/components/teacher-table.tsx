@@ -31,7 +31,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AvatarColor from "@/components/avatar-ui-color/avatar-color";
+import AvatarColor from "@/components/ui-elements/avatars/avatar-color";
 
 import {
     Table,

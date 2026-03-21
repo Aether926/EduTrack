@@ -5,8 +5,11 @@ export type CalendarEvent = {
   id: string;
   trainingId: string;
   title: string;
+  type: string | null;
   start: string;
   end: string | null;
+  status: string;
+  result: string | null;
 };
 
 export type AdminCalendarEvent = CalendarEvent & {
@@ -27,6 +30,8 @@ type PdRow = {
 type AttendanceRow = {
   id: string;
   training_id: string | null;
+  status: string | null;
+  result: string | null;
   ProfessionalDevelopment: PdRow | null;
 };
 
@@ -38,17 +43,18 @@ export async function getMyUpcomingEvents(): Promise<CalendarEvent[]> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return [];
 
-  const today = new Date().toISOString().slice(0, 10);
-
   const { data, error } = await supabase
     .from("Attendance")
     .select(
       `
       id,
       training_id,
+      status,
+      result,
       ProfessionalDevelopment:training_id (
         id,
         title,
+        type,
         start_date,
         end_date
       )
@@ -67,11 +73,14 @@ export async function getMyUpcomingEvents(): Promise<CalendarEvent[]> {
         id: String(r.id),
         trainingId: String(r.training_id ?? ""),
         title: pd?.title ?? "(no title)",
+        type: pd?.type ?? null,
         start: pd?.start_date ?? "",
         end: pd?.end_date ?? null,
+        status: r.status ?? "",
+        result: r.result ?? null,
       };
     })
-    .filter((e) => e.start && e.start >= today);
+    .filter((e) => !!e.start);
 }
 
 // ── Admin calendar (all trainings + enrolled teachers) ────────────────────────
@@ -143,6 +152,8 @@ export async function getAllUpcomingEvents(): Promise<AdminCalendarEvent[]> {
         type: pd.type ?? null,
         start: pd.start_date,
         end: pd.end_date ?? null,
+        status: "",
+        result: null,
         teachers: teacher ? [teacher] : [],
       });
     }

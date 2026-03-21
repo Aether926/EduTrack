@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronLeft,
@@ -14,6 +14,8 @@ import {
 import type { AdminCalendarEvent } from "@/lib/database/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TypeBadge } from "@/components/ui-elements/badges/type";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -47,6 +49,122 @@ const MONTHS_SHORT = [
     "Dec",
 ];
 
+const YEAR_RANGE_BACK = 10;
+const YEAR_RANGE_FORWARD = 5;
+
+// ── Picker overlay ─────────────────────────────────────────────────────────────
+
+function PickerOverlay({
+    viewYear,
+    viewMonth,
+    pickerYear,
+    today,
+    setPickerYear,
+    selectMonthYear,
+}: {
+    viewYear: number;
+    viewMonth: number;
+    pickerYear: number;
+    today: Date;
+    setPickerYear: React.Dispatch<React.SetStateAction<number>>;
+    selectMonthYear: (month: number) => void;
+}) {
+    const currentYear = today.getFullYear();
+    const years = Array.from(
+        { length: YEAR_RANGE_BACK + YEAR_RANGE_FORWARD + 1 },
+        (_, i) => currentYear - YEAR_RANGE_BACK + i,
+    );
+    const yearListRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const el = yearListRef.current?.querySelector(
+            `[data-year="${pickerYear}"]`,
+        ) as HTMLElement | null;
+        if (el) el.scrollIntoView({ block: "center", behavior: "instant" });
+    }, [pickerYear]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-x-0 top-[2.75rem] z-20 mx-3 rounded-lg border bg-card shadow-lg p-3"
+        >
+            <div className="flex gap-3">
+                {/* Year column — scrollable */}
+                <div className="flex flex-col gap-0.5 w-16 shrink-0">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 text-center">
+                        Year
+                    </p>
+                    <div
+                        ref={yearListRef}
+                        className="overflow-y-auto max-h-[168px] flex flex-col gap-0.5"
+                        style={{ scrollbarWidth: "none" }}
+                    >
+                        {years.map((y) => {
+                            const isPickerYear = y === pickerYear;
+                            const isViewYear = y === viewYear;
+                            const isTodayYear = y === currentYear;
+                            return (
+                                <button
+                                    key={y}
+                                    data-year={y}
+                                    onClick={() => setPickerYear(y)}
+                                    className={[
+                                        "rounded-md py-1.5 text-sm w-full transition-colors",
+                                        isPickerYear
+                                            ? "bg-blue-500/20 text-blue-300 font-semibold"
+                                            : isViewYear
+                                              ? "bg-muted/50 text-foreground font-semibold"
+                                              : isTodayYear
+                                                ? "border border-blue-500/30 text-blue-300 hover:bg-accent"
+                                                : "hover:bg-accent text-foreground/80",
+                                    ].join(" ")}
+                                >
+                                    {y}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+                {/* Divider */}
+                <div className="w-px bg-border/40 self-stretch" />
+                {/* Month grid */}
+                <div className="flex-1">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 text-center">
+                        Month
+                    </p>
+                    <div className="grid grid-cols-3 gap-1">
+                        {MONTHS_SHORT.map((m, i) => {
+                            const isCurrent =
+                                i === viewMonth && pickerYear === viewYear;
+                            const isNow =
+                                i === today.getMonth() &&
+                                pickerYear === today.getFullYear();
+                            return (
+                                <button
+                                    key={m}
+                                    onClick={() => selectMonthYear(i)}
+                                    className={[
+                                        "rounded-md py-2 text-sm transition-colors",
+                                        isCurrent
+                                            ? "bg-blue-500/20 text-blue-300 font-semibold"
+                                            : isNow
+                                              ? "border border-amber-500/40 text-amber-300 font-semibold hover:bg-accent"
+                                              : "hover:bg-accent text-foreground/80",
+                                    ].join(" ")}
+                                >
+                                    {m}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function pad(n: number) {
@@ -70,93 +188,6 @@ function formatDisplayDate(key: string) {
     return `${MONTHS[Number(m) - 1]} ${Number(d)}, ${y}`;
 }
 
-// ── Avatar colour (by first letter, matching InitialAvatar component) ──────────
-
-const LETTER_COLOR_MAP: { letters: string[]; bg: string; text: string }[] = [
-    {
-        letters: ["A", "B", "C", "D"],
-        bg: "bg-violet-500/20",
-        text: "text-violet-300",
-    },
-    {
-        letters: ["E", "F", "G", "H"],
-        bg: "bg-blue-500/20",
-        text: "text-blue-300",
-    },
-    {
-        letters: ["I", "J", "K", "L"],
-        bg: "bg-teal-500/20",
-        text: "text-teal-300",
-    },
-    {
-        letters: ["M", "N", "O", "P"],
-        bg: "bg-emerald-500/20",
-        text: "text-emerald-300",
-    },
-    {
-        letters: ["Q", "R", "S", "T"],
-        bg: "bg-orange-500/20",
-        text: "text-orange-300",
-    },
-    { letters: ["U", "V", "W"], bg: "bg-red-500/20", text: "text-red-300" },
-    { letters: ["X", "Y", "Z"], bg: "bg-pink-500/20", text: "text-pink-300" },
-];
-const LETTER_COLORS: Record<string, { bg: string; text: string }> =
-    Object.fromEntries(
-        LETTER_COLOR_MAP.flatMap(({ letters, bg, text }) =>
-            letters.map((l) => [l, { bg, text }]),
-        ),
-    );
-function getAvatarColor(name: string) {
-    const first = name.trim()[0]?.toUpperCase() ?? "";
-    return (
-        LETTER_COLORS[first] ?? {
-            bg: "bg-muted",
-            text: "text-muted-foreground",
-        }
-    );
-}
-function initials(name: string) {
-    return name
-        .trim()
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase();
-}
-
-// ── Avatar ─────────────────────────────────────────────────────────────────────
-
-function Avatar({
-    teacher,
-}: {
-    teacher: AdminCalendarEvent["teachers"][number];
-}) {
-    const color = getAvatarColor(teacher.name);
-    return (
-        <div
-            title={teacher.name}
-            className="h-6 w-6 rounded-full border-[1.5px] border-card overflow-hidden shrink-0"
-        >
-            {teacher.avatarUrl ? (
-                <img
-                    src={teacher.avatarUrl}
-                    alt={teacher.name}
-                    className="h-full w-full object-cover"
-                />
-            ) : (
-                <div
-                    className={`h-full w-full flex items-center justify-center text-[9px] font-bold uppercase ${color.bg} ${color.text}`}
-                >
-                    {initials(teacher.name)}
-                </div>
-            )}
-        </div>
-    );
-}
-
 // ── Main export ────────────────────────────────────────────────────────────────
 
 export default function AdminTrainingCalendar({
@@ -171,24 +202,116 @@ export default function AdminTrainingCalendar({
         today.getDate(),
     );
 
-    const [selectedKey, setSelectedKey] = useState(todayKey);
+    // Stable events reference — eventIds is a plain string so exhaustive-deps is satisfied.
+    const eventIds = events.map((e) => e.id).join(",");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const stableEvents = useMemo(() => events, [eventIds]);
+
+    // Auto-select: prefer today if it has events, otherwise nearest upcoming
+    // event date, otherwise first event date, otherwise today.
+    const defaultSelectedKey = useMemo(() => {
+        const keys = stableEvents
+            .map((e) => {
+                const d = parseDateOnlyToLocal(e.start);
+                if (!d) return null;
+                return localKey(d.getFullYear(), d.getMonth(), d.getDate());
+            })
+            .filter(Boolean) as string[];
+        const unique = Array.from(new Set(keys)).sort();
+        if (unique.includes(todayKey)) return todayKey;
+        const upcoming = unique.find((k) => k >= todayKey);
+        return upcoming ?? unique[0] ?? todayKey;
+    }, [stableEvents, todayKey]);
+
+    const [selectedKey, setSelectedKey] = useState(defaultSelectedKey);
     const [viewYear, setViewYear] = useState(today.getFullYear());
     const [viewMonth, setViewMonth] = useState(today.getMonth());
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerYear, setPickerYear] = useState(today.getFullYear());
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+
+    // Detect dark mode (class-based, e.g. next-themes)
+    const [isDark, setIsDark] = React.useState(
+        () =>
+            typeof document !== "undefined" &&
+            document.documentElement.classList.contains("dark"),
+    );
+    React.useEffect(() => {
+        const check = () =>
+            setIsDark(document.documentElement.classList.contains("dark"));
+        const observer = new MutationObserver(check);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        return () => observer.disconnect();
+    }, []);
 
     const byDay = useMemo(() => {
         const map = new Map<string, AdminCalendarEvent[]>();
-        for (const e of events) {
+        for (const e of stableEvents) {
             const d = parseDateOnlyToLocal(e.start);
             if (!d) continue;
             const key = localKey(d.getFullYear(), d.getMonth(), d.getDate());
             map.set(key, [...(map.get(key) ?? []), e]);
         }
         return map;
-    }, [events]);
+    }, [stableEvents]);
+
+    const { highlightRange, rangeStart, rangeEnd, isRangeUpcoming } =
+        useMemo(() => {
+            if (!selectedEventId)
+                return {
+                    highlightRange: new Set<string>(),
+                    rangeStart: null,
+                    rangeEnd: null,
+                    isRangeUpcoming: false,
+                };
+            const event = stableEvents.find((e) => e.id === selectedEventId);
+            if (!event?.start)
+                return {
+                    highlightRange: new Set<string>(),
+                    rangeStart: null,
+                    rangeEnd: null,
+                    isRangeUpcoming: false,
+                };
+            const range = new Set<string>();
+            const start = parseDateOnlyToLocal(event.start);
+            const end = event.end ? parseDateOnlyToLocal(event.end) : start;
+            if (!start)
+                return {
+                    highlightRange: range,
+                    rangeStart: null,
+                    rangeEnd: null,
+                    isRangeUpcoming: false,
+                };
+            const cur = new Date(start);
+            const last = end ?? start;
+            while (cur <= last) {
+                range.add(
+                    localKey(cur.getFullYear(), cur.getMonth(), cur.getDate()),
+                );
+                cur.setDate(cur.getDate() + 1);
+            }
+            const sorted = Array.from(range).sort();
+            return {
+                highlightRange: range,
+                rangeStart: sorted[0] ?? null,
+                rangeEnd: sorted[sorted.length - 1] ?? null,
+                isRangeUpcoming: event.start > todayKey,
+            };
+        }, [selectedEventId, stableEvents, todayKey]);
 
     const selectedEvents = byDay.get(selectedKey) ?? [];
+
+    // Auto-highlight: 1 event → select it automatically; multiple → let user click.
+    const prevSelectedKeyRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (prevSelectedKeyRef.current === selectedKey) return;
+        prevSelectedKeyRef.current = selectedKey;
+        const eventsOnDay = byDay.get(selectedKey) ?? [];
+        setSelectedEventId(eventsOnDay.length === 1 ? eventsOnDay[0].id : null);
+    }, [selectedKey, byDay]);
 
     const prevMonth = () => {
         if (viewMonth === 0) {
@@ -203,6 +326,13 @@ export default function AdminTrainingCalendar({
         } else setViewMonth((m) => m + 1);
     };
 
+    const selectMonthYear = (month: number) => {
+        setSelectedEventId(null);
+        setViewMonth(month);
+        setViewYear(pickerYear);
+        setPickerOpen(false);
+    };
+
     const totalDays = new Date(viewYear, viewMonth + 1, 0).getDate();
     const startDay = new Date(viewYear, viewMonth, 1).getDay();
     const cells: (number | null)[] = [
@@ -212,22 +342,22 @@ export default function AdminTrainingCalendar({
     while (cells.length % 7 !== 0) cells.push(null);
 
     return (
-        <div className="rounded-xl border border-orange-500/20 bg-card/80 overflow-hidden">
-            {/* accent bar */}
-            <div className="h-0.5 w-full bg-gradient-to-r from-orange-500/60 to-orange-500/10" />
+        <div className="rounded-xl border border-border/60 bg-card/80 overflow-hidden">
+            {/* accent bar — subtle */}
+            <div className="h-px w-full bg-border/60" />
 
             {/* header */}
             <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b border-border/40">
                 <div className="flex items-center gap-2">
-                    <div className="rounded-lg p-1.5 bg-orange-500/10">
-                        <CalendarDays className="h-3.5 w-3.5 text-orange-400" />
+                    <div className="rounded-lg p-1.5 bg-blue-500/10">
+                        <CalendarDays className="h-3.5 w-3.5 text-blue-400" />
                     </div>
                     <div>
                         <p className="text-sm font-semibold">
                             Training Calendar
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            Tap a date to see assigned teachers
+                            Tap a date · tap an event to highlight its range
                         </p>
                     </div>
                 </div>
@@ -236,7 +366,7 @@ export default function AdminTrainingCalendar({
                 </Badge>
             </div>
 
-            {/* body — calendar left, events right */}
+            {/* body — events left, calendar right */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] divide-y lg:divide-y-0 lg:divide-x divide-border/40">
                 {/* ── Event panel ── */}
                 <div className="p-4 order-2 lg:order-1">
@@ -290,40 +420,28 @@ export default function AdminTrainingCalendar({
                                     const isWorkshop = eType === "workshop";
                                     const isWebinar = eType === "webinar";
                                     const isConference = eType === "conference";
+                                    const isUpcoming = e.start > todayKey;
 
-                                    // stripe only keeps type colour — everything else is neutral orange
+                                    // Left stripe — by type
                                     const stripeClass = isSeminar
-                                        ? "bg-violet-400/50"
+                                        ? "bg-teal-400/50"
                                         : isWorkshop
-                                          ? "bg-orange-400/50"
+                                          ? "bg-amber-400/50"
                                           : isWebinar
                                             ? "bg-sky-400/50"
                                             : isConference
                                               ? "bg-pink-400/50"
-                                              : "bg-teal-400/50";
+                                              : "bg-violet-400/50"; // training default
 
                                     const countBubble = isSeminar
-                                        ? "bg-violet-500/10 border-violet-500/20 text-violet-400"
+                                        ? "bg-teal-500/10 border-teal-500/20 text-teal-400"
                                         : isWorkshop
-                                          ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
+                                          ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
                                           : isWebinar
                                             ? "bg-sky-500/10 border-sky-500/20 text-sky-400"
                                             : isConference
                                               ? "bg-pink-500/10 border-pink-500/20 text-pink-400"
-                                              : "bg-teal-500/10 border-teal-500/20 text-teal-400";
-
-                                    const typeBadge = isSeminar
-                                        ? "bg-violet-500/15 text-violet-400 border-violet-500/30"
-                                        : isWorkshop
-                                          ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
-                                          : isWebinar
-                                            ? "bg-sky-500/15 text-sky-400 border-sky-500/30"
-                                            : isConference
-                                              ? "bg-pink-500/15 text-pink-400 border-pink-500/30"
-                                              : "bg-teal-500/15 text-teal-400 border-teal-500/30";
-
-                                    const cardBorder =
-                                        "border-border/50 hover:bg-accent/20";
+                                              : "bg-violet-500/10 border-violet-500/20 text-violet-400";
 
                                     return (
                                         <motion.div
@@ -337,27 +455,33 @@ export default function AdminTrainingCalendar({
                                                     0.2,
                                                 ),
                                             }}
-                                            className={`rounded-lg border bg-background/50 overflow-hidden transition-colors ${cardBorder}`}
+                                            onClick={() =>
+                                                setSelectedEventId(
+                                                    selectedEventId === e.id
+                                                        ? null
+                                                        : e.id,
+                                                )
+                                            }
+                                            className={`rounded-lg border bg-background/50 overflow-hidden transition-colors cursor-pointer hover:bg-accent/20 ${selectedEventId === e.id ? (isSeminar ? "ring-1 ring-teal-500/50" : isWorkshop ? "ring-1 ring-amber-500/50" : isWebinar ? "ring-1 ring-sky-500/50" : isConference ? "ring-1 ring-pink-500/50" : "ring-1 ring-violet-500/50") : ""} ${isUpcoming ? "border-border/50" : "border-border/30 opacity-60"}`}
                                         >
-                                            {/* colored left stripe */}
                                             <div className="flex">
                                                 <div
                                                     className={`w-1 shrink-0 ${stripeClass}`}
                                                 />
                                                 <div className="flex-1 p-3">
-                                                    {/* md+: title and badges inline | mobile: title then date+badges below */}
                                                     <div className="flex items-start justify-between gap-2">
                                                         <p className="text-sm font-medium leading-snug">
                                                             {e.title}
                                                         </p>
-                                                        {/* badges — visible on md+ only */}
+                                                        {/* badges — md+ */}
                                                         <div className="hidden md:flex items-center gap-1.5 shrink-0">
-                                                            <span
-                                                                className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${typeBadge}`}
-                                                            >
-                                                                {e.type ??
-                                                                    "Training"}
-                                                            </span>
+                                                            <TypeBadge
+                                                                type={
+                                                                    e.type ??
+                                                                    "Training"
+                                                                }
+                                                                size="xs"
+                                                            />
                                                             <div
                                                                 className={`flex items-center gap-1 rounded-full border px-2 py-0.5 ${countBubble}`}
                                                             >
@@ -372,7 +496,8 @@ export default function AdminTrainingCalendar({
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    {/* date + badges row (badges visible on mobile only) */}
+
+                                                    {/* date + badges row (mobile badges) */}
                                                     <div className="flex items-center justify-between gap-2 mt-1">
                                                         <p className="text-[11px] text-muted-foreground">
                                                             {e.start}
@@ -381,13 +506,23 @@ export default function AdminTrainingCalendar({
                                                                 ? ` → ${e.end}`
                                                                 : ""}
                                                         </p>
+                                                        <span
+                                                            className={
+                                                                "text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground"
+                                                            }
+                                                        >
+                                                            {isUpcoming
+                                                                ? "Upcoming"
+                                                                : "Past"}
+                                                        </span>
                                                         <div className="flex md:hidden items-center gap-1.5 shrink-0">
-                                                            <span
-                                                                className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${typeBadge}`}
-                                                            >
-                                                                {e.type ??
-                                                                    "Training"}
-                                                            </span>
+                                                            <TypeBadge
+                                                                type={
+                                                                    e.type ??
+                                                                    "Training"
+                                                                }
+                                                                size="xs"
+                                                            />
                                                             <div
                                                                 className={`flex items-center gap-1 rounded-full border px-2 py-0.5 ${countBubble}`}
                                                             >
@@ -410,7 +545,6 @@ export default function AdminTrainingCalendar({
                                                         </p>
                                                     ) : (
                                                         <div className="mt-2">
-                                                            {/* avatar stack */}
                                                             <div className="flex items-center gap-2 mb-1.5">
                                                                 <div className="flex -space-x-1.5">
                                                                     {e.teachers
@@ -422,13 +556,17 @@ export default function AdminTrainingCalendar({
                                                                             (
                                                                                 t,
                                                                             ) => (
-                                                                                <Avatar
+                                                                                <InitialAvatar
                                                                                     key={
                                                                                         t.id
                                                                                     }
-                                                                                    teacher={
-                                                                                        t
+                                                                                    name={
+                                                                                        t.name
                                                                                     }
+                                                                                    src={
+                                                                                        t.avatarUrl
+                                                                                    }
+                                                                                    className="h-6 w-6 text-[9px]"
                                                                                 />
                                                                             ),
                                                                         )}
@@ -458,7 +596,6 @@ export default function AdminTrainingCalendar({
                                                                         : ""}
                                                                 </span>
                                                             </div>
-                                                            {/* name list */}
                                                             <div className="space-y-1">
                                                                 {e.teachers.map(
                                                                     (t) => (
@@ -468,10 +605,14 @@ export default function AdminTrainingCalendar({
                                                                             }
                                                                             className="flex items-center gap-2"
                                                                         >
-                                                                            <Avatar
-                                                                                teacher={
-                                                                                    t
+                                                                            <InitialAvatar
+                                                                                name={
+                                                                                    t.name
                                                                                 }
+                                                                                src={
+                                                                                    t.avatarUrl
+                                                                                }
+                                                                                className="h-6 w-6 text-[9px]"
                                                                             />
                                                                             <span className="text-xs text-foreground/70 truncate">
                                                                                 {
@@ -534,70 +675,14 @@ export default function AdminTrainingCalendar({
                         {/* month/year picker */}
                         <AnimatePresence>
                             {pickerOpen && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -6 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -6 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="absolute inset-x-0 top-[2.75rem] z-10 mx-3 rounded-lg border bg-card shadow-lg p-3"
-                                >
-                                    <div className="flex items-center justify-between mb-3">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() =>
-                                                setPickerYear((y) => y - 1)
-                                            }
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <span className="text-sm font-semibold">
-                                            {pickerYear}
-                                        </span>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() =>
-                                                setPickerYear((y) => y + 1)
-                                            }
-                                        >
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-1">
-                                        {MONTHS_SHORT.map((m, i) => {
-                                            const isCurrent =
-                                                i === viewMonth &&
-                                                pickerYear === viewYear;
-                                            const isNow =
-                                                i === today.getMonth() &&
-                                                pickerYear ===
-                                                    today.getFullYear();
-                                            return (
-                                                <button
-                                                    key={m}
-                                                    onClick={() => {
-                                                        setViewMonth(i);
-                                                        setViewYear(pickerYear);
-                                                        setPickerOpen(false);
-                                                    }}
-                                                    className={[
-                                                        "rounded-md py-2 text-sm transition-colors",
-                                                        isCurrent
-                                                            ? "bg-orange-600/50 text-orange-100 font-semibold"
-                                                            : isNow
-                                                              ? "border border-orange-500/40 font-semibold hover:bg-accent"
-                                                              : "hover:bg-accent text-foreground",
-                                                    ].join(" ")}
-                                                >
-                                                    {m}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </motion.div>
+                                <PickerOverlay
+                                    viewYear={viewYear}
+                                    viewMonth={viewMonth}
+                                    pickerYear={pickerYear}
+                                    today={today}
+                                    setPickerYear={setPickerYear}
+                                    selectMonthYear={selectMonthYear}
+                                />
                             )}
                         </AnimatePresence>
 
@@ -614,15 +699,26 @@ export default function AdminTrainingCalendar({
                         </div>
 
                         {/* day cells */}
-                        <div className="grid grid-cols-7 gap-y-0.5">
+                        <div className="grid grid-cols-7">
                             {cells.map((day, i) => {
                                 if (day === null) return <div key={`e-${i}`} />;
                                 const key = localKey(viewYear, viewMonth, day);
                                 const isToday = key === todayKey;
                                 const isSelected = key === selectedKey;
+                                const isRangeStart =
+                                    !!rangeStart && key === rangeStart;
+                                const isRangeEnd =
+                                    !!rangeEnd &&
+                                    key === rangeEnd &&
+                                    rangeEnd !== rangeStart;
+                                const isInRange =
+                                    highlightRange.has(key) &&
+                                    !isRangeStart &&
+                                    !isRangeEnd;
                                 const eventsOnDay = byDay.get(key);
                                 const hasEvent = !!eventsOnDay;
                                 const eventCount = eventsOnDay?.length ?? 0;
+                                const isPast = key < todayKey;
                                 const teacherCount = eventsOnDay
                                     ? new Set(
                                           eventsOnDay.flatMap((e) =>
@@ -631,52 +727,99 @@ export default function AdminTrainingCalendar({
                                       ).size
                                     : 0;
 
+                                const isSingleDayRange =
+                                    isRangeStart && isRangeEnd;
+                                const bandRgb = isRangeUpcoming
+                                    ? "245,158,11"
+                                    : "59,130,246";
+                                const bandAlpha = isDark ? "0.45" : "0.60";
+                                const bandStyle: React.CSSProperties =
+                                    isSingleDayRange
+                                        ? {}
+                                        : isRangeStart
+                                          ? {
+                                                background: `linear-gradient(to right, transparent 50%, rgba(${bandRgb},${bandAlpha}) 50%)`,
+                                            }
+                                          : isRangeEnd
+                                            ? {
+                                                  background: `linear-gradient(to left, transparent 50%, rgba(${bandRgb},${bandAlpha}) 50%)`,
+                                              }
+                                            : isInRange
+                                              ? {
+                                                    background: `rgba(${bandRgb},${bandAlpha})`,
+                                                }
+                                              : {};
+
                                 return (
-                                    <button
+                                    <div
                                         key={key}
-                                        onClick={() => setSelectedKey(key)}
-                                        className={[
-                                            "relative mx-auto flex h-10 w-10 flex-col items-center justify-center rounded-md text-sm transition-colors",
-                                            isSelected
-                                                ? "bg-orange-500/80 text-white font-semibold shadow-sm"
-                                                : isToday
-                                                  ? "border border-orange-500/50 font-semibold text-orange-300 hover:bg-accent"
-                                                  : hasEvent
-                                                    ? "font-semibold hover:bg-accent"
-                                                    : "hover:bg-accent text-foreground/80",
-                                        ]
-                                            .filter(Boolean)
-                                            .join(" ")}
+                                        style={bandStyle}
+                                        className="relative flex items-center justify-center"
                                     >
-                                        <span className="leading-none">
-                                            {day}
-                                        </span>
-                                        {/* dot for training */}
-                                        {hasEvent && (
-                                            <span
-                                                className={[
-                                                    "absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full",
-                                                    isSelected
-                                                        ? "bg-white/80"
-                                                        : "bg-orange-400/70",
-                                                ].join(" ")}
-                                            />
-                                        )}
-                                        {/* event count badge (multiple events) */}
-                                        {eventCount > 1 && !isSelected && (
-                                            <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-3.5 rounded-full bg-orange-500 text-white text-[8px] font-bold flex items-center justify-center px-0.5">
-                                                {eventCount}
+                                        <button
+                                            onClick={() => setSelectedKey(key)}
+                                            className={[
+                                                "relative flex h-10 w-10 flex-col items-center justify-center rounded-full text-sm transition-colors",
+                                                isRangeStart || isRangeEnd
+                                                    ? isRangeUpcoming
+                                                        ? "bg-amber-500 text-white font-semibold shadow-sm"
+                                                        : "bg-blue-500 text-white font-semibold shadow-sm"
+                                                    : isInRange
+                                                      ? isRangeUpcoming
+                                                          ? isDark
+                                                              ? "text-amber-300 font-medium hover:bg-amber-500/30"
+                                                              : "text-amber-100 hover:bg-amber-500/30"
+                                                          : isDark
+                                                            ? "text-blue-300 font-medium hover:bg-blue-500/30"
+                                                            : "text-blue-100 hover:bg-blue-500/30"
+                                                      : isSelected
+                                                        ? "bg-blue-500/20 text-blue-300 font-semibold shadow-sm"
+                                                        : isToday
+                                                          ? isDark
+                                                              ? "border border-blue-500/50 text-blue-300 font-semibold hover:bg-accent"
+                                                              : "border border-blue-500/80 text-blue-500/80 font-semibold hover:bg-accent"
+                                                          : hasEvent
+                                                            ? "font-semibold hover:bg-accent"
+                                                            : "hover:bg-accent text-foreground/80",
+                                            ]
+                                                .filter(Boolean)
+                                                .join(" ")}
+                                        >
+                                            <span className="leading-none">
+                                                {day}
                                             </span>
-                                        )}
-                                        {/* teacher count bubble (single event) */}
-                                        {eventCount === 1 &&
-                                            teacherCount > 0 &&
-                                            !isSelected && (
-                                                <span className="absolute -top-0.5 -right-0.5 h-3.5 min-w-3.5 rounded-full bg-orange-500/70 text-white text-[8px] font-bold flex items-center justify-center px-0.5">
-                                                    {teacherCount}
-                                                </span>
+                                            {/* dot */}
+                                            {hasEvent && (
+                                                <span
+                                                    className={[
+                                                        "absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full",
+                                                        isSelected ||
+                                                        isRangeStart ||
+                                                        isRangeEnd
+                                                            ? "bg-white/50"
+                                                            : key > todayKey
+                                                              ? "bg-amber-400/70"
+                                                              : "bg-blue-400/70",
+                                                    ].join(" ")}
+                                                />
                                             )}
-                                    </button>
+                                            {/* count / teacher badge */}
+                                            {(eventCount > 1 ||
+                                                (eventCount === 1 &&
+                                                    teacherCount > 0)) &&
+                                                !isSelected &&
+                                                !isRangeStart &&
+                                                !isRangeEnd && (
+                                                    <span
+                                                        className={`absolute -top-0.5 -right-0.5 h-4 min-w-4 rounded-full text-[9px] font-bold flex items-center justify-center px-0.5 ${key > todayKey ? (isDark ? "bg-amber-500 text-white" : "bg-amber-500/80 text-white") : isDark ? "bg-blue-500 text-white" : "bg-blue-500/80 text-white"}`}
+                                                    >
+                                                        {eventCount > 1
+                                                            ? eventCount
+                                                            : teacherCount}
+                                                    </span>
+                                                )}
+                                        </button>
+                                    </div>
                                 );
                             })}
                         </div>

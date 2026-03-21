@@ -21,8 +21,9 @@ import { GraduationCap } from "lucide-react";
 type MonthPoint = { month: string; hours: number };
 type View = "week" | "month" | "year";
 
-const ACTIVE = "#38bdf8";
-const DIM = "#38bdf828";
+// Blue-400 — soft info color, matches the stat card "info" group
+const ACTIVE = "#60a5fa";
+const DIM = "#60a5fa18"; // same hue, very faint for inactive bars
 
 const chartConfig = {
     hours: { label: "Hours", color: ACTIVE },
@@ -62,11 +63,9 @@ const VIEW_LABEL: Record<View, string> = {
     year: "All time by year",
 };
 
-// Show at most ~6 labels regardless of data length
 function getInterval(dataLength: number, view: View) {
-    if (view === "year") return 0; // always few bars
-    if (view === "week") return Math.ceil(dataLength / 6);
-    return Math.ceil(dataLength / 6); // month: show ~6 ticks
+    if (view === "year") return 0;
+    return Math.ceil(dataLength / 6);
 }
 
 export default function TrainingHoursChart({
@@ -90,15 +89,12 @@ export default function TrainingHoursChart({
     const xInterval = getInterval(data.length, view);
 
     return (
-        <Card className="bg-card/80 border-border/50">
+        <Card className="bg-card/80 border-border/60">
             <CardHeader className="pb-2 px-5 pt-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="space-y-0.5">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <GraduationCap
-                                className="h-4 w-4"
-                                style={{ color: ACTIVE }}
-                            />
+                            <GraduationCap className="h-4 w-4 text-blue-400" />
                             Training Hours Rendered
                         </CardTitle>
                         <CardDescription className="text-sm">

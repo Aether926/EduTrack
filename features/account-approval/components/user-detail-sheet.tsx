@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { PendingUser } from "../types";
 import { fullName, fmtDate } from "../lib/utils";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import {
     CheckCircle2,
     XCircle,
@@ -168,12 +168,14 @@ export default function UserDetailSheet({
                         label="Date of Original Appointment"
                         value={
                             user.dateOfOriginalAppointment
-                                ? new Date(user.dateOfOriginalAppointment + "T00:00:00")
-                                      .toLocaleDateString("en-PH", {
-                                          year: "numeric",
-                                          month: "long",
-                                          day: "numeric",
-                                      })
+                                ? new Date(
+                                      user.dateOfOriginalAppointment +
+                                          "T00:00:00",
+                                  ).toLocaleDateString("en-PH", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                  })
                                 : null
                         }
                     />
@@ -182,12 +184,14 @@ export default function UserDetailSheet({
                         label="Date of Original Deployment"
                         value={
                             user.dateOfOriginalDeployment
-                                ? new Date(user.dateOfOriginalDeployment + "T00:00:00")
-                                      .toLocaleDateString("en-PH", {
-                                          year: "numeric",
-                                          month: "long",
-                                          day: "numeric",
-                                      })
+                                ? new Date(
+                                      user.dateOfOriginalDeployment +
+                                          "T00:00:00",
+                                  ).toLocaleDateString("en-PH", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                  })
                                 : null
                         }
                     />

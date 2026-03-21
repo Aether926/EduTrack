@@ -31,7 +31,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import { Search, Users } from "lucide-react";
 import { useEffect } from "react";
 
@@ -44,22 +44,28 @@ function fullName(u: SuperadminUser) {
 function fmtDate(dt: string) {
     try {
         return new Date(dt).toLocaleDateString("en-PH", {
-            year: "numeric", month: "short", day: "numeric",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
         });
-    } catch { return dt; }
+    } catch {
+        return dt;
+    }
 }
 
 // ── Status badge ───────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
     const styles: Record<string, string> = {
-        APPROVED:  "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-        PENDING:   "bg-amber-500/15 text-amber-400 border-amber-500/30",
-        REJECTED:  "bg-rose-500/15 text-rose-400 border-rose-500/30",
+        APPROVED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+        PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+        REJECTED: "bg-rose-500/15 text-rose-400 border-rose-500/30",
         SUSPENDED: "bg-orange-500/15 text-orange-400 border-orange-500/30",
     };
     return (
-        <Badge className={`inline-flex items-center gap-1.5 ${styles[status.toUpperCase()] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30"} hover:opacity-100`}>
+        <Badge
+            className={`inline-flex items-center gap-1.5 ${styles[status.toUpperCase()] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30"} hover:opacity-100`}
+        >
             <span className="h-1.5 w-1.5 rounded-full bg-current" />
             {status}
         </Badge>
@@ -70,12 +76,14 @@ function StatusBadge({ status }: { status: string }) {
 
 function RoleChip({ role }: { role: string }) {
     const styles: Record<string, string> = {
-        TEACHER:    "bg-teal-500/10 text-teal-400 border-teal-500/40",
-        ADMIN:      "bg-violet-500/10 text-violet-400 border-violet-500/40",
+        TEACHER: "bg-teal-500/10 text-teal-400 border-teal-500/40",
+        ADMIN: "bg-violet-500/10 text-violet-400 border-violet-500/40",
         SUPERADMIN: "bg-rose-500/10 text-rose-400 border-rose-500/40",
     };
     return (
-        <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${styles[role] ?? "bg-slate-500/10 text-slate-400 border-slate-500/40"}`}>
+        <span
+            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${styles[role] ?? "bg-slate-500/10 text-slate-400 border-slate-500/40"}`}
+        >
             {role}
         </span>
     );
@@ -84,19 +92,29 @@ function RoleChip({ role }: { role: string }) {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function UserManagementTable({ actorId }: { actorId: string }) {
-    const { users, loading, approve, reject, suspend, unsuspend, deleteUser, changeRole } =
-        useSuperadminUsers();
+    const {
+        users,
+        loading,
+        approve,
+        reject,
+        suspend,
+        unsuspend,
+        deleteUser,
+        changeRole,
+    } = useSuperadminUsers();
 
-    const [q, setQ]                       = useState("");
-    const [roleFilter, setRoleFilter]     = useState("ALL");
+    const [q, setQ] = useState("");
+    const [roleFilter, setRoleFilter] = useState("ALL");
     const [statusFilter, setStatusFilter] = useState("ALL");
-    const [selectedUser, setSelectedUser] = useState<SuperadminUser | null>(null);
-    const [sheetOpen, setSheetOpen]       = useState(false);
-    const [quota, setQuota]               = useState({
-        teacherPromotionsUsed:       0,
-        teacherPromotionsLeft:       3,
+    const [selectedUser, setSelectedUser] = useState<SuperadminUser | null>(
+        null,
+    );
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [quota, setQuota] = useState({
+        teacherPromotionsUsed: 0,
+        teacherPromotionsLeft: 3,
         superadminCooldownRemaining: null as number | null,
-        superadminCount:             0,
+        superadminCount: 0,
     });
 
     // Fetch promotion quota
@@ -107,13 +125,15 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
     const filtered = useMemo(() => {
         const s = q.trim().toLowerCase();
         return users.filter((u) => {
-            const matchesSearch = !s ||
+            const matchesSearch =
+                !s ||
                 fullName(u).toLowerCase().includes(s) ||
                 (u.email ?? "").toLowerCase().includes(s) ||
                 (u.employeeId ?? "").toLowerCase().includes(s);
 
-            const matchesRole   = roleFilter   === "ALL" || u.role   === roleFilter;
-            const matchesStatus = statusFilter === "ALL" || u.status === statusFilter;
+            const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+            const matchesStatus =
+                statusFilter === "ALL" || u.status === statusFilter;
 
             return matchesSearch && matchesRole && matchesStatus;
         });
@@ -129,7 +149,9 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                             User Management
                         </CardTitle>
                         <CardDescription>
-                            {filtered.length} result{filtered.length === 1 ? "" : "s"} • {users.length} total users
+                            {filtered.length} result
+                            {filtered.length === 1 ? "" : "s"} • {users.length}{" "}
+                            total users
                         </CardDescription>
                     </div>
 
@@ -147,7 +169,10 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                         </div>
 
                         {/* Role filter */}
-                        <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <Select
+                            value={roleFilter}
+                            onValueChange={setRoleFilter}
+                        >
                             <SelectTrigger className="h-8 text-sm w-[130px]">
                                 <SelectValue />
                             </SelectTrigger>
@@ -155,21 +180,34 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                                 <SelectItem value="ALL">All Roles</SelectItem>
                                 <SelectItem value="TEACHER">Teacher</SelectItem>
                                 <SelectItem value="ADMIN">Admin</SelectItem>
-                                <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+                                <SelectItem value="SUPERADMIN">
+                                    Superadmin
+                                </SelectItem>
                             </SelectContent>
                         </Select>
 
                         {/* Status filter */}
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select
+                            value={statusFilter}
+                            onValueChange={setStatusFilter}
+                        >
                             <SelectTrigger className="h-8 text-sm w-[130px]">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="ALL">All Statuses</SelectItem>
-                                <SelectItem value="APPROVED">Approved</SelectItem>
+                                <SelectItem value="ALL">
+                                    All Statuses
+                                </SelectItem>
+                                <SelectItem value="APPROVED">
+                                    Approved
+                                </SelectItem>
                                 <SelectItem value="PENDING">Pending</SelectItem>
-                                <SelectItem value="REJECTED">Rejected</SelectItem>
-                                <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                                <SelectItem value="REJECTED">
+                                    Rejected
+                                </SelectItem>
+                                <SelectItem value="SUSPENDED">
+                                    Suspended
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -179,7 +217,10 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                     {loading ? (
                         <div className="space-y-2">
                             {[...Array(5)].map((_, i) => (
-                                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                                <Skeleton
+                                    key={i}
+                                    className="h-14 w-full rounded-lg"
+                                />
                             ))}
                         </div>
                     ) : (
@@ -214,7 +255,9 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                                         </TableRow>
                                     ) : (
                                         filtered.map((u) => {
-                                            const name = fullName(u).trim() || "(no name)";
+                                            const name =
+                                                fullName(u).trim() ||
+                                                "(no name)";
                                             return (
                                                 <TableRow
                                                     key={u.id}
@@ -242,11 +285,15 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                                                     </TableCell>
 
                                                     <TableCell className="hidden md:table-cell">
-                                                        <RoleChip role={u.role} />
+                                                        <RoleChip
+                                                            role={u.role}
+                                                        />
                                                     </TableCell>
 
                                                     <TableCell>
-                                                        <StatusBadge status={u.status} />
+                                                        <StatusBadge
+                                                            status={u.status}
+                                                        />
                                                     </TableCell>
 
                                                     <TableCell className="hidden md:table-cell text-xs text-muted-foreground font-mono">

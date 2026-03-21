@@ -12,7 +12,7 @@ import {
     rejectAppointmentRequest,
 } from "@/features/admin-actions/queue/actions/queue-actions";
 import type { AppointmentRequestWithTeacher } from "@/features/admin-actions/queue/types/queue";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 
 function MiniStatusBadge({ status }: { status: string }) {
     const s = (status ?? "").toUpperCase();

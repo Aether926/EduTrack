@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 
 import { HRQueueRow } from "@/features/admin-actions/queue/components/queue-row";
 import { AppointmentQueueRow } from "@/features/admin-actions/queue/components/appointment-queue-row";

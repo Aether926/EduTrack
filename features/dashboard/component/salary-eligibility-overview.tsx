@@ -26,15 +26,15 @@ const statusConfig: Record<
     { cls: string; icon: React.ReactNode }
 > = {
     ELIGIBLE: {
-        cls: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+        cls: "bg-muted/50 text-foreground border border-border/60",
         icon: <CheckCircle2 className="h-3 w-3" />,
     },
     APPROACHING: {
-        cls: "bg-amber-500/15 text-amber-400 border border-amber-500/30",
+        cls: "bg-muted/50 text-muted-foreground border border-border/60",
         icon: <AlertTriangle className="h-3 w-3" />,
     },
     ON_TRACK: {
-        cls: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+        cls: "bg-muted/30 text-muted-foreground border border-border/50",
         icon: <Clock className="h-3 w-3" />,
     },
 };
@@ -61,15 +61,12 @@ export default function SalaryEligibilityOverview({
         .slice(0, 5);
 
     return (
-        <Card className="overflow-hidden border-emerald-500/20">
-            {/* accent bar */}
-            <div className="h-0.5 w-full bg-gradient-to-r from-emerald-500/60 to-emerald-500/10" />
-
+        <Card className="overflow-hidden border-border/60">
             <CardHeader className="pb-3 border-b border-border/40">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
-                        <div className="rounded-lg p-1.5 bg-emerald-500/10 shrink-0">
-                            <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                        <div className="rounded-lg p-1.5 bg-muted/40 shrink-0">
+                            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                         <div>
                             <CardTitle className="text-sm font-semibold">
@@ -84,14 +81,14 @@ export default function SalaryEligibilityOverview({
                     {/* summary pills */}
                     <div className="flex flex-wrap gap-1 justify-end shrink-0">
                         {eligibleCount > 0 && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground">
+                                <span className="h-1.5 w-1.5 rounded-full bg-foreground/40" />
                                 {eligibleCount} eligible
                             </span>
                         )}
                         {approachingCount > 0 && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/30 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
                                 {approachingCount} approaching
                             </span>
                         )}
@@ -100,9 +97,9 @@ export default function SalaryEligibilityOverview({
 
                 {/* alert banner */}
                 {eligibleCount > 0 && (
-                    <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 flex items-center gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                        <p className="text-[11px] text-emerald-400 font-medium">
+                    <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 flex items-center gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <p className="text-[11px] text-foreground/70 font-medium">
                             {eligibleCount} teacher
                             {eligibleCount === 1 ? " is" : "s are"} eligible for
                             a salary increase.

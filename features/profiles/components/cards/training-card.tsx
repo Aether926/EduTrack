@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import type { TrainingRow } from "@/features/profiles/types/trainings";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
-import { badgeClass, fmtDateRange } from "@/features/profiles/lib/date";
+import { fmtDateRange } from "@/features/profiles/lib/date";
 
 // ── Type chip colours ──────────────────────────────────────────────────────────
 

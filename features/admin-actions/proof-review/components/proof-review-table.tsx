@@ -9,7 +9,7 @@ import { Search, X, Clock, GraduationCap, FileSearch } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import InitialAvatar from "@/components/avatar-ui-color/avatar-color";
+import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import { Input } from "@/components/ui/input";
 import {
     Table,

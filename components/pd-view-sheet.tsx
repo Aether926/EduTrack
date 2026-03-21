@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from "react";
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle,
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
 } from "@/components/ui/sheet";
 import { fetchPdDetails } from "@/app/actions/pd-details";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
-    GraduationCap, MapPin, Building2, Clock,
-    CalendarDays, FileText, Loader2,
+    GraduationCap,
+    MapPin,
+    Building2,
+    Clock,
+    CalendarDays,
+    FileText,
+    Loader2,
 } from "lucide-react";
 
 type PdDetails = {
@@ -26,38 +34,35 @@ type PdDetails = {
 
 type FetchResult = { ok: true; data: PdDetails } | { ok: false; error: string };
 
-const typeColors: Record<string, string> = {
-    training: "bg-teal-500/15 text-teal-400 border-teal-500/30",
-    seminar: "bg-violet-500/15 text-violet-400 border-violet-500/30",
-    workshop: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    webinar: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    conference: "bg-pink-500/15 text-pink-400 border-pink-500/30",
-};
-
-function TypeBadge({ type }: { type: string }) {
-    const cls = typeColors[(type ?? "").toLowerCase()] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
-    return (
-        <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}>
-            {type}
-        </span>
-    );
-}
+import { TypeBadge } from "@/components/ui-elements/badges/type";
 
 function LevelBadge({ level }: { level: string }) {
     const l = (level ?? "").toLowerCase();
-    const cls = l === "regional" ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-        : l === "national" ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
-        : l === "international" ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
-        : "bg-slate-500/15 text-slate-400 border-slate-500/30";
+    const cls =
+        l === "regional"
+            ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+            : l === "national"
+              ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
+              : l === "international"
+                ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                : "bg-slate-500/15 text-slate-400 border-slate-500/30";
     return (
-        <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}>
+        <span
+            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}
+        >
             {level}
         </span>
     );
 }
 
-function InfoRow({ icon: Icon, label, value }: {
-    icon: React.ElementType; label: string; value: React.ReactNode;
+function InfoRow({
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: React.ElementType;
+    label: string;
+    value: React.ReactNode;
 }) {
     return (
         <div className="flex items-start gap-3">
@@ -65,7 +70,9 @@ function InfoRow({ icon: Icon, label, value }: {
                 <Icon className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-                <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-0.5">{label}</div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-0.5">
+                    {label}
+                </div>
                 <div className="text-sm text-foreground leading-snug">
                     {value ?? <span className="text-muted-foreground">—</span>}
                 </div>
@@ -100,12 +107,18 @@ export default function PdViewSheet({
             const res = (await fetchPdDetails(trainingId)) as FetchResult;
             if (cancelled) return;
 
-            if (!res.ok) { setErr(res.error); setLoading(false); return; }
+            if (!res.ok) {
+                setErr(res.error);
+                setLoading(false);
+                return;
+            }
             setPd(res.data);
             setLoading(false);
         })();
 
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, [open, trainingId]);
 
     return (
@@ -114,7 +127,9 @@ export default function PdViewSheet({
                 side={isMobile ? "bottom" : "right"}
                 className={[
                     "flex flex-col gap-0 p-0 overflow-hidden",
-                    isMobile ? "h-[88vh] rounded-t-2xl" : "w-[420px] sm:w-[460px]",
+                    isMobile
+                        ? "h-[88vh] rounded-t-2xl"
+                        : "w-[420px] sm:w-[460px]",
                 ].join(" ")}
             >
                 {/* Header */}
@@ -132,17 +147,22 @@ export default function PdViewSheet({
 
                         {loading && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />Loading details…
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Loading details…
                             </div>
                         )}
 
                         {err && (
-                            <div className="text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-md px-3 py-2">{err}</div>
+                            <div className="text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-md px-3 py-2">
+                                {err}
+                            </div>
                         )}
 
                         {pd && (
                             <>
-                                <h2 className="text-xl font-semibold tracking-tight leading-tight">{pd.title}</h2>
+                                <h2 className="text-xl font-semibold tracking-tight leading-tight">
+                                    {pd.title}
+                                </h2>
                                 <div className="flex flex-wrap items-center gap-2 mt-2.5">
                                     <TypeBadge type={pd.type} />
                                     <LevelBadge level={pd.level} />
@@ -162,20 +182,39 @@ export default function PdViewSheet({
                                 value={
                                     <span className="font-mono text-xs">
                                         {pd.start_date}
-                                        {pd.end_date ? <><span className="text-muted-foreground mx-1">→</span>{pd.end_date}</> : null}
+                                        {pd.end_date ? (
+                                            <>
+                                                <span className="text-muted-foreground mx-1">
+                                                    →
+                                                </span>
+                                                {pd.end_date}
+                                            </>
+                                        ) : null}
                                     </span>
                                 }
                             />
                             <InfoRow
                                 icon={Clock}
                                 label="Total Hours"
-                                value={<span className="font-semibold text-emerald-400 tabular-nums">{pd.total_hours}h</span>}
+                                value={
+                                    <span className="font-semibold text-emerald-400 tabular-nums">
+                                        {pd.total_hours}h
+                                    </span>
+                                }
                             />
                         </div>
                         <div className="h-px bg-border/50" />
-                        <InfoRow icon={Building2} label="Sponsoring Agency" value={pd.sponsoring_agency} />
+                        <InfoRow
+                            icon={Building2}
+                            label="Sponsoring Agency"
+                            value={pd.sponsoring_agency}
+                        />
                         <InfoRow icon={MapPin} label="Venue" value={pd.venue} />
-                        <InfoRow icon={FileText} label="Description" value={pd.description} />
+                        <InfoRow
+                            icon={FileText}
+                            label="Description"
+                            value={pd.description}
+                        />
                     </div>
                 )}
             </SheetContent>
