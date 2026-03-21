@@ -477,7 +477,7 @@ export default function SelfEnrollModal({
                                     <Button
                                         type="submit"
                                         disabled={loadingBrowse}
-                                        className="gap-2"
+                                        className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
                                     >
                                         {loadingBrowse ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -594,6 +594,7 @@ export default function SelfEnrollModal({
                                                                                 {
                                                                                     t.total_hours
                                                                                 }
+
                                                                                 h
                                                                             </div>
                                                                         </TableCell>

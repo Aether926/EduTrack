@@ -13,7 +13,14 @@ import {
 } from "@tanstack/react-table";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown, MoreHorizontal, Search, X, Clock } from "lucide-react";
+import {
+    ArrowUpDown,
+    MoreHorizontal,
+    Search,
+    X,
+    Clock,
+    Plus,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +51,10 @@ import {
 } from "@/components/ui/table";
 
 import PdViewSheet from "@/components/pd-view-sheet";
+import UploadProofSheet, {
+    type UploadProofContext,
+} from "@/features/professional-dev/components/upload-proof-sheet";
+import SelfEnrollModal from "@/features/professional-dev/components/self-enroll-modal";
 import { TypeBadge } from "@/components/ui-elements/badges/type";
 
 export type TrainingSeminarRow = {
@@ -58,6 +69,7 @@ export type TrainingSeminarRow = {
     approvedHours: string | null;
     sponsor: string;
     status: string;
+    proofUrl: string | null;
 };
 
 /* ─── Status badge ─── */
@@ -117,7 +129,7 @@ function LevelPill({ level }: { level: string }) {
 }
 
 export default function TrainingsSeminars({
-    data,
+    data = [],
 }: {
     data: TrainingSeminarRow[];
 }) {
@@ -125,6 +137,12 @@ export default function TrainingsSeminars({
     const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(
         null,
     );
+    const [selectedRow, setSelectedRow] = useState<TrainingSeminarRow | null>(
+        null,
+    );
+    const [uploadOpen, setUploadOpen] = useState(false);
+    const [uploadCtx, setUploadCtx] = useState<UploadProofContext | null>(null);
+    const [selfEnrollOpen, setSelfEnrollOpen] = useState(false);
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
@@ -327,24 +345,46 @@ export default function TrainingsSeminars({
                                         setSelectedTrainingId(
                                             row.original.trainingId,
                                         );
+                                        setSelectedRow(row.original);
                                         setDetailsOpen(true);
                                     }}
                                 >
                                     View details
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                {canUpload ? (
-                                    <DropdownMenuItem asChild>
-                                        <a
-                                            href={`/professional-dev/${row.original.id}/upload-proof`}
+                                {canUpload && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                setUploadCtx({
+                                                    attendanceId:
+                                                        row.original.id,
+                                                    status: row.original.status,
+                                                    training: {
+                                                        title: row.original
+                                                            .title,
+                                                        type: row.original.type,
+                                                        level: row.original
+                                                            .level,
+                                                        totalHours: Number(
+                                                            row.original
+                                                                .totalHours,
+                                                        ),
+                                                        startDate:
+                                                            row.original
+                                                                .startDate,
+                                                        endDate:
+                                                            row.original
+                                                                .endDate,
+                                                    },
+                                                });
+                                                setUploadOpen(true);
+                                            }}
                                         >
                                             Upload proof
-                                        </a>
-                                    </DropdownMenuItem>
-                                ) : (
-                                    <DropdownMenuItem disabled>
-                                        Upload proof
-                                    </DropdownMenuItem>
+                                        </DropdownMenuItem>
+                                    </>
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -422,21 +462,39 @@ export default function TrainingsSeminars({
                     </div>
 
                     {/* Desktop search — full width on mobile, fixed on md+ */}
-                    <div className="hidden md:block w-full md:w-[320px]">
+                    <div className="hidden md:flex items-center gap-2 w-full md:w-auto">
                         <Input
                             value={globalFilter ?? ""}
                             onChange={(e) => setGlobalFilter(e.target.value)}
                             placeholder="Search title, sponsor, status..."
+                            className="w-full md:w-[320px]"
                         />
+                        <Button
+                            size="sm"
+                            className="shrink-0 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => setSelfEnrollOpen(true)}
+                        >
+                            <Plus className="h-4 w-4" />
+                            Self-Report
+                        </Button>
                     </div>
 
                     {/* Mobile search icon → expand */}
                     <div className="flex md:hidden items-center gap-2">
                         <Button
+                            size="sm"
+                            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => setSelfEnrollOpen(true)}
+                        >
+                            <Plus className="h-4 w-4" />
+                            Self-Report
+                        </Button>
+                        <Button
                             variant="outline"
                             size="icon"
                             onClick={() => setSearchOpen((v) => !v)}
                             aria-label="Search"
+                            className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10 hover:text-blue-400"
                         >
                             {searchOpen ? (
                                 <X className="h-4 w-4" />
@@ -599,6 +657,20 @@ export default function TrainingsSeminars({
                 open={detailsOpen}
                 onOpenChange={setDetailsOpen}
                 trainingId={selectedTrainingId}
+                proofUrl={selectedRow?.proofUrl}
+                status={selectedRow?.status}
+            />
+            <UploadProofSheet
+                open={uploadOpen}
+                onOpenChange={setUploadOpen}
+                ctx={uploadCtx}
+            />
+            <SelfEnrollModal
+                open={selfEnrollOpen}
+                onOpenChange={setSelfEnrollOpen}
+                onSuccess={() => {
+                    setSelfEnrollOpen(false);
+                }}
             />
         </>
     );

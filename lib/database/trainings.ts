@@ -13,6 +13,7 @@ export type MyTrainingSeminarRow = {
   approvedHours: string | null; // ← add
   sponsor: string;
   status: string;
+  proofUrl: string | null;
 };
 
 type AttendanceRow = {
@@ -20,7 +21,8 @@ type AttendanceRow = {
   training_id: string;
   status: string;
   created_at: string;
-  approved_hours: number | null; // ← add
+  approved_hours: number | null;
+  proof_url: string | null;
 };
 
 type PDRow = {
@@ -39,7 +41,7 @@ export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingS
 
   const { data: attendance, error: aErr } = await supabase
     .from("Attendance")
-    .select("id, training_id, status, created_at, approved_hours") 
+    .select("id, training_id, status, created_at, approved_hours, proof_url")
     .eq("teacher_id", userId)
     .order("created_at", { ascending: false });
 
@@ -70,6 +72,7 @@ export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingS
       approvedHours: null,
       sponsor: "",
       status: r.status ?? "",
+      proofUrl: null,
     }));
   }
 
@@ -87,9 +90,10 @@ export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingS
       startDate: pd?.start_date ?? "",
       endDate: pd?.end_date ?? "",
       totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
-      approvedHours: r.approved_hours != null ? String(r.approved_hours) : null, // ← add
+      approvedHours: r.approved_hours != null ? String(r.approved_hours) : null,
       sponsor: pd?.sponsoring_agency ?? "",
       status: r.status ?? "",
+      proofUrl: r.proof_url ?? null,
     };
   });
 }

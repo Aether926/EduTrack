@@ -13,7 +13,7 @@ export default async function ProfessionalDevelopmentPage() {
     const user = await getUser();
     if (!user) redirect("/signin");
 
-    const rows = await getMyTrainingSeminars(user.id);
+    const rows = (await getMyTrainingSeminars(user.id)) ?? [];
 
     const total = rows.length;
     const approved = rows.filter(
@@ -37,7 +37,10 @@ export default async function ProfessionalDevelopmentPage() {
                                     <h1 className="text-lg font-semibold tracking-tight leading-tight">
                                         Trainings & Seminars
                                     </h1>
-                                    <Badge variant="outline" className="text-[11px]">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-[11px]"
+                                    >
                                         Training / Seminar Records
                                     </Badge>
                                 </div>
@@ -54,8 +57,12 @@ export default async function ProfessionalDevelopmentPage() {
                                     <GraduationCap className="h-3.5 w-3.5 text-blue-400" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] text-muted-foreground leading-none">Records</div>
-                                    <div className="text-xl font-bold text-blue-400 tabular-nums mt-0.5">{total}</div>
+                                    <div className="text-[11px] text-muted-foreground leading-none">
+                                        Records
+                                    </div>
+                                    <div className="text-xl font-bold text-blue-400 tabular-nums mt-0.5">
+                                        {total}
+                                    </div>
                                 </div>
                             </div>
 
@@ -64,8 +71,12 @@ export default async function ProfessionalDevelopmentPage() {
                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] text-muted-foreground leading-none">Approved</div>
-                                    <div className="text-xl font-bold text-emerald-400 tabular-nums mt-0.5">{approved}</div>
+                                    <div className="text-[11px] text-muted-foreground leading-none">
+                                        Approved
+                                    </div>
+                                    <div className="text-xl font-bold text-emerald-400 tabular-nums mt-0.5">
+                                        {approved}
+                                    </div>
                                 </div>
                             </div>
                         </div>

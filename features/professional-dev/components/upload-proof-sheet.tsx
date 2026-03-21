@@ -286,7 +286,7 @@ export default function UploadProofSheet({
                                         <img
                                             src={URL.createObjectURL(file)}
                                             alt="Preview"
-                                            className="w-full max-h-64 object-contain block"
+                                            className="w-full h-auto max-h-72 object-contain block"
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors rounded-lg">
                                             <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
