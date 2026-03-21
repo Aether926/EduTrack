@@ -4,7 +4,14 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import {
+    CalendarIcon,
+    ChevronLeft,
+    ChevronRight,
+    ChevronUp,
+    ChevronDown,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Select,
     SelectContent,
@@ -20,16 +27,278 @@ import {
 } from "@/app/util/helper";
 
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+    NameInput,
+    MiddleInitialInput,
+} from "@/components/formatter/name/name-input";
+import {
+    ContactInput,
+    isValidContact,
+} from "@/components/formatter/contact/contact-input";
+import {
+    EmployeeIdInput,
+    isValidEmployeeId,
+} from "@/components/formatter/employee-id/employee-id-input";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { logSignUp } from "@/app/actions/auth-log-actions";
+
+// ── Calendar constants ─────────────────────────────────────────────────────────
+const CAL_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const CAL_MONTHS_SHORT = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+];
+const CAL_YEAR_BACK = 60;
+const CAL_YEAR_FORWARD = 2;
+function pad2(n: number) {
+    return n < 10 ? `0${n}` : String(n);
+}
+
+function MiniCalendar({
+    value,
+    onChange,
+    maxDate,
+    minDate,
+}: {
+    value: Date | undefined;
+    onChange: (d: Date) => void;
+    maxDate?: Date;
+    minDate?: Date;
+}) {
+    const today = new Date();
+    const [viewYear, setViewYear] = useState(
+        value?.getFullYear() ?? today.getFullYear(),
+    );
+    const [viewMonth, setViewMonth] = useState(
+        value?.getMonth() ?? today.getMonth(),
+    );
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [pickerYear, setPickerYear] = useState(
+        value?.getFullYear() ?? today.getFullYear(),
+    );
+    const yearListRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!pickerOpen) return;
+        const el = yearListRef.current?.querySelector(
+            `[data-year="${pickerYear}"]`,
+        ) as HTMLElement | null;
+        if (el) el.scrollIntoView({ block: "center", behavior: "instant" });
+    }, [pickerOpen, pickerYear]);
+
+    const totalDays = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const startDay = new Date(viewYear, viewMonth, 1).getDay();
+    const todayKey = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+    const selectedKey = value
+        ? `${value.getFullYear()}-${pad2(value.getMonth() + 1)}-${pad2(value.getDate())}`
+        : null;
+    const cells: (number | null)[] = [
+        ...Array(startDay).fill(null),
+        ...Array.from({ length: totalDays }, (_, i) => i + 1),
+    ];
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    const prevMonth = () => {
+        if (viewMonth === 0) {
+            setViewYear((y) => y - 1);
+            setViewMonth(11);
+        } else setViewMonth((m) => m - 1);
+    };
+    const nextMonth = () => {
+        if (viewMonth === 11) {
+            setViewYear((y) => y + 1);
+            setViewMonth(0);
+        } else setViewMonth((m) => m + 1);
+    };
+
+    const years = Array.from(
+        { length: CAL_YEAR_BACK + CAL_YEAR_FORWARD + 1 },
+        (_, i) => today.getFullYear() - CAL_YEAR_BACK + i,
+    );
+
+    return (
+        <div className="rounded-lg border border-[#2e2e32] bg-[#1c1c1e] p-3 relative select-none">
+            {/* Navigation */}
+            <div className="flex items-center justify-between mb-3 px-1">
+                <button
+                    type="button"
+                    onClick={prevMonth}
+                    className="rounded-md p-1 hover:bg-white/10 transition-colors"
+                >
+                    <ChevronLeft className="h-4 w-4 text-[#8a8a9a]" />
+                </button>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setPickerYear(viewYear);
+                        setPickerOpen((v) => !v);
+                    }}
+                    className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-[#f0f0f0] hover:bg-white/10 transition-colors"
+                >
+                    {CAL_MONTHS_SHORT[viewMonth]} {viewYear}
+                    {pickerOpen ? (
+                        <ChevronUp className="h-3.5 w-3.5 text-[#8a8a9a]" />
+                    ) : (
+                        <ChevronDown className="h-3.5 w-3.5 text-[#8a8a9a]" />
+                    )}
+                </button>
+                <button
+                    type="button"
+                    onClick={nextMonth}
+                    className="rounded-md p-1 hover:bg-white/10 transition-colors"
+                >
+                    <ChevronRight className="h-4 w-4 text-[#8a8a9a]" />
+                </button>
+            </div>
+
+            {/* Picker overlay */}
+            <AnimatePresence>
+                {pickerOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute inset-x-0 top-[2.75rem] z-10 mx-3 rounded-lg border border-[#2e2e32] bg-[#1c1c1e] shadow-lg p-3"
+                    >
+                        <div className="flex gap-3">
+                            {/* Year column */}
+                            <div className="flex flex-col gap-0.5 w-16 shrink-0">
+                                <p className="text-[10px] font-semibold text-[#555560] uppercase tracking-wide mb-1 text-center">
+                                    Year
+                                </p>
+                                <div
+                                    ref={yearListRef}
+                                    className="overflow-y-auto max-h-[168px] flex flex-col gap-0.5"
+                                    style={{ scrollbarWidth: "none" }}
+                                >
+                                    {years.map((y) => (
+                                        <button
+                                            key={y}
+                                            type="button"
+                                            data-year={y}
+                                            onClick={() => setPickerYear(y)}
+                                            className={[
+                                                "rounded-md py-1.5 text-sm w-full transition-colors",
+                                                y === pickerYear
+                                                    ? "bg-[#5b8dee]/20 text-[#5b8dee] font-semibold"
+                                                    : y === viewYear
+                                                      ? "bg-white/10 text-[#f0f0f0] font-semibold"
+                                                      : y ===
+                                                          today.getFullYear()
+                                                        ? "border border-[#5b8dee]/30 text-[#5b8dee] hover:bg-white/10"
+                                                        : "hover:bg-white/10 text-[#8a8a9a]",
+                                            ].join(" ")}
+                                        >
+                                            {y}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            {/* Divider */}
+                            <div className="w-px bg-[#2e2e32] self-stretch" />
+                            {/* Month grid */}
+                            <div className="flex-1">
+                                <p className="text-[10px] font-semibold text-[#555560] uppercase tracking-wide mb-1 text-center">
+                                    Month
+                                </p>
+                                <div className="grid grid-cols-3 gap-1">
+                                    {CAL_MONTHS_SHORT.map((m, i) => {
+                                        const isCurrent =
+                                            i === viewMonth &&
+                                            pickerYear === viewYear;
+                                        const isNow =
+                                            i === today.getMonth() &&
+                                            pickerYear === today.getFullYear();
+                                        return (
+                                            <button
+                                                key={m}
+                                                type="button"
+                                                onClick={() => {
+                                                    setViewMonth(i);
+                                                    setViewYear(pickerYear);
+                                                    setPickerOpen(false);
+                                                }}
+                                                className={[
+                                                    "rounded-md py-2 text-sm transition-colors",
+                                                    isCurrent
+                                                        ? "bg-[#5b8dee]/20 text-[#5b8dee] font-semibold"
+                                                        : isNow
+                                                          ? "border border-amber-500/40 text-amber-300 font-semibold hover:bg-white/10"
+                                                          : "hover:bg-white/10 text-[#8a8a9a]",
+                                                ].join(" ")}
+                                            >
+                                                {m}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 mb-1">
+                {CAL_DAYS.map((d) => (
+                    <div
+                        key={d}
+                        className="text-center text-[0.72rem] text-[#555560] py-1"
+                    >
+                        {d}
+                    </div>
+                ))}
+            </div>
+
+            {/* Day cells */}
+            <div className="grid grid-cols-7 gap-y-1">
+                {cells.map((day, i) => {
+                    if (day === null) return <div key={`e-${i}`} />;
+                    const key = `${viewYear}-${pad2(viewMonth + 1)}-${pad2(day)}`;
+                    const isToday = key === todayKey;
+                    const isSelected = key === selectedKey;
+                    const date = new Date(viewYear, viewMonth, day);
+                    const isDisabled =
+                        (maxDate && date > maxDate) ||
+                        (minDate && date < minDate);
+                    return (
+                        <button
+                            key={key}
+                            type="button"
+                            disabled={!!isDisabled}
+                            onClick={() => onChange(date)}
+                            className={[
+                                "mx-auto flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors",
+                                isDisabled
+                                    ? "opacity-25 cursor-not-allowed"
+                                    : isSelected
+                                      ? "bg-[#5b8dee] text-white font-semibold"
+                                      : isToday
+                                        ? "border border-[#5b8dee]/60 text-[#5b8dee] font-semibold hover:bg-white/10"
+                                        : "text-[#f0f0f0] hover:bg-white/10",
+                            ].join(" ")}
+                        >
+                            {day}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 export default function FillUpPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,15 +317,24 @@ export default function FillUpPage() {
         contactNumber: "",
         employeeId: "",
         position: "",
-        customPosition: ""
+        customPosition: "",
     });
 
-    const [dateOfOriginalAppointment, setDateOfOriginalAppointment] = useState<Date | undefined>();
-    const [dateOfOriginalDeployment, setDateOfOriginalDeployment] = useState<Date | undefined>();
+    const [dateOfOriginalAppointment, setDateOfOriginalAppointment] = useState<
+        Date | undefined
+    >();
+    const [dateOfOriginalDeployment, setDateOfOriginalDeployment] = useState<
+        Date | undefined
+    >();
+    const [latestAppointment, setLatestAppointment] = useState<
+        Date | undefined
+    >();
 
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
 
             if (!user) {
                 router.push("/signin");
@@ -89,7 +367,9 @@ export default function FillUpPage() {
                 const y = e.clientY - rect.top;
                 const angle =
                     Math.atan2(y - rect.height / 2, x - rect.width / 2) *
-                        (180 / Math.PI) + 90 + 180;
+                        (180 / Math.PI) +
+                    90 +
+                    180;
                 glowRef.current.style.setProperty("--angle", `${angle}deg`);
             }
             if (spotlightRef.current) {
@@ -104,10 +384,14 @@ export default function FillUpPage() {
 
     // Generate username client-side to avoid server action auth issues
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const generateUsernameClient = async (firstName: string, lastName: string): Promise<string> => {
-        const base = `${firstName.toLowerCase().trim()}.${lastName.toLowerCase().trim()}`
-            .replace(/\s+/g, "")
-            .replace(/[^a-z0-9.]/g, "");
+    const generateUsernameClient = async (
+        firstName: string,
+        lastName: string,
+    ): Promise<string> => {
+        const base =
+            `${firstName.toLowerCase().trim()}.${lastName.toLowerCase().trim()}`
+                .replace(/\s+/g, "")
+                .replace(/[^a-z0-9.]/g, "");
 
         const { data } = await supabase
             .from("Profile")
@@ -125,6 +409,16 @@ export default function FillUpPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!isValidContact(formData.contactNumber)) {
+            toast.error(
+                "Contact number must be 11 digits (e.g. 0917-123-4567).",
+            );
+            return;
+        }
+        if (!isValidEmployeeId(formData.employeeId)) {
+            toast.error("Employee ID must be exactly 7 digits.");
+            return;
+        }
         if (!dateOfOriginalAppointment) {
             toast.error("Please select your Date of Original Appointment.");
             return;
@@ -134,7 +428,9 @@ export default function FillUpPage() {
             return;
         }
         if (dateOfOriginalDeployment < dateOfOriginalAppointment) {
-            toast.error("Date of Original Deployment cannot be earlier than Date of Original Appointment.");
+            toast.error(
+                "Date of Original Deployment cannot be earlier than Date of Original Appointment.",
+            );
             return;
         }
 
@@ -143,22 +439,23 @@ export default function FillUpPage() {
 
         try {
             // 1. Create User row
-            const { error: userError } = await supabase
-                .from("User")
-                .upsert({
-                    id: user.id,
-                    auth_id: user.id,
-                    email: user.email,
-                    role: "TEACHER",
-                    status: "PENDING",
-                });
+            const { error: userError } = await supabase.from("User").upsert({
+                id: user.id,
+                auth_id: user.id,
+                email: user.email,
+                role: "TEACHER",
+                status: "PENDING",
+            });
             if (userError) {
                 toast.error(`Error creating user: ${userError.message}`);
                 return;
             }
 
             // 2. Generate username client-side
-            const autoUsername = await generateUsernameClient(formData.firstName, formData.lastName);
+            const autoUsername = await generateUsernameClient(
+                formData.firstName,
+                formData.lastName,
+            );
 
             // 3. Create Profile row
             const { error: profileError } = await supabase
@@ -181,10 +478,14 @@ export default function FillUpPage() {
             }
 
             // 4. Ensure ProfileHR row exists
-            const { error: rpcError } = await supabase
-                .rpc("ensure_profile_hr_exists", { p_user_id: user.id });
+            const { error: rpcError } = await supabase.rpc(
+                "ensure_profile_hr_exists",
+                { p_user_id: user.id },
+            );
             if (rpcError) {
-                toast.error(`Error initializing HR record: ${rpcError.message}`);
+                toast.error(
+                    `Error initializing HR record: ${rpcError.message}`,
+                );
                 return;
             }
 
@@ -193,14 +494,31 @@ export default function FillUpPage() {
                 .from("ProfileHR")
                 .update({
                     employeeId: formData.employeeId,
-                    position: formData.position === "Other" ? formData.customPosition : formData.position,
-                    dateOfOriginalAppointment: format(dateOfOriginalAppointment, "yyyy-MM-dd"),
-                    dateOfOriginalDeployment: format(dateOfOriginalDeployment, "yyyy-MM-dd"),
+                    position:
+                        formData.position === "Other"
+                            ? formData.customPosition
+                            : formData.position,
+                    dateOfOriginalAppointment: format(
+                        dateOfOriginalAppointment,
+                        "yyyy-MM-dd",
+                    ),
+                    dateOfOriginalDeployment: format(
+                        dateOfOriginalDeployment,
+                        "yyyy-MM-dd",
+                    ),
+                    ...(latestAppointment && {
+                        latestAppointment: format(
+                            latestAppointment,
+                            "yyyy-MM-dd",
+                        ),
+                    }),
                 })
                 .eq("id", user.id)
                 .select();
             if (hrError) {
-                toast.error(`Error saving employment details: ${hrError.message}`);
+                toast.error(
+                    `Error saving employment details: ${hrError.message}`,
+                );
                 return;
             }
             if (!hrData || hrData.length === 0) {
@@ -218,7 +536,6 @@ export default function FillUpPage() {
             success = true;
             router.push("/status");
         } catch (error) {
-            
             toast.error("An unexpected error occurred. Please try again.");
         } finally {
             if (!success) setSubmitting(false);
@@ -297,17 +614,23 @@ export default function FillUpPage() {
                         <div className="p-8">
                             {/* Logo */}
                             <div className="flex items-center gap-2 mb-7">
-                                <div className="w-[30px] h-[30px] bg-[#5b8dee] rounded-[7px] flex items-center justify-center text-sm">📚</div>
-                                <span className="text-[15px] font-bold text-[#f0f0f0]">EduTrack</span>
+                                <div className="w-[30px] h-[30px] bg-[#5b8dee] rounded-[7px] flex items-center justify-center text-sm">
+                                    📚
+                                </div>
+                                <span className="text-[15px] font-bold text-[#f0f0f0]">
+                                    EduTrack
+                                </span>
                             </div>
 
-                            <h1 className="text-[22px] font-bold text-[#f0f0f0] mb-1">Complete your profile</h1>
+                            <h1 className="text-[22px] font-bold text-[#f0f0f0] mb-1">
+                                Complete your profile
+                            </h1>
                             <p className="text-[13px] text-[#8a8a9a] mb-7">
-                                Fill in your details before your account is reviewed
+                                Fill in your details before your account is
+                                reviewed
                             </p>
 
                             <form onSubmit={handleSubmit} className="space-y-4">
-
                                 {/* ── Personal Info Section ── */}
                                 <p className="text-[11px] font-semibold text-[#5b8dee] uppercase tracking-widest">
                                     Personal Information
@@ -315,13 +638,19 @@ export default function FillUpPage() {
 
                                 {/* First Name */}
                                 <div>
-                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">First Name *</label>
-                                    <Input
-                                        type="text"
+                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
+                                        First Name{" "}
+                                        <span className="text-rose-500">*</span>
+                                    </label>
+                                    <NameInput
                                         className="dark-input"
                                         value={formData.firstName}
-                                        onChange={(e) => setFormData({ ...formData, firstName: cleanNameInput(e.target.value) })}
-                                        onBlur={() => setFormData({ ...formData, firstName: formatName(formData.firstName) })}
+                                        onChange={(v) =>
+                                            setFormData({
+                                                ...formData,
+                                                firstName: v,
+                                            })
+                                        }
                                         required
                                         placeholder="Enter first name"
                                     />
@@ -329,13 +658,19 @@ export default function FillUpPage() {
 
                                 {/* Last Name */}
                                 <div>
-                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">Last Name *</label>
-                                    <Input
-                                        type="text"
+                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
+                                        Last Name{" "}
+                                        <span className="text-rose-500">*</span>
+                                    </label>
+                                    <NameInput
                                         className="dark-input"
                                         value={formData.lastName}
-                                        onChange={(e) => setFormData({ ...formData, lastName: cleanNameInput(e.target.value) })}
-                                        onBlur={() => setFormData({ ...formData, lastName: formatName(formData.lastName) })}
+                                        onChange={(v) =>
+                                            setFormData({
+                                                ...formData,
+                                                lastName: v,
+                                            })
+                                        }
                                         required
                                         placeholder="Enter last name"
                                     />
@@ -344,26 +679,39 @@ export default function FillUpPage() {
                                 {/* Middle Initial */}
                                 <div>
                                     <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
-                                        Middle Initial <span className="text-[#555560] font-normal">(optional)</span>
+                                        Middle Initial{" "}
+                                        <span className="text-[#555560] font-normal">
+                                            (optional)
+                                        </span>
                                     </label>
-                                    <Input
-                                        type="text"
+                                    <MiddleInitialInput
                                         className="dark-input"
-                                        maxLength={2}
                                         value={formData.middleInitial}
-                                        onChange={(e) => setFormData({ ...formData, middleInitial: cleanMiddleInitial(e.target.value) })}
+                                        onChange={(v) =>
+                                            setFormData({
+                                                ...formData,
+                                                middleInitial: v,
+                                            })
+                                        }
                                         placeholder="Optional"
                                     />
                                 </div>
 
                                 {/* Contact Number */}
                                 <div>
-                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">Contact Number *</label>
-                                    <Input
-                                        type="tel"
+                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
+                                        Contact Number{" "}
+                                        <span className="text-rose-500">*</span>
+                                    </label>
+                                    <ContactInput
                                         className="dark-input"
                                         value={formData.contactNumber}
-                                        onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                                        onChange={(v) =>
+                                            setFormData({
+                                                ...formData,
+                                                contactNumber: v,
+                                            })
+                                        }
                                         required
                                         placeholder="+63 XXX XXX XXXX"
                                     />
@@ -372,9 +720,17 @@ export default function FillUpPage() {
                                 {/* Email */}
                                 <div>
                                     <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
-                                        Email <span className="text-[#555560] font-normal">(from account)</span>
+                                        Email{" "}
+                                        <span className="text-[#555560] font-normal">
+                                            (from account)
+                                        </span>
                                     </label>
-                                    <Input type="email" className="dark-input" value={user?.email || ""} disabled />
+                                    <Input
+                                        type="email"
+                                        className="dark-input"
+                                        value={user?.email || ""}
+                                        disabled
+                                    />
                                 </div>
 
                                 {/* ── Employment Info Section ── */}
@@ -384,12 +740,19 @@ export default function FillUpPage() {
 
                                 {/* Employee ID */}
                                 <div>
-                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">Employee ID *</label>
-                                    <Input
-                                        type="text"
+                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
+                                        Employee ID{" "}
+                                        <span className="text-rose-500">*</span>
+                                    </label>
+                                    <EmployeeIdInput
                                         className="dark-input"
                                         value={formData.employeeId}
-                                        onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                                        onChange={(v) =>
+                                            setFormData({
+                                                ...formData,
+                                                employeeId: v,
+                                            })
+                                        }
                                         required
                                         placeholder="Enter employee ID"
                                     />
@@ -398,15 +761,20 @@ export default function FillUpPage() {
                                 {/* Position */}
                                 <div>
                                     <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
-                                        Position *
+                                        Position{" "}
+                                        <span className="text-[#555560] font-normal">
+                                            (optional)
+                                        </span>
                                     </label>
                                     <Select
                                         value={formData.position}
-                                        onValueChange={(value) => setFormData({
-                                            ...formData,
-                                            position: value,
-                                            customPosition: "",
-                                        })}
+                                        onValueChange={(value) =>
+                                            setFormData({
+                                                ...formData,
+                                                position: value,
+                                                customPosition: "",
+                                            })
+                                        }
                                         required
                                     >
                                         <SelectTrigger className="w-full bg-[#1c1c1e] border-[#2e2e32] text-[13.5px] text-[#f0f0f0] focus:ring-[#5b8dee]/20 focus:border-[#5b8dee] rounded-lg">
@@ -414,12 +782,21 @@ export default function FillUpPage() {
                                         </SelectTrigger>
                                         <SelectContent className="bg-[#1c1c1e] border-[#2e2e32] text-[#f0f0f0]">
                                             {[
-                                                "Teacher I", "Teacher II", "Teacher III",
-                                                "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII",
-                                                "Master Teacher I", "Master Teacher II",
-                                                "Master Teacher III", "Master Teacher IV",
-                                                "School Principal I", "School Principal II",
-                                                "School Principal III", "School Principal IV",
+                                                "Teacher I",
+                                                "Teacher II",
+                                                "Teacher III",
+                                                "Teacher IV",
+                                                "Teacher V",
+                                                "Teacher VI",
+                                                "Teacher VII",
+                                                "Master Teacher I",
+                                                "Master Teacher II",
+                                                "Master Teacher III",
+                                                "Master Teacher IV",
+                                                "School Principal I",
+                                                "School Principal II",
+                                                "School Principal III",
+                                                "School Principal IV",
                                                 "Administrative Staff",
                                             ].map((pos) => (
                                                 <SelectItem
@@ -445,10 +822,13 @@ export default function FillUpPage() {
                                                 type="text"
                                                 className="dark-input"
                                                 value={formData.customPosition}
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    customPosition: e.target.value,
-                                                })}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        customPosition:
+                                                            e.target.value,
+                                                    })
+                                                }
                                                 required
                                                 placeholder="Enter your position"
                                                 autoFocus
@@ -460,78 +840,65 @@ export default function FillUpPage() {
                                 {/* Date of Original Appointment */}
                                 <div>
                                     <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
-                                        Date of Original Appointment *
+                                        Date of Original Appointment{" "}
+                                        <span className="text-rose-500">*</span>
                                     </label>
-                                    <p className="text-[11px] text-[#555560] mb-2">First day as a DepEd employee</p>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border text-[13.5px] transition-colors",
-                                                    "bg-[#1c1c1e] border-[#2e2e32] hover:border-[#5b8dee]",
-                                                    dateOfOriginalAppointment ? "text-[#f0f0f0]" : "text-[#555560]"
-                                                )}
-                                            >
-                                                <CalendarIcon className="h-4 w-4 text-[#777786] shrink-0" />
-                                                {dateOfOriginalAppointment
-                                                    ? format(dateOfOriginalAppointment, "MMMM d, yyyy")
-                                                    : "Select date"}
-                                            </button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-[#1c1c1e] border-[#2e2e32]" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={dateOfOriginalAppointment}
-                                                onSelect={setDateOfOriginalAppointment}
-                                                disabled={(date) => date > new Date()}
-                                                initialFocus
-                                                captionLayout="dropdown"
-                                                fromYear={1970}
-                                                toYear={new Date().getFullYear()}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <p className="text-[11px] text-[#555560] mb-2">
+                                        First day as a DepEd employee
+                                    </p>
+                                    <MiniCalendar
+                                        value={dateOfOriginalAppointment}
+                                        onChange={setDateOfOriginalAppointment}
+                                        maxDate={new Date()}
+                                    />
                                 </div>
 
                                 {/* Date of Original Deployment */}
                                 <div>
                                     <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
-                                        Date of Original Deployment *
+                                        Date of Original Deployment{" "}
+                                        <span className="text-rose-500">*</span>
                                     </label>
-                                    <p className="text-[11px] text-[#555560] mb-2">First day at Valencia National High School</p>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border text-[13.5px] transition-colors",
-                                                    "bg-[#1c1c1e] border-[#2e2e32] hover:border-[#5b8dee]",
-                                                    dateOfOriginalDeployment ? "text-[#f0f0f0]" : "text-[#555560]"
-                                                )}
-                                            >
-                                                <CalendarIcon className="h-4 w-4 text-[#777786] shrink-0" />
-                                                {dateOfOriginalDeployment
-                                                    ? format(dateOfOriginalDeployment, "MMMM d, yyyy")
-                                                    : "Select date"}
-                                            </button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-[#1c1c1e] border-[#2e2e32]" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={dateOfOriginalDeployment}
-                                                onSelect={setDateOfOriginalDeployment}
-                                                disabled={(date) =>
-                                                    date > new Date() ||
-                                                    (dateOfOriginalAppointment ? date < dateOfOriginalAppointment : false)
-                                                }
-                                                initialFocus
-                                                captionLayout="dropdown"
-                                                fromYear={1970}
-                                                toYear={new Date().getFullYear()}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <p className="text-[11px] text-[#555560] mb-2">
+                                        First day at Valencia National High
+                                        School
+                                    </p>
+                                    <MiniCalendar
+                                        value={dateOfOriginalDeployment}
+                                        onChange={setDateOfOriginalDeployment}
+                                        maxDate={new Date()}
+                                        minDate={dateOfOriginalAppointment}
+                                    />
+                                </div>
+
+                                {/* Latest Appointment */}
+                                <div>
+                                    <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
+                                        Latest Appointment{" "}
+                                        <span className="text-[#555560] font-normal">
+                                            (optional)
+                                        </span>
+                                    </label>
+                                    <p className="text-[11px] text-[#555560] mb-2">
+                                        Most recent promotion date, if
+                                        applicable
+                                    </p>
+                                    <MiniCalendar
+                                        value={latestAppointment}
+                                        onChange={setLatestAppointment}
+                                        maxDate={new Date()}
+                                    />
+                                    {latestAppointment && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setLatestAppointment(undefined)
+                                            }
+                                            className="mt-1.5 text-[11px] text-[#555560] hover:text-[#8a8a9a] transition-colors"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
                                 </div>
 
                                 <Button
@@ -539,7 +906,9 @@ export default function FillUpPage() {
                                     disabled={submitting}
                                     className="w-full bg-white text-[#0a0a0b] hover:opacity-90 rounded-lg text-[13.5px] font-semibold py-2.5 mt-2 transition-all active:scale-[0.99]"
                                 >
-                                    {submitting ? "Submitting..." : "Submit for Approval"}
+                                    {submitting
+                                        ? "Submitting..."
+                                        : "Submit for Approval"}
                                 </Button>
                             </form>
                         </div>

@@ -1,0 +1,76 @@
+"use client";
+
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Strips everything except digits. */
+function digitsOnly(str: string): string {
+    return str.replace(/\D/g, "");
+}
+
+/** Formats digits as XXXX-XXX-XXXX (max 11 digits). */
+function formatContact(digits: string): string {
+    const d = digits.slice(0, 11);
+    if (d.length <= 4) return d;
+    if (d.length <= 7) return `${d.slice(0, 4)}-${d.slice(4)}`;
+    return `${d.slice(0, 4)}-${d.slice(4, 7)}-${d.slice(7)}`;
+}
+
+/** Returns true if the contact number has exactly 11 digits. */
+export function isValidContact(value: string): boolean {
+    return digitsOnly(value).length === 11;
+}
+
+// ── ContactInput ──────────────────────────────────────────────────────────────
+
+interface ContactInputProps extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "onChange" | "value"
+> {
+    value: string;
+    onChange: (value: string) => void;
+    className?: string;
+}
+
+/**
+ * Phone number input that auto-formats to XXXX-XXX-XXXX.
+ * - Only allows digits; dashes are inserted automatically
+ * - Backspace removes the last digit (not the dash)
+ * - Returns the raw formatted string (with dashes) via onChange
+ */
+export function ContactInput({
+    value,
+    onChange,
+    className,
+    ...props
+}: ContactInputProps) {
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const digits = digitsOnly(e.target.value);
+        onChange(formatContact(digits));
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key === "Backspace") {
+            // Strip last digit, reformat
+            const digits = digitsOnly(value);
+            if (digits.length > 0) {
+                e.preventDefault();
+                onChange(formatContact(digits.slice(0, -1)));
+            }
+        }
+    }
+
+    return (
+        <Input
+            {...props}
+            type="tel"
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            maxLength={13} // XXXX-XXX-XXXX = 13 chars
+            className={cn(className)}
+        />
+    );
+}
