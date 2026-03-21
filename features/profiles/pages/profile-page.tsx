@@ -39,7 +39,7 @@ export default function ProfilePage({
     initialProfile: ProfileState;
 }) {
     const { theme } = useTheme();
-    const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
+    
 
     const {
         isSaving,
@@ -96,9 +96,8 @@ export default function ProfilePage({
     }, [userId, loadTrainings]);
 
     return (
-        <div
-            className={`min-h-screen w-full max-w-full overflow-x-clip ${bgClass} space-y-6`}
-        >
+        <div className="min-h-screen w-full max-w-full overflow-x-clip bg-gray-100 dark:bg-gray-950 space-y-6">
+
             {/* Header — no more global Edit button, just share/QR/PDF */}
             <ProfileHeader
                 teacherId={userId}

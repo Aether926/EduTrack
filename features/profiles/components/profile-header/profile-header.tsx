@@ -111,7 +111,7 @@ export default function ProfileHeader({
         }
     }
 
-    const bgImage = theme === "light" ? "border-gray-100" : "border-neutral-900";
+    
 
     const fullName = (() => {
         const middle = tempProfileData.middleInitial
@@ -139,7 +139,8 @@ export default function ProfileHeader({
                         {/* ── Profile Image ── */}
                         <div className="flex justify-center shrink-0">
                             <div className="relative w-40 h-40 md:w-36 md:h-36 lg:w-40 lg:h-40">
-                                <div className={`w-full h-full ${bgImage} rounded-full border-4 overflow-hidden bg-gray-200 dark:bg-gray-800`}>
+                                <div className="w-full h-full border-gray-100 dark:border-neutral-900 rounded-full border-4 overflow-hidden bg-gray-200 dark:bg-gray-800">
+
                                     {preview ? (
                                         <img
                                             src={preview}
@@ -293,13 +294,12 @@ export default function ProfileHeader({
                 qrToken={qr.qrToken}
                 qrUrl={qr.qrUrl}
                 loading={qr.qrLoading}
-                isCooldown={qr.isCooldown}
-                cooldownLeftMs={qr.cooldownLeftMs}
+                cooldownUntil={qr.cooldownUntil}
                 onGenerate={() => void qr.generateQr()}
-                onCopy={() => void qr.copyQrLink()}
                 onDownload={() => void qr.downloadQrPng(fullName)}
                 qrCanvasWrapperRef={qr.qrCanvasWrapperRef}
             />
+
 
             {/* ── Completion Modal ── */}
             {profileData && (
