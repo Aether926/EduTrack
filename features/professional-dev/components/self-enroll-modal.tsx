@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { useState, useCallback, useTransition, useRef } from "react";
+import { useState, useCallback, useTransition, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -84,6 +84,111 @@ function Chip({ label, cls }: { label: string; cls: string }) {
         >
             {label}
         </span>
+    );
+}
+
+// ── PDF first-page thumbnail via PDF.js ────────────────────────────────────────
+
+function PdfThumbnail({
+    file,
+    previewUrl,
+    onFullscreen,
+}: {
+    file: File;
+    previewUrl: string;
+    onFullscreen: () => void;
+}) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        setError(false);
+
+        (async () => {
+            try {
+                const pdfjsLib = await import("pdfjs-dist");
+                // Disable worker — runs on main thread, no CDN/version issues
+                pdfjsLib.GlobalWorkerOptions.workerSrc = "";
+
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer })
+                    .promise;
+                if (cancelled) return;
+
+                const page = await pdf.getPage(1);
+                if (cancelled) return;
+
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+
+                const viewport = page.getViewport({ scale: 1 });
+                // Scale to fit container width (~400px max)
+                const scale = Math.min(400 / viewport.width, 2);
+                const scaled = page.getViewport({ scale });
+
+                canvas.width = scaled.width;
+                canvas.height = scaled.height;
+
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return;
+                await page.render({
+                    canvas,
+                    viewport: scaled,
+                }).promise;
+
+                if (!cancelled) setLoading(false);
+            } catch (err) {
+                console.error("PDF thumbnail error:", err);
+                if (!cancelled) {
+                    setLoading(false);
+                    setError(true);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [file]);
+
+    if (error) {
+        // Fallback: show file icon if canvas render fails
+        return (
+            <div className="flex items-center gap-2 rounded-lg border bg-muted/20 p-4">
+                <FileText className="h-8 w-8 text-teal-400 shrink-0" />
+                <div>
+                    <div className="text-sm font-medium">{file.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                        PDF document
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={onFullscreen}
+            className="group relative w-full overflow-hidden rounded-lg border bg-muted/20 hover:border-border transition-colors"
+            aria-label="View fullscreen"
+        >
+            {loading && (
+                <div className="flex items-center justify-center h-40">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+            )}
+            <canvas
+                ref={canvasRef}
+                className={`w-full block ${loading ? "hidden" : ""}`}
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors rounded-lg">
+                <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+        </button>
     );
 }
 
@@ -182,26 +287,13 @@ function ProofUpload({
                         </button>
                     )}
 
-                    {/* PDF preview */}
+                    {/* PDF preview — first page thumbnail via PDF.js */}
                     {isPdf && (
-                        <div className="relative rounded-lg border overflow-hidden bg-muted/20">
-                            <iframe
-                                src={previewUrl}
-                                className="w-full h-[60vh]"
-                                title="PDF preview"
-                            />
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onFullscreen(file);
-                                }}
-                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
-                                aria-label="Expand"
-                            >
-                                <ZoomIn className="h-4 w-4" />
-                            </button>
-                        </div>
+                        <PdfThumbnail
+                            file={file}
+                            previewUrl={previewUrl}
+                            onFullscreen={() => onFullscreen(file)}
+                        />
                     )}
 
                     {/* Non-previewable file (shouldn't happen with accept filter, but fallback) */}
@@ -328,10 +420,9 @@ export default function SelfEnrollModal({
             return;
         }
         startTransition(async () => {
-            const res = await selfEnrollExistingTraining(
-                selected.id,
-                enrollProof,
-            );
+            const fd = new FormData();
+            fd.append("proof", enrollProof);
+            const res = await selfEnrollExistingTraining(selected.id, fd);
             if (!res.success) {
                 toast.error(res.error);
                 return;
@@ -354,20 +445,24 @@ export default function SelfEnrollModal({
         }
 
         startTransition(async () => {
-            const res = await teacherSelfReportTraining({
-                title: formData.title,
-                type: formData.type,
-                level: formData.level,
-                sponsoring_agency: formData.sponsoring_agency,
-                total_hours: Number(formData.total_hours),
-                start_date: toLocalDateString(formData.start_date!),
-                end_date: formData.end_date
-                    ? toLocalDateString(formData.end_date)
-                    : undefined,
-                venue: formData.venue || undefined,
-                description: formData.description || undefined,
-                proof: createProof,
-            });
+            const fd = new FormData();
+            fd.append("proof", createProof);
+            const res = await teacherSelfReportTraining(
+                {
+                    title: formData.title,
+                    type: formData.type,
+                    level: formData.level,
+                    sponsoring_agency: formData.sponsoring_agency,
+                    total_hours: Number(formData.total_hours),
+                    start_date: toLocalDateString(formData.start_date!),
+                    end_date: formData.end_date
+                        ? toLocalDateString(formData.end_date)
+                        : undefined,
+                    venue: formData.venue || undefined,
+                    description: formData.description || undefined,
+                },
+                fd,
+            );
 
             if (!res.success) {
                 // if duplicate found, suggest enrolling instead

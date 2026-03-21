@@ -23,12 +23,15 @@ type TeacherSelfReportInput = {
   end_date?: string;
   venue?: string;
   description?: string;
-  proof: File;
+
 };
 
 export async function teacherSelfReportTraining(
-  input: TeacherSelfReportInput
+  input: TeacherSelfReportInput,
+  fd: FormData
 ): Promise<ActionResult<{ attendanceId: string }>> {
+  const proof = fd.get('proof') as File | null;
+  if (!proof || proof.size === 0) return { success: false, error: 'Proof file is required.' };
   try {
     const supabase = await createClient();
     const { data: authData } = await supabase.auth.getUser();
@@ -101,12 +104,12 @@ export async function teacherSelfReportTraining(
       return { success: false, error: pdErr?.message ?? 'Failed to create training record' };
     }
 
-    const safeName = input.proof.name.replace(/[^\w.\-]+/g, '_');
+    const safeName = proof.name.replace(/[^\w.\-]+/g, '_');
     const proofPath = `attendance/${userId}/self-report/${training.id}/${Date.now()}_${safeName}`;
 
     const { error: uploadErr } = await admin.storage
       .from('certificates')
-      .upload(proofPath, input.proof, { upsert: true });
+      .upload(proofPath, proof, { upsert: true });
 
     if (uploadErr) {
       await admin.from('ProfessionalDevelopment').delete().eq('id', training.id);
@@ -155,8 +158,10 @@ export async function teacherSelfReportTraining(
 
 export async function selfEnrollExistingTraining(
   trainingId: string,
-  proof: File
+  fd: FormData
 ): Promise<ActionResult<{ attendanceId: string }>> {
+  const proof = fd.get('proof') as File | null;
+  if (!proof || proof.size === 0) return { success: false, error: 'Proof file is required.' };
   try {
     const supabase = await createClient();
     const { data: authData } = await supabase.auth.getUser();
