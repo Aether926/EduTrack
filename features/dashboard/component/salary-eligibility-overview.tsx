@@ -1,13 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-    CheckCircle2,
-    AlertTriangle,
-    Clock,
-    TrendingUp,
-    ArrowRight,
-} from "lucide-react";
+import { CheckCircle2, TrendingUp, ArrowRight } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -16,28 +10,11 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SalaryStatusBadge } from "@/components/ui-elements/badges/salary-status";
 import type {
     TeacherEligibilityRow,
     EligibilityStatus,
 } from "@/lib/database/salary-eligibility";
-
-const statusConfig: Record<
-    EligibilityStatus,
-    { cls: string; icon: React.ReactNode }
-> = {
-    ELIGIBLE: {
-        cls: "bg-muted/50 text-foreground border border-border/60",
-        icon: <CheckCircle2 className="h-3 w-3" />,
-    },
-    APPROACHING: {
-        cls: "bg-muted/50 text-muted-foreground border border-border/60",
-        icon: <AlertTriangle className="h-3 w-3" />,
-    },
-    ON_TRACK: {
-        cls: "bg-muted/30 text-muted-foreground border border-border/50",
-        icon: <Clock className="h-3 w-3" />,
-    },
-};
 
 interface SalaryEligibilityOverviewProps {
     data: TeacherEligibilityRow[];
@@ -116,7 +93,6 @@ export default function SalaryEligibilityOverview({
                 ) : (
                     <div className="divide-y divide-border/40">
                         {preview.map((row) => {
-                            const sc = statusConfig[row.status];
                             return (
                                 <div
                                     key={row.userId}
@@ -149,16 +125,10 @@ export default function SalaryEligibilityOverview({
                                             )}
                                         </p>
                                     </div>
-                                    <span
-                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0 ${sc.cls}`}
-                                    >
-                                        {sc.icon}
-                                        {row.status === "ELIGIBLE"
-                                            ? "Eligible"
-                                            : row.status === "APPROACHING"
-                                              ? "Soon"
-                                              : "On Track"}
-                                    </span>
+                                    <SalaryStatusBadge
+                                        status={row.status.toLowerCase()}
+                                        size="xs"
+                                    />
                                 </div>
                             );
                         })}

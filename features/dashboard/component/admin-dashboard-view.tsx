@@ -459,12 +459,6 @@ function SalaryCard({
                             Step increment status
                         </CardDescription>
                     </div>
-                    {eligibleCount > 0 && (
-                        <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
-                            {eligibleCount} eligible
-                        </span>
-                    )}
                 </div>
             </CardHeader>
             <CardContent className="px-5 pb-2 pt-0">
@@ -671,7 +665,6 @@ export default function AdminDashboardView({
     adminStats,
     activity,
     eligibilityData,
-    eligibilityCount,
     adminEvents,
 }: Props) {
     const {

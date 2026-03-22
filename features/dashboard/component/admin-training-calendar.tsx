@@ -15,7 +15,7 @@ import type { AdminCalendarEvent } from "@/lib/database/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TypeBadge } from "@/components/ui-elements/badges/type";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -191,7 +191,7 @@ function formatDisplayDate(key: string) {
 // ── Main export ────────────────────────────────────────────────────────────────
 
 export default function AdminTrainingCalendar({
-    events,
+    events = [],
 }: {
     events: AdminCalendarEvent[];
 }) {
@@ -556,7 +556,7 @@ export default function AdminTrainingCalendar({
                                                                             (
                                                                                 t,
                                                                             ) => (
-                                                                                <InitialAvatar
+                                                                                <UserAvatar
                                                                                     key={
                                                                                         t.id
                                                                                     }
@@ -605,7 +605,7 @@ export default function AdminTrainingCalendar({
                                                                             }
                                                                             className="flex items-center gap-2"
                                                                         >
-                                                                            <InitialAvatar
+                                                                            <UserAvatar
                                                                                 name={
                                                                                     t.name
                                                                                 }

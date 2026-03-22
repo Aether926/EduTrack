@@ -18,6 +18,7 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui-elements/badges/status";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -639,22 +640,6 @@ export default function TrainingCalendar({
                                                   ? "border-l-4 border-l-pink-500/60"
                                                   : "border-l-4 border-l-violet-500/60";
 
-                                        const pillCls = isApproved
-                                            ? "bg-emerald-500/15 text-emerald-400"
-                                            : isPending
-                                              ? "bg-amber-500/15 text-amber-400"
-                                              : isRejected
-                                                ? "bg-rose-500/15 text-rose-400"
-                                                : "bg-sky-500/15 text-sky-400";
-
-                                        const pillLabel = isApproved
-                                            ? "Approved"
-                                            : isPending
-                                              ? "Pending"
-                                              : isRejected
-                                                ? "Rejected"
-                                                : "Enrolled";
-
                                         return (
                                             <motion.div
                                                 key={e.id}
@@ -681,11 +666,18 @@ export default function TrainingCalendar({
                                                         {e.title}
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <span
-                                                            className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${pillCls}`}
-                                                        >
-                                                            {pillLabel}
-                                                        </span>
+                                                        <StatusBadge
+                                                            status={
+                                                                isApproved
+                                                                    ? "approved"
+                                                                    : isPending
+                                                                      ? "pending"
+                                                                      : isRejected
+                                                                        ? "rejected"
+                                                                        : "enrolled"
+                                                            }
+                                                            size="xs"
+                                                        />
                                                         <span className="text-xs text-muted-foreground">
                                                             {e.start}
                                                             {e.end
