@@ -14,7 +14,7 @@ import {
 import type { AdminCalendarEvent } from "@/lib/database/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TypeBadge } from "@/components/ui-elements/badges/type";
+import { TypeBadge } from "@/components/ui-elements/badges";
 import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
 
 // ── Constants ──────────────────────────────────────────────────────────────────

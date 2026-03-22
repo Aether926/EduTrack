@@ -18,7 +18,7 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/ui-elements/badges/status";
+import { StatusBadge } from "@/components/ui-elements/badges";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 

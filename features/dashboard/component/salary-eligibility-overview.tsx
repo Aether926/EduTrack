@@ -10,7 +10,7 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SalaryStatusBadge } from "@/components/ui-elements/badges/salary-status";
+import { SalaryStatusBadge } from "@/components/ui-elements/badges";
 import type {
     TeacherEligibilityRow,
     EligibilityStatus,

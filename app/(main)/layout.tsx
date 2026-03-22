@@ -6,7 +6,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/app-sidebar";
-import { MobileTopbar } from "@/components/mobile-topbar";
+import { MobileTopbar } from "@/components/ui-elements/mobile-topbar";
 import { DeletionWarningBanner } from "@/features/settingss/components/deletion-warning-banner";
 import { getUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";

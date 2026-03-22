@@ -30,15 +30,15 @@ import { Input } from "@/components/ui/input";
 import {
     NameInput,
     MiddleInitialInput,
-} from "@/components/formatter/name/name-input";
+} from "@/components/formatter/name-input";
 import {
     ContactInput,
     isValidContact,
-} from "@/components/formatter/contact/contact-input";
+} from "@/components/formatter/contact-input";
 import {
     EmployeeIdInput,
     isValidEmployeeId,
-} from "@/components/formatter/employee-id/employee-id-input";
+} from "@/components/formatter/employee-id-input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
