@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useTheme } from "next-themes";
-import { supabase } from "@/lib/supabaseClient";
+import { EyeOff } from "lucide-react";
 
 import ProfileHeader from "@/features/profiles/components/profile-header/profile-header";
 import PersonalInfoCard from "@/features/profiles/components/cards/personal-info-card";
@@ -20,6 +20,7 @@ import AppointmentHistoryCard from "@/features/profiles/components/cards/appoint
 import type { TrainingRow } from "@/features/profiles/types/trainings";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import type { ProfileState } from "@/features/profiles/types/profile";
+import type { PrivacySettings } from "@/features/profiles/actions/privacy-actions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyProfile = Record<string, any>;
@@ -36,26 +37,53 @@ function str(v: unknown): string {
     return String(v);
 }
 
+// ── All-private placeholder ────────────────────────────────────────────────────
+function AllPrivateCard() {
+    return (
+        <div className="flex justify-center items-center py-12 md:py-24 px-4">
+            <div className="rounded-xl border border-border/40 bg-muted/10 px-6 py-10 md:px-12 md:py-16 flex flex-col items-center gap-3 w-full max-w-lg text-center">
+                <EyeOff className="h-8 w-8 md:h-12 md:w-12 shrink-0 opacity-30" />
+                <p className="text-lg md:text-xl font-semibold">
+                    Profile is private
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    This teacher has chosen to keep their profile information
+                    private.
+                </p>
+            </div>
+        </div>
+    );
+}
+
+// ── Default privacy settings ───────────────────────────────────────────────────
+const DEFAULT_PRIVACY: PrivacySettings = {
+    contactInfo: false,
+    emergencyContact: false,
+    educationCredentials: false,
+    educationBackground: false,
+};
+
 export default function PublicProfileView(props: {
     profile: AnyProfile;
     from?: FromSource;
     trainings?: TrainingRow[];
     viewerRole: ViewerRole;
+    hasSession?: boolean;
+    showRecordButton?: boolean;
+    isArchived?: boolean;
 }) {
-    const { profile, from = "teacher", trainings = [], viewerRole } = props;
+    const {
+        profile,
+        from = "teacher",
+        trainings = [],
+        viewerRole,
+        hasSession = false,
+        showRecordButton = false,
+        isArchived = false,
+    } = props;
 
     const { theme } = useTheme();
     const bgClass = theme === "light" ? "bg-gray-100" : "bg-gray-950";
-
-    const [hasSession, setHasSession] = useState(false);
-
-    useEffect(() => {
-        const run = async () => {
-            const { data } = await supabase.auth.getSession();
-            setHasSession(Boolean(data.session));
-        };
-        void run();
-    }, []);
 
     const data = useMemo<ProfileState>(
         () => ({
@@ -81,6 +109,7 @@ export default function PublicProfileView(props: {
                 profile?.dateOfOriginalAppointment,
             ),
             dateOfLatestAppointment: toDate(profile?.dateOfLatestAppointment),
+            dateOfOriginalDeployment: toDate(profile?.dateOfOriginalDeployment),
             pagibigNo: str(profile?.pagibigNo),
             philHealthNo: str(profile?.philHealthNo),
             gsisNo: str(profile?.gsisNo),
@@ -179,17 +208,34 @@ export default function PublicProfileView(props: {
             emergencyAddress: str(profile?.emergencyAddress),
             emergencyTelephoneNo: str(profile?.emergencyTelephoneNo),
             profileImage: profile?.profileImage ?? null,
+            privacySettings: profile?.privacySettings ?? null,
         }),
         [profile],
     );
 
-    const isAdmin = viewerRole === "ADMIN";
+    const isAdmin = ["ADMIN", "SUPERADMIN"].includes(viewerRole);
     const isTeacher = viewerRole === "TEACHER";
-    const isGuest = viewerRole === "GUEST";
     const noop = () => {};
 
+    // ── Privacy settings — only applies to teacher viewing teacher ────────────
+    const privacy: PrivacySettings = isTeacher
+        ? { ...DEFAULT_PRIVACY, ...(data.privacySettings ?? {}) }
+        : DEFAULT_PRIVACY;
+
+    const can = (key: keyof PrivacySettings) => isAdmin || privacy[key];
+
+    const allPrivate =
+        hasSession &&
+        isTeacher &&
+        !(
+            can("contactInfo") ||
+            can("emergencyContact") ||
+            can("educationCredentials") ||
+            can("educationBackground")
+        );
+
     return (
-        <div className={`min-h-screen ${bgClass} space-y-6`}>
+        <div className={`min-h-screen ${bgClass}`}>
             {from === "qr" && !hasSession && (
                 <div className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
                     <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
@@ -215,64 +261,164 @@ export default function PublicProfileView(props: {
                 </div>
             )}
 
-            <ProfileHeader
-                teacherId={str(profile?.id)}
-                preview={data.profileImage ?? null}
-                isEditing={false}
-                tempProfileData={{
-                    firstName: data.firstName,
-                    middleInitial: data.middleInitial,
-                    lastName: data.lastName,
-                    position: data.position,
-                    username: data.username,
-                }}
-                showActions={false}
-                onImageChange={noop}
-                onSave={noop}
-                onCancel={noop}
-                onEdit={noop}
-            />
+            <div className="space-y-6">
+                <ProfileHeader
+                    teacherId={str(profile?.id)}
+                    preview={data.profileImage ?? null}
+                    isEditing={false}
+                    tempProfileData={{
+                        firstName: data.firstName,
+                        middleInitial: data.middleInitial,
+                        lastName: data.lastName,
+                        position: data.position,
+                        username: data.username,
+                    }}
+                    showActions={true}
+                    showRecordsButton={isAdmin}
+                    showShareMenu={false}
+                    isArchived={isArchived}
+                    onImageChange={noop}
+                    onSave={noop}
+                    onCancel={noop}
+                    onEdit={noop}
+                />
 
-            {/* ── Layout ── */}
-            <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
-                {/* Left Column — Personal Info */}
-                <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                    <PersonalInfoCard
-                        data={data}
-                        isEditing={false}
-                        onInputChange={noop}
-                        onDateChange={noop}
-                        viewerRole={viewerRole}
-                    />
-
-                    {/* Trainings & Service Record — TEACHER + ADMIN, tablet/desktop */}
-                    {!isGuest && (
-                        <div className="hidden md:flex md:flex-col md:gap-4">
-                            <TrainingsCard
-                                trainings={trainings}
-                                loading={false}
-                                viewerRole={viewerRole}
+                {/* ── Not logged in — contact + emergency only ── */}
+                {!hasSession && (
+                    <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <ContactInfoCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
                             />
-                            <ServiceRecordCard data={data} />
                         </div>
-                    )}
-                </div>
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <EmergencyContactCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                            />
+                        </div>
+                    </div>
+                )}
 
-                {/* Right Column — Contact + Emergency (all roles); more for TEACHER + ADMIN */}
-                <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
-                    <ContactInfoCard
-                        data={data}
-                        isEditing={false}
-                        onInputChange={noop}
-                    />
-                    <EmergencyContactCard
-                        data={data}
-                        isEditing={false}
-                        onInputChange={noop}
-                    />
+                {/* ── Teacher viewing teacher — privacy controlled ── */}
+                {hasSession &&
+                    isTeacher &&
+                    (allPrivate ? (
+                        <AllPrivateCard />
+                    ) : (
+                        (() => {
+                            // Build ordered list of visible sections (excluding educationBackground)
+                            const mainSections: React.ReactNode[] = [];
+                            if (can("contactInfo"))
+                                mainSections.push(
+                                    <ContactInfoCard
+                                        key="contactInfo"
+                                        data={data}
+                                        isEditing={false}
+                                        onInputChange={noop}
+                                    />,
+                                );
+                            if (can("emergencyContact"))
+                                mainSections.push(
+                                    <EmergencyContactCard
+                                        key="emergencyContact"
+                                        data={data}
+                                        isEditing={false}
+                                        onInputChange={noop}
+                                    />,
+                                );
+                            if (can("educationCredentials"))
+                                mainSections.push(
+                                    <EducationCard
+                                        key="educationCredentials"
+                                        data={data}
+                                        isEditing={false}
+                                        onInputChange={noop}
+                                    />,
+                                );
 
-                    {!isGuest && (
-                        <>
+                            const showEduBg = can("educationBackground");
+                            const totalVisible =
+                                mainSections.length + (showEduBg ? 1 : 0);
+
+                            // Single card — center it
+                            if (totalVisible === 1) {
+                                return (
+                                    <div className="flex justify-center p-4 md:px-6">
+                                        <div className="w-full md:w-1/2 xl:max-w-[500px]">
+                                            {mainSections[0] ?? (
+                                                <EducationBackgroundCard
+                                                    data={data}
+                                                    isEditing={false}
+                                                    onInputChange={noop}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            if (showEduBg) {
+                                // Education History visible: left = all others stacked, right = education history alone
+                                return (
+                                    <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+                                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                                            {mainSections}
+                                        </div>
+                                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                                            <EducationBackgroundCard
+                                                data={data}
+                                                isEditing={false}
+                                                onInputChange={noop}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            } else {
+                                // Education History NOT visible: zigzag — left gets [0,2,4...], right gets [1,3,5...]
+                                const leftCol = mainSections.filter(
+                                    (_, i) => i % 2 === 0,
+                                );
+                                const rightCol = mainSections.filter(
+                                    (_, i) => i % 2 === 1,
+                                );
+                                return (
+                                    <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+                                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                                            {leftCol}
+                                        </div>
+                                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                                            {rightCol}
+                                        </div>
+                                    </div>
+                                );
+                            }
+                        })()
+                    ))}
+
+                {/* ── Admin — sees everything ── */}
+                {isAdmin && (
+                    <div className="flex flex-col md:flex-row justify-center gap-6 p-4 md:px-6">
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <PersonalInfoCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                                onDateChange={noop}
+                            />
+                            <ContactInfoCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                            />
+                            <EmergencyContactCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                            />
                             <EmploymentInfoCard
                                 data={data}
                                 isEditing={false}
@@ -281,6 +427,30 @@ export default function PublicProfileView(props: {
                                 viewerRole={viewerRole}
                                 from={from}
                                 isOwnProfile={false}
+                            />
+                            <AppointmentHistoryCard
+                                teacherId={str(profile?.id)}
+                                isOwnProfile={false}
+                                from={from}
+                            />
+                            <TrainingsCard
+                                trainings={trainings}
+                                loading={false}
+                                viewerRole={viewerRole}
+                            />
+                            <ServiceRecordCard data={data} />
+                        </div>
+                        <div className="flex flex-col gap-4 w-full md:w-1/2 xl:max-w-[500px]">
+                            <FamilyBackgroundCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
+                                onChildrenChange={noop}
+                            />
+                            <GovernmentIDsCard
+                                data={data}
+                                isEditing={false}
+                                onInputChange={noop}
                             />
                             <EducationCard
                                 data={data}
@@ -292,43 +462,10 @@ export default function PublicProfileView(props: {
                                 isEditing={false}
                                 onInputChange={noop}
                             />
-                            <AppointmentHistoryCard
-                                teacherId={str(profile?.id)}
-                                isOwnProfile={false}
-                                from={from}
-                            />
-
-                            {isAdmin && (
-                                <>
-                                    <FamilyBackgroundCard
-                                        data={data}
-                                        isEditing={false}
-                                        onInputChange={noop}
-                                        onChildrenChange={noop}
-                                    />
-                                    <GovernmentIDsCard
-                                        data={data}
-                                        isEditing={false}
-                                        onInputChange={noop}
-                                    />
-                                </>
-                            )}
-                        </>
-                    )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {/* Trainings & Service Record — TEACHER + ADMIN, mobile only */}
-            {!isGuest && (
-                <div className="md:hidden flex flex-col gap-4 px-4 pb-4">
-                    <TrainingsCard
-                        trainings={trainings}
-                        loading={false}
-                        viewerRole={viewerRole}
-                    />
-                    <ServiceRecordCard data={data} />
-                </div>
-            )}
         </div>
     );
 }

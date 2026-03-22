@@ -1,3 +1,5 @@
+import type { PrivacySettings } from "../actions/privacy-actions";
+
 export type TempProfileData = {
   firstName: string;
   middleInitial: string;
@@ -39,6 +41,7 @@ export type ProfileState = {
   plantillaNo: string;
   dateOfOriginalAppointment?: Date;
   dateOfLatestAppointment?: Date;
+  dateOfOriginalDeployment?: Date;
 
   // ── Government IDs ──
   pagibigNo: string;
@@ -150,4 +153,5 @@ export type ProfileState = {
   emergencyTelephoneNo: string;
 
   profileImage?: string | null;
+  privacySettings?: PrivacySettings | null;
 };

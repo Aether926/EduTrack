@@ -1,27 +1,24 @@
-import { supabase } from "@/lib/supabaseClient";
+"use server";
+import { createClient } from "@/lib/supabase/server";
 import type { ProfileFamily, ProfileChild } from "@/features/profiles/types/family-background";
 
-// ─── Fetch ────────────────────────────────────────────────────────────────────
-
 export async function fetchFamilyBackground(profileId: string) {
+  const supabase = await createClient();
   const [{ data: family, error: familyError }, { data: children, error: childrenError }] =
     await Promise.all([
       supabase
-        .from("ProfileFamily")
-        .select("*")
-        .eq("profileId", profileId)
-        .single(),
+      .from("ProfileFamily")
+      .select("*")
+      .eq("profileId", profileId)
+      .single(),
       supabase
-        .from("ProfileChildren")
-        .select("*")
-        .eq("profileId", profileId)
-        .order("createdAt", { ascending: true }),
+      .from("ProfileChildren")
+      .select("*")
+      .eq("profileId", profileId)
+      .order("createdAt", { ascending: true }),
     ]);
 
-  if (familyError && familyError.code !== "PGRST116") {
-    throw new Error(familyError.message);
-  }
-
+  if (familyError && familyError.code !== "PGRST116") throw new Error(familyError.message);
   if (childrenError) throw new Error(childrenError.message);
 
   return {
@@ -30,10 +27,8 @@ export async function fetchFamilyBackground(profileId: string) {
   };
 }
 
-export async function saveFamilyBackground(
-  profileId: string,
-  family: ProfileFamily
-) {
+export async function saveFamilyBackground(profileId: string, family: ProfileFamily) {
+  const supabase = await createClient();
   const payload = {
     profileId,
     spouseSurname: family.spouseSurname || null,
@@ -54,37 +49,25 @@ export async function saveFamilyBackground(
   };
 
   const { error } = family.id
-    ? await supabase
-        .from("ProfileFamily")
-        .update(payload)
-        .eq("id", family.id)
-    : await supabase
-        .from("ProfileFamily")
-        .insert({ ...payload });
+    ? await supabase.from("ProfileFamily").update(payload).eq("id", family.id)
+    : await supabase.from("ProfileFamily").insert({ ...payload });
 
   if (error) throw new Error(error.message);
 }
 
-// ─── Save Children (delete-and-reinsert) ─────────────────────────────────────
-// Simplest reliable approach: wipe existing rows, reinsert current list.
+export async function saveChildren(profileId: string, children: ProfileChild[]) {
+  const supabase = await createClient();
 
-export async function saveChildren(
-  profileId: string,
-  children: ProfileChild[]
-) {
-  // Delete all existing children for this profile
   const { error: deleteError } = await supabase
     .from("ProfileChildren")
     .delete()
     .eq("profileId", profileId);
 
   if (deleteError) throw new Error(deleteError.message);
-
-  // If no children to save, we're done
   if (children.length === 0) return;
 
   const rows = children
-    .filter((c) => c.name.trim()) // skip blank rows
+    .filter((c) => c.name.trim())
     .map((c) => ({
       profileId,
       name: c.name.trim(),
@@ -93,9 +76,6 @@ export async function saveChildren(
 
   if (rows.length === 0) return;
 
-  const { error: insertError } = await supabase
-    .from("ProfileChildren")
-    .insert(rows);
-
+  const { error: insertError } = await supabase.from("ProfileChildren").insert(rows);
   if (insertError) throw new Error(insertError.message);
 }

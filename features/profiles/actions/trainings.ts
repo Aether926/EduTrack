@@ -1,9 +1,10 @@
-import { supabase } from "@/lib/supabaseClient";
+"use server";
+import { createClient } from "@/lib/supabase/server";
 import type { TrainingRow } from "@/features/profiles/types/trainings";
 
 export async function getMyTrainings(): Promise<TrainingRow[]> {
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth.user;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data: attendanceRows, error: aErr } = await supabase
@@ -41,7 +42,6 @@ export async function getMyTrainings(): Promise<TrainingRow[]> {
     return {
       attendanceId: String(a.id),
       trainingId: String(a.training_id),
-
       title: pd?.title ?? "(missing title)",
       type: pd?.type ?? "",
       level: pd?.level ?? "",
@@ -50,13 +50,10 @@ export async function getMyTrainings(): Promise<TrainingRow[]> {
       totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
       approvedHours: pd?.approved_hours ?? null,
       sponsor: pd?.sponsoring_agency ?? "",
-
       status: a.status ?? "",
       result: a.result ?? null,
-
       proof_url: a.proof_url ?? null,
       proof_path: a.proof_path ?? null,
-
       created_at: a.created_at ?? "",
     };
   });

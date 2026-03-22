@@ -3,23 +3,22 @@ import { createAdminClient } from "@/lib/supabase/server";
 export type ProofReviewRow = {
   attendanceId: string;
 
-  // attendance
   status: string;
   submittedAt: string | null;
   proofUrl: string | null;
   result: string | null;
   remarks: string | null;
 
-  // teacher
   teacher: {
     userId: string;
     email: string | null;
     name: string;
+    firstName: string;       
+    lastName: string;
     employeeId: string | null;
     profileImage: string | null;
   };
 
-  // training
   training: {
     id: string;
     title: string;
@@ -33,6 +32,12 @@ export type ProofReviewRow = {
     description: string | null;
   };
 };
+
+export type ActionResult<T = null> =
+  | { ok: true; data?: T }
+  | { ok: false; error: string };
+
+// ── Fetch ──────────────────────────────────────────────────────────────────────
 
 type AttendanceRow = {
   id: string;
@@ -71,7 +76,6 @@ type PDRow = {
 export async function getPendingProofs(): Promise<ProofReviewRow[]> {
   const admin = createAdminClient();
 
-  // 1) attendance rows waiting for review
   const { data: att, error: attErr } = await admin
     .from("Attendance")
     .select(
@@ -86,7 +90,6 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
   const teacherIds = Array.from(new Set(attRows.map((r) => r.teacher_id)));
   const trainingIds = Array.from(new Set(attRows.map((r) => r.training_id)));
 
-  // 2) trainings
   const { data: pds } = await admin
     .from("ProfessionalDevelopment")
     .select(
@@ -98,7 +101,6 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
     ((pds ?? []) as PDRow[]).map((x) => [String(x.id), x])
   );
 
-  // 3) users -> email
   const { data: users } = await admin
     .from("User")
     .select("id,email")
@@ -116,7 +118,6 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
     )
   );
 
-  // 4) profiles by email
   let profiles: ProfileRow[] = [];
   if (emails.length > 0) {
     const { data: profData } = await admin
@@ -133,13 +134,14 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
       .map((p) => [String(p.email), p])
   );
 
-  // 5) map final rows
   return attRows.map((r) => {
     const pd = pdMap.get(String(r.training_id));
     const u = userMap.get(String(r.teacher_id));
     const prof = u?.email ? profileByEmail.get(u.email) : null;
 
-    const fullName = `${prof?.firstName ?? ""} ${prof?.lastName ?? ""}`.trim();
+    const firstName = prof?.firstName ?? "";
+    const lastName = prof?.lastName ?? "";
+    const fullName = `${firstName} ${lastName}`.trim();
 
     return {
       attendanceId: String(r.id),
@@ -154,6 +156,8 @@ export async function getPendingProofs(): Promise<ProofReviewRow[]> {
         userId: String(r.teacher_id),
         email: u?.email ?? null,
         name: fullName || u?.email || "(unknown)",
+        firstName,
+        lastName,
         employeeId: prof?.employeeId ?? null,
         profileImage: prof?.profileImage ?? null,
       },

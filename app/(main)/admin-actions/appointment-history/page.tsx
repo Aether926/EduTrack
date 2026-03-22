@@ -1,82 +1,95 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getUser, createAdminClient } from "@/lib/supabase/server";
 import { AppointmentHistoryClient } from "@/features/admin-actions/appointment-history/components/appointment-history-client";
 
 import { Badge } from "@/components/ui/badge";
 import { Users, ClipboardList } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
-const ALLOWED = ["ADMIN", "HR_ADMIN", "PRINCIPAL", "SUPER_ADMIN", "HR"] as const;
+const ALLOWED = new Set(["ADMIN", "SUPERADMIN"]);
 
 export default async function AppointmentHistoryPage() {
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/signin");
+    const user = await getUser();
+    if (!user) redirect("/signin");
 
-  const { data: viewer } = await supabase
-    .from("User")
-    .select("role")
-    .eq("id", auth.user.id)
-    .single();
+    const roleLabel = (user.user_metadata?.role ?? "TEACHER").toString();
+    if (!ALLOWED.has(roleLabel)) redirect("/");
 
-  const roleLabel = (viewer?.role ?? "USER").toString();
-  if (!ALLOWED.includes(roleLabel as any)) redirect("/");
+    const admin = createAdminClient();
 
-  const admin = createAdminClient();
+    const [{ data: history }, { data: profiles }, { data: hrRows }] = await Promise.all([
+        admin
+            .from("AppointmentHistory")
+            .select(
+                "id, teacher_id, position, appointment_type, start_date, end_date, memo_no, remarks, created_by, created_at, approved_by, approved_at, status, school_id, school_name",
+            )
+            .order("created_at", { ascending: false }),
+        admin
+            .from("Profile")
+            .select("id, firstName, lastName, email, profileImage")
+            .order("lastName", { ascending: true }),
+        admin
+            .from("ProfileHR")
+            .select("id, employeeId"),
+    ]);
 
-  const { data: history } = await admin
-    .from("AppointmentHistory")
-    .select("*")
-    .order("created_at", { ascending: false });
+    const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+    const hrMap = new Map((hrRows ?? []).map((h: any) => [h.id, h.employeeId ?? "—"]));
 
-  const { data: profiles } = await admin
-    .from("Profile")
-    .select("id, firstName, lastName, email")
-    .order("lastName", { ascending: true });
+    const merged = (history ?? []).map((row: any) => {
+        const profile = profileMap.get(row.teacher_id) ?? null;
+        return {
+            ...row,
+            teacher: profile
+                ? {
+                    ...profile,
+                    employeeId: hrMap.get(row.teacher_id) ?? "—",
+                }
+                : null,
+        };
+    });
 
-  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const teachers = (profiles ?? []).map((p: any) => ({
+        id: p.id,
+        fullName: `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim(),
+    }));
 
-  const merged = (history ?? []).map((row: any) => ({
-    ...row,
-    teacher: profileMap.get(row.teacher_id) ?? null,
-  }));
-
-  const teachers = (profiles ?? []).map((p: any) => ({
-    id: p.id,
-    fullName: `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim(),
-  }));
-
-  const totalRows = merged.length;
-  const totalTeachers = teachers.length;
-
-  return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
-      {/* header card (same style as other pages) */}
-      <div className="rounded-xl border bg-card p-4 md:p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{roleLabel}</Badge>
-            <Badge variant="outline">Appointment History</Badge>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="gap-2">
-              <ClipboardList className="h-3.5 w-3.5" />
-              {totalRows} record{totalRows === 1 ? "" : "s"}
-            </Badge>
-
-            <Badge variant="secondary" className="gap-2">
-              <Users className="h-3.5 w-3.5" />
-              {totalTeachers} teacher{totalTeachers === 1 ? "" : "s"}
-            </Badge>
-          </div>
+    return (
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
+            <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 via-transparent to-teal-400/5 pointer-events-none" />
+                <div className="relative px-5 py-5 md:px-6 md:py-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="rounded-lg border border-teal-500/20 bg-teal-500/10 p-2.5 shrink-0">
+                                <ClipboardList className="h-5 w-5 text-teal-400" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-semibold tracking-tight leading-tight">
+                                    Appointment History
+                                </h1>
+                                <p className="text-[13px] text-muted-foreground mt-0.5">
+                                    Track appointment changes and timelines.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                {roleLabel}
+                            </span>
+                            <Badge variant="outline" className="gap-1.5">
+                                <ClipboardList className="h-3.5 w-3.5" />
+                                {merged.length} record{merged.length === 1 ? "" : "s"}
+                            </Badge>
+                            <Badge variant="outline" className="gap-1.5">
+                                <Users className="h-3.5 w-3.5" />
+                                {teachers.length} teacher{teachers.length === 1 ? "" : "s"}
+                            </Badge>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <AppointmentHistoryClient rows={merged} teachers={teachers} />
         </div>
-      </div>
-
-      {/* existing UI */}
-      <AppointmentHistoryClient rows={merged} teachers={teachers} />
-    </div>
-  );
+    );
 }

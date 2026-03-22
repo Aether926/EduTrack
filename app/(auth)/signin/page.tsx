@@ -13,6 +13,7 @@ import {
     Award,
     ClipboardList,
 } from "lucide-react";
+import { logSignIn } from "@/app/actions/auth-log-actions";
 
 const FEATURES = [
     {
@@ -77,6 +78,7 @@ export default function LogIn() {
             .select("id")
             .eq("email", emailNorm)
             .maybeSingle();
+
         if (error) return null;
         return !!data;
     }
@@ -88,6 +90,7 @@ export default function LogIn() {
         if (!emailNorm && !password) return setMessage("Invalid credentials.");
         if (!emailNorm) return setMessage("Email is required.");
         if (!password) return setMessage("Password is required.");
+
         setSubmitting(true);
 
         const { error, data } = await supabase.auth.signInWithPassword({
@@ -99,11 +102,19 @@ export default function LogIn() {
             const msg = (error.message || "").toLowerCase();
             if (msg.includes("invalid login credentials")) {
                 const exists = await emailExistsInUserTable(emailNorm);
+
                 if (exists === false) setMessage("Email doesn't exist.");
                 else if (exists === true) setMessage("Wrong password.");
                 else setMessage("Invalid credentials.");
             } else if (msg.includes("email not confirmed")) {
                 setMessage("Please confirm your email first.");
+            } else if (
+                msg.includes("user is banned") ||
+                msg.includes("banned")
+            ) {
+                setMessage(
+                    "Your account has been archived. Please contact your administrator.",
+                );
             } else if (
                 msg.includes("too many requests") ||
                 msg.includes("rate")
@@ -122,6 +133,9 @@ export default function LogIn() {
             setSubmitting(false);
             return;
         }
+        try {
+            await logSignIn(userId, emailNorm);
+        } catch {}
 
         const { data: profile, error: profErr } = await supabase
             .from("User")
@@ -135,14 +149,14 @@ export default function LogIn() {
         }
 
         if (!profile) router.push("/fillUp");
-        else if (profile.status === "PENDING") router.push("/pending-approval");
+        else if (profile.status === "PENDING") router.push("/status");
         else if (profile.status === "APPROVED") router.push("/dashboard");
-        else
+        else {
             setMessage(
                 "Your account status is unclear. Please contact support.",
             );
-
-        setSubmitting(false);
+            setSubmitting(false);
+        }
     }
 
     return (

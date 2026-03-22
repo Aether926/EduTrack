@@ -299,6 +299,18 @@ export default function ProfileForm({
                                     <SelectItem value="teacher-3">
                                         Teacher III
                                     </SelectItem>
+                                    <SelectItem value="teacher-4">
+                                        Teacher IV
+                                    </SelectItem>
+                                    <SelectItem value="teacher-5">
+                                        Teacher V
+                                    </SelectItem>
+                                    <SelectItem value="teacher-6">
+                                        Teacher VI
+                                    </SelectItem>
+                                    <SelectItem value="teacher-7">
+                                        Teacher VII
+                                    </SelectItem>
                                     <SelectItem value="master-teacher-1">
                                         Master Teacher I
                                     </SelectItem>
@@ -308,8 +320,20 @@ export default function ProfileForm({
                                     <SelectItem value="master-teacher-3">
                                         Master Teacher III
                                     </SelectItem>
-                                    <SelectItem value="principal">
-                                        Principal
+                                    <SelectItem value="master-teacher-4">
+                                        Master Teacher IV
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-1">
+                                        School Principal I
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-2">
+                                        School Principal II
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-3">
+                                        School Principal III
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-4">
+                                        School Principal IV
                                     </SelectItem>
                                     <SelectItem value="administrative-staff">
                                         Administrative Staff

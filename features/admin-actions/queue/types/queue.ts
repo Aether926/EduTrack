@@ -1,12 +1,13 @@
 import type { ProfileHRChangeRequest } from "@/features/profiles/types/employment-info";
 import type { AppointmentChangeRequest } from "@/features/profiles/appointment/types/appointment";
-import type { ResponsibilityChangeRequest } from "@/features/responsibilities/types/responsibility";
+import type { ResponsibilityChangeRequest } from "@/features/admin-actions/responsibilities/types/responsibility";
 export type RequestWithTeacher = ProfileHRChangeRequest & {
   teacher: {
     id: string;
     firstName: string;
     lastName: string;
     email: string;
+    profileImage: string | null;
   } | null;
 };
 
@@ -16,6 +17,7 @@ export type AppointmentRequestWithTeacher = AppointmentChangeRequest & {
     firstName: string;
     lastName: string;
     email: string;
+    profileImage: string | null;
   } | null;
 };
 
@@ -25,5 +27,6 @@ export type ResponsibilityRequestWithTeacher = ResponsibilityChangeRequest & {
     firstName: string;
     lastName: string;
     email: string;
+    profileImage: string | null;
   } | null;
 };

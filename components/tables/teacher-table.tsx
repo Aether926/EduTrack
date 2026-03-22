@@ -203,11 +203,11 @@ export default function TeacherTable({
     const canManage = role === "ADMIN" || isAdmin || !role;
 
     const handleAdd = (selectedRows: Teacher[]) => {
-        console.log("Adding:", selectedRows);
+        
     };
 
     const handleDelete = (selectedRows: Teacher[]) => {
-        console.log("Deleting:", selectedRows);
+        
     };
 
     return (

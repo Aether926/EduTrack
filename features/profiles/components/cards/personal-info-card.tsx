@@ -11,6 +11,9 @@ import {
     Droplets,
     Flag,
     Copy,
+    Edit2,
+    Save,
+    X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,12 +32,66 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetFooter,
+} from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/combobox";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { ProfileState } from "@/features/profiles/types/profile";
-import { formatName, cleanMiddleInitial } from "@/app/util/helper";
+import { formatName } from "@/app/util/helper";
+
+// ── Read-only display value ────────────────────────────────────────────────────
+
+function DisplayValue({ value }: { value?: string | null }) {
+    return (
+        <div className="px-3 py-2 rounded-md bg-white/5 border border-white/8 text-sm font-medium text-foreground">
+            {value || <span className="text-muted-foreground">—</span>}
+        </div>
+    );
+}
+
+// ── Field label ────────────────────────────────────────────────────────────────
+
+function FieldLabel({
+    icon: Icon,
+    children,
+    required,
+}: {
+    icon?: React.ElementType;
+    children: React.ReactNode;
+    required?: boolean;
+}) {
+    return (
+        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            {Icon && <Icon size={12} className="text-blue-400 shrink-0" />}
+            {children}
+            {required && <span className="text-rose-400 ml-0.5">*</span>}
+        </label>
+    );
+}
+
+// ── Section divider ────────────────────────────────────────────────────────────
+
+function SectionDivider({ label }: { label: string }) {
+    return (
+        <div className="flex items-center gap-3 py-1">
+            <div className="h-px flex-1 bg-border/50" />
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest shrink-0">
+                {label}
+            </span>
+            <div className="h-px flex-1 bg-border/50" />
+        </div>
+    );
+}
+
+// ── InputField ─────────────────────────────────────────────────────────────────
 
 function InputField(props: {
     label: string;
@@ -68,8 +125,10 @@ function InputField(props: {
 
     return (
         <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                {Icon ? <Icon size={14} className="text-blue-600" /> : null}
+            <FieldLabel
+                icon={Icon as React.ElementType | undefined}
+                required={required}
+            >
                 {mobileLabel ? (
                     <>
                         <span className="max-[425px]:hidden">{label}</span>
@@ -80,14 +139,13 @@ function InputField(props: {
                 ) : (
                     label
                 )}
-                {required ? <span className="text-red-500">*</span> : null}
-            </label>
+            </FieldLabel>
             {isEditing ? (
                 isTextarea ? (
                     <Textarea
                         value={value}
                         onChange={(e) => onInputChange(field, e.target.value)}
-                        className="resize-none"
+                        className="resize-none bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
                         rows={rows || 3}
                         placeholder={placeholder || ""}
                         required={Boolean(required)}
@@ -100,16 +158,17 @@ function InputField(props: {
                         onBlur={() => onBlur?.(field)}
                         placeholder={placeholder || ""}
                         required={Boolean(required)}
+                        className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
                     />
                 )
             ) : (
-                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                    {value || "—"}
-                </div>
+                <DisplayValue value={value} />
             )}
         </div>
     );
 }
+
+// ── DatePickerField ────────────────────────────────────────────────────────────
 
 function DatePickerField(props: {
     label: string;
@@ -121,20 +180,20 @@ function DatePickerField(props: {
 }) {
     const { label, value, field, isEditing, onDateChange, required } = props;
     const [open, setOpen] = React.useState(false);
-
     return (
         <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                <Calendar size={14} className="text-blue-600" />
+            <FieldLabel
+                icon={Calendar as React.ElementType}
+                required={required}
+            >
                 {label}
-                {required ? <span className="text-red-500">*</span> : null}
-            </label>
+            </FieldLabel>
             {isEditing ? (
                 <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
-                            className="w-full justify-start text-left font-normal"
+                            className="w-full justify-start text-left font-normal bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20"
                         >
                             {value ? (
                                 value.toLocaleDateString()
@@ -143,7 +202,7 @@ function DatePickerField(props: {
                                     Select date
                                 </span>
                             )}
-                            <ChevronDownIcon className="ml-auto h-4 w-4" />
+                            <ChevronDownIcon className="ml-auto h-4 w-4 text-muted-foreground" />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -162,13 +221,15 @@ function DatePickerField(props: {
                     </PopoverContent>
                 </Popover>
             ) : (
-                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                    {value ? value.toLocaleDateString() : "—"}
-                </div>
+                <DisplayValue
+                    value={value ? value.toLocaleDateString() : undefined}
+                />
             )}
         </div>
     );
 }
+
+// ── SelectField ────────────────────────────────────────────────────────────────
 
 function SelectField(props: {
     label: string;
@@ -190,21 +251,17 @@ function SelectField(props: {
         onInputChange,
         placeholder,
     } = props;
-
     return (
         <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                {Icon ? (
-                    <Icon size={14} className="text-blue-600 shrink-0" />
-                ) : null}
+            <FieldLabel icon={Icon as React.ElementType | undefined}>
                 {label}
-            </label>
+            </FieldLabel>
             {isEditing ? (
                 <Select
                     value={value}
                     onValueChange={(v) => onInputChange(field, v)}
                 >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20">
                         <SelectValue
                             placeholder={placeholder ?? `Select ${label}`}
                         />
@@ -218,15 +275,13 @@ function SelectField(props: {
                     </SelectContent>
                 </Select>
             ) : (
-                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                    {value || "—"}
-                </div>
+                <DisplayValue value={value} />
             )}
         </div>
     );
 }
 
-// ─── Address Block ────────────────────────────────────────────────────────────
+// ── AddressBlock ───────────────────────────────────────────────────────────────
 
 function AddressBlock(props: {
     prefix: "residential" | "permanent";
@@ -240,7 +295,6 @@ function AddressBlock(props: {
     const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     const f = (suffix: string) =>
         `${prefix}${cap(suffix)}` as keyof ProfileState;
-
     const fields = [
         {
             key: "HouseNo",
@@ -258,47 +312,50 @@ function AddressBlock(props: {
             key: "Subdivision",
             label: "Subdivision / Village",
             half: false,
-            placeholder: "e.g. Greenview Subd.",
+            placeholder: "e.g. Deca Homes.",
         },
         {
             key: "Barangay",
             label: "Barangay",
             half: true,
-            placeholder: "e.g. Bagong Silang",
+            placeholder: "e.g. Valencia",
         },
         {
             key: "City",
             label: "City / Municipality",
             half: true,
-            placeholder: "e.g. Valencia City",
+            placeholder: "e.g. Ormoc City",
         },
         {
             key: "Province",
             label: "Province",
             half: true,
-            placeholder: "e.g. Bukidnon",
+            placeholder: "e.g. Leyte",
         },
         {
             key: "ZipCode",
             label: "ZIP Code",
             half: true,
-            placeholder: "e.g. 8709",
+            placeholder: "e.g. 6513",
         },
     ];
-
     return (
-        <div className={disabled ? "opacity-50 pointer-events-none" : ""}>
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2 mb-3">
-                <MapPin size={13} className="text-blue-500" />
-                {label}
-            </p>
+        <div className={disabled ? "opacity-40 pointer-events-none" : ""}>
+            <div className="flex items-center gap-2 mb-3">
+                <div className="rounded-md border border-white/10 bg-white/5 p-1 shrink-0">
+                    <MapPin className="h-3 w-3 text-blue-400" />
+                </div>
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+                    {label}
+                </span>
+            </div>
             <div className="grid grid-cols-2 max-[480px]:grid-cols-1 gap-3 items-end">
                 {fields.map((field) => (
                     <div
                         key={field.key}
                         className={`space-y-1.5 ${!field.half ? "col-span-2 max-[480px]:col-span-1" : ""}`}
                     >
-                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block">
+                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                             {field.label}
                         </label>
                         {isEditing && !disabled ? (
@@ -308,11 +365,14 @@ function AddressBlock(props: {
                                     onInputChange(f(field.key), e.target.value)
                                 }
                                 placeholder={field.placeholder}
+                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
                             />
                         ) : (
-                            <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {(data[f(field.key)] as string) || "—"}
-                            </div>
+                            <DisplayValue
+                                value={
+                                    (data[f(field.key)] as string) || undefined
+                                }
+                            />
                         )}
                     </div>
                 ))}
@@ -321,11 +381,10 @@ function AddressBlock(props: {
     );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────────
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 const NAME_EXTENSIONS = ["Jr.", "Sr.", "II", "III", "IV", "V"];
-
 const nationalities = [
     { value: "american", label: "American" },
     { value: "australian", label: "Australian" },
@@ -351,7 +410,6 @@ const nationalities = [
     { value: "thai", label: "Thai" },
     { value: "vietnamese", label: "Vietnamese" },
 ];
-
 const religions = [
     { value: "roman catholic", label: "Roman Catholic" },
     { value: "islam", label: "Islam" },
@@ -361,18 +419,21 @@ const religions = [
     { value: "seventh-day Adventist", label: "Seventh-day Adventist" },
 ];
 
-export default function PersonalInfoCard(props: {
+// ── PersonalInfoForm ───────────────────────────────────────────────────────────
+
+function PersonalInfoForm({
+    data,
+    isEditing,
+    onInputChange,
+    onDateChange,
+}: {
     data: ProfileState;
     isEditing: boolean;
     onInputChange: (field: keyof ProfileState, value: string) => void;
     onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
-    viewerRole?: "GUEST" | "TEACHER" | "ADMIN";
 }) {
-    const { data, isEditing, onInputChange, onDateChange, viewerRole } = props;
-
     const isDualCitizen = data.citizenship === "Dual Citizenship";
 
-    // Auto-copy residential → permanent when toggled
     const handleSameAsResidential = (checked: boolean) => {
         onInputChange(
             "sameAsResidential" as keyof ProfileState,
@@ -390,407 +451,338 @@ export default function PersonalInfoCard(props: {
     };
 
     return (
-        <Card className="border-0 shadow-lg w-full xl:max-w-[500px]">
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <User className="text-blue-600" size={20} />
-                    <CardTitle>Personal Information</CardTitle>
-                </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6 w-full">
-                {/* ── Name fields ── */}
-                <div className="space-y-4">
-                    <InputField
-                        label="First Name"
-                        value={data.firstName}
-                        field="firstName"
-                        icon={User}
-                        isEditing={isEditing}
-                        onInputChange={onInputChange}
-                        onBlur={(field) => {
-                            if (field === "firstName")
-                                onInputChange(
-                                    "firstName",
-                                    formatName(data.firstName),
-                                );
-                        }}
-                        required
-                    />
-
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                                <span className="hidden md:inline">
-                                    Middle Initial
-                                </span>
-                                <span className="inline md:hidden">M.I.</span>
-                            </label>
-                            {isEditing ? (
-                                <Input
-                                    value={data.middleInitial}
-                                    onChange={(e) => {
-                                        const raw = e.target.value.replace(
-                                            /[^a-zA-Z.]/g,
-                                            "",
-                                        );
-                                        const letter = raw
-                                            .replace(/\./g, "")
-                                            .slice(0, 1)
-                                            .toUpperCase();
-                                        onInputChange(
-                                            "middleInitial",
-                                            letter ? `${letter}.` : "",
-                                        );
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (
-                                            (e.key === "Backspace" ||
-                                                e.key === "Delete") &&
-                                            data.middleInitial
-                                        ) {
-                                            e.preventDefault();
-                                            onInputChange("middleInitial", "");
-                                        }
-                                    }}
-                                    placeholder="Optional"
-                                />
-                            ) : (
-                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                    {data.middleInitial || "—"}
-                                </div>
-                            )}
-                        </div>
-                        <div className="col-span-2">
-                            <InputField
-                                label="Last Name"
-                                value={data.lastName}
-                                field="lastName"
-                                isEditing={isEditing}
-                                onInputChange={onInputChange}
-                                onBlur={(field) => {
-                                    if (field === "lastName")
-                                        onInputChange(
-                                            "lastName",
-                                            formatName(data.lastName),
-                                        );
+        <div className="space-y-6">
+            {/* ── Name ── */}
+            <div className="space-y-4">
+                <InputField
+                    label="First Name"
+                    value={data.firstName}
+                    field="firstName"
+                    icon={User}
+                    isEditing={isEditing}
+                    onInputChange={onInputChange}
+                    onBlur={(f) => {
+                        if (f === "firstName")
+                            onInputChange(
+                                "firstName",
+                                formatName(data.firstName),
+                            );
+                    }}
+                    required
+                />
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                        <FieldLabel>
+                            <span className="hidden md:inline">
+                                Middle Initial
+                            </span>
+                            <span className="inline md:hidden">M.I.</span>
+                        </FieldLabel>
+                        {isEditing ? (
+                            <Input
+                                value={data.middleInitial}
+                                onChange={(e) => {
+                                    const raw = e.target.value.replace(
+                                        /[^a-zA-Z.]/g,
+                                        "",
+                                    );
+                                    const letter = raw
+                                        .replace(/\./g, "")
+                                        .slice(0, 1)
+                                        .toUpperCase();
+                                    onInputChange(
+                                        "middleInitial",
+                                        letter ? `${letter}.` : "",
+                                    );
                                 }}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {/* ── Name Extension */}
-                    <SelectField
-                        label="Name Extension"
-                        value={data.nameExtension ?? ""}
-                        field="nameExtension"
-                        options={NAME_EXTENSIONS.map((v) => ({
-                            value: v,
-                            label: v,
-                        }))}
-                        isEditing={isEditing}
-                        onInputChange={onInputChange}
-                        placeholder="None (e.g. Jr., Sr.)"
-                    />
-                </div>
-
-                <div className="border-t border-gray-200 dark:border-gray-800" />
-
-                {/* ── Age, Gender, DOB, Civil Status ── */}
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                                Age
-                            </label>
-                            <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {data.age || "—"}
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                                Gender
-                            </label>
-                            {isEditing ? (
-                                <Select
-                                    value={data.gender}
-                                    onValueChange={(v) =>
-                                        onInputChange("gender", v)
+                                onKeyDown={(e) => {
+                                    if (
+                                        (e.key === "Backspace" ||
+                                            e.key === "Delete") &&
+                                        data.middleInitial
+                                    ) {
+                                        e.preventDefault();
+                                        onInputChange("middleInitial", "");
                                     }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Male">
-                                            Male
-                                        </SelectItem>
-                                        <SelectItem value="Female">
-                                            Female
-                                        </SelectItem>
-                                        <SelectItem value="Other">
-                                            Other
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            ) : (
-                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                    {data.gender || "—"}
-                                </div>
-                            )}
-                        </div>
+                                }}
+                                placeholder="Optional"
+                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                            />
+                        ) : (
+                            <DisplayValue value={data.middleInitial} />
+                        )}
                     </div>
+                    <div className="col-span-2">
+                        <InputField
+                            label="Last Name"
+                            value={data.lastName}
+                            field="lastName"
+                            isEditing={isEditing}
+                            onInputChange={onInputChange}
+                            onBlur={(f) => {
+                                if (f === "lastName")
+                                    onInputChange(
+                                        "lastName",
+                                        formatName(data.lastName),
+                                    );
+                            }}
+                            required
+                        />
+                    </div>
+                </div>
+                <SelectField
+                    label="Name Extension"
+                    value={data.nameExtension ?? ""}
+                    field="nameExtension"
+                    options={NAME_EXTENSIONS.map((v) => ({
+                        value: v,
+                        label: v,
+                    }))}
+                    isEditing={isEditing}
+                    onInputChange={onInputChange}
+                    placeholder="None (e.g. Jr., Sr.)"
+                />
+            </div>
 
-                    <DatePickerField
-                        label="Date of Birth"
-                        value={data.dateOfBirth}
-                        field="dateOfBirth"
-                        isEditing={isEditing}
-                        onDateChange={onDateChange}
-                    />
+            <SectionDivider label="Personal Details" />
 
-                    {/* ── Place of Birth ── */}
-                    <InputField
-                        label="Place of Birth"
-                        value={data.placeOfBirth ?? ""}
-                        field="placeOfBirth"
-                        icon={MapPin}
-                        isEditing={isEditing}
-                        onInputChange={onInputChange}
-                        placeholder="e.g. Valencia City, Bukidnon"
-                    />
-
-                    <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                            Civil Status
-                        </label>
+            {/* ── Age / Gender / DOB / Civil Status ── */}
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                        <FieldLabel>Age</FieldLabel>
+                        <DisplayValue value={data.age} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <FieldLabel>Gender</FieldLabel>
                         {isEditing ? (
                             <Select
-                                value={data.civilStatus}
+                                value={data.gender}
                                 onValueChange={(v) =>
-                                    onInputChange("civilStatus", v)
+                                    onInputChange("gender", v)
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Single">
-                                        Single
+                                    <SelectItem value="Male">Male</SelectItem>
+                                    <SelectItem value="Female">
+                                        Female
                                     </SelectItem>
-                                    <SelectItem value="Married">
-                                        Married
-                                    </SelectItem>
-                                    <SelectItem value="Widowed">
-                                        Widowed
-                                    </SelectItem>
-                                    <SelectItem value="Separated">
-                                        Separated
-                                    </SelectItem>
-                                    <SelectItem value="Divorced">
-                                        Divorced
-                                    </SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
                                 </SelectContent>
                             </Select>
                         ) : (
-                            <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {data.civilStatus || "—"}
-                            </div>
+                            <DisplayValue value={data.gender} />
                         )}
                     </div>
                 </div>
-
-                <div className="border-t border-gray-200 dark:border-gray-800" />
-
-                {/* ── Physical Info ── */}
-                <div className="space-y-4">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                        Physical Information
-                    </p>
-                    <div className="grid grid-row-1 gap-2">
-                        <div className="grid grid-cols-3 gap-3">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                                <Ruler
-                                    size={14}
-                                    className="text-blue-600 shrink-0"
-                                />
-                                Height (m)
-                            </label>
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                                <Weight
-                                    size={14}
-                                    className="text-blue-600 shrink-0"
-                                />
-                                Weight (kg)
-                            </label>
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
-                                <Droplets
-                                    size={14}
-                                    className="text-blue-600 shrink-0"
-                                />
-                                Blood Type
-                            </label>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                            {isEditing ? (
-                                <Input
-                                    type="number"
-                                    value={data.height ?? ""}
-                                    onChange={(e) =>
-                                        onInputChange("height", e.target.value)
-                                    }
-                                    placeholder="e.g. 1.65"
-                                />
-                            ) : (
-                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                    {data.height || "—"}
-                                </div>
-                            )}
-                            {isEditing ? (
-                                <Input
-                                    type="number"
-                                    value={data.weight ?? ""}
-                                    onChange={(e) =>
-                                        onInputChange("weight", e.target.value)
-                                    }
-                                    placeholder="e.g. 62.5"
-                                />
-                            ) : (
-                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                    {data.weight || "—"}
-                                </div>
-                            )}
-                            {isEditing ? (
-                                <Select
-                                    value={data.bloodType ?? ""}
-                                    onValueChange={(v) =>
-                                        onInputChange("bloodType", v)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {BLOOD_TYPES.map((v) => (
-                                            <SelectItem key={v} value={v}>
-                                                {v}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            ) : (
-                                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                    {data.bloodType || "—"}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="border-t border-gray-200 dark:border-gray-800" />
-
-                {/* ── Nationality ── */}
-                <div className="space-y-4">
-                    <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                            Nationality
-                        </label>
-                        {isEditing ? (
-                            <Combobox
-                                label="Nationality"
-                                options={nationalities}
-                                onChangeValue={(v: string) =>
-                                    onInputChange("nationality", v)
-                                }
-                            />
-                        ) : (
-                            <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {data.nationality || "—"}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* ── Religion ── */}
-                    <div className="flex flex-col space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                            Religion
-                        </label>
-                        {isEditing ? (
-                            <Combobox
-                                label="Religion"
-                                options={religions}
-                                onChangeValue={(v: string) =>
-                                    onInputChange("religion", v)
-                                }
-                            />
-                        ) : (
-                            <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                {data.religion || "—"}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* ── Citizenship ── */}
-                    <SelectField
-                        label="Citizenship"
-                        value={data.citizenship ?? "Filipino"}
-                        field="citizenship"
-                        options={[
-                            { value: "Filipino", label: "Filipino" },
-                            {
-                                value: "Dual Citizenship",
-                                label: "Dual Citizenship",
-                            },
-                        ]}
-                        icon={Flag}
-                        isEditing={isEditing}
-                        onInputChange={onInputChange}
-                    />
-
-                    {isDualCitizen && (
-                        <div className="grid grid-cols-2 gap-3 pl-2 border-l-2 border-blue-200 dark:border-blue-800">
-                            <SelectField
-                                label="By"
-                                value={data.dualCitizenshipType ?? ""}
-                                field="dualCitizenshipType"
-                                options={[
-                                    { value: "by birth", label: "By Birth" },
-                                    {
-                                        value: "by naturalization",
-                                        label: "By Naturalization",
-                                    },
-                                ]}
-                                isEditing={isEditing}
-                                onInputChange={onInputChange}
-                            />
-                            <InputField
-                                label="Country"
-                                value={data.dualCitizenshipCountry ?? ""}
-                                field="dualCitizenshipCountry"
-                                isEditing={isEditing}
-                                onInputChange={onInputChange}
-                                placeholder="e.g. USA"
-                            />
-                        </div>
+                <DatePickerField
+                    label="Date of Birth"
+                    value={data.dateOfBirth}
+                    field="dateOfBirth"
+                    isEditing={isEditing}
+                    onDateChange={onDateChange}
+                />
+                <InputField
+                    label="Place of Birth"
+                    value={data.placeOfBirth ?? ""}
+                    field="placeOfBirth"
+                    icon={MapPin}
+                    isEditing={isEditing}
+                    onInputChange={onInputChange}
+                    placeholder="e.g. Ormoc City, Leyte"
+                />
+                <div className="space-y-1.5">
+                    <FieldLabel>Civil Status</FieldLabel>
+                    {isEditing ? (
+                        <Select
+                            value={data.civilStatus}
+                            onValueChange={(v) =>
+                                onInputChange("civilStatus", v)
+                            }
+                        >
+                            <SelectTrigger className="bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Single">Single</SelectItem>
+                                <SelectItem value="Married">Married</SelectItem>
+                                <SelectItem value="Widowed">Widowed</SelectItem>
+                                <SelectItem value="Separated">
+                                    Separated
+                                </SelectItem>
+                                <SelectItem value="Divorced">
+                                    Divorced
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    ) : (
+                        <DisplayValue value={data.civilStatus} />
                     )}
                 </div>
+            </div>
 
-                <div className="border-t border-gray-200 dark:border-gray-800" />
+            <SectionDivider label="Physical Information" />
 
-                {/* ── Residential Address ── */}
-                <div className="space-y-4">
-                    <AddressBlock
-                        prefix="residential"
-                        label="Residential Address"
-                        data={data}
-                        isEditing={isEditing}
-                        onInputChange={onInputChange}
-                    />
+            {/* ── Physical ── */}
+            <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                        <FieldLabel icon={Ruler as React.ElementType}>
+                            Height (m)
+                        </FieldLabel>
+                        {isEditing ? (
+                            <Input
+                                type="number"
+                                value={data.height ?? ""}
+                                onChange={(e) =>
+                                    onInputChange("height", e.target.value)
+                                }
+                                placeholder="e.g. 1.65"
+                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                            />
+                        ) : (
+                            <DisplayValue value={data.height} />
+                        )}
+                    </div>
+                    <div className="space-y-1.5">
+                        <FieldLabel icon={Weight as React.ElementType}>
+                            Weight (kg)
+                        </FieldLabel>
+                        {isEditing ? (
+                            <Input
+                                type="number"
+                                value={data.weight ?? ""}
+                                onChange={(e) =>
+                                    onInputChange("weight", e.target.value)
+                                }
+                                placeholder="e.g. 62.5"
+                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                            />
+                        ) : (
+                            <DisplayValue value={data.weight} />
+                        )}
+                    </div>
+                    <div className="space-y-1.5">
+                        <FieldLabel icon={Droplets as React.ElementType}>
+                            Blood Type
+                        </FieldLabel>
+                        {isEditing ? (
+                            <Select
+                                value={data.bloodType ?? ""}
+                                onValueChange={(v) =>
+                                    onInputChange("bloodType", v)
+                                }
+                            >
+                                <SelectTrigger className="bg-white/5 border-white/10 hover:bg-white/8 hover:border-white/20">
+                                    <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {BLOOD_TYPES.map((v) => (
+                                        <SelectItem key={v} value={v}>
+                                            {v}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <DisplayValue value={data.bloodType} />
+                        )}
+                    </div>
+                </div>
+            </div>
 
+            <SectionDivider label="Nationality & Identity" />
+
+            {/* ── Nationality / Religion / Citizenship ── */}
+            <div className="flex flex-col sm:gap-4 space-y-4 sm:space-y-0">
+                <div className="space-y-1.5">
+                    <FieldLabel>Nationality</FieldLabel>
+                    {isEditing ? (
+                        <Combobox
+                            label="Nationality"
+                            options={nationalities}
+                            onChangeValue={(v: string) =>
+                                onInputChange("nationality", v)
+                            }
+                        />
+                    ) : (
+                        <DisplayValue value={data.nationality} />
+                    )}
+                </div>
+                <div className="space-y-1.5">
+                    <FieldLabel>Religion</FieldLabel>
+                    {isEditing ? (
+                        <Combobox
+                            label="Religion"
+                            options={religions}
+                            onChangeValue={(v: string) =>
+                                onInputChange("religion", v)
+                            }
+                        />
+                    ) : (
+                        <DisplayValue value={data.religion} />
+                    )}
+                </div>
+                <SelectField
+                    label="Citizenship"
+                    value={data.citizenship ?? "Filipino"}
+                    field="citizenship"
+                    options={[
+                        { value: "Filipino", label: "Filipino" },
+                        {
+                            value: "Dual Citizenship",
+                            label: "Dual Citizenship",
+                        },
+                    ]}
+                    icon={Flag}
+                    isEditing={isEditing}
+                    onInputChange={onInputChange}
+                />
+                {isDualCitizen && (
+                    <div className="grid grid-cols-2 gap-3 pl-3 border-l-2 border-blue-500/30">
+                        <SelectField
+                            label="By"
+                            value={data.dualCitizenshipType ?? ""}
+                            field="dualCitizenshipType"
+                            options={[
+                                { value: "by birth", label: "By Birth" },
+                                {
+                                    value: "by naturalization",
+                                    label: "By Naturalization",
+                                },
+                            ]}
+                            isEditing={isEditing}
+                            onInputChange={onInputChange}
+                        />
+                        <InputField
+                            label="Country"
+                            value={data.dualCitizenshipCountry ?? ""}
+                            field="dualCitizenshipCountry"
+                            isEditing={isEditing}
+                            onInputChange={onInputChange}
+                            placeholder="e.g. USA"
+                        />
+                    </div>
+                )}
+            </div>
+
+            <SectionDivider label="Address" />
+
+            {/* ── Addresses ── */}
+            <div className="flex flex-col gap-4 space-y-4">
+                <AddressBlock
+                    prefix="residential"
+                    label="Residential Address"
+                    data={data}
+                    isEditing={isEditing}
+                    onInputChange={onInputChange}
+                />
+                <div className="flex flex-col gap-4">
                     {isEditing && (
-                        <div className="flex items-center gap-2 py-1">
+                        <div className="flex items-center gap-2 py-1 px-3 rounded-md bg-white/4 border border-white/8">
                             <Checkbox
                                 id="sameAsResidential"
                                 checked={data.sameAsResidential ?? false}
@@ -800,14 +792,13 @@ export default function PersonalInfoCard(props: {
                             />
                             <Label
                                 htmlFor="sameAsResidential"
-                                className="text-sm cursor-pointer flex items-center gap-1.5"
+                                className="text-sm cursor-pointer flex items-center gap-1.5 text-muted-foreground"
                             >
-                                <Copy size={13} className="text-blue-500" />
+                                <Copy size={12} className="text-blue-400" />
                                 Permanent address same as residential
                             </Label>
                         </div>
                     )}
-
                     <AddressBlock
                         prefix="permanent"
                         label="Permanent Address"
@@ -817,9 +808,142 @@ export default function PersonalInfoCard(props: {
                         onInputChange={onInputChange}
                     />
                 </div>
+            </div>
+        </div>
+    );
+}
 
-                <div className="border-t border-gray-200 dark:border-gray-800" />
-            </CardContent>
-        </Card>
+// ── Main export ────────────────────────────────────────────────────────────────
+
+export default function PersonalInfoCard({
+    data,
+    isEditing,
+    onInputChange,
+    onDateChange,
+    onEdit,
+    onSave,
+    onCancel,
+    isOwnProfile = false,
+    isSaving = false,
+}: {
+    data: ProfileState;
+    isEditing: boolean;
+    onInputChange: (field: keyof ProfileState, value: string) => void;
+    onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
+    onEdit?: () => void;
+    onSave?: () => void;
+    onCancel?: () => void;
+    isOwnProfile?: boolean;
+    isSaving?: boolean;
+}) {
+    const isMobile = useIsMobile();
+
+    return (
+        <>
+            {/* ── Read-only Card ── */}
+            <div className="border border-border/60 shadow-lg w-full overflow-hidden rounded-xl bg-card">
+                {/* Decorative header band */}
+                <div className="relative px-6 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
+                    <div className="relative flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-2">
+                                <User className="h-4 w-4 text-blue-400" />
+                            </div>
+                            <span className="text-base font-semibold text-foreground">
+                                Personal Information
+                            </span>
+                        </div>
+                        {isOwnProfile && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={onEdit}
+                                className="gap-1.5 text-muted-foreground hover:text-foreground h-8 px-2.5 text-xs"
+                            >
+                                <Edit2 className="h-3.5 w-3.5" />
+                                Edit
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-6 w-full px-6 py-5">
+                    <PersonalInfoForm
+                        data={data}
+                        isEditing={false}
+                        onInputChange={onInputChange}
+                        onDateChange={onDateChange}
+                    />
+                </div>
+            </div>
+
+            {/* ── Edit Sheet ── */}
+            <Sheet
+                open={isEditing}
+                onOpenChange={(open) => {
+                    if (!open) onCancel?.();
+                }}
+            >
+                <SheetContent
+                    side={isMobile ? "bottom" : "right"}
+                    className={[
+                        "flex flex-col gap-0 p-0 overflow-hidden border-border/60",
+                        isMobile
+                            ? "h-[92vh] rounded-t-2xl"
+                            : "w-[500px] sm:w-[540px]",
+                    ].join(" ")}
+                >
+                    {/* Sticky header band */}
+                    <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10 shrink-0">
+                        {/* Decorative glow */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
+                        <div className="relative flex items-center gap-2.5">
+                            <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-1.5">
+                                <User className="h-4 w-4 text-blue-400" />
+                            </div>
+                            <SheetTitle className="text-sm font-medium text-muted-foreground">
+                                Edit Personal Information
+                            </SheetTitle>
+                        </div>
+                    </SheetHeader>
+
+                    {/* Scrollable form */}
+                    <div className="flex-1 overflow-y-auto px-5 py-5">
+                        <PersonalInfoForm
+                            data={data}
+                            isEditing={true}
+                            onInputChange={onInputChange}
+                            onDateChange={onDateChange}
+                        />
+                    </div>
+
+                    {/* Sticky footer */}
+                    <SheetFooter className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-4 flex flex-row gap-2 shrink-0">
+                        <Button
+                            onClick={onSave}
+                            disabled={isSaving}
+                            className="gap-2 flex-1 bg-blue-600 hover:bg-blue-500 text-white"
+                        >
+                            {isSaving ? (
+                                <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <Save size={15} />
+                            )}
+                            Save
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={onCancel}
+                            disabled={isSaving}
+                            className="gap-2 flex-1 border-white/10 hover:bg-white/5"
+                        >
+                            <X size={15} />
+                            Cancel
+                        </Button>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
+        </>
     );
 }

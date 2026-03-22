@@ -1,5 +1,4 @@
 export type PendingUser = {
-  employeeId: string;
   id: string;
   firstName: string;
   lastName: string;
@@ -9,8 +8,12 @@ export type PendingUser = {
   status: "PENDING" | "REJECTED" | "APPROVED" | string;
   contactNumber: string;
   createdAt: string;
+  employeeId: string;
+  position: string;
+  dateOfOriginalAppointment: string | null;
+  dateOfOriginalDeployment: string | null;
+  profileImage: string | null;
 };
-
 export type ActionResult =
   | { ok: true }
   | { ok: false; error: string };

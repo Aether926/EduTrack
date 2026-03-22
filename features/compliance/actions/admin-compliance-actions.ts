@@ -54,9 +54,10 @@ export async function upsertCompliancePolicy(form: {
 
     if (error) throw new Error(error.message);
   } else {
+    const { is_edit: _removed, ...insertData } = cleanForm;
     const { error } = await admin
       .from("TrainingCompliancePolicy")
-      .insert(cleanForm);
+      .insert(insertData);
 
     if (error) throw new Error(error.message);
   }

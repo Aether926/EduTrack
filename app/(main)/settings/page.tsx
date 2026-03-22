@@ -516,28 +516,36 @@ function DangerZoneSection() {
 
 // ── Main Settings Page ────────────────────────────────────────────────────────
 export default function SettingsPage() {
-  return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
-        <div className="mb-6 space-y-1">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">Account</Badge>
-            <Badge variant="outline">Settings</Badge>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your account security and preferences.
-          </p>
-        </div>
+    const [isSuperadmin, setIsSuperadmin] = useState(false);
 
-        <Separator className="mb-6" />
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data }) => {
+            setIsSuperadmin(data.user?.user_metadata?.role === "SUPERADMIN");
+        });
+    }, []);
 
-        <div className="space-y-6">
-          <SessionInfoSection />
-          <ChangePasswordSection />
-          <DangerZoneSection />
-        </div>
-      </div>
-    </main>
-  );
+    return (
+        <main className="min-h-screen bg-background">
+            <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
+                <div className="mb-6 space-y-1">
+                    <div className="flex items-center gap-2">
+                        <Badge variant="secondary">Account</Badge>
+                        <Badge variant="outline">Settings</Badge>
+                    </div>
+                    <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+                    <p className="text-sm text-muted-foreground">
+                        Manage your account security and preferences.
+                    </p>
+                </div>
+
+                <Separator className="mb-6" />
+
+                <div className="space-y-6">
+                    <SessionInfoSection />
+                    <ChangePasswordSection />
+                    {!isSuperadmin && <DangerZoneSection />}
+                </div>
+            </div>
+        </main>
+    );
 }

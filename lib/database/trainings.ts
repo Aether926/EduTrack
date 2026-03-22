@@ -13,6 +13,7 @@ export type MyTrainingSeminarRow = {
   approvedHours: string | null; // ← add
   sponsor: string;
   status: string;
+  proofUrl: string | null;
 };
 
 type AttendanceRow = {
@@ -20,7 +21,8 @@ type AttendanceRow = {
   training_id: string;
   status: string;
   created_at: string;
-  approved_hours: number | null; // ← add
+  approved_hours: number | null;
+  proof_url: string | null;
 };
 
 type PDRow = {
@@ -34,17 +36,13 @@ type PDRow = {
   sponsoring_agency: string | null;
 };
 
-export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
+export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingSeminarRow[]> {
   const supabase = await createClient();
-
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  const user = authData.user;
-  if (authError || !user) return [];
 
   const { data: attendance, error: aErr } = await supabase
     .from("Attendance")
-    .select("id, training_id, status, created_at, approved_hours") 
-    .eq("teacher_id", user.id)
+    .select("id, training_id, status, created_at, approved_hours, proof_url")
+    .eq("teacher_id", userId)
     .order("created_at", { ascending: false });
 
   if (aErr) {
@@ -74,6 +72,7 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
       approvedHours: null,
       sponsor: "",
       status: r.status ?? "",
+      proofUrl: null,
     }));
   }
 
@@ -91,9 +90,10 @@ export async function getMyTrainingSeminars(): Promise<MyTrainingSeminarRow[]> {
       startDate: pd?.start_date ?? "",
       endDate: pd?.end_date ?? "",
       totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
-      approvedHours: r.approved_hours != null ? String(r.approved_hours) : null, // ← add
+      approvedHours: r.approved_hours != null ? String(r.approved_hours) : null,
       sponsor: pd?.sponsoring_agency ?? "",
       status: r.status ?? "",
+      proofUrl: r.proof_url ?? null,
     };
   });
 }

@@ -46,6 +46,7 @@ export type TeacherTableRow = {
   email: string;
   profileImage: string | null;
   status: string;
+  subjectSpecialization: string | null;
 };
 
 export type ProfessionalDevelopment = {
@@ -131,7 +132,7 @@ export async function getUsersWithPending(
 
         return pendingProfiles;
     } catch (error) {
-        console.error("Error fetching pending users:", error);
+        
         return [];
     }
 }
@@ -169,7 +170,7 @@ export async function getUsersWithRejected(
 
         return rejectedProfiles;
     } catch (error) {
-        console.error("Error fetching rejected users:", error);
+        
         return [];
     }
 }

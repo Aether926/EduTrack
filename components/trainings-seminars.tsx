@@ -13,7 +13,14 @@ import {
 } from "@tanstack/react-table";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown, MoreHorizontal, Search, X, Clock } from "lucide-react";
+import {
+    ArrowUpDown,
+    MoreHorizontal,
+    Search,
+    X,
+    Clock,
+    Plus,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +50,12 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import PdViewModal from "@/components/pd-view-modal";
+import PdViewSheet from "@/components/pd-view-sheet";
+import UploadProofSheet, {
+    type UploadProofContext,
+} from "@/features/professional-dev/components/upload-proof-sheet";
+import SelfEnrollModal from "@/features/professional-dev/components/self-enroll-modal";
+import { TypeBadge } from "@/components/ui-elements/badges/type";
 
 export type TrainingSeminarRow = {
     id: string;
@@ -57,6 +69,7 @@ export type TrainingSeminarRow = {
     approvedHours: string | null;
     sponsor: string;
     status: string;
+    proofUrl: string | null;
 };
 
 /* ─── Status badge ─── */
@@ -95,28 +108,6 @@ function StatusBadge({ status }: { status: string }) {
     return <Badge variant="outline">{status}</Badge>;
 }
 
-/* ─── Type chip ─── */
-const typeColors: Record<string, string> = {
-    training: "bg-teal-500/10 text-teal-400 border-teal-500/40",
-    seminar: "bg-violet-500/10 text-violet-400 border-violet-500/40",
-    workshop: "bg-orange-500/10 text-orange-400 border-orange-500/40",
-    webinar: "bg-sky-500/10 text-sky-400 border-sky-500/40",
-    conference: "bg-pink-500/10 text-pink-400 border-pink-500/40",
-};
-
-function TypeChip({ type }: { type: string }) {
-    const key = (type || "").toLowerCase();
-    const cls =
-        typeColors[key] ?? "bg-slate-500/10 text-slate-400 border-slate-500/40";
-    return (
-        <span
-            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}
-        >
-            {type}
-        </span>
-    );
-}
-
 /* ─── Level pill ─── */
 function LevelPill({ level }: { level: string }) {
     const l = (level || "").toLowerCase();
@@ -138,7 +129,7 @@ function LevelPill({ level }: { level: string }) {
 }
 
 export default function TrainingsSeminars({
-    data,
+    data = [],
 }: {
     data: TrainingSeminarRow[];
 }) {
@@ -146,6 +137,12 @@ export default function TrainingsSeminars({
     const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(
         null,
     );
+    const [selectedRow, setSelectedRow] = useState<TrainingSeminarRow | null>(
+        null,
+    );
+    const [uploadOpen, setUploadOpen] = useState(false);
+    const [uploadCtx, setUploadCtx] = useState<UploadProofContext | null>(null);
+    const [selfEnrollOpen, setSelfEnrollOpen] = useState(false);
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
@@ -170,7 +167,7 @@ export default function TrainingsSeminars({
                     </Button>
                 ),
                 cell: ({ row }) => (
-                    <TypeChip type={row.getValue("type") as string} />
+                    <TypeBadge type={row.getValue("type") as string} />
                 ),
             },
             {
@@ -192,7 +189,7 @@ export default function TrainingsSeminars({
                         r.status === "ENROLLED" || r.status === "REJECTED";
                     return (
                         <div className="min-w-0">
-                            <div className="truncate font-medium">
+                            <div className="font-medium text-sm break-words leading-snug">
                                 {r.title}
                             </div>
                             {canUpload && (
@@ -348,24 +345,46 @@ export default function TrainingsSeminars({
                                         setSelectedTrainingId(
                                             row.original.trainingId,
                                         );
+                                        setSelectedRow(row.original);
                                         setDetailsOpen(true);
                                     }}
                                 >
                                     View details
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                {canUpload ? (
-                                    <DropdownMenuItem asChild>
-                                        <a
-                                            href={`/professional-dev/${row.original.id}/upload-proof`}
+                                {canUpload && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                setUploadCtx({
+                                                    attendanceId:
+                                                        row.original.id,
+                                                    status: row.original.status,
+                                                    training: {
+                                                        title: row.original
+                                                            .title,
+                                                        type: row.original.type,
+                                                        level: row.original
+                                                            .level,
+                                                        totalHours: Number(
+                                                            row.original
+                                                                .totalHours,
+                                                        ),
+                                                        startDate:
+                                                            row.original
+                                                                .startDate,
+                                                        endDate:
+                                                            row.original
+                                                                .endDate,
+                                                    },
+                                                });
+                                                setUploadOpen(true);
+                                            }}
                                         >
                                             Upload proof
-                                        </a>
-                                    </DropdownMenuItem>
-                                ) : (
-                                    <DropdownMenuItem disabled>
-                                        Upload proof
-                                    </DropdownMenuItem>
+                                        </DropdownMenuItem>
+                                    </>
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -431,7 +450,7 @@ export default function TrainingsSeminars({
     return (
         <>
             <Card className="min-w-0 overflow-hidden">
-                <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between">
+                <CardHeader className="gap-3 md:flex-row md:items-center md:justify-between overflow-hidden">
                     <div className="space-y-1 shrink-0">
                         <CardTitle className="text-base">
                             Trainings & Seminars
@@ -443,19 +462,37 @@ export default function TrainingsSeminars({
                     </div>
 
                     {/* Desktop search — full width on mobile, fixed on md+ */}
-                    <div className="hidden md:block w-full md:w-[320px]">
+                    <div className="hidden md:flex items-center gap-2 w-full md:w-auto">
                         <Input
                             value={globalFilter ?? ""}
                             onChange={(e) => setGlobalFilter(e.target.value)}
                             placeholder="Search title, sponsor, status..."
+                            className="w-full md:w-[320px]"
                         />
+                        <Button
+                            size="sm"
+                            className="shrink-0 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => setSelfEnrollOpen(true)}
+                        >
+                            <Plus className="h-4 w-4" />
+                            Self-Report
+                        </Button>
                     </div>
 
                     {/* Mobile search icon → expand */}
-                    <div className="flex md:hidden items-center gap-2">
+                    <div className="flex md:hidden items-center gap-2 min-w-0 overflow-hidden">
+                        <Button
+                            size="sm"
+                            className="shrink-0 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => setSelfEnrollOpen(true)}
+                        >
+                            <Plus className="h-4 w-4" />
+                            Self-Report
+                        </Button>
                         <Button
                             variant="outline"
                             size="icon"
+                            className="shrink-0 border-blue-500/50 text-blue-400 hover:bg-blue-500/10 hover:text-blue-400"
                             onClick={() => setSearchOpen((v) => !v)}
                             aria-label="Search"
                         >
@@ -470,13 +507,10 @@ export default function TrainingsSeminars({
                             {searchOpen ? (
                                 <motion.div
                                     initial={{ width: 0, opacity: 0 }}
-                                    animate={{
-                                        width: "min(240px, 55vw)",
-                                        opacity: 1,
-                                    }}
+                                    animate={{ width: "100%", opacity: 1 }}
                                     exit={{ width: 0, opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="overflow-hidden"
+                                    className="overflow-hidden min-w-0 flex-1"
                                 >
                                     <Input
                                         value={globalFilter ?? ""}
@@ -484,7 +518,7 @@ export default function TrainingsSeminars({
                                             setGlobalFilter(e.target.value)
                                         }
                                         placeholder="Search..."
-                                        className="h-9"
+                                        className="h-9 w-full"
                                     />
                                 </motion.div>
                             ) : null}
@@ -493,7 +527,13 @@ export default function TrainingsSeminars({
                 </CardHeader>
 
                 <CardContent className="pt-0">
-                    <div className="rounded-md border overflow-x-auto">
+                    <div
+                        className="rounded-md border overflow-x-auto"
+                        style={{
+                            scrollbarWidth: "thin",
+                            scrollbarColor: "hsl(var(--border)) transparent",
+                        }}
+                    >
                         <Table>
                             <TableHeader>
                                 {table.getHeaderGroups().map((hg) => (
@@ -616,10 +656,24 @@ export default function TrainingsSeminars({
                 </CardContent>
             </Card>
 
-            <PdViewModal
+            <PdViewSheet
                 open={detailsOpen}
                 onOpenChange={setDetailsOpen}
                 trainingId={selectedTrainingId}
+                proofUrl={selectedRow?.proofUrl}
+                status={selectedRow?.status}
+            />
+            <UploadProofSheet
+                open={uploadOpen}
+                onOpenChange={setUploadOpen}
+                ctx={uploadCtx}
+            />
+            <SelfEnrollModal
+                open={selfEnrollOpen}
+                onOpenChange={setSelfEnrollOpen}
+                onSuccess={() => {
+                    setSelfEnrollOpen(false);
+                }}
             />
         </>
     );
