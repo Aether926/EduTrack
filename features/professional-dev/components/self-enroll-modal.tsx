@@ -91,7 +91,6 @@ function Chip({ label, cls }: { label: string; cls: string }) {
 
 function PdfThumbnail({
     file,
-    previewUrl,
     onFullscreen,
 }: {
     file: File;

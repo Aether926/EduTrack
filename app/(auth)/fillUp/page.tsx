@@ -466,7 +466,10 @@ export default function FillUpPage() {
                         email: user.email,
                         firstName: formData.firstName,
                         lastName: formData.lastName,
-                        middleInitial: formData.middleInitial,
+                        middleInitial: formData.middleInitial.replace(
+                            /\.{2,}/g,
+                            ".",
+                        ),
                         contactNumber: formData.contactNumber,
                         username: autoUsername,
                     },
