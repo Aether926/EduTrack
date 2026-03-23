@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
     Card,
@@ -50,19 +49,15 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import {
+    AppointmentTypeBadge,
+    PositionBadge,
+} from "@/components/ui-elements/badges";
 
 import { AddAppointmentSheet } from "@/features/admin-actions/appointment-history/components/add-appointment-modal";
 import { AppointmentDetailSheet } from "@/features/admin-actions/appointment-history/components/appointment-details-sheet";
 import type { AppointmentHistoryRow } from "@/features/admin-actions/appointment-history/types/appointment-history";
-
-const TYPE_STYLE: Record<string, string> = {
-    Original: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    Promotion: "bg-violet-500/10 text-violet-400 border-violet-500/30",
-    Reappointment: "bg-teal-500/10 text-teal-400 border-teal-500/30",
-    Transfer: "bg-orange-500/10 text-orange-400 border-orange-500/30",
-    Reinstatement: "bg-pink-500/10 text-pink-400 border-pink-500/30",
-};
 
 const APPOINTMENT_TYPES = [
     "Original",
@@ -274,7 +269,7 @@ export function AppointmentHistoryClient(props: {
                     const end = row.original.end_date;
                     return (
                         <div className="flex items-center gap-3 min-w-0">
-                            <InitialAvatar
+                            <UserAvatar
                                 name={name}
                                 src={row.original.teacherProfileImage}
                                 className="h-8 w-8 shrink-0"
@@ -287,15 +282,10 @@ export function AppointmentHistoryClient(props: {
                                     {t?.email ?? "—"}
                                 </div>
                                 <div className="md:hidden mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                    <Badge
-                                        variant="outline"
-                                        className={
-                                            TYPE_STYLE[type] ??
-                                            "bg-muted text-muted-foreground border-border"
-                                        }
-                                    >
-                                        {type}
-                                    </Badge>
+                                    <AppointmentTypeBadge
+                                        type={type}
+                                        size="xs"
+                                    />
                                     <span className="truncate">
                                         {position || "—"}
                                     </span>
@@ -313,24 +303,19 @@ export function AppointmentHistoryClient(props: {
                 accessorKey: "appointment_type",
                 header: "Type",
                 cell: ({ row }) => (
-                    <Badge
-                        variant="outline"
-                        className={
-                            TYPE_STYLE[row.original.appointment_type] ??
-                            "bg-muted text-muted-foreground border-border"
-                        }
-                    >
-                        {row.original.appointment_type}
-                    </Badge>
+                    <AppointmentTypeBadge
+                        type={row.original.appointment_type}
+                    />
                 ),
             },
             {
                 accessorKey: "position",
                 header: "Position",
                 cell: ({ row }) => (
-                    <span className="text-sm text-muted-foreground">
-                        {row.original.position || "—"}
-                    </span>
+                    <PositionBadge
+                        position={row.original.position || ""}
+                        size="xs"
+                    />
                 ),
             },
             {

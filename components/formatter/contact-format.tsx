@@ -10,6 +10,18 @@ function digitsOnly(str: string): string {
     return str.replace(/\D/g, "");
 }
 
+/**
+ * Formats a raw phone string for display (e.g. in table cells).
+ * Handles +63 prefix. Returns null if not a valid 11-digit PH number.
+ */
+export function fmtContact(raw: string): string | null {
+    const d = raw.replace(/\D/g, "");
+    const n = d.startsWith("63") && d.length === 12 ? "0" + d.slice(2) : d;
+    return /^09\d{9}$/.test(n)
+        ? `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7)}`
+        : null;
+}
+
 /** Formats digits as XXXX-XXX-XXXX (max 11 digits). */
 function formatContact(digits: string): string {
     const d = digits.slice(0, 11);

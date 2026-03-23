@@ -51,20 +51,13 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+import { PositionBadge } from "@/components/ui-elements/badges";
+import { fmtContact } from "@/components/formatter/contact-format";
+import { fmtEmployeeId } from "@/components/formatter/employee-id-format";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmtPhone(raw: string): string | null {
-    const d = raw.replace(/\D/g, "");
-    const n = d.startsWith("63") && d.length === 12 ? "0" + d.slice(2) : d;
-    return /^09\d{9}$/.test(n)
-        ? `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7)}`
-        : null;
-}
-
-function fmtEmployeeId(raw: string): string {
-    const digits = raw.replace(/\D/g, "");
-    return digits.length === 7 ? digits : "—";
-}
+const fmtPhone = fmtContact;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -169,18 +162,23 @@ export default function TeacherTable({
                                     </div>
                                 ) : (
                                     <div className="md:hidden mt-0.5 space-y-0.5 min-w-0">
-                                        {showPosition &&
-                                            row.original.position && (
-                                                <div className="truncate text-xs text-muted-foreground">
-                                                    {row.original.position}
-                                                </div>
-                                            )}
                                         {showContact &&
                                             row.original.contact && (
                                                 <div className="truncate text-xs text-muted-foreground font-mono">
                                                     {fmtPhone(
                                                         row.original.contact,
-                                                    ) ?? row.original.contact}
+                                                    ) ?? "—"}
+                                                </div>
+                                            )}
+                                        {showPosition &&
+                                            row.original.position && (
+                                                <div className="mt-1">
+                                                    <PositionBadge
+                                                        position={
+                                                            row.original
+                                                                .position
+                                                        }
+                                                    />
                                                 </div>
                                             )}
                                         {showEmergency && emergencyName && (
@@ -193,7 +191,7 @@ export default function TeacherTable({
                                                     <span className="font-mono ml-1">
                                                         {fmtPhone(
                                                             emergencyContact,
-                                                        ) ?? emergencyContact}
+                                                        ) ?? "—"}
                                                     </span>
                                                 )}
                                             </div>
@@ -206,7 +204,7 @@ export default function TeacherTable({
                 },
             },
 
-            // Position — gated by privacy
+            // Position — gated by privacy, now with badge
             {
                 accessorKey: "position",
                 header: "Position",
@@ -220,9 +218,9 @@ export default function TeacherTable({
                             </div>
                         );
                     return (
-                        <div className="max-w-[260px] truncate text-sm text-muted-foreground">
-                            {row.getValue("position") as string}
-                        </div>
+                        <PositionBadge
+                            position={row.getValue("position") as string}
+                        />
                     );
                 },
             },
@@ -264,8 +262,7 @@ export default function TeacherTable({
                                     {emergencyName}
                                     {emergencyContact && (
                                         <span className="font-mono ml-1">
-                                            {fmtPhone(emergencyContact) ??
-                                                emergencyContact}
+                                            {fmtPhone(emergencyContact) ?? "—"}
                                         </span>
                                     )}
                                 </div>
@@ -309,8 +306,7 @@ export default function TeacherTable({
                             </div>
                             {emergencyContact && (
                                 <div className="font-mono text-xs text-muted-foreground/70">
-                                    {fmtPhone(emergencyContact) ??
-                                        emergencyContact}
+                                    {fmtPhone(emergencyContact) ?? "—"}
                                 </div>
                             )}
                         </div>
@@ -333,7 +329,7 @@ export default function TeacherTable({
                 ),
             },
         ],
-        [isAdmin], // isAdmin drives column visibility — must be in deps
+        [isAdmin],
     );
 
     const filteredData = useMemo(() => {

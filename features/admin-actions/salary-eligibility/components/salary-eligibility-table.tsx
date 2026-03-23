@@ -21,11 +21,16 @@ import {
     Search,
     X,
     CheckCircle2,
-    AlertTriangle,
-    Clock,
     BadgeDollarSign,
     Loader2,
 } from "lucide-react";
+
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import {
+    SalaryStatusBadge,
+    PositionBadge,
+} from "@/components/ui-elements/badges";
+import { fmtEmployeeId } from "@/components/formatter/employee-id-format";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,33 +62,6 @@ import type {
     EligibilityStatus,
 } from "@/lib/database/salary-eligibility";
 import { markSalaryIncreaseGivenAction } from "@/features/admin-actions/salary-eligibility/actions/salary-eligibility-actions";
-
-// ── Status config ──────────────────────────────────────────────────────────────
-
-const statusConfig: Record<
-    EligibilityStatus,
-    {
-        label: string;
-        cls: string;
-        icon: React.ReactNode;
-    }
-> = {
-    ELIGIBLE: {
-        label: "Eligible",
-        cls: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
-        icon: <CheckCircle2 className="h-3 w-3" />,
-    },
-    APPROACHING: {
-        label: "Approaching",
-        cls: "bg-amber-500/15 text-amber-400 border border-amber-500/30",
-        icon: <AlertTriangle className="h-3 w-3" />,
-    },
-    ON_TRACK: {
-        label: "On Track",
-        cls: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
-        icon: <Clock className="h-3 w-3" />,
-    },
-};
 
 // ── Cycle progress bar ─────────────────────────────────────────────────────────
 
@@ -191,9 +169,9 @@ export default function SalaryEligibilityTable({
                 ),
                 cell: ({ row }) => (
                     <div className="font-mono text-xs text-muted-foreground">
-                        {row.getValue("employeeId") === "—"
-                            ? "—"
-                            : row.getValue("employeeId")}
+                        {fmtEmployeeId(
+                            String(row.getValue("employeeId") ?? ""),
+                        )}
                     </div>
                 ),
             },
@@ -214,17 +192,27 @@ export default function SalaryEligibilityTable({
                 ),
                 cell: ({ row }) => {
                     const r = row.original;
+                    const fullName =
+                        `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim();
                     return (
-                        <div className="min-w-0">
-                            <div className="font-medium truncate">
-                                {r.lastName}, {r.firstName}
-                                {r.middleInitial ? ` ${r.middleInitial}.` : ""}
-                            </div>
-                            <div className="md:hidden mt-1 space-y-0.5">
-                                <div className="text-xs text-muted-foreground truncate">
-                                    {r.position}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <UserAvatar
+                                name={fullName}
+                                className="h-7 w-7 shrink-0 text-[10px]"
+                            />
+                            <div className="min-w-0">
+                                <div className="font-medium truncate">
+                                    {r.lastName}, {r.firstName}
+                                    {r.middleInitial
+                                        ? ` ${r.middleInitial}.`
+                                        : ""}
                                 </div>
-                                <CycleBar row={r} />
+                                <div className="md:hidden mt-1 space-y-0.5">
+                                    <div className="text-xs text-muted-foreground truncate">
+                                        {r.position}
+                                    </div>
+                                    <CycleBar row={r} />
+                                </div>
                             </div>
                         </div>
                     );
@@ -234,9 +222,10 @@ export default function SalaryEligibilityTable({
                 accessorKey: "position",
                 header: "Position",
                 cell: ({ row }) => (
-                    <div className="max-w-[180px] truncate text-sm text-muted-foreground">
-                        {row.getValue("position")}
-                    </div>
+                    <PositionBadge
+                        position={row.getValue("position")}
+                        size="xs"
+                    />
                 ),
             },
             {
@@ -294,15 +283,8 @@ export default function SalaryEligibilityTable({
                 accessorFn: (r) => r.status,
                 header: "Status",
                 cell: ({ row }) => {
-                    const sc = statusConfig[row.original.status];
-                    return (
-                        <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${sc.cls}`}
-                        >
-                            {sc.icon}
-                            {sc.label}
-                        </span>
-                    );
+                    const key = row.original.status.toLowerCase();
+                    return <SalaryStatusBadge status={key} size="xs" />;
                 },
                 filterFn: (row, _id, filterValue) => {
                     if (!filterValue || filterValue === "ALL") return true;

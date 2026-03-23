@@ -3,8 +3,8 @@
 import React from "react";
 import { PhoneCall, User, MapPin, Heart, Edit2, Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { ContactInput } from "@/components/formatter/contact-input";
-import { NameInput } from "@/components/formatter/name-input";
+import { ContactInput } from "@/components/formatter/contact-format";
+import { NameInput } from "@/components/formatter/name-format";
 import { Button } from "@/components/ui/button";
 import {
     Sheet,

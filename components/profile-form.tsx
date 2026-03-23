@@ -323,6 +323,39 @@ export default function ProfileForm({
                                     <SelectItem value="master-teacher-4">
                                         Master Teacher IV
                                     </SelectItem>
+                                    <SelectItem value="master-teacher-5">
+                                        Master Teacher V
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-1">
+                                        Head Teacher I
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-2">
+                                        Head Teacher II
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-3">
+                                        Head Teacher III
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-4">
+                                        Head Teacher IV
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-5">
+                                        Head Teacher V
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-6">
+                                        Head Teacher VI
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-1">
+                                        Assistant School Principal I
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-2">
+                                        Assistant School Principal II
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-3">
+                                        Assistant School Principal III
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-4">
+                                        Assistant School Principal IV
+                                    </SelectItem>
                                     <SelectItem value="school-principal-1">
                                         School Principal I
                                     </SelectItem>
@@ -334,6 +367,9 @@ export default function ProfileForm({
                                     </SelectItem>
                                     <SelectItem value="school-principal-4">
                                         School Principal IV
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-5">
+                                        School Principal V
                                     </SelectItem>
                                     <SelectItem value="administrative-staff">
                                         Administrative Staff

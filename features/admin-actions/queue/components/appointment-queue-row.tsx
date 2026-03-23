@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -13,54 +12,7 @@ import {
 } from "@/features/admin-actions/queue/actions/queue-actions";
 import type { AppointmentRequestWithTeacher } from "@/features/admin-actions/queue/types/queue";
 import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
-
-function MiniStatusBadge({ status }: { status: string }) {
-    const s = (status ?? "").toUpperCase();
-    if (s === "APPROVED")
-        return (
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                <span className="h-1 w-1 rounded-full bg-emerald-400" />
-                Approved
-            </span>
-        );
-    if (s === "REJECTED")
-        return (
-            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/15 px-2 py-0.5 text-[10px] font-semibold text-rose-400">
-                <span className="h-1 w-1 rounded-full bg-rose-400" />
-                Rejected
-            </span>
-        );
-    return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
-            <span className="h-1 w-1 rounded-full bg-amber-400" />
-            Pending
-        </span>
-    );
-}
-
-function StatusBadge({ status }: { status: string }) {
-    const s = (status ?? "").toUpperCase();
-    if (s === "APPROVED")
-        return (
-            <Badge className="inline-flex items-center justify-center gap-1.5 min-w-[90px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                Approved
-            </Badge>
-        );
-    if (s === "REJECTED")
-        return (
-            <Badge className="inline-flex items-center justify-center gap-1.5 min-w-[90px] bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                Rejected
-            </Badge>
-        );
-    return (
-        <Badge className="inline-flex items-center justify-center gap-1.5 min-w-[90px] bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/15">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            Pending
-        </Badge>
-    );
-}
+import { StatusBadge } from "@/components/ui-elements/badges";
 
 export function AppointmentQueueRow(props: {
     request: AppointmentRequestWithTeacher;
@@ -151,7 +103,7 @@ export function AppointmentQueueRow(props: {
                             {teacher?.email ?? "—"}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
-                            <MiniStatusBadge status={request.status} />
+                            <StatusBadge status={request.status} size="xs" />
                             <span className="text-xs text-muted-foreground font-mono">
                                 {new Date(
                                     request.requested_at,

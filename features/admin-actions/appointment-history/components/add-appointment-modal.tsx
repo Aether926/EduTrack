@@ -36,7 +36,7 @@ import {
 } from "@/components/teacher-picker-modal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
 
 const POSITIONS = [
     "Teacher I",
@@ -50,10 +50,22 @@ const POSITIONS = [
     "Master Teacher II",
     "Master Teacher III",
     "Master Teacher IV",
+    "Master Teacher V",
+    "Head Teacher I",
+    "Head Teacher II",
+    "Head Teacher III",
+    "Head Teacher IV",
+    "Head Teacher V",
+    "Head Teacher VI",
+    "Assistant School Principal I",
+    "Assistant School Principal II",
+    "Assistant School Principal III",
+    "Assistant School Principal IV",
     "School Principal I",
     "School Principal II",
     "School Principal III",
     "School Principal IV",
+    "School Principal V",
     "Administrative Staff",
 ];
 
@@ -323,7 +335,7 @@ export function AddAppointmentSheet(props: {
                             >
                                 {selectedTeacher ? (
                                     <span className="flex items-center gap-2">
-                                        <InitialAvatar
+                                        <UserAvatar
                                             name={selectedTeacher.fullName}
                                             src={selectedTeacher.profileImage}
                                             className="h-5 w-5"

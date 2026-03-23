@@ -1,9 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, ShieldAlert, ShieldX, Clock } from "lucide-react";
-import { STATUS_LABEL, STATUS_BADGE } from "@/features/compliance/lib/status";
+import { RiskStatusBadge } from "@/components/ui-elements/badges";
 import type {
     TeacherTrainingCompliance,
     ComplianceStatus,
@@ -77,9 +76,9 @@ export function ComplianceSummaryCard(props: {
                             Training Compliance — {schoolYear}
                         </span>
                     </CardTitle>
-                    <Badge className={`${STATUS_BADGE[status]} shrink-0`}>
-                        {STATUS_LABEL[status]}
-                    </Badge>
+                    <div className="shrink-0">
+                        <RiskStatusBadge status={status.toLowerCase()} />
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -155,17 +154,7 @@ export function ComplianceSummaryCard(props: {
                     </div>
 
                     {/* Remaining */}
-                    <div
-                        className="text-center p-2 sm:p-3 rounded-lg border"
-                        style={{
-                            backgroundColor: hoursRemaining
-                                ? "rgba(16, 185, 129, 0.08)"
-                                : "rgba(244, 63, 94, 0.08)",
-                            borderColor: hoursRemaining
-                                ? "rgba(16, 185, 129, 0.25)"
-                                : "rgba(244, 63, 94, 0.25)",
-                        }}
-                    >
+                    <div className="text-center p-2 sm:p-3">
                         <p
                             className="text-lg sm:text-2xl font-bold tabular-nums"
                             style={{

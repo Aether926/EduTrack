@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
-    CalendarIcon,
     ChevronLeft,
     ChevronRight,
     ChevronUp,
@@ -20,25 +19,19 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-import {
-    cleanNameInput,
-    formatName,
-    cleanMiddleInitial,
-} from "@/app/util/helper";
-
 import { Input } from "@/components/ui/input";
 import {
     NameInput,
     MiddleInitialInput,
-} from "@/components/formatter/name-input";
+} from "@/components/formatter/name-format";
 import {
     ContactInput,
     isValidContact,
-} from "@/components/formatter/contact-input";
+} from "@/components/formatter/contact-format";
 import {
     EmployeeIdInput,
     isValidEmployeeId,
-} from "@/components/formatter/employee-id-input";
+} from "@/components/formatter/employee-id-format";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -796,10 +789,22 @@ export default function FillUpPage() {
                                                 "Master Teacher II",
                                                 "Master Teacher III",
                                                 "Master Teacher IV",
+                                                "Master Teacher V",
+                                                "Head Teacher I",
+                                                "Head Teacher II",
+                                                "Head Teacher III",
+                                                "Head Teacher IV",
+                                                "Head Teacher V",
+                                                "Head Teacher VI",
+                                                "Assistant School Principal I",
+                                                "Assistant School Principal II",
+                                                "Assistant School Principal III",
+                                                "Assistant School Principal IV",
                                                 "School Principal I",
                                                 "School Principal II",
                                                 "School Principal III",
                                                 "School Principal IV",
+                                                "School Principal V",
                                                 "Administrative Staff",
                                             ].map((pos) => (
                                                 <SelectItem

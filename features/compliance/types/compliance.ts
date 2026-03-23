@@ -38,6 +38,7 @@ export type ComplianceWithTeacher = TeacherTrainingCompliance & {
     firstName: string;
     lastName: string;
     email: string;
+    profileImage: string | null;
   } | null;
   school: {
     id: string;

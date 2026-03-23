@@ -16,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import { RoleBadge } from "@/components/ui-elements/badges";
 import { AdminDeletionRequestsTable } from "@/features/settingss/components/admin-deletion-requests-table";
 import { getAllDeletionRequests } from "@/features/settingss/actions/admin-deletion-actions";
 
@@ -182,9 +183,7 @@ export default async function AdminActionsPage() {
                             </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-block rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {roleLabel}
-                            </span>
+                            <RoleBadge role={roleLabel} />
                             <Badge variant="outline" className="gap-1.5">
                                 <Users className="h-3.5 w-3.5" />
                                 {teachers.length} teachers
@@ -318,7 +317,7 @@ export default async function AdminActionsPage() {
                                                     prefetch={false}
                                                     className="group flex items-center gap-3 rounded-lg border border-border/50 bg-muted/10 px-3 py-2.5 hover:bg-muted/20 hover:border-border/80 transition-colors"
                                                 >
-                                                    <InitialAvatar
+                                                    <UserAvatar
                                                         name={t.fullName}
                                                         src={t.profileImage}
                                                         className="h-8 w-8 shrink-0"

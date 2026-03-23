@@ -12,11 +12,11 @@ import {
     RefreshCw,
     Search,
     Settings,
-    ShieldAlert,
     ShieldCheck,
-    ShieldX,
     X,
 } from "lucide-react";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import { RiskStatusBadge } from "@/components/ui-elements/badges";
 import { toast } from "sonner";
 
 import {
@@ -56,12 +56,6 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-const STATUS_ICON: Record<ComplianceStatus, React.ReactNode> = {
-    COMPLIANT: <ShieldCheck className="h-4 w-4 text-emerald-400" />,
-    AT_RISK: <ShieldAlert className="h-4 w-4 text-amber-400" />,
-    NON_COMPLIANT: <ShieldX className="h-4 w-4 text-rose-400" />,
-};
-
 const STATUS_ORDER: Record<ComplianceStatus, number> = {
     NON_COMPLIANT: 0,
     AT_RISK: 1,
@@ -76,38 +70,6 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
         <label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-0.5 block">
             {children}
         </label>
-    );
-}
-
-function StatusPill({ status }: { status: ComplianceStatus }) {
-    const cfg: Record<
-        ComplianceStatus,
-        { icon: React.ReactNode; label: string; cls: string }
-    > = {
-        COMPLIANT: {
-            icon: <ShieldCheck className="h-3 w-3" />,
-            label: "Compliant",
-            cls: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-        },
-        AT_RISK: {
-            icon: <ShieldAlert className="h-3 w-3" />,
-            label: "At Risk",
-            cls: "border-amber-500/30 bg-amber-500/10 text-amber-400",
-        },
-        NON_COMPLIANT: {
-            icon: <ShieldX className="h-3 w-3" />,
-            label: "Non-Compliant",
-            cls: "border-rose-500/30 bg-rose-500/10 text-rose-400",
-        },
-    };
-    const { icon, label, cls } = cfg[status];
-    return (
-        <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}
-        >
-            {icon}
-            {label}
-        </span>
     );
 }
 
@@ -236,17 +198,17 @@ export function AdminComplianceClient(props: {
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         {/* Status pills */}
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                {counts.COMPLIANT} compliant
+                            <RiskStatusBadge status="compliant" />
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                                {counts.COMPLIANT}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                                {counts.AT_RISK} at risk
+                            <RiskStatusBadge status="at_risk" />
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                                {counts.AT_RISK}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-rose-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                                {counts.NON_COMPLIANT} non-compliant
+                            <RiskStatusBadge status="non_compliant" />
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                                {counts.NON_COMPLIANT}
                             </span>
                         </div>
 
@@ -468,55 +430,58 @@ export function AdminComplianceClient(props: {
                                         className="border-b last:border-b-0 hover:bg-muted/20 transition-colors"
                                     >
                                         <TableCell className="pl-4 py-3">
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium leading-snug">
-                                                    {c.teacher
-                                                        ? `${c.teacher.firstName} ${c.teacher.lastName}`
-                                                        : "Unknown"}
-                                                </p>
-                                                <p className="text-[11px] text-muted-foreground font-mono">
-                                                    {c.teacher?.email ?? "—"}
-                                                </p>
-                                                {/* Mobile hours row */}
-                                                <div className="md:hidden flex items-center gap-2 mt-1.5">
-                                                    <span className="text-[11px] font-mono text-muted-foreground">
-                                                        {c.total_hours}h /{" "}
-                                                        {c.required_hours}h
-                                                    </span>
-                                                    <span
-                                                        className="text-[11px] font-semibold px-1.5 py-0.5 rounded border"
-                                                        style={
-                                                            c.remaining_hours >
-                                                            0
-                                                                ? {
-                                                                      color: "rgb(251,113,133)",
-                                                                      borderColor:
-                                                                          "rgba(244,63,94,0.30)",
-                                                                      backgroundColor:
-                                                                          "rgba(244,63,94,0.08)",
-                                                                  }
-                                                                : {
-                                                                      color: "rgb(52,211,153)",
-                                                                      borderColor:
-                                                                          "rgba(16,185,129,0.30)",
-                                                                      backgroundColor:
-                                                                          "rgba(16,185,129,0.08)",
-                                                                  }
-                                                        }
-                                                    >
-                                                        {c.remaining_hours}h
-                                                        remaining
-                                                    </span>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <UserAvatar
+                                                    name={
+                                                        c.teacher
+                                                            ? `${c.teacher.firstName} ${c.teacher.lastName}`
+                                                            : "?"
+                                                    }
+                                                    src={
+                                                        (c.teacher as any)
+                                                            ?.profileImage ??
+                                                        null
+                                                    }
+                                                    className="h-8 w-8 shrink-0"
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium leading-snug">
+                                                        {c.teacher
+                                                            ? `${c.teacher.firstName} ${c.teacher.lastName}`
+                                                            : "Unknown"}
+                                                    </p>
+                                                    <p className="text-[11px] text-muted-foreground font-mono">
+                                                        {c.teacher?.email ??
+                                                            "—"}
+                                                    </p>
+                                                    {/* Mobile hours row */}
+                                                    <div className="md:hidden flex items-center gap-2 mt-1.5">
+                                                        <span className="text-[11px] font-mono text-muted-foreground">
+                                                            {c.total_hours}h /{" "}
+                                                            {c.required_hours}h
+                                                        </span>
+                                                        <span
+                                                            className="text-[11px] font-semibold"
+                                                            style={{
+                                                                color:
+                                                                    c.remaining_hours >
+                                                                    0
+                                                                        ? "rgb(251,113,133)"
+                                                                        : "rgb(52,211,153)",
+                                                            }}
+                                                        >
+                                                            {c.remaining_hours}h
+                                                            remaining
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </TableCell>
 
                                         {/* Mobile-only status cell */}
                                         <TableCell className="md:hidden text-center pr-4 align-middle">
-                                            <StatusPill
-                                                status={
-                                                    c.status as ComplianceStatus
-                                                }
+                                            <RiskStatusBadge
+                                                status={c.status.toLowerCase()}
                                             />
                                         </TableCell>
 
@@ -525,43 +490,41 @@ export function AdminComplianceClient(props: {
                                         </TableCell>
 
                                         <TableCell className="hidden md:table-cell text-center font-semibold tabular-nums text-sm">
-                                            {c.total_hours}h
+                                            <span
+                                                style={{
+                                                    color:
+                                                        c.status === "COMPLIANT"
+                                                            ? "rgb(52,211,153)"
+                                                            : c.status ===
+                                                                "AT_RISK"
+                                                              ? "rgb(251,191,36)"
+                                                              : "rgb(251,113,133)",
+                                                }}
+                                            >
+                                                {c.total_hours}h
+                                            </span>
                                         </TableCell>
 
                                         <TableCell className="hidden md:table-cell text-center text-sm text-muted-foreground tabular-nums">
                                             {c.required_hours}h
                                         </TableCell>
 
-                                        <TableCell className="hidden md:table-cell text-center">
+                                        <TableCell className="hidden md:table-cell text-center font-semibold tabular-nums text-sm">
                                             <span
-                                                className="text-sm font-bold tabular-nums px-2 py-0.5 rounded-md border"
-                                                style={
-                                                    c.remaining_hours > 0
-                                                        ? {
-                                                              color: "rgb(251,113,133)",
-                                                              borderColor:
-                                                                  "rgba(244,63,94,0.30)",
-                                                              backgroundColor:
-                                                                  "rgba(244,63,94,0.08)",
-                                                          }
-                                                        : {
-                                                              color: "rgb(52,211,153)",
-                                                              borderColor:
-                                                                  "rgba(16,185,129,0.30)",
-                                                              backgroundColor:
-                                                                  "rgba(16,185,129,0.08)",
-                                                          }
-                                                }
+                                                style={{
+                                                    color:
+                                                        c.remaining_hours > 0
+                                                            ? "rgb(251,113,133)"
+                                                            : "rgb(52,211,153)",
+                                                }}
                                             >
                                                 {c.remaining_hours}h
                                             </span>
                                         </TableCell>
 
                                         <TableCell className="hidden md:table-cell text-center">
-                                            <StatusPill
-                                                status={
-                                                    c.status as ComplianceStatus
-                                                }
+                                            <RiskStatusBadge
+                                                status={c.status.toLowerCase()}
                                             />
                                         </TableCell>
                                     </motion.tr>

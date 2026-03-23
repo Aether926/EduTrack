@@ -18,6 +18,15 @@ export function isValidEmployeeId(value: string): boolean {
 }
 
 /**
+ * Formats a raw employee ID string for display (e.g. in table cells).
+ * Returns the 7-digit string if valid, or "—" otherwise.
+ */
+export function fmtEmployeeId(raw: string): string {
+    const digits = raw.replace(/\D/g, "");
+    return digits.length === 7 ? digits : "—";
+}
+
+/**
  * Employee ID input — accepts exactly 7 digits, nothing else.
  */
 export function EmployeeIdInput({
