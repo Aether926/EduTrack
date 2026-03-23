@@ -28,14 +28,13 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import {
     Card,
     CardContent,
@@ -43,7 +42,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-
 import {
     Table,
     TableBody,
@@ -53,12 +51,34 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-interface TeacherTableProps {
-    data: TeacherTableRow[];
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtPhone(raw: string): string | null {
+    const d = raw.replace(/\D/g, "");
+    const n = d.startsWith("63") && d.length === 12 ? "0" + d.slice(2) : d;
+    return /^09\d{9}$/.test(n)
+        ? `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7)}`
+        : null;
 }
 
-export default function TeacherTable({ data }: TeacherTableProps) {
+function fmtEmployeeId(raw: string): string {
+    const digits = raw.replace(/\D/g, "");
+    return digits.length === 7 ? digits : "—";
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+interface TeacherTableProps {
+    data: TeacherTableRow[];
+    viewerRole?: "ADMIN" | "TEACHER";
+}
+
+export default function TeacherTable({
+    data,
+    viewerRole = "TEACHER",
+}: TeacherTableProps) {
     const router = useRouter();
+    const isAdmin = viewerRole === "ADMIN";
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
@@ -66,7 +86,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
     const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
     const [positionFilter, setPositionFilter] = useState<string | null>(null);
 
-    // Derive unique values for filter options from data
     const subjectOptions = useMemo(() => {
         const set = new Set<string>();
         for (const row of data) {
@@ -86,25 +105,24 @@ export default function TeacherTable({ data }: TeacherTableProps) {
 
     const columns = useMemo<ColumnDef<TeacherTableRow>[]>(
         () => [
-            {
-                accessorKey: "employeeid",
-                header: ({ column }) => (
-                    <Button
-                        variant="ghost"
-                        onClick={() =>
-                            column.toggleSorting(column.getIsSorted() === "asc")
-                        }
-                        className="px-2"
-                    >
-                        Employee ID <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
-                ),
-                cell: ({ row }) => (
-                    <div className="font-mono text-xs text-muted-foreground">
-                        {row.getValue("employeeid")}
-                    </div>
-                ),
-            },
+            // Employee ID — admin only
+            ...(isAdmin
+                ? ([
+                      {
+                          accessorKey: "employeeid",
+                          header: "Employee ID",
+                          cell: ({ row }) => (
+                              <div className="font-mono text-xs text-muted-foreground">
+                                  {fmtEmployeeId(
+                                      String(row.getValue("employeeid") ?? ""),
+                                  )}
+                              </div>
+                          ),
+                      },
+                  ] as ColumnDef<TeacherTableRow>[])
+                : []),
+
+            // Name + privacy-aware inline info
             {
                 accessorKey: "fullname",
                 header: ({ column }) => (
@@ -120,52 +138,187 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                 ),
                 cell: ({ row }) => {
                     const fullname = row.getValue("fullname") as string;
-                    const profileImage = row.original.profileImage;
-                    const position = row.original.position;
-                    const contact = row.original.contact;
+                    const ps = (row.original as any).privacySettings ?? {};
+                    const showPosition = isAdmin || (ps.showPosition ?? false);
+                    const showContact = isAdmin || (ps.contactInfo ?? false);
+                    const showEmergency =
+                        isAdmin || (ps.emergencyContact ?? false);
+                    const emergencyName = String(
+                        (row.original as any).emergencyName ?? "",
+                    );
+                    const emergencyContact = String(
+                        (row.original as any).emergencyContact ?? "",
+                    );
+                    const allHidden =
+                        !showPosition && !showContact && !showEmergency;
 
                     return (
                         <div className="flex items-center gap-3 min-w-0">
-                            <InitialAvatar
+                            <UserAvatar
                                 name={fullname}
-                                src={profileImage}
+                                src={row.original.profileImage}
                                 className="h-8 w-8 shrink-0"
                             />
                             <div className="min-w-0">
                                 <div className="truncate font-medium">
                                     {fullname}
                                 </div>
-                                <div className="md:hidden mt-1 space-y-0.5 min-w-0">
-                                    <div className="truncate text-xs text-muted-foreground">
-                                        {position || "N/A"}
+                                {allHidden && !isAdmin ? (
+                                    <div className="text-xs text-muted-foreground/50 italic mt-0.5">
+                                        Profile is private
                                     </div>
-                                    <div className="truncate text-xs text-muted-foreground font-mono">
-                                        {contact || "N/A"}
+                                ) : (
+                                    <div className="md:hidden mt-0.5 space-y-0.5 min-w-0">
+                                        {showPosition &&
+                                            row.original.position && (
+                                                <div className="truncate text-xs text-muted-foreground">
+                                                    {row.original.position}
+                                                </div>
+                                            )}
+                                        {showContact &&
+                                            row.original.contact && (
+                                                <div className="truncate text-xs text-muted-foreground font-mono">
+                                                    {fmtPhone(
+                                                        row.original.contact,
+                                                    ) ?? row.original.contact}
+                                                </div>
+                                            )}
+                                        {showEmergency && emergencyName && (
+                                            <div className="truncate text-xs text-muted-foreground/70">
+                                                <span className="not-italic">
+                                                    Emrg:{" "}
+                                                </span>
+                                                {emergencyName}
+                                                {emergencyContact && (
+                                                    <span className="font-mono ml-1">
+                                                        {fmtPhone(
+                                                            emergencyContact,
+                                                        ) ?? emergencyContact}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     );
                 },
             },
+
+            // Position — gated by privacy
             {
                 accessorKey: "position",
                 header: "Position",
-                cell: ({ row }) => (
-                    <div className="max-w-[260px] truncate text-sm text-muted-foreground">
-                        {row.getValue("position")}
-                    </div>
-                ),
+                cell: ({ row }) => {
+                    const ps = (row.original as any).privacySettings ?? {};
+                    const showPosition = isAdmin || (ps.showPosition ?? false);
+                    if (!showPosition)
+                        return (
+                            <div className="text-xs text-muted-foreground/40 italic">
+                                Hidden
+                            </div>
+                        );
+                    return (
+                        <div className="max-w-[260px] truncate text-sm text-muted-foreground">
+                            {row.getValue("position") as string}
+                        </div>
+                    );
+                },
             },
+
+            // Contact + emergency — gated by privacy
             {
                 accessorKey: "contact",
-                header: "Contact Number",
-                cell: ({ row }) => (
-                    <div className="font-mono text-xs text-muted-foreground">
-                        {row.getValue("contact")}
-                    </div>
-                ),
+                header: "Contact",
+                cell: ({ row }) => {
+                    const ps = (row.original as any).privacySettings ?? {};
+                    const showContact = isAdmin || (ps.contactInfo ?? false);
+                    const showEmergency =
+                        isAdmin || (ps.emergencyContact ?? false);
+                    const emergencyName = String(
+                        (row.original as any).emergencyName ?? "",
+                    );
+                    const emergencyContact = String(
+                        (row.original as any).emergencyContact ?? "",
+                    );
+
+                    return (
+                        <div className="space-y-0.5">
+                            {showContact ? (
+                                <div className="font-mono text-xs text-muted-foreground">
+                                    {fmtPhone(
+                                        String(row.getValue("contact") ?? ""),
+                                    ) ?? "—"}
+                                </div>
+                            ) : (
+                                <div className="text-xs text-muted-foreground/40 italic">
+                                    Hidden
+                                </div>
+                            )}
+                            {showEmergency && emergencyName && (
+                                <div className="text-xs text-muted-foreground/70">
+                                    <span className="text-muted-foreground/50">
+                                        Emrg:{" "}
+                                    </span>
+                                    {emergencyName}
+                                    {emergencyContact && (
+                                        <span className="font-mono ml-1">
+                                            {fmtPhone(emergencyContact) ??
+                                                emergencyContact}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                },
             },
+
+            // Emergency contact — gated by privacy
+            {
+                id: "emergency",
+                header: "Emergency Contact",
+                cell: ({ row }) => {
+                    const ps = (row.original as any).privacySettings ?? {};
+                    const showEmergency =
+                        isAdmin || (ps.emergencyContact ?? false);
+                    const emergencyName = String(
+                        (row.original as any).emergencyName ?? "",
+                    );
+                    const emergencyContact = String(
+                        (row.original as any).emergencyContact ?? "",
+                    );
+
+                    if (!showEmergency)
+                        return (
+                            <div className="text-xs text-muted-foreground/40 italic">
+                                Hidden
+                            </div>
+                        );
+                    if (!emergencyName)
+                        return (
+                            <div className="text-xs text-muted-foreground/40">
+                                —
+                            </div>
+                        );
+                    return (
+                        <div className="space-y-0.5">
+                            <div className="text-sm text-muted-foreground truncate max-w-[180px]">
+                                {emergencyName}
+                            </div>
+                            {emergencyContact && (
+                                <div className="font-mono text-xs text-muted-foreground/70">
+                                    {fmtPhone(emergencyContact) ??
+                                        emergencyContact}
+                                </div>
+                            )}
+                        </div>
+                    );
+                },
+            },
+
+            // View arrow
             {
                 id: "view",
                 header: "",
@@ -180,10 +333,9 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                 ),
             },
         ],
-        [],
+        [isAdmin], // isAdmin drives column visibility — must be in deps
     );
 
-    // Combined filtered data: apply dropdown filters on top of table's global filter
     const filteredData = useMemo(() => {
         return data.filter((row) => {
             if (
@@ -294,9 +446,8 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                     </div>
                 </div>
 
-                {/* Filter dropdowns row */}
+                {/* Filter dropdowns */}
                 <div className="flex flex-wrap gap-2">
-                    {/* Subject Specialization filter */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -330,7 +481,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* Position filter */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -364,7 +514,6 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* Clear filters — only show when a filter is active */}
                     {(subjectFilter || positionFilter) && (
                         <Button
                             variant="ghost"
@@ -391,7 +540,8 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                                         const colId = header.column.id;
                                         const hideOnSmall =
                                             colId === "position" ||
-                                            colId === "contact"
+                                            colId === "contact" ||
+                                            colId === "emergency"
                                                 ? "hidden md:table-cell"
                                                 : "";
                                         const viewCol =
@@ -437,7 +587,8 @@ export default function TeacherTable({ data }: TeacherTableProps) {
                                             const colId = cell.column.id;
                                             const hideOnSmall =
                                                 colId === "position" ||
-                                                colId === "contact"
+                                                colId === "contact" ||
+                                                colId === "emergency"
                                                     ? "hidden md:table-cell"
                                                     : "";
                                             return (

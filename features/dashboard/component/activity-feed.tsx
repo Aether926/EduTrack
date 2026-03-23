@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui-elements/badges";
 import { Separator } from "@/components/ui/separator";
 import {
     Bell,
@@ -68,18 +69,6 @@ function iconBg(kind: ReturnType<typeof classify>) {
         return "bg-amber-500/10 text-amber-400 border-amber-500/20";
     if (kind === "requests")
         return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-    return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
-}
-
-function kindBadge(kind: ReturnType<typeof classify>) {
-    if (kind === "approved")
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/25";
-    if (kind === "rejected")
-        return "bg-rose-500/10 text-rose-400 border-rose-500/25";
-    if (kind === "compliance")
-        return "bg-amber-500/10 text-amber-400 border-amber-500/25";
-    if (kind === "requests")
-        return "bg-blue-500/10 text-blue-400 border-blue-500/25";
     return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
 }
 
@@ -358,12 +347,10 @@ export default function ActivityFeed({
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`capitalize ${kindBadge(kind)}`}
-                                                    >
-                                                        {kind}
-                                                    </Badge>
+                                                    <StatusBadge
+                                                        status={kind}
+                                                        size="xs"
+                                                    />
                                                     <div className="text-xs text-muted-foreground">
                                                         {(r as FeedRow)
                                                             .display_time ??

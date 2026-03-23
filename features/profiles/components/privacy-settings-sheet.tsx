@@ -33,6 +33,11 @@ const PRIVACY_SECTIONS: {
         description: "Emergency contact name and details",
     },
     {
+        key: "showPosition",
+        label: "Position / Job Title",
+        description: "Current position visible in the teacher directory",
+    },
+    {
         key: "educationCredentials",
         label: "Education Credentials",
         description: "Bachelor's degree, subject specialization, post graduate",
@@ -47,6 +52,7 @@ const PRIVACY_SECTIONS: {
 const DEFAULT_PRIVACY: PrivacySettings = {
     contactInfo: false,
     emergencyContact: false,
+    showPosition: false,
     educationCredentials: false,
     educationBackground: false,
 };
@@ -76,6 +82,7 @@ export default function PrivacySettingsSheet({
         setSettings({
             contactInfo: true,
             emergencyContact: true,
+            showPosition: true,
             educationCredentials: true,
             educationBackground: true,
         });
@@ -85,6 +92,7 @@ export default function PrivacySettingsSheet({
         setSettings({
             contactInfo: false,
             emergencyContact: false,
+            showPosition: false,
             educationCredentials: false,
             educationBackground: false,
         });

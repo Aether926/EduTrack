@@ -3,6 +3,8 @@
 import React from "react";
 import { PhoneCall, User, MapPin, Heart, Edit2, Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ContactInput } from "@/components/formatter/contact-input";
+import { NameInput } from "@/components/formatter/name-input";
 import { Button } from "@/components/ui/button";
 import {
     Sheet,
@@ -14,12 +16,35 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { ProfileState } from "@/features/profiles/types/profile";
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtPhone(raw: string): string | null {
+    const d = raw.replace(/\D/g, "");
+    const n = d.startsWith("63") && d.length === 12 ? "0" + d.slice(2) : d;
+    return /^09\d{9}$/.test(n)
+        ? `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7)}`
+        : null;
+}
+
 // ── Display value ──────────────────────────────────────────────────────────────
 
-function DisplayValue({ value }: { value?: string | null }) {
+function DisplayValue({
+    value,
+    phone,
+}: {
+    value?: string | null;
+    phone?: boolean;
+}) {
+    const display = phone && value ? (fmtPhone(value) ?? value) : value;
     return (
         <div className="px-3 py-2 rounded-md bg-white/5 border border-white/8 text-sm font-medium text-foreground">
-            {value || <span className="text-muted-foreground">—</span>}
+            {display ? (
+                <span className={phone ? "font-mono" : undefined}>
+                    {display}
+                </span>
+            ) : (
+                <span className="text-muted-foreground">—</span>
+            )}
         </div>
     );
 }
@@ -32,6 +57,7 @@ function Field(props: {
     field: keyof ProfileState;
     icon?: React.ComponentType<{ size?: number; className?: string }>;
     type?: string;
+    inputVariant?: "name" | "contact" | "default";
     isEditing: boolean;
     onInputChange: (field: keyof ProfileState, value: string) => void;
     placeholder?: string;
@@ -42,10 +68,15 @@ function Field(props: {
         field,
         icon: Icon,
         type = "text",
+        inputVariant = "default",
         isEditing,
         onInputChange,
         placeholder,
     } = props;
+
+    const inputCls =
+        "bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20";
+
     return (
         <div className="space-y-1.5">
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
@@ -53,15 +84,34 @@ function Field(props: {
                 {label}
             </label>
             {isEditing ? (
-                <Input
-                    type={type}
-                    value={value}
-                    onChange={(e) => onInputChange(field, e.target.value)}
-                    placeholder={placeholder}
-                    className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
-                />
+                inputVariant === "contact" ? (
+                    <ContactInput
+                        value={value}
+                        onChange={(v: string) => onInputChange(field, v)}
+                        placeholder={placeholder}
+                        className={inputCls}
+                    />
+                ) : inputVariant === "name" ? (
+                    <NameInput
+                        value={value}
+                        onChange={(v: string) => onInputChange(field, v)}
+                        placeholder={placeholder}
+                        className={inputCls}
+                    />
+                ) : (
+                    <Input
+                        type={type}
+                        value={value}
+                        onChange={(e) => onInputChange(field, e.target.value)}
+                        placeholder={placeholder}
+                        className={inputCls}
+                    />
+                )
             ) : (
-                <DisplayValue value={value} />
+                <DisplayValue
+                    value={value}
+                    phone={inputVariant === "contact"}
+                />
             )}
         </div>
     );
@@ -85,6 +135,7 @@ function EmergencyContactForm({
                 value={data.emergencyName}
                 field="emergencyName"
                 icon={User}
+                inputVariant="name"
                 isEditing={isEditing}
                 onInputChange={onInputChange}
                 placeholder="e.g. John Doe"
@@ -112,7 +163,7 @@ function EmergencyContactForm({
                 value={data.emergencyTelephoneNo}
                 field="emergencyTelephoneNo"
                 icon={PhoneCall}
-                type="tel"
+                inputVariant="contact"
                 isEditing={isEditing}
                 onInputChange={onInputChange}
                 placeholder="e.g. 09XX-XXX-XXXX"

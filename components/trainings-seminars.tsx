@@ -55,7 +55,7 @@ import UploadProofSheet, {
     type UploadProofContext,
 } from "@/features/professional-dev/components/upload-proof-sheet";
 import SelfEnrollModal from "@/features/professional-dev/components/self-enroll-modal";
-import { TypeBadge } from "@/components/ui-elements/badges/type";
+import { TypeBadge } from "@/components/ui-elements/badges";
 
 export type TrainingSeminarRow = {
     id: string;

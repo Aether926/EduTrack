@@ -180,9 +180,14 @@ export default function ProfileHeader({
                             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white break-words">
                                 {fullName}
                             </h2>
-                            <p className="text-blue-600 font-semibold text-sm md:text-base break-words mt-1">
-                                {tempProfileData.position}
-                            </p>
+                            {/* Show position if own profile, admin (privacySettings null), or teacher made it public */}
+                            {(isOwnProfile ||
+                                privacySettings === null ||
+                                privacySettings?.showPosition) && (
+                                <p className="text-blue-600 font-semibold text-sm md:text-base break-words mt-1">
+                                    {tempProfileData.position}
+                                </p>
+                            )}
 
                             {/* Username */}
                             {isOwnProfile ? (

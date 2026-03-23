@@ -3,6 +3,7 @@
 import React from "react";
 import { Phone, Mail, Edit2, Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ContactInput } from "@/components/formatter/contact-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,12 +16,35 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { ProfileState } from "@/features/profiles/types/profile";
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtPhone(raw: string): string | null {
+    const d = raw.replace(/\D/g, "");
+    const n = d.startsWith("63") && d.length === 12 ? "0" + d.slice(2) : d;
+    return /^09\d{9}$/.test(n)
+        ? `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7)}`
+        : null;
+}
+
 // ── Display value ──────────────────────────────────────────────────────────────
 
-function DisplayValue({ value }: { value?: string | null }) {
+function DisplayValue({
+    value,
+    phone,
+}: {
+    value?: string | null;
+    phone?: boolean;
+}) {
+    const display = phone && value ? (fmtPhone(value) ?? value) : value;
     return (
         <div className="px-3 py-2 rounded-md bg-white/5 border border-white/8 text-sm font-medium text-foreground">
-            {value || <span className="text-muted-foreground">—</span>}
+            {display ? (
+                <span className={phone ? "font-mono" : undefined}>
+                    {display}
+                </span>
+            ) : (
+                <span className="text-muted-foreground">—</span>
+            )}
         </div>
     );
 }
@@ -67,6 +91,13 @@ function Field(props: {
                         className="resize-none bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
                         rows={rows || 3}
                     />
+                ) : type === "tel" ? (
+                    <ContactInput
+                        value={value}
+                        onChange={(v) => onInputChange(field, v)}
+                        placeholder={placeholder || ""}
+                        className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                    />
                 ) : (
                     <Input
                         type={type}
@@ -78,7 +109,7 @@ function Field(props: {
                     />
                 )
             ) : (
-                <DisplayValue value={value} />
+                <DisplayValue value={value} phone={type === "tel"} />
             )}
         </div>
     );
