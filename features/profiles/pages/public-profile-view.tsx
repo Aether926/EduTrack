@@ -204,13 +204,13 @@ export default function PublicProfileView(props: {
                 profile?.educationGraduateGraduated,
             ),
             educationGraduateHonors: str(profile?.educationGraduateHonors),
-            emergencyName: str(profile.ProfileEmergencyContact[0].name),
+            emergencyName: str(profile.ProfileEmergencyContact[0]?.name),
             emergencyRelationship: str(
-                profile.ProfileEmergencyContact[0].relationship,
+                profile.ProfileEmergencyContact[0]?.relationship,
             ),
-            emergencyAddress: str(profile.ProfileEmergencyContact[0].address),
+            emergencyAddress: str(profile.ProfileEmergencyContact[0]?.address),
             emergencyTelephoneNo: str(
-                profile.ProfileEmergencyContact[0].telephoneNo,
+                profile.ProfileEmergencyContact[0]?.telephoneNo,
             ),
             profileImage: profile?.profileImage ?? null,
             privacySettings: profile?.privacySettings ?? null,
