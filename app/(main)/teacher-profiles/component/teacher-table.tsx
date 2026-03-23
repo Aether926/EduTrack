@@ -256,19 +256,6 @@ export default function TeacherTable({
                                     Hidden
                                 </div>
                             )}
-                            {showEmergency && emergencyName && (
-                                <div className="text-xs text-muted-foreground/70">
-                                    <span className="text-muted-foreground/50">
-                                        Emrg:{" "}
-                                    </span>
-                                    {emergencyName}
-                                    {emergencyContact && (
-                                        <span className="font-mono ml-1">
-                                            {fmtPhone(emergencyContact) ?? "—"}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     );
                 },
