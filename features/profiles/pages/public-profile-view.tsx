@@ -59,6 +59,7 @@ function AllPrivateCard() {
 const DEFAULT_PRIVACY: PrivacySettings = {
     contactInfo: false,
     emergencyContact: false,
+    showPosition: false,
     educationCredentials: false,
     educationBackground: false,
 };
@@ -231,7 +232,8 @@ export default function PublicProfileView(props: {
             can("contactInfo") ||
             can("emergencyContact") ||
             can("educationCredentials") ||
-            can("educationBackground")
+            can("educationBackground") ||
+            can("showPosition")
         );
 
     return (
@@ -270,7 +272,7 @@ export default function PublicProfileView(props: {
                         firstName: data.firstName,
                         middleInitial: data.middleInitial,
                         lastName: data.lastName,
-                        position: data.position,
+                        position: can("showPosition") ? data.position : "",
                         username: data.username,
                     }}
                     showActions={true}

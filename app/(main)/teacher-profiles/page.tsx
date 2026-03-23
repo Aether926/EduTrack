@@ -7,6 +7,7 @@ import TeacherTable from "@/app/(main)/teacher-profiles/component/teacher-table"
 import type { TeacherTableRow } from "@/lib/user";
 
 import { Badge } from "@/components/ui/badge";
+import { RoleBadge } from "@/components/ui-elements/badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
@@ -52,13 +53,15 @@ export default function TeacherProfilesPage() {
 
             const { data: profiles, error } = await supabase
                 .from("Profile")
-                .select(`
+                .select(
+                    `
                     *,
                     User!inner (
                         status,
                         role
                     )
-                `)
+                `,
+                )
                 .eq("User.status", "APPROVED")
                 .eq("User.role", "TEACHER")
                 .order("lastName", { ascending: true });
@@ -76,26 +79,33 @@ export default function TeacherProfilesPage() {
                 .select("id, employeeId, position")
                 .in("id", profileIds);
 
-            const hrMap = new Map((hrProfiles ?? []).map((hr: any) => [hr.id, hr]));
+            const hrMap = new Map(
+                (hrProfiles ?? []).map((hr: any) => [hr.id, hr]),
+            );
 
             const tableData: TeacherTableRow[] = (profiles ?? [])
                 .filter((profile: any) => profile.id !== authUser.id)
                 .map((profile: any) => {
                     const hr = hrMap.get(profile.id);
                     return {
-                        id:           profile.id,
-                        employeeid:   hr?.employeeId    || "N/A",
-                        fullname:     `${profile.firstName} ${
+                        id: profile.id,
+                        employeeid: hr?.employeeId || "N/A",
+                        fullname: `${profile.firstName} ${
                             profile.middleInitial
-                                ? profile.middleInitial.replace(/\.+$/, "") + ". "
+                                ? profile.middleInitial.replace(/\.+$/, "") +
+                                  ". "
                                 : ""
                         }${profile.lastName}`,
-                        position:     hr?.position      || "N/A",
-                        contact:      profile.contactNumber || "N/A",
-                        email:        profile.email,
-                        profileImage: profile.profileImage  || null,
-                        status:       profile.User.status,
-                        subjectSpecialization: profile.subjectSpecialization  || null,
+                        position: hr?.position || "N/A",
+                        contact: profile.contactNumber || "N/A",
+                        email: profile.email,
+                        profileImage: profile.profileImage || null,
+                        status: profile.User.status,
+                        subjectSpecialization:
+                            profile.subjectSpecialization || null,
+                        emergencyName: profile.emergencyName || null,
+                        emergencyContact: profile.emergencyTelephoneNo || null,
+                        privacySettings: profile.privacySettings || null,
                     };
                 });
 
@@ -161,7 +171,10 @@ export default function TeacherProfilesPage() {
                     </div>
                     <div className="divide-y divide-border/60">
                         {Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="grid grid-cols-4 gap-4 px-5 py-3.5 items-center">
+                            <div
+                                key={i}
+                                className="grid grid-cols-4 gap-4 px-5 py-3.5 items-center"
+                            >
                                 <Skeleton className="h-4 w-16" />
                                 <div className="flex items-center gap-2">
                                     <Skeleton className="h-8 w-8 rounded-full shrink-0" />
@@ -200,10 +213,16 @@ export default function TeacherProfilesPage() {
                                     <h1 className="text-lg font-semibold tracking-tight leading-tight">
                                         Teachers
                                     </h1>
-                                    <Badge variant="secondary" className="text-[11px]">
-                                        {userRole ?? "USER"}
-                                    </Badge>
-                                    <Badge variant="outline" className="text-[11px]">
+                                    <RoleBadge
+                                        role={(
+                                            userRole ?? "TEACHER"
+                                        ).toLowerCase()}
+                                        size="xs"
+                                    />
+                                    <Badge
+                                        variant="outline"
+                                        className="text-[11px]"
+                                    >
                                         Teacher Profiles
                                     </Badge>
                                 </div>
@@ -219,7 +238,9 @@ export default function TeacherProfilesPage() {
                                     <Users className="h-3.5 w-3.5 text-blue-400" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] text-muted-foreground leading-none">Total</div>
+                                    <div className="text-[11px] text-muted-foreground leading-none">
+                                        Total
+                                    </div>
                                     <div className="text-xl font-bold text-blue-400 tabular-nums mt-0.5">
                                         {stats.total}
                                     </div>
@@ -231,7 +252,9 @@ export default function TeacherProfilesPage() {
                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] text-muted-foreground leading-none">Approved</div>
+                                    <div className="text-[11px] text-muted-foreground leading-none">
+                                        Approved
+                                    </div>
                                     <div className="text-xl font-bold text-emerald-400 tabular-nums mt-0.5">
                                         {stats.approved}
                                     </div>
@@ -246,10 +269,15 @@ export default function TeacherProfilesPage() {
             <div className="min-w-0">
                 {teachers.length === 0 ? (
                     <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background flex items-center justify-center py-16">
-                        <p className="text-sm text-muted-foreground">No approved teachers found.</p>
+                        <p className="text-sm text-muted-foreground">
+                            No approved teachers found.
+                        </p>
                     </div>
                 ) : (
-                    <TeacherTable data={teachers} />
+                    <TeacherTable
+                        data={teachers}
+                        viewerRole={userRole ?? "TEACHER"}
+                    />
                 )}
             </div>
         </div>

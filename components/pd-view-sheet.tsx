@@ -37,7 +37,7 @@ type PdDetails = {
 
 type FetchResult = { ok: true; data: PdDetails } | { ok: false; error: string };
 
-import { TypeBadge } from "@/components/ui-elements/badges/type";
+import { TypeBadge } from "@/components/ui-elements/badges";
 
 function LevelBadge({ level }: { level: string }) {
     const l = (level ?? "").toLowerCase();
