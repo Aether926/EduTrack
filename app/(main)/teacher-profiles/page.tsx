@@ -68,6 +68,7 @@ export default function TeacherProfilesPage() {
                     )
                     `,
                 )
+                .eq("User.role", "TEACHER")
                 .order("lastName", { ascending: true });
 
             // console.log(profiles);
