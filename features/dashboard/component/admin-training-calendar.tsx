@@ -88,7 +88,7 @@ function PickerOverlay({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
-            className="absolute inset-x-0 top-[2.75rem] z-20 mx-3 rounded-lg border bg-card shadow-lg p-3"
+            className="absolute inset-x-0 top-11 z-20 mx-3 rounded-lg border bg-card shadow-lg p-3"
         >
             <div className="flex gap-3">
                 {/* Year column — scrollable */}
@@ -546,7 +546,7 @@ export default function AdminTrainingCalendar({
                                                     ) : (
                                                         <div className="mt-2">
                                                             <div className="flex items-center gap-2 mb-1.5">
-                                                                <div className="flex -space-x-1.5">
+                                                                <div className="flex gap-0.5 -space-x-1.5">
                                                                     {e.teachers
                                                                         .slice(
                                                                             0,

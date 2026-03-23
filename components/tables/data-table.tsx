@@ -1,6 +1,6 @@
 "use client";
 
-import PaginationBar from "../pagination";
+import PaginationBar from "./pagination";
 import { useRouter } from "next/navigation";
 
 import * as React from "react";
@@ -146,8 +146,8 @@ export function DataTable<T>({
         .rows.map((row) => row.original);
 
     return (
-        <div className="w-full flex flex-col">
-            <div>
+        <div className="w-full min-h-screen flex flex-col">
+            <div className="flex-1">
                 <div className="flex items-center py-2">
                     <div className="flex flex-row">
                         <div className="relative max-w-sm pr-2">
@@ -221,8 +221,8 @@ export function DataTable<T>({
                     </DropdownMenu>
                 </div>
 
-                <div className="overflow-x-auto rounded-md border">
-                    <Table className="min-w-[900px]">
+                <div className="overflow-hidden rounded-md border">
+                    <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
@@ -300,7 +300,6 @@ export function DataTable<T>({
                     </Table>
                 </div>
             </div>
-
             <div className="sticky bottom-0 bg-background border-t py-4 z-10 mt-auto">
                 <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
                     <div className="text-muted-foreground text-sm mr-auto">

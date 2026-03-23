@@ -111,7 +111,12 @@ export default async function TeacherPublicProfilePage({
 
     const { data: profile, error } = await db
         .from("Profile")
-        .select("*")
+        .select(
+            `
+            *,
+            ProfileEmergencyContact (*)
+        `,
+        )
         .eq("id", id)
         .single();
 
@@ -129,7 +134,7 @@ export default async function TeacherPublicProfilePage({
     // (e.g. emergencyName, emergencyRelationship, emergencyAddress, emergencyTelephoneNo).
     const hrEntries = Object.fromEntries(
         Object.entries(profileHR ?? {}).filter(
-            ([_, v]) => v !== null && v !== undefined && v !== "",
+            ([v]) => v !== null && v !== undefined && v !== "",
         ),
     );
 

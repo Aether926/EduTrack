@@ -59,12 +59,18 @@ export default function TeacherProfilesPage() {
                     User!inner (
                         status,
                         role
+                    ),
+                    ProfileEmergencyContact (
+                        name,
+                        relationship,
+                        address,
+                        telephoneNo
                     )
-                `,
+                    `,
                 )
-                .eq("User.status", "APPROVED")
-                .eq("User.role", "TEACHER")
                 .order("lastName", { ascending: true });
+
+            // console.log(profiles);
 
             if (error) {
                 toast.error("Error fetching teachers.");
@@ -73,41 +79,42 @@ export default function TeacherProfilesPage() {
                 return;
             }
 
-            const profileIds = (profiles ?? []).map((p: any) => p.id);
             const { data: hrProfiles } = await supabase
                 .from("ProfileHR")
-                .select("id, employeeId, position")
-                .in("id", profileIds);
-
-            const hrMap = new Map(
-                (hrProfiles ?? []).map((hr: any) => [hr.id, hr]),
-            );
+                .select("*");
 
             const tableData: TeacherTableRow[] = (profiles ?? [])
                 .filter((profile: any) => profile.id !== authUser.id)
                 .map((profile: any) => {
-                    const hr = hrMap.get(profile.id);
+                    const hrProf = hrProfiles?.find(
+                        (hr) => hr.id === profile.id,
+                    );
+                    const emergencyContact =
+                        profile.ProfileEmergencyContact?.[0] ?? null;
+
                     return {
                         id: profile.id,
-                        employeeid: hr?.employeeId || "N/A",
+                        employeeid: hrProf?.employeeId || "N/A",
                         fullname: `${profile.firstName} ${
                             profile.middleInitial
                                 ? profile.middleInitial.replace(/\.+$/, "") +
                                   ". "
                                 : ""
                         }${profile.lastName}`,
-                        position: hr?.position || "N/A",
+                        position: hrProf?.position || "N/A",
                         contact: profile.contactNumber || "N/A",
                         email: profile.email,
                         profileImage: profile.profileImage || null,
                         status: profile.User.status,
                         subjectSpecialization:
                             profile.subjectSpecialization || null,
-                        emergencyName: profile.emergencyName || null,
-                        emergencyContact: profile.emergencyTelephoneNo || null,
+                        emergencyName: emergencyContact?.name || null,
+                        emergencyContact: emergencyContact?.telephoneNo || null,
                         privacySettings: profile.privacySettings || null,
                     };
                 });
+
+            // console.log(tableData);
 
             setTeachers(tableData);
             setLoading(false);
@@ -126,7 +133,7 @@ export default function TeacherProfilesPage() {
         return (
             <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
                 {/* ── Header skeleton ── */}
-                <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background px-5 py-5 md:px-6 md:py-6">
+                <div className="rounded-xl border border-border/60 bg-linear-to-br from-card to-background px-5 py-5 md:px-6 md:py-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-3">
                             <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
@@ -159,7 +166,7 @@ export default function TeacherProfilesPage() {
                 </div>
 
                 {/* ── Table skeleton ── */}
-                <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-linear-to-br from-card to-background overflow-hidden">
                     <div className="px-5 py-4 border-b border-border/60">
                         <Skeleton className="h-9 w-64 rounded-lg" />
                     </div>
@@ -200,8 +207,8 @@ export default function TeacherProfilesPage() {
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6 md:py-6 space-y-4">
             {/* ── Page header band ── */}
-            <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
+            <div className="relative rounded-xl border border-border/60 bg-linear-to-br from-card to-background overflow-hidden">
+                <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
                 <div className="relative px-5 py-5 md:px-6 md:py-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-3">
@@ -268,7 +275,7 @@ export default function TeacherProfilesPage() {
             {/* ── Table ── */}
             <div className="min-w-0">
                 {teachers.length === 0 ? (
-                    <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-background flex items-center justify-center py-16">
+                    <div className="rounded-xl border border-border/60 bg-linear-to-br from-card to-background flex items-center justify-center py-16">
                         <p className="text-sm text-muted-foreground">
                             No approved teachers found.
                         </p>

@@ -78,7 +78,6 @@ function getAvatarColor(name: string) {
 interface InitialAvatarProps {
     name: string;
     src?: string | null;
-    /** Extra classes applied to the Avatar root (e.g. size, group-hover ring) */
     className?: string;
 }
 
@@ -104,9 +103,16 @@ export default function InitialAvatar({
         >
             <AvatarImage src={src || undefined} />
             <AvatarFallback
-                className={`text-[11px] font-semibold ${color.bg} ${color.text}`}
+                className={`text-[11px] font-semibold ${color.text} relative overflow-hidden`}
             >
-                {initials ?? <UserRound className="h-4 w-4" />}
+                {/* Solid base blocks transparency bleed when avatars overlap */}
+                <span className="absolute inset-0 bg-background" />
+                {/* Tinted color layer sits on top of the base */}
+                <span className={`absolute inset-0 ${color.bg}`} />
+                {/* Content */}
+                <span className="relative z-10 flex items-center justify-center w-full h-full">
+                    {initials ?? <UserRound className="h-4 w-4" />}
+                </span>
             </AvatarFallback>
         </Avatar>
     );

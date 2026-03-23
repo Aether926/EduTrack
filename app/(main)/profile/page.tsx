@@ -6,10 +6,10 @@ import ProfilePage from "@/features/profiles/pages/profile-page";
 export const revalidate = 300;
 
 export default async function Page() {
-  const user = await getUser();
-  if (!user) redirect("/signin");
+    const user = await getUser();
+    if (!user) redirect("/signin");
 
-  const initialProfile = await loadProfileData(user.id);
+    const initialProfile = await loadProfileData(user.id);
 
-  return <ProfilePage userId={user.id} initialProfile={initialProfile} />;
+    return <ProfilePage userId={user.id} initialProfile={initialProfile} />;
 }

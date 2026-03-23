@@ -79,6 +79,8 @@ export default function TeacherTable({
     const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
     const [positionFilter, setPositionFilter] = useState<string | null>(null);
 
+    // console.log(data);
+
     const subjectOptions = useMemo(() => {
         const set = new Set<string>();
         for (const row of data) {
@@ -286,6 +288,8 @@ export default function TeacherTable({
                     const emergencyContact = String(
                         (row.original as any).emergencyContact ?? "",
                     );
+
+                    // console.log(row.original);
 
                     if (!showEmergency)
                         return (
