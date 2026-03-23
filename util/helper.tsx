@@ -1,9 +1,3 @@
-// ---------- Clean Raw Name Input ----------
-export function cleanNameInput(value: string) {
-    // Allow letters (including accented), spaces, hyphen, apostrophe, dot
-    return value.replace(/[^\p{L}' .-]/gu, "");
-}
-
 // ---------- Format Names (Dela Cruz, D'Angelo, Anna-Marie, Jr.) ----------
 export function formatName(value: string) {
     if (!value || !value.trim()) return "";
@@ -56,7 +50,7 @@ export function formatName(value: string) {
                 return word
                     .split("'")
                     .map((part) =>
-                        part ? part[0].toUpperCase() + part.slice(1) : ""
+                        part ? part[0].toUpperCase() + part.slice(1) : "",
                     )
                     .join("'");
             }
@@ -66,7 +60,7 @@ export function formatName(value: string) {
                 return word
                     .split("-")
                     .map((part) =>
-                        part ? part[0].toUpperCase() + part.slice(1) : ""
+                        part ? part[0].toUpperCase() + part.slice(1) : "",
                     )
                     .join("-");
             }
@@ -77,19 +71,6 @@ export function formatName(value: string) {
         .join(" ");
 
     return suffix ? `${formattedCore} ${suffix}` : formattedCore;
-}
-
-// ---------- Middle Initial Cleaner (A–Z only, 1 char, uppercase) ----------
-export function cleanMiddleInitial(value: string) {
-    if (!value) return "";
-
-    // Get first letter only, uppercase it, and add a dot
-    const letter = value
-        .replace(/[^a-zA-Z]/g, "")
-        .toUpperCase()
-        .charAt(0);
-
-    return letter ? `${letter}.` : "";
 }
 
 // ---------- Age Calculator ----------

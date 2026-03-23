@@ -19,8 +19,6 @@ import {
     ZoomIn,
 } from "lucide-react";
 
-import { toLocalDateString } from "@/lib/utils";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -47,6 +45,7 @@ import {
     selfEnrollExistingTraining,
     teacherSelfReportTraining,
 } from "@/features/professional-dev/actions/teacher-training-actions";
+import { toLocalDateString } from "@/util/date";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
-    CalendarIcon,
     ChevronLeft,
     ChevronRight,
     ChevronUp,
@@ -19,12 +18,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-
-import {
-    cleanNameInput,
-    formatName,
-    cleanMiddleInitial,
-} from "@/app/util/helper";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -41,7 +34,6 @@ import {
 } from "@/components/formatter/employee-id-input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { logSignUp } from "@/app/actions/auth-log-actions";
 
 // ── Calendar constants ─────────────────────────────────────────────────────────
@@ -171,7 +163,7 @@ function MiniCalendar({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute inset-x-0 top-[2.75rem] z-10 mx-3 rounded-lg border border-[#2e2e32] bg-[#1c1c1e] shadow-lg p-3"
+                        className="absolute inset-x-0 top-11 z-10 mx-3 rounded-lg border border-[#2e2e32] bg-[#1c1c1e] shadow-lg p-3"
                     >
                         <div className="flex gap-3">
                             {/* Year column */}
@@ -383,7 +375,6 @@ export default function FillUpPage() {
     }, []);
 
     // Generate username client-side to avoid server action auth issues
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const generateUsernameClient = async (
         firstName: string,
         lastName: string,
@@ -538,7 +529,7 @@ export default function FillUpPage() {
 
             success = true;
             router.push("/status");
-        } catch (error) {
+        } catch {
             toast.error("An unexpected error occurred. Please try again.");
         } finally {
             if (!success) setSubmitting(false);

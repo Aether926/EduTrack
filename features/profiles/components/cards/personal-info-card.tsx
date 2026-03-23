@@ -45,7 +45,7 @@ import { Combobox } from "@/components/combobox";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { ProfileState } from "@/features/profiles/types/profile";
-import { formatName } from "@/app/util/helper";
+import { formatName } from "@/util/helper";
 
 // ── Read-only display value ────────────────────────────────────────────────────
 
