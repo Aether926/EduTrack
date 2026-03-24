@@ -110,9 +110,8 @@ function PdfThumbnail({
             try {
                 if (typeof window === "undefined") return;
 
-                const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf");
-                pdfjsLib.GlobalWorkerOptions.workerSrc =
-                    `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+                const pdfjsLib = await import("pdfjs-dist");
+                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer })
@@ -136,13 +135,12 @@ function PdfThumbnail({
                 const ctx = canvas.getContext("2d");
                 if (!ctx) return;
                 await page.render({
-                    canvasContext: ctx,
+                    canvas: canvas!,
                     viewport: scaled,
                 }).promise;
 
                 if (!cancelled) setLoading(false);
             } catch (err) {
-
                 if (!cancelled) {
                     setLoading(false);
                     setError(true);

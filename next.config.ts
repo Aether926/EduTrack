@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
-      canvas: false, // 👈 fix here
+      canvas: false,
     };
     return config;
   },

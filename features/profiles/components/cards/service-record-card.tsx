@@ -2,6 +2,7 @@ import React from "react";
 import { Clock, CalendarDays, MapPin, Award, BadgeCheck } from "lucide-react";
 import type { ProfileState } from "@/features/profiles/types/profile";
 import { calculateServiceYears } from "@/features/profiles/lib/date";
+import LoyaltyServiceCard from "@/components/loyalty-service-card";
 
 export default function ServiceRecordCard(props: { data: ProfileState }) {
     const { data } = props;
@@ -125,6 +126,13 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Loyalty Award — Rose (NEW) */}
+                    <LoyaltyServiceCard
+                        dateOfOriginalAppointment={
+                            data.dateOfOriginalAppointment
+                        }
+                    />
                 </div>
 
                 {/* Note */}
@@ -149,6 +157,14 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                         </span>{" "}
                         — how long they have held their present role since their
                         most recent promotion.
+                    </p>
+                    <p>
+                        <span className="text-rose-400/90 font-semibold">
+                            Loyalty Award
+                        </span>{" "}
+                        — countdown to the next loyalty milestone (10 years
+                        first; every 5 years after), based on the original DepEd
+                        appointment date.
                     </p>
                 </div>
             </div>
