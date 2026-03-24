@@ -1,237 +1,124 @@
-"use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { unstable_cache } from "next/cache";
+import { createAdminClient, createClient, getUser } from "@/lib/supabase/server";
+import { getDashboardStats } from "@/lib/database/dashboard";
+import { getMyUpcomingEvents, getAllUpcomingEvents } from "@/lib/database/calendar";
+import type { ActivityRow } from "@/lib/database/activity";
+import { getTeacherSalaryEligibility } from "@/lib/database/salary-eligibility";
+import { getAdminDashboardStats } from "@/lib/database/admin-dashboard";
+import DashboardView from "@/features/dashboard/component/dashboard-view";
+import { redirect } from "next/navigation";
+import PatchNoteModal from "@/components/patch-note-modal";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
-import { GraduationCap, Users, Calendar, TrendingUp } from "lucide-react";
+function getCachedAdminStats() {
+  return unstable_cache(
+    async () => getAdminDashboardStats(),
+    ["admin-dashboard-stats"],
+    { revalidate: 300, tags: ["admin-dashboard-stats"] }
+  )();
+}
 
-export default function Dashboard() {
-    const [userName, setUserName] = useState("User");
-    const [user, setUser] = useState<any>(null);
-    const [userRole, setUserRole] = useState<string | null>(null);
+function getCachedAdminEvents() {
+  return unstable_cache(
+    async () => getAllUpcomingEvents(),
+    ["admin-upcoming-events"],
+    { revalidate: 300, tags: ["admin-upcoming-events"] }
+  )();
+}
 
-    useEffect(() => {
-        const loadUser = async () => {
-            const { data } = await supabase.auth.getSession();
+function getCachedEligibility() {
+  return unstable_cache(
+    async () => getTeacherSalaryEligibility(1, 10, "eligible_first"),
+    ["teacher-salary-eligibility"],
+    { revalidate: 300, tags: ["teacher-salary-eligibility"] }
+  )();
+}
 
-            const authUser = data.session?.user;
-            if (!authUser) return;
+function getCachedDashboardStats(userId: string) {
+  return unstable_cache(
+    async () => getDashboardStats(userId),
+    ["dashboard-stats", userId],
+    { revalidate: 300, tags: [`dashboard-stats-${userId}`] }
+  )();
+}
 
-            setUser(authUser);
+function getCachedUpcomingEvents(userId: string) {
+  return unstable_cache(
+    async () => getMyUpcomingEvents(),
+    ["upcoming-events", userId],
+    { revalidate: 300, tags: [`upcoming-events-${userId}`] }
+  )();
+}
 
-            // 👇 Fetch role from your "User" table
-            const { data: userRow, error } = await supabase
-                .from("User")
-                .select("role")
-                .eq("id", authUser.id)
-                .single();
+const ADMIN_ROLES = new Set(["ADMIN", "SUPERADMIN"]);
 
-            if (!error && userRow) {
-                setUserRole(userRow.role); // e.g. "ADMIN" | "TEACHER"
-            }
-        };
+function fmtServer(dt: string) {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric", month: "short", day: "2-digit",
+      hour: "2-digit", minute: "2-digit",
+    }).format(new Date(dt));
+  } catch { return dt; }
+}
 
-        loadUser();
-    }, []);
+export default async function DashboardPage() {
+  const user = await getUser();
+  if (!user) redirect("/signin");
 
-    useEffect(() => {
-        // Fetch user data from Supabase if needed
-        const fetchUser = async () => {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-            if (user) {
-                // Set username from user metadata or email
-                setUserName(
-                    user.user_metadata?.name ||
-                        user.email?.split("@")[0] ||
-                        "User"
-                );
-            }
-        };
+  // Role from metadata — zero DB call
+  const role = user.user_metadata?.role ?? null;
+  const isAdmin = ADMIN_ROLES.has(role);
+  const supabase = await createClient();
 
-        fetchUser();
-    }, []);
+  const [stats, events, eligibility, adminStats, adminEvents] = await Promise.all([
+    getCachedDashboardStats(user.id),
+    getCachedUpcomingEvents(user.id),
+    isAdmin ? getCachedEligibility()  : Promise.resolve({ data: [], count: 0 }),
+    isAdmin ? getCachedAdminStats()   : Promise.resolve(null),
+    isAdmin ? getCachedAdminEvents()  : Promise.resolve([]),
+  ]);
 
-    const recentActivity = [
-        {
-            name: "Maria Angelica Reyes",
-            position: "Senior High School Teacher II",
-            action: "logged in",
-            time: "2 hours ago",
-            date: "Dec 12, 2025",
-            type: "login",
-        },
-        {
-            name: "John Carlo D. Santos",
-            position: "ICT Coordinator",
-            action: "updated profile",
-            time: "3 hours ago",
-            date: "Dec 12, 2025",
-            type: "update",
-        },
-        {
-            name: "Louise Anne T. Cruz",
-            position: "Guidance Counselor",
-            action: "logged in",
-            time: "5 hours ago",
-            date: "Dec 12, 2025",
-            type: "login",
-        },
-        {
-            name: "Kimberly Joy Flores",
-            position: "Master Teacher I",
-            action: "completed training",
-            time: "8 hours ago",
-            date: "Dec 12, 2025",
-            type: "training",
-        },
-        {
-            name: "Patrick Joseph Mendoza",
-            position: "Administrative Assistant II",
-            action: "logged in",
-            time: "1 day ago",
-            date: "Dec 11, 2025",
-            type: "login",
-        },
-    ];
+  // ActivityLog intentionally NOT cached — must be real-time
+  const db = isAdmin ? createAdminClient() : supabase;
+  const q = db
+    .from("ActivityLog")
+    .select("id, created_at, action, message, meta, target_user_id, actor_id, entity_type, entity_id")
+    .order("created_at", { ascending: false })
+    .limit(40);
 
-    return (
-        <div className="min-h-screen flex flex-col bg-background p-8">
-            {/* Welcome Header */}
-            <div className="max-w-6xl mx-auto w-full">
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-foreground mb-2">
-                        Welcome to EduTrack, {userName}! 👋
-                    </h1>
-                    <p className="text-muted-foreground text-lg">
-                        Your comprehensive education management platform
-                    </p>
-                </div>
+  if (!isAdmin) q.eq("target_user_id", user.id);
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <span className="text-2xl font-bold text-foreground">
-                                29
-                            </span>
-                        </div>
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                            Total Profiles
-                        </h3>
-                    </div>
+  const { data: activityRows } = await q;
 
-                    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                <GraduationCap className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                            </div>
-                            <span className="text-2xl font-bold text-foreground">
-                                42
-                            </span>
-                        </div>
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                            Training Records
-                        </h3>
-                    </div>
+  const activity: (ActivityRow & {
+    display_time?: string;
+    actor_id?: string | null;
+  })[] = (activityRows ?? []).map((r: any) => ({
+    id:             r.id,
+    created_at:     r.created_at,
+    display_time:   fmtServer(r.created_at),
+    action:         r.action,
+    message:        r.message ?? "activity updated",
+    meta:           r.meta ?? null,
+    actor_id:       r.actor_id ?? null,
+    target_user_id: r.target_user_id,
+    entity_type:    r.entity_type ?? null,
+    entity_id:      r.entity_id ?? null,
+  }));
 
-                    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                <Calendar className="h-6 w-6 text-green-600 dark:text-green-400" />
-                            </div>
-                            <span className="text-2xl font-bold text-foreground">
-                                38
-                            </span>
-                        </div>
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                            Seminar Records
-                        </h3>
-                    </div>
-                </div>
-
-                {/* Quick Actions - Only for ADMIN */}
-                {userRole === "ADMIN" && (
-                    <div className="bg-card border border-border rounded-lg p-6 mb-6">
-                        <h2 className="text-xl font-semibold text-foreground mb-4">
-                            Quick Actions
-                        </h2>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <a
-                                href="account-approval"
-                                className="block p-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-left"
-                            >
-                                <h3 className="font-medium mb-1">
-                                    Review Pending Requests
-                                </h3>
-                                <p className="text-sm opacity-90">
-                                    Approve or deny account requests from new
-                                    users
-                                </p>
-                            </a>
-
-                            <a
-                                href="professional-dev"
-                                className="block p-4 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity text-left"
-                            >
-                                <h3 className="font-medium mb-1">
-                                    Add Training / Seminar
-                                </h3>
-                                <p className="text-sm opacity-90">
-                                    Record new training or seminar attendance
-                                </p>
-                            </a>
-                        </div>
-                    </div>
-                )}
-
-                {/* Recent Activity */}
-                <div className="bg-card border border-border rounded-lg p-6">
-                    <h2 className="text-xl font-semibold text-foreground mb-4">
-                        Recent Activity
-                    </h2>
-                    <div className="space-y-3">
-                        {recentActivity.map((activity, index) => (
-                            <div
-                                key={index}
-                                className="flex items-center justify-between py-3 border-b border-border last:border-0"
-                            >
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-foreground">
-                                        {activity.name}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {activity.position} • {activity.action}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {activity.date} • {activity.time}
-                                    </p>
-                                </div>
-                                <span
-                                    className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-                                        activity.type === "login"
-                                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                            : activity.type === "update"
-                                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                                            : "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400"
-                                    }`}
-                                >
-                                    {activity.type === "login"
-                                        ? "Login"
-                                        : activity.type === "update"
-                                        ? "Update"
-                                        : "Training"}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <>
+    <DashboardView
+      role={role}
+      viewerId={user.id}
+      stats={stats}
+      events={events}
+      activity={activity as any}
+      eligibilityData={eligibility.data}
+      eligibilityCount={eligibility.count}
+      adminStats={adminStats}
+      adminEvents={adminEvents} />
+      <PatchNoteModal />
+      </>
+  );
 }

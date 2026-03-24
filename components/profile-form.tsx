@@ -189,6 +189,7 @@ export default function ProfileForm({
                                         mode="single"
                                         selected={birthDate}
                                         captionLayout="dropdown"
+                                        disabled={(d) => d > new Date()}
                                         onSelect={(date) => {
                                             setBirthDate(date);
                                             setBirthDateOpen(false);
@@ -298,6 +299,18 @@ export default function ProfileForm({
                                     <SelectItem value="teacher-3">
                                         Teacher III
                                     </SelectItem>
+                                    <SelectItem value="teacher-4">
+                                        Teacher IV
+                                    </SelectItem>
+                                    <SelectItem value="teacher-5">
+                                        Teacher V
+                                    </SelectItem>
+                                    <SelectItem value="teacher-6">
+                                        Teacher VI
+                                    </SelectItem>
+                                    <SelectItem value="teacher-7">
+                                        Teacher VII
+                                    </SelectItem>
                                     <SelectItem value="master-teacher-1">
                                         Master Teacher I
                                     </SelectItem>
@@ -307,8 +320,56 @@ export default function ProfileForm({
                                     <SelectItem value="master-teacher-3">
                                         Master Teacher III
                                     </SelectItem>
-                                    <SelectItem value="principal">
-                                        Principal
+                                    <SelectItem value="master-teacher-4">
+                                        Master Teacher IV
+                                    </SelectItem>
+                                    <SelectItem value="master-teacher-5">
+                                        Master Teacher V
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-1">
+                                        Head Teacher I
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-2">
+                                        Head Teacher II
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-3">
+                                        Head Teacher III
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-4">
+                                        Head Teacher IV
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-5">
+                                        Head Teacher V
+                                    </SelectItem>
+                                    <SelectItem value="head-teacher-6">
+                                        Head Teacher VI
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-1">
+                                        Assistant School Principal I
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-2">
+                                        Assistant School Principal II
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-3">
+                                        Assistant School Principal III
+                                    </SelectItem>
+                                    <SelectItem value="assistant-school-principal-4">
+                                        Assistant School Principal IV
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-1">
+                                        School Principal I
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-2">
+                                        School Principal II
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-3">
+                                        School Principal III
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-4">
+                                        School Principal IV
+                                    </SelectItem>
+                                    <SelectItem value="school-principal-5">
+                                        School Principal V
                                     </SelectItem>
                                     <SelectItem value="administrative-staff">
                                         Administrative Staff
@@ -387,90 +448,6 @@ export default function ProfileForm({
                             className="bg-gray-200 border-gray-600"
                         />
                     </Field>
-                </FieldSet>
-                <FieldSet>
-                    <FieldLegend>
-                        Appointment Details
-                        <span className="pl-1 text-sm text-gray-600">
-                            (optional)
-                        </span>
-                    </FieldLegend>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Field>
-                            <FieldLabel htmlFor="date-of-appointment">
-                                Date of Original Appointment
-                            </FieldLabel>
-                            <Popover
-                                open={dateOfOriginalAppointmentOpen}
-                                onOpenChange={setDateOfOriginalAppointmentOpen}
-                            >
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        id="date-of-appointment"
-                                    >
-                                        {dateOfOriginalAppointment
-                                            ? dateOfOriginalAppointment.toLocaleDateString()
-                                            : "Select date"}
-                                        <ChevronDownIcon />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-auto overflow-hidden p-0"
-                                    align="start"
-                                >
-                                    <Calendar
-                                        mode="single"
-                                        selected={dateOfOriginalAppointment}
-                                        captionLayout="dropdown"
-                                        onSelect={(date) => {
-                                            setDateOfOriginalAppointment(date);
-                                            setDateOfOriginalAppointmentOpen(
-                                                false
-                                            );
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="date-of-appointment">
-                                Date of Latest Appointment
-                            </FieldLabel>
-                            <Popover
-                                open={dateOfLatestAppointmentOpen}
-                                onOpenChange={setDateOfLatestAppointmentOpen}
-                            >
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        id="date-of-appointment"
-                                    >
-                                        {dateOfLatestAppointment
-                                            ? dateOfLatestAppointment.toLocaleDateString()
-                                            : "Select date"}
-                                        <ChevronDownIcon />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-auto overflow-hidden p-0"
-                                    align="start"
-                                >
-                                    <Calendar
-                                        mode="single"
-                                        selected={dateOfLatestAppointment}
-                                        captionLayout="dropdown"
-                                        onSelect={(date) => {
-                                            setDateOfLatestAppointment(date);
-                                            setDateOfLatestAppointmentOpen(
-                                                false
-                                            );
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </Field>
-                    </div>
                 </FieldSet>
                 <FieldSet>
                     <FieldLegend>Educational Background</FieldLegend>

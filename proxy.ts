@@ -1,6 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+// ── Route constants ────────────────────────────────────────────────────────────
+
+const PUBLIC_ROUTES      = ["/qr/", "/reset-password", "/callback"];
+const AUTH_ROUTES        = ["/signin", "/signUp", "/forgot-password"];
+const SKIP_CLEANUP       = ["/signin", "/signUp", "/forgot-password", "/reset-password", "/callback"];
+const PROTECTED_ROUTES   = ["/dashboard", "/profile", "/teacher-profiles", "/responsibilities", "/compliance", "/documents", "/settings"];
+const ADMIN_ROUTES       = ["/account-approval", "/add-training-seminar", "/proof-review", "/admin-actions"];
+const TEACHER_ONLY_ROUTES = ["/professional-dev", "/responsibilities", "/compliance", "/documents"];
+const SUPERADMIN_ROUTES  = ["/superadmin"];
+
+// ── Role constants ─────────────────────────────────────────────────────────────
+
+const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
+
+// ── Middleware ─────────────────────────────────────────────────────────────────
 
 export async function proxy(req: NextRequest) {
     let response = NextResponse.next({ request: req });
@@ -26,71 +43,197 @@ export async function proxy(req: NextRequest) {
         }
     );
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
     const { pathname } = req.nextUrl;
 
-    const protectedRoutes = ["/dashboard", "/profile"];
-    const adminRoutes = ["/account-approval"];
-    const authRequiredRoutes = ["/fillUp", "/pending-approval"];
-
-    // Redirect to signin if not authenticated and trying to access protected routes
-    if (
-        [...protectedRoutes, ...adminRoutes, ...authRequiredRoutes].some(
-            (path) => pathname.startsWith(path)
-        ) &&
-        !user
-    ) {
-        return NextResponse.redirect(new URL("/signin", req.url));
+    // ── 1. Allow public routes through ────────────────────────────────────────
+    if (PUBLIC_ROUTES.some((p) => pathname.startsWith(p))) {
+        return response;
     }
 
-    if (user) {
-        const { data: profile } = await supabase
+    // ── 2. Get current user ───────────────────────────────────────────────────
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // ── 3. Clean up stale session cookies ────────────────────────────────────
+    if (!user && !SKIP_CLEANUP.some((p) => pathname.startsWith(p))) {
+        const hasStaleSession = req.cookies
+            .getAll()
+            .some(({ name }) => name.startsWith("sb-"));
+
+        if (hasStaleSession) {
+            const cleanResponse = NextResponse.redirect(
+                new URL("/signin", req.url)
+            );
+            req.cookies.getAll().forEach(({ name }) => {
+                if (name.startsWith("sb-")) cleanResponse.cookies.delete(name);
+            });
+            return cleanResponse;
+        }
+    }
+
+    // ── 4. Auth routes (signin, signUp, forgot-password) ──────────────────────
+    if (AUTH_ROUTES.some((p) => pathname.startsWith(p))) {
+        if (!user) return response;
+
+        const { data: urow } = await supabase
             .from("User")
-            .select("role, status")
+            .select("status, role")
             .eq("id", user.id)
-            .single();
+            .maybeSingle();
 
-        // Admin route protection
-        if (adminRoutes.some((path) => pathname.startsWith(path))) {
-            if (profile?.role !== "ADMIN") {
-                return NextResponse.redirect(new URL("/unauthorized", req.url));
-            }
-        }
+        if (!urow) return NextResponse.redirect(new URL("/fillUp", req.url));
 
-        // Check if user needs to complete form
-        if (!profile && !pathname.startsWith("/fillUp")) {
-            return NextResponse.redirect(new URL("/fillUp", req.url));
-        }
-
-        console.log(profile?.status);
-
-        // Check if user is pending approval
-        if (
-            profile?.status != "APPROVED" &&
-            !pathname.startsWith(`/status/${profile?.status}`)
-        ) {
+        if (urow.status !== "APPROVED") {
             return NextResponse.redirect(
-                new URL("/status/" + profile?.status, req.url)
+                new URL(`/status/${urow.status}`, req.url)
             );
         }
 
-        // Approved users trying to access fillup/pending should go to dashboard
-        if (
-            profile?.status === "APPROVED" &&
-            !pathname.startsWith("/dashboard") && // Add this check
-            (pathname.startsWith("/fillUp") || pathname.startsWith("/status/"))
-        ) {
-            return NextResponse.redirect(new URL("/dashboard", req.url));
+        // Redirect superadmin to their own dashboard
+        if (urow.role === "SUPERADMIN") {
+            return NextResponse.redirect(
+                new URL("/superadmin/dashboard", req.url)
+            );
         }
+
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // ── 5. fillUp route ───────────────────────────────────────────────────────
+    if (pathname.startsWith("/fillUp")) {
+        if (!user) {
+            return NextResponse.redirect(new URL("/signin", req.url));
+        }
+
+        const { data: urow, error } = await supabase
+            .from("User")
+            .select("status")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (error) return response;
+        if (!urow)  return response;
+
+        if (urow.status !== "APPROVED") {
+            return NextResponse.redirect(
+                new URL(`/status/${urow.status}`, req.url)
+            );
+        }
+
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // ── 6. Status route ───────────────────────────────────────────────────────
+    if (pathname.startsWith("/status")) {
+        if (!user) {
+            return NextResponse.redirect(new URL("/signin", req.url));
+        }
+
+        const { data: urow, error } = await supabase
+            .from("User")
+            .select("status")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (error) return NextResponse.redirect(new URL("/signin", req.url));
+        if (!urow)  return NextResponse.redirect(new URL("/fillUp", req.url));
+
+        const target = urow.status === "APPROVED"
+            ? "/dashboard"
+            : `/status/${urow.status}`;
+
+        if (pathname === target) return response;
+
+        return NextResponse.redirect(new URL(target, req.url));
+    }
+
+    // ── 7. Superadmin routes ──────────────────────────────────────────────────
+    if (SUPERADMIN_ROUTES.some((p) => pathname.startsWith(p))) {
+        if (!user) {
+            return NextResponse.redirect(new URL("/signin", req.url));
+        }
+
+        const role = (user.user_metadata?.role ?? "") as string;
+
+        if (role !== "SUPERADMIN") {
+            // Silent redirect based on role — don't reveal route exists
+            const dest = ADMIN_ROLES.includes(role as any)
+                ? "/dashboard"
+                : "/dashboard";
+            return NextResponse.redirect(new URL(dest, req.url));
+        }
+
+        // Check user status
+        const { data: urow } = await supabase
+            .from("User")
+            .select("status")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (!urow || urow.status !== "APPROVED") {
+            return NextResponse.redirect(
+                new URL(`/status/${urow?.status ?? "PENDING"}`, req.url)
+            );
+        }
+
+        return response;
+    }
+
+    // ── 8. Protected + admin routes ───────────────────────────────────────────
+    const isProtected = [...PROTECTED_ROUTES, ...ADMIN_ROUTES].some((p) =>
+        pathname.startsWith(p)
+    );
+
+    if (!isProtected) return response;
+
+    if (!user) {
+        return NextResponse.redirect(new URL("/signin", req.url));
+    }
+
+    const role = (user.user_metadata?.role ?? "TEACHER") as string;
+    const isAdmin = ADMIN_ROLES.includes(role as any);
+
+    const { data: urow, error } = await supabase
+        .from("User")
+        .select("status")
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if (error) return NextResponse.redirect(new URL("/signin", req.url));
+    if (!urow)  return NextResponse.redirect(new URL("/fillUp", req.url));
+
+    if (urow.status !== "APPROVED") {
+        if (!pathname.startsWith("/status")) {
+            return NextResponse.redirect(
+                new URL(`/status/${urow.status}`, req.url)
+            );
+        }
+        return response;
+    }
+
+    // Block superadmin from accessing regular routes
+    if (role === "SUPERADMIN") {
+        return NextResponse.redirect(
+            new URL("/superadmin/dashboard", req.url)
+        );
+    }
+
+    // Block admins from teacher-only routes
+    if (isAdmin && TEACHER_ONLY_ROUTES.some((p) => pathname.startsWith(p))) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Block teachers from admin routes
+    if (!isAdmin && ADMIN_ROUTES.some((p) => pathname.startsWith(p))) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     return response;
 }
 
+// ── Matcher ────────────────────────────────────────────────────────────────────
+
 export const config = {
     matcher: [
-        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|signin|signUp|unauthorized).*)",
+        "/((?!_next|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf)$).*)",
     ],
 };
