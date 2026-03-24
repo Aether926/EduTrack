@@ -135,12 +135,15 @@ function PdfThumbnail({
                 const ctx = canvas.getContext("2d");
                 if (!ctx) return;
                 await page.render({
-                    canvas: canvas!,
+                    canvas: canvas,
+                    canvasContext: ctx,
                     viewport: scaled,
                 }).promise;
 
                 if (!cancelled) setLoading(false);
             } catch (err) {
+                console.error("PDF render error:", err);
+
                 if (!cancelled) {
                     setLoading(false);
                     setError(true);
