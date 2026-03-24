@@ -110,13 +110,25 @@ export async function getTeacherSalaryEligibility(
 
     const admin = createAdminClient();
 
-    // fetch ProfileHR
+
+    const { data: approvedUsers } = await admin
+      .from("User")
+      .select("id, role")
+      .eq("status", "APPROVED")
+      .or("role.eq.TEACHER,role.eq.ADMIN")
+
+
+    const approvedIds = (approvedUsers ?? []).map((u) => u.id);
+    if (approvedIds.length === 0) return { data: [], count: 0 };
+
     const { data: hrRows, error } = await admin
       .from("ProfileHR")
       .select(
         "id, employeeId, position, dateOfLatestAppointment, last_salary_increase_at, salary_increase_notified_at"
       )
+      .in("id", approvedIds)
       .not("dateOfLatestAppointment", "is", null);
+
 
     if (error || !hrRows || hrRows.length === 0) return { data: [], count: 0 };
 
@@ -276,7 +288,7 @@ export async function markSalaryIncreaseGiven(
     if (!["ADMIN", "SUPERADMIN"].includes(role)) return { ok: false, error: "Unauthorized" };
 
     const admin = createAdminClient();
-
+ 
     const { data: hr } = await admin
       .from("ProfileHR")
       .select("dateOfLatestAppointment, last_salary_increase_at")

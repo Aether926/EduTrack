@@ -20,6 +20,13 @@ const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "development" && {
     allowedDevOrigins: ["192.168.1.12"],
   }),
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      canvas: false, // 👈 fix here
+    };
+    return config;
+  },
 };
 
 export default nextConfig;

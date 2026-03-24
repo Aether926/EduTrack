@@ -54,6 +54,7 @@ export default function ProfileShareMenu({
     }
 
     const defaultSettings: PrivacySettings = {
+        showPosition: false,
         contactInfo: false,
         emergencyContact: false,
         educationCredentials: false,
