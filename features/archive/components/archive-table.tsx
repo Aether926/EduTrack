@@ -4,8 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { ArchivedUser } from "../actions/archive-actions";
 import {
-    restoreUser,
-    superadminDeleteUser,
+    restoreUser
 } from "@/features/superadmin/actions/superadmin-actions";
 import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import { Input } from "@/components/ui/input";
@@ -111,23 +110,6 @@ export default function ArchiveTable({
         } finally {
             setLoadingId(null);
             setRestoreConfirm(null);
-        }
-    }
-
-    async function handleDelete(u: ArchivedUser) {
-        setLoadingId(u.id);
-        try {
-            const res = await superadminDeleteUser(u.id);
-            if (!res.ok) {
-                console.error("Delete failed for user", u.id, ":", res.error);
-                toast.error(res.error);
-                return;
-            }
-            toast.success(`${fullName(u)} has been permanently deleted.`);
-            router.refresh();
-        } finally {
-            setLoadingId(null);
-            setDeleteConfirm(null);
         }
     }
 
@@ -261,21 +243,6 @@ export default function ArchiveTable({
                                                                 )}
                                                                 Restore
                                                             </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                className="gap-1.5 bg-rose-900/20 text-rose-700 border border-rose-700/40 hover:bg-rose-900/30"
-                                                                onClick={() =>
-                                                                    setDeleteConfirm(
-                                                                        u,
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    isLoading
-                                                                }
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                                Delete
-                                                            </Button>
                                                         </>
                                                     )}
                                                     {!isSuperadmin && (
@@ -389,19 +356,6 @@ export default function ArchiveTable({
                             onClick={() => setDeleteConfirm(null)}
                         >
                             Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="bg-rose-600 hover:bg-rose-500 text-white"
-                            onClick={() =>
-                                deleteConfirm && handleDelete(deleteConfirm)
-                            }
-                            disabled={!!loadingId}
-                        >
-                            {loadingId && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                            )}
-                            Delete permanently
                         </Button>
                     </DialogFooter>
                 </DialogContent>
