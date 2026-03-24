@@ -1,13 +1,20 @@
 "use client";
 
 import * as React from "react";
-import type { PendingUser } from "../types";
-import { fmtDate, fullName } from "../lib/utils";
-import UserDetailSheet from "./user-detail-sheet";
+import { useState } from "react";
+import type { PendingUser } from "@/features/account-approval/types";
+import { fmtDate, fullName } from "@/features/account-approval/lib/utils";
+import UserDetailSheet from "@/features/account-approval/components/user-detail-sheet";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { StatusBadge, RoleBadge } from "@/components/ui-elements/badges";
+import {
+    ApproveButton,
+    ApproveAnywayButton,
+    RejectButton,
+    DeleteButton,
+} from "@/components/action-button";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
 import {
     Table,
     TableBody,
@@ -25,64 +32,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 
-import {
-    CheckCircle2,
-    XCircle,
-    Trash2,
-    Loader2,
-    AlertTriangle,
-    ShieldCheck,
-    UserX,
-} from "lucide-react";
-import { useState } from "react";
-
-/* ── Status badge ─────────────────────────────────────────────────────────── */
-function StatusBadge({ status }: { status: string }) {
-    const s = (status ?? "").toUpperCase();
-    if (s === "PENDING")
-        return (
-            <Badge className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                Pending
-            </Badge>
-        );
-    if (s === "REJECTED")
-        return (
-            <Badge className="inline-flex items-center gap-1.5 bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                Rejected
-            </Badge>
-        );
-    if (s === "APPROVED")
-        return (
-            <Badge className="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                Approved
-            </Badge>
-        );
-    return <Badge variant="outline">{status}</Badge>;
-}
-
-/* ── Role chip ────────────────────────────────────────────────────────────── */
-const roleColors: Record<string, string> = {
-    teacher: "bg-teal-500/10 text-teal-400 border-teal-500/40",
-    admin: "bg-violet-500/10 text-violet-400 border-violet-500/40",
-    hr: "bg-sky-500/10 text-sky-400 border-sky-500/40",
-    principal: "bg-orange-500/10 text-orange-400 border-orange-500/40",
-};
-
-function RoleChip({ role }: { role?: string }) {
-    const key = (role ?? "").toLowerCase();
-    const cls =
-        roleColors[key] ?? "bg-slate-500/10 text-slate-400 border-slate-500/40";
-    return (
-        <span
-            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${cls}`}
-        >
-            {role}
-        </span>
-    );
-}
+import { AlertTriangle, ShieldCheck, UserX } from "lucide-react";
 
 /* ── Empty state ──────────────────────────────────────────────────────────── */
 function EmptyState({ variant }: { variant: "pending" | "rejected" }) {
@@ -155,9 +105,7 @@ export default function UserApprovalTable({
         <>
             <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
                 {/* Header band */}
-                <div
-                    className={`relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background`}
-                >
+                <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div
                         className={`absolute inset-0 bg-gradient-to-br ${accentGradient} via-transparent to-transparent pointer-events-none`}
                     />
@@ -209,9 +157,7 @@ export default function UserApprovalTable({
 
                             <TableBody>
                                 {users.map((u) => {
-                                    const name = fullName(u)
-                                        .replace(/\b([A-Z])\.\s*/g, "$1")
-                                        .trim();
+                                    const name = fullName(u).trim();
                                     const isLoading = loadingId === u.id;
 
                                     return (
@@ -225,7 +171,7 @@ export default function UserApprovalTable({
                                         >
                                             <TableCell className="pl-5">
                                                 <div className="flex items-center gap-2.5">
-                                                    <InitialAvatar
+                                                    <UserAvatar
                                                         name={name}
                                                         src={u.profileImage}
                                                         className="h-8 w-8 shrink-0"
@@ -253,7 +199,7 @@ export default function UserApprovalTable({
                                             </TableCell>
 
                                             <TableCell>
-                                                <RoleChip role={u.role} />
+                                                <RoleBadge role={u.role} />
                                             </TableCell>
 
                                             <TableCell>
@@ -262,7 +208,7 @@ export default function UserApprovalTable({
                                                 />
                                             </TableCell>
 
-                                            <TableCell className="hidden md:table-cell text-sm text-muted-foreground font-mono text-xs">
+                                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground font-mono">
                                                 {fmtDate(u.createdAt)}
                                             </TableCell>
 
@@ -273,56 +219,48 @@ export default function UserApprovalTable({
                                                 }
                                             >
                                                 <div className="flex items-center justify-center gap-1.5">
-                                                    <Button
-                                                        size="sm"
-                                                        className="gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-500/40"
-                                                        onClick={() =>
-                                                            handleApprove(u)
-                                                        }
-                                                        disabled={isLoading}
-                                                    >
-                                                        {isLoading ? (
-                                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                        ) : (
-                                                            <CheckCircle2 className="h-3.5 w-3.5" />
-                                                        )}
-                                                        {isPending
-                                                            ? "Approve"
-                                                            : "Approve anyway"}
-                                                    </Button>
+                                                    {isPending ? (
+                                                        <ApproveButton
+                                                            loading={isLoading}
+                                                            disabled={isLoading}
+                                                            onClick={() =>
+                                                                handleApprove(u)
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <ApproveAnywayButton
+                                                            loading={isLoading}
+                                                            disabled={isLoading}
+                                                            onClick={() =>
+                                                                handleApprove(u)
+                                                            }
+                                                        />
+                                                    )}
 
                                                     {isPending && (
-                                                        <Button
-                                                            size="sm"
-                                                            className="gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 hover:border-rose-500/40"
+                                                        <RejectButton
+                                                            loading={isLoading}
+                                                            disabled={isLoading}
                                                             onClick={() =>
                                                                 setConfirm({
                                                                     type: "reject",
                                                                     user: u,
                                                                 })
                                                             }
-                                                            disabled={isLoading}
-                                                        >
-                                                            <XCircle className="h-3.5 w-3.5" />
-                                                            Reject
-                                                        </Button>
+                                                        />
                                                     )}
 
                                                     {!isPending && onDelete && (
-                                                        <Button
-                                                            size="sm"
-                                                            className="gap-1.5 bg-rose-900/20 text-rose-700 border border-rose-700/40 hover:bg-rose-900/30 hover:border-rose-600/50"
+                                                        <DeleteButton
+                                                            loading={isLoading}
+                                                            disabled={isLoading}
                                                             onClick={() =>
                                                                 setConfirm({
                                                                     type: "delete",
                                                                     user: u,
                                                                 })
                                                             }
-                                                            disabled={isLoading}
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                            Delete
-                                                        </Button>
+                                                        />
                                                     )}
                                                 </div>
                                             </TableCell>
@@ -346,7 +284,7 @@ export default function UserApprovalTable({
                         <DialogHeader className="relative">
                             <div className="flex items-center gap-2 mb-3">
                                 <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-2">
-                                    <XCircle className="h-4 w-4 text-rose-400" />
+                                    <AlertTriangle className="h-4 w-4 text-rose-400" />
                                 </div>
                                 <DialogTitle className="text-sm font-medium text-muted-foreground">
                                     Reject Request
@@ -369,17 +307,11 @@ export default function UserApprovalTable({
                         >
                             Cancel
                         </Button>
-                        <Button
-                            size="sm"
-                            className="bg-rose-600 hover:bg-rose-500 text-white"
-                            onClick={handleConfirm}
+                        <RejectButton
+                            loading={!!loadingId}
                             disabled={!!loadingId}
-                        >
-                            {loadingId && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                            )}
-                            Reject
-                        </Button>
+                            onClick={handleConfirm}
+                        />
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -427,20 +359,15 @@ export default function UserApprovalTable({
                         >
                             Cancel
                         </Button>
-                        <Button
-                            size="sm"
-                            className="bg-rose-600 hover:bg-rose-500 text-white"
-                            onClick={handleConfirm}
+                        <DeleteButton
+                            loading={!!loadingId}
                             disabled={!!loadingId}
-                        >
-                            {loadingId && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                            )}
-                            Delete permanently
-                        </Button>
+                            onClick={handleConfirm}
+                        />
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
             <UserDetailSheet
                 user={selectedUser}
                 open={sheetOpen}

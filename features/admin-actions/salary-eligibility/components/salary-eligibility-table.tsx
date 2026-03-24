@@ -63,6 +63,33 @@ import type {
 } from "@/lib/database/salary-eligibility";
 import { markSalaryIncreaseGivenAction } from "@/features/admin-actions/salary-eligibility/actions/salary-eligibility-actions";
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/**
+ * Normalises a stored middle initial so it never double-dots.
+ * "C." → "C."   "C" → "C."   "" | null → null
+ */
+function normaliseMI(mi: string | null | undefined): string | null {
+    if (!mi) return null;
+    const trimmed = mi.trim().replace(/\.+$/, ""); // strip any trailing dots
+    return trimmed ? `${trimmed}.` : null;
+}
+
+/**
+ * Builds "Firstname MI. Lastname" display string.
+ */
+function formatDisplayName(
+    firstName: string,
+    lastName: string,
+    middleInitial: string | null | undefined,
+): string {
+    const fn = firstName.trim();
+    const ln = lastName.trim();
+    const mi = normaliseMI(middleInitial);
+    const parts = [fn, mi, ln].filter(Boolean);
+    return parts.join(" ");
+}
+
 // ── Cycle progress bar ─────────────────────────────────────────────────────────
 
 function CycleBar({ row }: { row: TeacherEligibilityRow }) {
@@ -177,8 +204,12 @@ export default function SalaryEligibilityTable({
             },
             {
                 id: "fullName",
-                accessorFn: (r) =>
-                    `${r.lastName}, ${r.firstName}${r.middleInitial ? ` ${r.middleInitial}.` : ""}`,
+                // sort accessor: "Firstname Lastname" for alpha sort
+                accessorFn: (r) => {
+                    const fn = (r.firstName ?? "").trim();
+                    const ln = (r.lastName ?? "").trim();
+                    return `${fn} ${ln}`.trim();
+                },
                 header: ({ column }) => (
                     <Button
                         variant="ghost"
@@ -192,20 +223,32 @@ export default function SalaryEligibilityTable({
                 ),
                 cell: ({ row }) => {
                     const r = row.original;
-                    const fullName =
-                        `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim();
+                    const firstName = (r.firstName ?? "").trim();
+                    const lastName = (r.lastName ?? "").trim();
+                    // avatar always gets "Firstname Lastname" for correct FL initials
+                    const avatarName = [firstName, lastName]
+                        .filter(Boolean)
+                        .join(" ");
+                    // display: "Firstname MI. Lastname"
+                    const displayName = formatDisplayName(
+                        firstName,
+                        lastName,
+                        r.middleInitial,
+                    );
                     return (
-                        <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex items-center gap-3 min-w-0">
                             <UserAvatar
-                                name={fullName}
-                                className="h-7 w-7 shrink-0 text-[10px]"
+                                name={avatarName}
+                                src={r.profileImage ?? null}
+                                className="h-8 w-8 shrink-0"
                             />
                             <div className="min-w-0">
                                 <div className="font-medium truncate">
-                                    {r.lastName}, {r.firstName}
-                                    {r.middleInitial
-                                        ? ` ${r.middleInitial}.`
-                                        : ""}
+                                    {displayName || (
+                                        <span className="text-muted-foreground italic text-xs">
+                                            No name set
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="md:hidden mt-1 space-y-0.5">
                                     <div className="text-xs text-muted-foreground truncate">
@@ -320,7 +363,7 @@ export default function SalaryEligibilityTable({
                 .trim();
             if (!v) return true;
             const r = row.original;
-            const full = `${r.lastName} ${r.firstName}`.toLowerCase();
+            const full = `${r.firstName} ${r.lastName}`.toLowerCase();
             const emp = String(r.employeeId ?? "").toLowerCase();
             const pos = String(r.position ?? "").toLowerCase();
             return full.includes(v) || emp.includes(v) || pos.includes(v);

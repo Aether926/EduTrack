@@ -7,15 +7,16 @@ import {
     SheetTitle,
     SheetDescription,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { PendingUser } from "../types";
-import { fullName, fmtDate } from "../lib/utils";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import type { PendingUser } from "@/features/account-approval/types";
+import { fmtDate, fullName } from "@/features/account-approval/lib/utils";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import { StatusBadge, RoleBadge } from "@/components/ui-elements/badges";
 import {
-    CheckCircle2,
-    XCircle,
-    Loader2,
+    ApproveButton,
+    ApproveAnywayButton,
+    RejectButton,
+} from "@/components/action-button";
+import {
     Mail,
     Phone,
     Briefcase,
@@ -112,10 +113,11 @@ export default function UserDetailSheet({
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
                     <SheetHeader className="relative">
                         <div className="flex items-center gap-3 mb-3">
-                            <InitialAvatar 
-                                name={name} 
+                            <UserAvatar
+                                name={name}
                                 src={user.profileImage}
-                                className="h-10 w-10" />
+                                className="h-10 w-10"
+                            />
                             <div className="min-w-0">
                                 <SheetTitle className="text-base leading-tight">
                                     {name}
@@ -126,18 +128,8 @@ export default function UserDetailSheet({
                             </div>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                            <Badge
-                                className={
-                                    user.status === "PENDING"
-                                        ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                                        : "bg-rose-500/15 text-rose-400 border-rose-500/30"
-                                }
-                            >
-                                {user.status}
-                            </Badge>
-                            <Badge variant="outline" className="text-[11px]">
-                                {user.role}
-                            </Badge>
+                            <StatusBadge status={user.status} />
+                            <RoleBadge role={user.role} />
                             <span className="text-[11px] text-muted-foreground ml-auto">
                                 Registered {fmtDate(user.createdAt)}
                             </span>
@@ -203,47 +195,29 @@ export default function UserDetailSheet({
                 {/* Footer actions */}
                 {variant === "pending" && (
                     <div className="px-6 py-4 border-t border-border/60 flex gap-2 shrink-0">
-                        <Button
-                            className="flex-1 gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
+                        <ApproveButton
+                            loading={loading === "approve"}
+                            disabled={!!loading}
                             onClick={handleApprove}
+                            size="default"
+                        />
+                        <RejectButton
+                            loading={loading === "reject"}
                             disabled={!!loading}
-                        >
-                            {loading === "approve" ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                            )}
-                            Approve
-                        </Button>
-                        <Button
-                            className="flex-1 gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20"
                             onClick={handleReject}
-                            disabled={!!loading}
-                        >
-                            {loading === "reject" ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                                <XCircle className="h-3.5 w-3.5" />
-                            )}
-                            Reject
-                        </Button>
+                            size="default"
+                        />
                     </div>
                 )}
 
                 {variant === "rejected" && (
                     <div className="px-6 py-4 border-t border-border/60 shrink-0">
-                        <Button
-                            className="w-full gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
-                            onClick={handleApprove}
+                        <ApproveAnywayButton
+                            loading={loading === "approve"}
                             disabled={!!loading}
-                        >
-                            {loading === "approve" ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                            )}
-                            Approve anyway
-                        </Button>
+                            onClick={handleApprove}
+                            size="default"
+                        />
                     </div>
                 )}
             </SheetContent>

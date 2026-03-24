@@ -10,6 +10,7 @@ export type TeacherEligibilityRow = {
   firstName: string;
   lastName: string;
   middleInitial: string | null;
+  profileImage: string | null;
   position: string;
   dateOfLatestAppointment: string;
   lastSalaryIncreaseAt: string | null;
@@ -120,14 +121,32 @@ export async function getTeacherSalaryEligibility(
 
     if (error || !hrRows || hrRows.length === 0) return { data: [], count: 0 };
 
-    // fetch Profile separately (id type mismatch: ProfileHR=uuid, Profile=text)
+    // Debug: log all HR ids to check their format
+    console.log("[salary-eligibility] HR ids:", hrRows.map((r) => ({ id: r.id, type: typeof r.id })));
+
     const hrIds = hrRows.map((r) => String(r.id));
-    const { data: profiles } = await admin
+
+    const { data: profiles, error: profileError } = await admin
       .from("Profile")
-      .select("id, firstName, lastName, middleInitial")
+      .select("id, firstName, lastName, middleInitial, profileImage")
       .in("id", hrIds);
 
-    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    // Debug: log profile results and any error
+    console.log("[salary-eligibility] Profile query error:", profileError);
+    console.log("[salary-eligibility] Profiles returned:", profiles?.map((p) => ({ id: p.id, type: typeof p.id, firstName: p.firstName, lastName: p.lastName })));
+
+    // Build map with explicit string keys on both sides
+    const profileMap = new Map(
+      (profiles ?? []).map((p) => [String(p.id), p])
+    );
+
+    // Debug: log which HR ids are missing from the profile map
+    for (const r of hrRows) {
+      const key = String(r.id);
+      if (!profileMap.has(key)) {
+        console.warn(`[salary-eligibility] No Profile match for HR id: "${key}" (raw: ${r.id})`);
+      }
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -148,6 +167,7 @@ export async function getTeacherSalaryEligibility(
         firstName: profile?.firstName ?? "",
         lastName: profile?.lastName ?? "",
         middleInitial: profile?.middleInitial ?? null,
+        profileImage: profile?.profileImage ?? null,
         position: r.position ?? "—",
         dateOfLatestAppointment: r.dateOfLatestAppointment,
         lastSalaryIncreaseAt: r.last_salary_increase_at ?? null,
@@ -181,12 +201,10 @@ export async function getTeacherSalaryEligibility(
     });
 
     if (toNotify.length > 0) {
-
       const activityRows = toNotify.flatMap((r) => [
-
         {
-          actor_id: auth.user.id,
-          target_user_id: auth.user.id,
+          actor_id: auth.user!.id,
+          target_user_id: auth.user!.id,
           action: "SALARY_INCREASE_ELIGIBLE",
           entity_type: "ProfileHR",
           entity_id: r.userId,
@@ -198,9 +216,8 @@ export async function getTeacherSalaryEligibility(
             cycleStartDate: r.cycleStartDate,
           },
         },
-        // notify teacher
         {
-          actor_id: auth.user.id,
+          actor_id: auth.user!.id,
           target_user_id: r.userId,
           action: "SALARY_INCREASE_ELIGIBLE",
           entity_type: "ProfileHR",
@@ -215,7 +232,6 @@ export async function getTeacherSalaryEligibility(
 
       await admin.from("ActivityLog").insert(activityRows);
 
-      // update salary_increase_notified_at for all notified teachers
       await Promise.all(
         toNotify.map((r) =>
           admin
@@ -234,6 +250,8 @@ export async function getTeacherSalaryEligibility(
         _notifiedAt: string | null;
         _cycleStartDate: string;
       };
+      void _notifiedAt;
+      void _cycleStartDate;
       return rest;
     });
 
@@ -295,8 +313,6 @@ export async function markSalaryIncreaseGiven(
       : null;
 
     const cycle = computeCycle(appointmentDate, lastIncreaseDate, today);
-
-    // always anchor to the cycle mark date, not today
     const markDate = toLocalDateString(cycle.cycleStartDate);
 
     const { error } = await admin
@@ -306,7 +322,6 @@ export async function markSalaryIncreaseGiven(
 
     if (error) return { ok: false, error: error.message };
 
-    // fetch teacher name for the log message
     const { data: profile } = await admin
       .from("Profile")
       .select("firstName, lastName")
@@ -317,7 +332,6 @@ export async function markSalaryIncreaseGiven(
       ? `${profile.lastName}, ${profile.firstName}`
       : "Teacher";
 
-    // activity log — admin feed
     await admin.from("ActivityLog").insert([
       {
         actor_id: auth.user.id,

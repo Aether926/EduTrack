@@ -1,6 +1,6 @@
 "use client";
 
-import PaginationBar from "./pagination";
+import PaginationBar from "@/components/pagination";
 import { useRouter } from "next/navigation";
 
 import * as React from "react";
