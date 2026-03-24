@@ -113,7 +113,6 @@ export default async function AdminCompliancePage() {
             <AdminComplianceClient
                 compliance={safeCompliance as any}
                 policies={(policies ?? []) as any}
-                schools={(schools ?? []) as any}
                 schoolYear={schoolYear}
             />
         </div>

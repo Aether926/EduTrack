@@ -319,7 +319,7 @@ export default function FillUpPage() {
     const [dateOfOriginalDeployment, setDateOfOriginalDeployment] = useState<
         Date | undefined
     >();
-    const [latestAppointment, setLatestAppointment] = useState<
+    const [dateOflatestAppointment, setDateOfLatestAppointment] = useState<
         Date | undefined
     >();
 
@@ -502,12 +502,10 @@ export default function FillUpPage() {
                         dateOfOriginalDeployment,
                         "yyyy-MM-dd",
                     ),
-                    ...(latestAppointment && {
-                        latestAppointment: format(
-                            latestAppointment,
-                            "yyyy-MM-dd",
-                        ),
-                    }),
+                    dateOfLatestAppointment: format(
+                        dateOfOriginalAppointment,
+                        "yyyy-MM-dd",
+                    ),
                 })
                 .eq("id", user.id)
                 .select();
@@ -882,7 +880,7 @@ export default function FillUpPage() {
                                 {/* Latest Appointment */}
                                 <div>
                                     <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
-                                        Latest Appointment{" "}
+                                        Date of Latest Appointment{" "}
                                         <span className="text-[#555560] font-normal">
                                             (optional)
                                         </span>
@@ -892,15 +890,15 @@ export default function FillUpPage() {
                                         applicable
                                     </p>
                                     <MiniCalendar
-                                        value={latestAppointment}
-                                        onChange={setLatestAppointment}
+                                        value={dateOflatestAppointment}
+                                        onChange={setDateOfLatestAppointment}
                                         maxDate={new Date()}
                                     />
-                                    {latestAppointment && (
+                                    {dateOflatestAppointment && (
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                setLatestAppointment(undefined)
+                                                setDateOfLatestAppointment(undefined)
                                             }
                                             className="mt-1.5 text-[11px] text-[#555560] hover:text-[#8a8a9a] transition-colors"
                                         >

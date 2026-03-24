@@ -216,12 +216,14 @@ export async function superadminDeleteUser(id: string): Promise<ActionResult> {
     }
 
     // Delete related rows
+    await admin.from("TeacherResponsibility").delete().eq("created_by", id);
     await admin.from("Attendance").delete().eq("teacher_id", id);
     await admin.from("DocumentSubmission").delete().eq("teacher_id", id);
     await admin.from("SecurityLog").delete().eq("user_id", id);
     await admin.from("Profile").delete().eq("id", id);
     await admin.from("ProfileHR").delete().eq("id", id);
     await admin.from("User").delete().eq("id", id);
+    
 
     // Finally delete from auth
     const { error } = await admin.auth.admin.deleteUser(id);

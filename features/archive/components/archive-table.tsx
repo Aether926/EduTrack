@@ -114,6 +114,7 @@ export default function ArchiveTable({
         try {
             const res = await superadminDeleteUser(u.id);
             if (!res.ok) {
+                console.error("Delete failed for user", u.id, ":", res.error);
                 toast.error(res.error);
                 return;
             }
