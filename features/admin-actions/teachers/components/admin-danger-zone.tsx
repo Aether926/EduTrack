@@ -268,8 +268,8 @@ export function AdminDangerZone({
                                     </p>
                                     <p className="text-[11px] text-muted-foreground">
                                         The teacher will be notified and their
-                                        account will be scheduled for permanent
-                                        deletion after the grace period.
+                                        account will be scheduled for archive
+                                        after the grace period.
                                     </p>
                                 </div>
 

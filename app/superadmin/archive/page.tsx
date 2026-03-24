@@ -27,7 +27,7 @@ export default async function SuperadminArchivePage() {
                                 Archive
                             </h1>
                             <p className="text-[13px] text-muted-foreground mt-0.5">
-                                View, restore, or permanently delete archived accounts.
+                                View, restore archived accounts.
                             </p>
                         </div>
                     </div>

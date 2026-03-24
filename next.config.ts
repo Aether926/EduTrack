@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
   },
 
   ...(process.env.NODE_ENV === "development" && {
-    allowedDevOrigins: ["192.168.1.12"],
+    allowedDevOrigins: ["192.168.1.8"],
   }),
   webpack: (config) => {
     config.resolve.fallback = {

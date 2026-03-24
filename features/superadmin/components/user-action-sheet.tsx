@@ -155,7 +155,6 @@ interface UserActionSheetProps {
     onReject: (id: string) => Promise<void>;
     onSuspend: (id: string, reason: string) => Promise<void>;
     onUnsuspend: (id: string) => Promise<void>;
-    onDelete: (id: string) => Promise<void>;
     onRoleChange: (
         id: string,
         role: "TEACHER" | "ADMIN" | "SUPERADMIN",
@@ -177,7 +176,6 @@ export default function UserActionSheet({
     onReject,
     onSuspend,
     onUnsuspend,
-    onDelete,
     onRoleChange,
     promotionQuota,
 }: UserActionSheetProps) {
@@ -616,20 +614,6 @@ export default function UserActionSheet({
                             onClick={() => setDeleteConfirm(false)}
                         >
                             Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="bg-rose-600 hover:bg-rose-500 text-white"
-                            onClick={() => {
-                                setDeleteConfirm(false);
-                                handle("delete", () => onDelete(user.id));
-                            }}
-                            disabled={!!loading}
-                        >
-                            {loading === "delete" && (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                            )}
-                            Delete permanently
                         </Button>
                     </DialogFooter>
                 </DialogContent>

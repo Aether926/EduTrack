@@ -11,7 +11,6 @@ import {
     superadminRejectUser,
     superadminSuspendUser,
     superadminUnsuspendUser,
-    superadminDeleteUser,
     changeUserRole,
 } from "../actions/superadmin-actions";
 
@@ -64,13 +63,6 @@ export function useSuperadminUsers() {
         refresh();
     }
 
-    async function deleteUser(id: string) {
-        const res = await superadminDeleteUser(id);
-        if (!res.ok) { toast.error(res.error); return; }
-        toast.success("User permanently deleted.");
-        refresh();
-    }
-
     async function changeRole(id: string, role: "TEACHER" | "ADMIN" | "SUPERADMIN") {
         const res = await changeUserRole(id, role);
         if (!res.ok) { toast.error(res.error); return; }
@@ -86,7 +78,6 @@ export function useSuperadminUsers() {
         reject,
         suspend,
         unsuspend,
-        deleteUser,
         changeRole,
     };
 }

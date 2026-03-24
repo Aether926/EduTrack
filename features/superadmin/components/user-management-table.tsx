@@ -99,7 +99,6 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
         reject,
         suspend,
         unsuspend,
-        deleteUser,
         changeRole,
     } = useSuperadminUsers();
 
@@ -320,7 +319,6 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                 onReject={reject}
                 onSuspend={suspend}
                 onUnsuspend={unsuspend}
-                onDelete={deleteUser}
                 onRoleChange={changeRole}
                 promotionQuota={quota}
             />
