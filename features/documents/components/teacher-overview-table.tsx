@@ -16,6 +16,7 @@ type TeacherStatus = {
     rejected: number;
     missing: number;
     total: number;
+    totalRequired: number;
     docs: any[];
 };
 
@@ -43,6 +44,10 @@ function MiniStat({
     );
 }
 
+function clamp(num: number, max: number) {
+    return num > max ? max : num;
+}
+
 export function TeacherOverviewTable({
     teacherStatus,
 }: {
@@ -56,8 +61,8 @@ export function TeacherOverviewTable({
         <>
             <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
                 {/* ── Header ── */}
-                <div className="relative px-5 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent pointer-events-none" />
+                <div className="relative px-5 py-4 border-b border-border/60 bg-linear-to-br from-card to-background">
+                    <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 via-transparent to-transparent pointer-events-none" />
                     <div className="relative flex items-center gap-2.5">
                         <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-2 shrink-0">
                             <Users className="h-4 w-4 text-blue-400" />
@@ -102,7 +107,15 @@ export function TeacherOverviewTable({
 
                         <tbody className="divide-y divide-border/60">
                             {teacherStatus.map((t) => {
-                                const percent = pct(t.approved, t.total);
+                                const approvedDocs = t.docs.filter(
+                                    (doc) => doc.status === "APPROVED",
+                                ).length;
+                                const percent = clamp(
+                                    pct(approvedDocs, t.totalRequired),
+                                    100,
+                                );
+
+                                console.log(t);
 
                                 return (
                                     <tr
@@ -187,7 +200,7 @@ export function TeacherOverviewTable({
                                                             style={{
                                                                 width:
                                                                     t.total > 0
-                                                                        ? `${(t.approved / t.total) * 100}%`
+                                                                        ? `${percent}%`
                                                                         : "0%",
                                                             }}
                                                         />
@@ -197,7 +210,8 @@ export function TeacherOverviewTable({
                                                     </span>
                                                 </div>
                                                 <span className="text-[10px] text-muted-foreground/60 tabular-nums">
-                                                    {t.approved}/{t.total}
+                                                    {t.approved}/
+                                                    {t.totalRequired}
                                                 </span>
                                             </div>
                                         </td>

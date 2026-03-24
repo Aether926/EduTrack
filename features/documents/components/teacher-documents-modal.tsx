@@ -156,8 +156,8 @@ export function TeacherDocumentsModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl w-[95vw] max-h-[88vh] overflow-y-auto p-0 gap-0">
                 {/* ── Header ── */}
-                <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-blue-500/5 pointer-events-none" />
+                <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-linear-to-br from-card to-background">
+                    <div className="absolute inset-0 bg-linear-to-br from-violet-500/5 via-transparent to-blue-500/5 pointer-events-none" />
                     <DialogHeader className="relative">
                         <div className="flex items-center gap-3 mb-1">
                             <div className="h-10 w-10 rounded-xl border border-border/60 bg-muted/30 flex items-center justify-center font-semibold text-sm shrink-0">
@@ -224,8 +224,7 @@ export function TeacherDocumentsModal({
                                     Completion
                                 </p>
                                 <p className="text-sm font-semibold mt-0.5">
-                                    {teacher.approved}/{teacher.total} required
-                                    approved
+                                    {teacher.approved}/{teacher.total} approved
                                 </p>
                             </div>
                             <span className="text-2xl font-bold tabular-nums text-muted-foreground">
@@ -333,7 +332,7 @@ export function TeacherDocumentsModal({
                                                                 <p className="text-[10px] text-rose-400 uppercase tracking-widest font-semibold mb-0.5">
                                                                     Reason
                                                                 </p>
-                                                                <p className="text-xs text-rose-300 leading-snug break-words">
+                                                                <p className="text-xs text-rose-300 leading-snug wrap-break-word">
                                                                     {
                                                                         doc.reject_reason
                                                                     }
