@@ -11,7 +11,6 @@ import { RoleBadge } from "@/components/ui-elements/badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { equal } from "assert";
 
 export default function TeacherProfilesPage() {
     const [userRole, setUserRole] = useState<"ADMIN" | "TEACHER" | null>(null);

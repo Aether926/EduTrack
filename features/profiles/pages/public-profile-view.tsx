@@ -72,6 +72,7 @@ export default function PublicProfileView(props: {
     hasSession?: boolean;
     showRecordButton?: boolean;
     isArchived?: boolean;
+    isAdminEditing?: boolean;
 }) {
     const {
         profile,
@@ -208,7 +209,9 @@ export default function PublicProfileView(props: {
             emergencyRelationship: str(
                 profile.ProfileEmergencyContact?.[0]?.relationship,
             ),
-            emergencyAddress: str(profile.ProfileEmergencyContact?.[0]?.address),
+            emergencyAddress: str(
+                profile.ProfileEmergencyContact?.[0]?.address,
+            ),
             emergencyTelephoneNo: str(
                 profile.ProfileEmergencyContact?.[0]?.telephoneNo,
             ),
@@ -217,8 +220,6 @@ export default function PublicProfileView(props: {
         }),
         [profile],
     );
-
-
 
     const isAdmin = ["ADMIN", "SUPERADMIN"].includes(viewerRole);
     const isTeacher = viewerRole === "TEACHER";

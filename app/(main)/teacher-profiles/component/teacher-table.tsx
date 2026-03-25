@@ -64,11 +64,13 @@ const fmtPhone = fmtContact;
 interface TeacherTableProps {
     data: TeacherTableRow[];
     viewerRole?: "ADMIN" | "TEACHER";
+    showManage?: boolean;
 }
 
 export default function TeacherTable({
     data,
     viewerRole = "TEACHER",
+    showManage = false,
 }: TeacherTableProps) {
     const router = useRouter();
     const isAdmin = viewerRole === "ADMIN";
@@ -309,17 +311,27 @@ export default function TeacherTable({
                 id: "view",
                 header: "",
                 enableSorting: false,
-                cell: () => (
-                    <div className="flex items-center justify-end gap-2 text-muted-foreground">
-                        <span className="hidden md:inline text-xs">
-                            View profile
-                        </span>
-                        <ChevronRight className="h-4 w-4" />
+                cell: ({ row }) => (
+                    <div className="flex items-center justify-end gap-2">
+                        {isAdmin && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(
+                                        `/admin-actions/teachers/${row.original.id}`,
+                                    );
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+                            >
+                                Manage
+                            </button>
+                        )}
+                        <ChevronRight className="hidden md:block h-3.5 w-3.5 text-muted-foreground/50" />
                     </div>
                 ),
             },
         ],
-        [isAdmin],
+        [isAdmin, showManage, router],
     );
 
     const filteredData = useMemo(() => {

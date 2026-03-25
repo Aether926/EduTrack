@@ -4,6 +4,8 @@ import PublicProfileView from "@/components/public-profile-view";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import type { TrainingRow } from "@/features/profiles/types/trainings";
 import { redirect } from "next/navigation";
+import ProfilePage from "@/features/profiles/pages/profile-page";
+import { loadProfileData } from "@/features/profiles/actions/load-profile-action";
 
 function isPublicSafeTraining(a: { status: string; result: string | null }) {
     const s = (a.status ?? "").toUpperCase();
@@ -81,10 +83,13 @@ async function getTrainingsForTeacher(
 
 export default async function TeacherPublicProfilePage({
     params,
+    searchParams,
 }: {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{ edit?: string }>;
 }) {
     const { id } = await params;
+    const { edit } = await searchParams;
 
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
@@ -143,6 +148,19 @@ export default async function TeacherPublicProfilePage({
     };
 
     const trainings = await getTrainingsForTeacher(id, viewerRole);
+    const isAdminEditing = edit === "true" && viewerRole === "ADMIN";
+
+    if (isAdminEditing) {
+        const initialProfile = await loadProfileData(id);
+        return (
+            <ProfilePage
+                userId={auth.user.id}
+                initialProfile={initialProfile}
+                targetUserId={id}
+                isAdminEditing={true}
+            />
+        );
+    }
 
     return (
         <PublicProfileView
