@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Heart, CalendarDays, ChevronRight } from "lucide-react";
+import { Handshake, CalendarDays, ChevronRight } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -113,19 +113,19 @@ export default function LoyaltyServiceCard({
     const loyalty = computeLoyalty(dateOfOriginalAppointment);
 
     return (
-        <div className="relative overflow-hidden rounded-lg border border-rose-500/20 bg-rose-500/8 px-4 py-3.5">
+        <div className="relative overflow-hidden rounded-lg border border-blue-500/20 bg-blue-500/8 px-4 py-3.5">
             {/* Gradient wash */}
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none" />
 
             <div className="relative space-y-3">
                 {/* Row 1 — label + countdown */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                     <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="rounded-md border border-rose-500/20 bg-rose-500/10 p-1.5 shrink-0">
-                            <Heart className="h-3.5 w-3.5 text-rose-400" />
+                        <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-1.5 shrink-0">
+                            <Handshake className="h-3.5 w-3.5 text-blue-400" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[11px] font-semibold text-rose-400/80 uppercase tracking-widest">
+                            <p className="text-[11px] font-semibold text-blue-400/80 uppercase tracking-widest">
                                 Loyalty Award
                             </p>
                             <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -139,7 +139,7 @@ export default function LoyaltyServiceCard({
                     {loyalty ? (
                         <div className="sm:text-right shrink-0 pl-9 sm:pl-0">
                             {loyalty.daysRemaining === 0 ? (
-                                <p className="text-2xl font-bold text-rose-400 leading-tight">
+                                <p className="text-2xl font-bold text-blue-400 leading-tight">
                                     Eligible!
                                 </p>
                             ) : (
@@ -172,7 +172,7 @@ export default function LoyaltyServiceCard({
                         {/* Bar */}
                         <div className="w-full h-1.5 rounded-full bg-muted/40 overflow-hidden">
                             <div
-                                className="h-full rounded-full bg-rose-500 transition-all duration-700"
+                                className="h-full rounded-full bg-blue-500 transition-all duration-700"
                                 style={{ width: `${100 - loyalty.pct}%` }}
                                 /* inverted: full bar = just started, empty = reached milestone */
                             />
@@ -181,7 +181,7 @@ export default function LoyaltyServiceCard({
                         {/* Date stamps */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <span className="font-medium text-rose-400/70">
+                                <span className="font-medium text-blue-400/70">
                                     {loyalty.milestone === 10
                                         ? "Appointment"
                                         : `${loyalty.milestone - 5}yr`}
@@ -191,7 +191,7 @@ export default function LoyaltyServiceCard({
                             <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground text-right">
                                 <span>{fmt(loyalty.milestoneDate)}</span>
-                                <span className="font-medium text-rose-400/70">
+                                <span className="font-medium text-blue-400/70">
                                     {loyalty.milestone}yr
                                 </span>
                             </div>

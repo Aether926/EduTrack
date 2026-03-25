@@ -141,15 +141,15 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                         <span className="text-amber-400/90 font-semibold">
                             Original Appointment
                         </span>{" "}
-                        — the date this individual officially became a DepEd
-                        employee, regardless of school.
+                        — the amount of years this individual officially became
+                        a DepEd employee, regardless of school.
                     </p>
                     <p>
                         <span className="text-emerald-400/90 font-semibold">
                             Original Deployment
                         </span>{" "}
-                        — the date they were first stationed at this specific
-                        school.
+                        — the amount of years they were first stationed at this
+                        specific school.
                     </p>
                     <p>
                         <span className="text-violet-400/90 font-semibold">

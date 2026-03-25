@@ -23,7 +23,7 @@ import {
     CheckCircle2,
     BadgeDollarSign,
     Loader2,
-    Heart,
+    Handshake,
     TrendingUp,
 } from "lucide-react";
 
@@ -403,7 +403,7 @@ function ModeToggle({
                         : "text-muted-foreground hover:text-foreground"
                 }`}
             >
-                <Heart className="h-3 w-3" />
+                <Handshake className="h-3 w-3" />
                 Loyalty
             </button>
         </div>
@@ -566,7 +566,7 @@ export default function SalaryEligibilityTable({
                         }
                         className="px-2"
                     >
-                        {mode === "step" ? "Next Increase" : "Next Milestone"}{" "}
+                        {mode === "step" ? "Next Step" : "Next Milestone"}{" "}
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                 ),
