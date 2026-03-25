@@ -111,8 +111,10 @@ function PdfThumbnail({
                 if (typeof window === "undefined") return;
 
                 const pdfjsLib = await import("pdfjs-dist");
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 
-                        `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+                pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+                    "pdfjs-dist/build/pdf.worker.mjs",
+                    import.meta.url,
+                ).toString();
 
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer })
@@ -143,7 +145,7 @@ function PdfThumbnail({
 
                 if (!cancelled) setLoading(false);
             } catch (err) {
-                console.error("PDF render error:", err)
+                console.error("PDF render error:", err);
 
                 if (!cancelled) {
                     setLoading(false);

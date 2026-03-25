@@ -50,7 +50,6 @@ export default async function SuperadminArchivedProfilePage({
             <ArchiveProfileBanner
                 archivedAt={archivedUser.archivedAt}
                 archiveReason={archivedUser.archiveReason}
-                
             />
 
             <PublicProfileView
