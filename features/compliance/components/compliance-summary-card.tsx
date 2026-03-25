@@ -2,29 +2,97 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldCheck, ShieldAlert, ShieldX, Clock } from "lucide-react";
-import { RiskStatusBadge } from "@/components/ui-elements/badges";
 import type {
     TeacherTrainingCompliance,
     ComplianceStatus,
 } from "@/features/compliance/types/compliance";
 
-const STATUS_ICON: Record<ComplianceStatus, React.ReactNode> = {
-    COMPLIANT: <ShieldCheck className="h-5 w-5 text-emerald-500" />,
-    AT_RISK: <ShieldAlert className="h-5 w-5 text-amber-500" />,
-    NON_COMPLIANT: <ShieldX className="h-5 w-5 text-rose-500" />,
+// ── Status config ─────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<
+    ComplianceStatus,
+    {
+        icon: React.ReactNode;
+        barColor: string;
+        cardBorder: string;
+        badgeBg: string;
+        badgeBorder: string;
+        badgeText: string;
+        badgeDot: string;
+        badgeLabel: string;
+        hintBg: string;
+        hintBorder: string;
+        hintText: string;
+    }
+> = {
+    COMPLIANT: {
+        icon: <ShieldCheck className="h-4 w-4 text-emerald-400" />,
+        barColor: "rgba(16, 185, 129, 0.5)",
+        cardBorder: "rgba(16, 185, 129, 0.18)",
+        badgeBg: "rgba(16, 185, 129, 0.1)",
+        badgeBorder: "rgba(16, 185, 129, 0.3)",
+        badgeText: "rgb(52, 211, 153)",
+        badgeDot: "rgb(52, 211, 153)",
+        badgeLabel: "Compliant",
+        hintBg: "rgba(16, 185, 129, 0.06)",
+        hintBorder: "rgba(16, 185, 129, 0.18)",
+        hintText: "rgb(167, 243, 208)",
+    },
+    AT_RISK: {
+        icon: <ShieldAlert className="h-4 w-4 text-amber-400" />,
+        barColor: "rgba(245, 158, 11, 0.55)",
+        cardBorder: "rgba(245, 158, 11, 0.18)",
+        badgeBg: "rgba(245, 158, 11, 0.1)",
+        badgeBorder: "rgba(245, 158, 11, 0.3)",
+        badgeText: "rgb(251, 191, 36)",
+        badgeDot: "rgb(251, 191, 36)",
+        badgeLabel: "At Risk",
+        hintBg: "rgba(245, 158, 11, 0.06)",
+        hintBorder: "rgba(245, 158, 11, 0.18)",
+        hintText: "rgb(253, 230, 138)",
+    },
+    NON_COMPLIANT: {
+        icon: <ShieldX className="h-4 w-4 text-rose-400" />,
+        barColor: "rgba(244, 63, 94, 0.5)",
+        cardBorder: "rgba(244, 63, 94, 0.18)",
+        badgeBg: "rgba(244, 63, 94, 0.1)",
+        badgeBorder: "rgba(244, 63, 94, 0.3)",
+        badgeText: "rgb(251, 113, 133)",
+        badgeDot: "rgb(251, 113, 133)",
+        badgeLabel: "Non-Compliant",
+        hintBg: "rgba(244, 63, 94, 0.06)",
+        hintBorder: "rgba(244, 63, 94, 0.18)",
+        hintText: "rgb(254, 205, 211)",
+    },
 };
 
-const STATUS_BAR_COLOR: Record<ComplianceStatus, string> = {
-    COMPLIANT: "rgba(16, 185, 129, 0.55)",
-    AT_RISK: "rgba(245, 158, 11, 0.6)",
-    NON_COMPLIANT: "rgba(244, 63, 94, 0.55)",
-};
+// ── Stat cell ─────────────────────────────────────────────────────────────────
 
-const STATUS_BORDER_COLOR: Record<ComplianceStatus, string> = {
-    COMPLIANT: "rgba(16, 185, 129, 0.2)",
-    AT_RISK: "rgba(245, 158, 11, 0.2)",
-    NON_COMPLIANT: "rgba(244, 63, 94, 0.2)",
-};
+function StatCell({
+    value,
+    label,
+    color,
+}: {
+    value: string;
+    label: string;
+    color: string;
+}) {
+    return (
+        <div className="flex flex-col items-center justify-center gap-1 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-3.5">
+            <span
+                className="text-2xl font-bold tabular-nums leading-none"
+                style={{ color }}
+            >
+                {value}
+            </span>
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                {label}
+            </span>
+        </div>
+    );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export function ComplianceSummaryCard(props: {
     compliance: TeacherTrainingCompliance | null;
@@ -37,7 +105,7 @@ export function ComplianceSummaryCard(props: {
             <Card className="border border-border/60">
                 <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
-                        <ShieldX className="h-5 w-5 text-muted-foreground" />
+                        <ShieldX className="h-4 w-4 text-muted-foreground" />
                         Training Compliance
                     </CardTitle>
                 </CardHeader>
@@ -52,6 +120,8 @@ export function ComplianceSummaryCard(props: {
     }
 
     const status = compliance.status as ComplianceStatus;
+    const cfg = STATUS_CONFIG[status];
+
     const percent =
         compliance.required_hours > 0
             ? Math.min(
@@ -60,43 +130,72 @@ export function ComplianceSummaryCard(props: {
               )
             : 100;
 
-    const hoursCompleted = compliance.total_hours >= compliance.required_hours;
-    const hoursRemaining = compliance.remaining_hours <= 0;
+    // Completed: green when met, plain foreground when not — no amber scream
+    const completedColor =
+        compliance.total_hours >= compliance.required_hours
+            ? "rgb(52, 211, 153)"
+            : "hsl(var(--foreground))";
+
+    // Required: always muted — it's just a fixed reference number
+    const requiredColor = "hsl(var(--muted-foreground))";
+
+    // Remaining: green when zero, status tint when still owed
+    const remainingColor =
+        compliance.remaining_hours <= 0 ? "rgb(52, 211, 153)" : cfg.badgeText;
 
     return (
         <Card
             className="border bg-card"
-            style={{ borderColor: STATUS_BORDER_COLOR[status] }}
+            style={{ borderColor: cfg.cardBorder }}
         >
+            {/* ── Header ── */}
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-sm sm:text-base flex items-center gap-2 min-w-0">
-                        <span className="shrink-0">{STATUS_ICON[status]}</span>
-                        <span className="leading-snug">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2 min-w-0">
+                        <span className="shrink-0">{cfg.icon}</span>
+                        <span className="leading-snug truncate">
                             Training Compliance — {schoolYear}
                         </span>
                     </CardTitle>
-                    <div className="shrink-0">
-                        <RiskStatusBadge status={status.toLowerCase()} />
-                    </div>
+
+                    {/* Inline status badge — matches your pill pattern */}
+                    <span
+                        className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0"
+                        style={{
+                            backgroundColor: cfg.badgeBg,
+                            borderColor: cfg.badgeBorder,
+                            color: cfg.badgeText,
+                        }}
+                    >
+                        <span
+                            className="h-1.5 w-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: cfg.badgeDot }}
+                        />
+                        {cfg.badgeLabel}
+                    </span>
                 </div>
             </CardHeader>
+
             <CardContent className="space-y-4">
-                {/* Progress bar */}
+                {/* ── Progress bar ── */}
                 <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{compliance.total_hours}h completed</span>
-                        <span>{compliance.required_hours}h required</span>
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                        <span className="tabular-nums">
+                            {compliance.total_hours}h completed
+                        </span>
+                        <span className="tabular-nums">
+                            {compliance.required_hours}h required
+                        </span>
                     </div>
                     <div
-                        className="h-2 w-full rounded-full overflow-hidden"
-                        style={{ backgroundColor: "rgba(255,255,255,0.07)" }}
+                        className="h-1.5 w-full rounded-full overflow-hidden"
+                        style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                     >
                         <div
                             className="h-full rounded-full transition-all duration-700 ease-out"
                             style={{
                                 width: `${percent}%`,
-                                backgroundColor: STATUS_BAR_COLOR[status],
+                                backgroundColor: cfg.barColor,
                             }}
                         />
                     </div>
@@ -105,95 +204,39 @@ export function ComplianceSummaryCard(props: {
                     </p>
                 </div>
 
-                {/* Stats */}
+                {/* ── Stat cells — all three consistent ── */}
                 <div className="grid grid-cols-3 gap-2">
-                    {/* Completed */}
-                    <div
-                        className="text-center p-2 sm:p-3 rounded-lg border"
-                        style={{
-                            backgroundColor: hoursCompleted
-                                ? "rgba(16, 185, 129, 0.08)"
-                                : "rgba(245, 158, 11, 0.08)",
-                            borderColor: hoursCompleted
-                                ? "rgba(16, 185, 129, 0.25)"
-                                : "rgba(245, 158, 11, 0.25)",
-                        }}
-                    >
-                        <p
-                            className="text-lg sm:text-2xl font-bold tabular-nums"
-                            style={{
-                                color: hoursCompleted
-                                    ? "rgb(52, 211, 153)"
-                                    : "rgb(251, 191, 36)",
-                            }}
-                        >
-                            {compliance.total_hours}h
-                        </p>
-                        <p className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                            Completed
-                        </p>
-                    </div>
-
-                    {/* Required */}
-                    <div
-                        className="text-center p-2 sm:p-3 rounded-lg border"
-                        style={{
-                            backgroundColor: "rgba(59, 130, 246, 0.08)",
-                            borderColor: "rgba(59, 130, 246, 0.25)",
-                        }}
-                    >
-                        <p
-                            className="text-lg sm:text-2xl font-bold tabular-nums"
-                            style={{ color: "rgb(96, 165, 250)" }}
-                        >
-                            {compliance.required_hours}h
-                        </p>
-                        <p className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                            Required
-                        </p>
-                    </div>
-
-                    {/* Remaining */}
-                    <div className="text-center p-2 sm:p-3">
-                        <p
-                            className="text-lg sm:text-2xl font-bold tabular-nums"
-                            style={{
-                                color: hoursRemaining
-                                    ? "rgb(52, 211, 153)"
-                                    : "rgb(251, 113, 133)",
-                            }}
-                        >
-                            {compliance.remaining_hours}h
-                        </p>
-                        <p className="text-[10px] sm:text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
-                            Remaining
-                        </p>
-                    </div>
+                    <StatCell
+                        value={`${compliance.total_hours}h`}
+                        label="Completed"
+                        color={completedColor}
+                    />
+                    <StatCell
+                        value={`${compliance.required_hours}h`}
+                        label="Required"
+                        color={requiredColor}
+                    />
+                    <StatCell
+                        value={`${compliance.remaining_hours}h`}
+                        label="Remaining"
+                        color={remainingColor}
+                    />
                 </div>
 
+                {/* ── Hint banner — only when not compliant ── */}
                 {status !== "COMPLIANT" && (
                     <div
-                        className="flex items-start gap-2 p-3 rounded-lg text-sm border"
-                        style={
-                            status === "AT_RISK"
-                                ? {
-                                      backgroundColor:
-                                          "rgba(245, 158, 11, 0.07)",
-                                      borderColor: "rgba(245, 158, 11, 0.2)",
-                                      color: "rgb(253, 230, 138)",
-                                  }
-                                : {
-                                      backgroundColor:
-                                          "rgba(244, 63, 94, 0.07)",
-                                      borderColor: "rgba(244, 63, 94, 0.2)",
-                                      color: "rgb(254, 205, 211)",
-                                  }
-                        }
+                        className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg border text-[13px]"
+                        style={{
+                            backgroundColor: cfg.hintBg,
+                            borderColor: cfg.hintBorder,
+                            color: cfg.hintText,
+                        }}
                     >
-                        <Clock className="h-4 w-4 mt-0.5 shrink-0 opacity-70" />
-                        <span className="text-[13px]">
+                        <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-60" />
+                        <span>
                             {status === "AT_RISK"
-                                ? `You're close — complete ${compliance.remaining_hours} more hour${compliance.remaining_hours !== 1 ? "s" : ""} to stay compliant.`
+                                ? `You're close — ${compliance.remaining_hours} more hour${compliance.remaining_hours !== 1 ? "s" : ""} to stay compliant.`
                                 : `You need ${compliance.remaining_hours} more hour${compliance.remaining_hours !== 1 ? "s" : ""} to meet the requirement.`}
                         </span>
                     </div>

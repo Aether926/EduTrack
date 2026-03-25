@@ -11,6 +11,7 @@ import { RoleBadge } from "@/components/ui-elements/badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { equal } from "assert";
 
 export default function TeacherProfilesPage() {
     const [userRole, setUserRole] = useState<"ADMIN" | "TEACHER" | null>(null);
@@ -70,6 +71,9 @@ export default function TeacherProfilesPage() {
                 )
                 .order("lastName", { ascending: true });
 
+            // console.log("profile:", profiles);
+            // console.log("profiles error", error);
+
             // console.log(profiles);
 
             if (error) {
@@ -84,7 +88,12 @@ export default function TeacherProfilesPage() {
                 .select("*");
 
             const tableData: TeacherTableRow[] = (profiles ?? [])
-                .filter((profile: any) => profile.id !== authUser.id)
+                .filter(
+                    (profile: any) =>
+                        profile.id !== authUser.id &&
+                        profile.User?.role === "TEACHER" &&
+                        profile.User?.status === "APPROVED",
+                )
                 .map((profile: any) => {
                     const hrProf = hrProfiles?.find(
                         (hr) => hr.id === profile.id,

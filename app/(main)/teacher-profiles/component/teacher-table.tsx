@@ -106,13 +106,19 @@ export default function TeacherTable({
                       {
                           accessorKey: "employeeid",
                           header: "Employee ID",
-                          cell: ({ row }) => (
-                              <div className="font-mono text-xs text-muted-foreground">
-                                  {fmtEmployeeId(
-                                      String(row.getValue("employeeid") ?? ""),
-                                  )}
-                              </div>
-                          ),
+                          cell: ({ row }) => {
+                              const raw = String(
+                                  row.getValue("employeeid") ?? "",
+                              );
+                              const formatted = fmtEmployeeId(raw);
+                              const display =
+                                  formatted === "—" ? raw : formatted;
+                              return (
+                                  <div className="font-mono text-xs text-muted-foreground">
+                                      {display || "—"}
+                                  </div>
+                              );
+                          },
                       },
                   ] as ColumnDef<TeacherTableRow>[])
                 : []),
@@ -169,7 +175,7 @@ export default function TeacherTable({
                                                 <div className="truncate text-xs text-muted-foreground font-mono">
                                                     {fmtPhone(
                                                         row.original.contact,
-                                                    ) ?? "—"}
+                                                    ) ?? row.original.contact}
                                                 </div>
                                             )}
                                         {showPosition &&
@@ -193,7 +199,7 @@ export default function TeacherTable({
                                                     <span className="font-mono ml-1">
                                                         {fmtPhone(
                                                             emergencyContact,
-                                                        ) ?? "—"}
+                                                        ) ?? emergencyContact}
                                                     </span>
                                                 )}
                                             </div>
@@ -232,24 +238,18 @@ export default function TeacherTable({
                 accessorKey: "contact",
                 header: "Contact",
                 cell: ({ row }) => {
-                    const ps = (row.original as any).privacySettings ?? {};
+                    const rowValue = row.original;
+                    const ps = (rowValue as any).privacySettings ?? {};
                     const showContact = isAdmin || (ps.contactInfo ?? false);
-                    const showEmergency =
-                        isAdmin || (ps.emergencyContact ?? false);
-                    const emergencyName = String(
-                        (row.original as any).emergencyName ?? "",
-                    );
-                    const emergencyContact = String(
-                        (row.original as any).emergencyContact ?? "",
-                    );
+                    const constactNumber = rowValue.contact;
+                    const formattedPhone =
+                        fmtPhone(constactNumber) ?? constactNumber;
 
                     return (
                         <div className="space-y-0.5">
                             {showContact ? (
                                 <div className="font-mono text-xs text-muted-foreground">
-                                    {fmtPhone(
-                                        String(row.getValue("contact") ?? ""),
-                                    ) ?? "—"}
+                                    {formattedPhone ?? "—"}
                                 </div>
                             ) : (
                                 <div className="text-xs text-muted-foreground/40 italic">
@@ -276,8 +276,6 @@ export default function TeacherTable({
                         (row.original as any).emergencyContact ?? "",
                     );
 
-                    // console.log(row.original);
-
                     if (!showEmergency)
                         return (
                             <div className="text-xs text-muted-foreground/40 italic">
@@ -297,7 +295,8 @@ export default function TeacherTable({
                             </div>
                             {emergencyContact && (
                                 <div className="font-mono text-xs text-muted-foreground/70">
-                                    {fmtPhone(emergencyContact) ?? "—"}
+                                    {fmtPhone(emergencyContact) ??
+                                        emergencyContact}
                                 </div>
                             )}
                         </div>

@@ -55,6 +55,11 @@ function fmtDate(dt: string | null) {
     }
 }
 
+/** Collapses accidental double-dots (e.g. "C.. IBARRA" → "C. IBARRA"). */
+function fixDoubleDots(name: string): string {
+    return name.replace(/\.{2,}/g, ".");
+}
+
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface ArchiveTableProps {

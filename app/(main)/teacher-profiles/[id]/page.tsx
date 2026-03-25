@@ -16,7 +16,7 @@ async function getTrainingsForTeacher(
     viewerRole: ViewerRole,
 ): Promise<TrainingRow[]> {
     const adminMode = viewerRole === "ADMIN";
-    const db = adminMode ? createAdminClient() : await createClient();
+    const db = adminMode ? createAdminClient() : await createClient(); // ← no await on adminClient
 
     const { data: attendanceRows, error: aErr } = await db
         .from("Attendance")
@@ -41,15 +41,16 @@ async function getTrainingsForTeacher(
     const filtered = adminMode
         ? attendance
         : attendance.filter(isPublicSafeTraining);
+    if (filtered.length === 0) return []; // ← early return, no __none__ needed
 
     const trainingIds = Array.from(new Set(filtered.map((r) => r.training_id)));
 
     const { data: pdRows } = await db
         .from("ProfessionalDevelopment")
         .select(
-            "id, title, type, level, start_date, end_date, total_hours, approved_hours, sponsoring_agency",
+            "id, title, type, level, start_date, end_date, total_hours, sponsoring_agency", // ← no approved_hours
         )
-        .in("id", trainingIds.length ? trainingIds : ["__none__"]);
+        .in("id", trainingIds); // ← direct, no ternary
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdMap = new Map<string, any>();
@@ -58,26 +59,21 @@ async function getTrainingsForTeacher(
 
     return filtered.map((a) => {
         const pd = pdMap.get(String(a.training_id));
-
         return {
             attendanceId: String(a.id),
             trainingId: String(a.training_id),
-
             title: pd?.title ?? "(missing title)",
             type: pd?.type ?? "",
             level: pd?.level ?? "",
             startDate: pd?.start_date ?? "",
             endDate: pd?.end_date ?? "",
             totalHours: pd?.total_hours != null ? String(pd.total_hours) : "",
-            approvedHours: pd?.approved_hours ?? null,
+            approvedHours: null, // ← always null now
             sponsor: pd?.sponsoring_agency ?? "",
-
             status: a.status ?? "",
             result: a.result ?? null,
-
             proof_url: adminMode ? (a.proof_url ?? null) : null,
             proof_path: adminMode ? (a.proof_path ?? null) : null,
-
             created_at: a.created_at ?? "",
         };
     });

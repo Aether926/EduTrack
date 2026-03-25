@@ -3,10 +3,8 @@
 
 import * as React from "react";
 import type { ProofReviewRow } from "../types";
-import { fmt, statusBadgeVariant } from "../lib/utils";
+import { fmt } from "../lib/utils";
 import { Loader2, X, ZoomIn } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
     Sheet,
@@ -18,6 +16,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+import { ApproveButton, RejectButton } from "@/components/action-button";
 
 function isImage(url: string) {
     return /\.(jpe?g|png|gif|webp|bmp|svg)(\?|$)/i.test(url);
@@ -67,17 +67,48 @@ export default function ProofReviewSheet({
                     <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10">
                         <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1 min-w-0">
-                                <SheetTitle className="text-base leading-snug truncate">
+                                <SheetTitle className="text-base leading-snug">
                                     {row.training.title}
                                 </SheetTitle>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <Badge
-                                        variant={statusBadgeVariant(row.status)}
-                                    >
-                                        {row.status}
-                                    </Badge>
+                                    {(() => {
+                                        const s = (
+                                            row.status ?? ""
+                                        ).toUpperCase();
+                                        const map: Record<string, string> = {
+                                            APPROVED:
+                                                "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+                                            REJECTED:
+                                                "bg-rose-500/15 text-rose-400 border-rose-500/30",
+                                            ENROLLED:
+                                                "bg-sky-500/15 text-sky-400 border-sky-500/30",
+                                            PENDING:
+                                                "bg-amber-500/15 text-amber-400 border-amber-500/30",
+                                        };
+                                        const dotMap: Record<string, string> = {
+                                            APPROVED: "bg-emerald-400",
+                                            REJECTED: "bg-rose-400",
+                                            ENROLLED: "bg-sky-400",
+                                            PENDING: "bg-amber-400",
+                                        };
+                                        const cls =
+                                            map[s] ??
+                                            "bg-slate-500/15 text-slate-400 border-slate-500/30";
+                                        const dot = dotMap[s] ?? "bg-slate-400";
+                                        return (
+                                            <span
+                                                className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${cls}`}
+                                            >
+                                                <span
+                                                    className={`h-1.5 w-1.5 rounded-full ${dot}`}
+                                                />
+                                                {s.charAt(0) +
+                                                    s.slice(1).toLowerCase()}
+                                            </span>
+                                        );
+                                    })()}
                                     <span className="text-xs text-muted-foreground">
-                                        Submitted: {fmt(row.submittedAt)}
+                                        {fmt(row.submittedAt)}
                                     </span>
                                 </div>
                             </div>
@@ -98,9 +129,6 @@ export default function ProofReviewSheet({
                     <div className="flex-1 px-5 py-4 space-y-5">
                         {/* Training details */}
                         <div className="space-y-1 text-sm">
-                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                                Training
-                            </div>
                             <div className="text-muted-foreground">
                                 <span className="font-medium text-foreground">
                                     Type / Level:
@@ -228,27 +256,16 @@ export default function ProofReviewSheet({
 
                     {/* ── Footer actions — sticky at bottom ── */}
                     <div className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-4 flex flex-wrap gap-2">
-                        <Button
+                        <ApproveButton
                             onClick={() => void onApprove(row.attendanceId)}
-                            disabled={isLoading}
-                            className="gap-2 flex-1"
-                        >
-                            {isLoading && (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            )}
-                            Approve
-                        </Button>
-                        <Button
-                            variant="destructive"
+                            loading={isLoading}
+                            size="default"
+                        />
+                        <RejectButton
                             onClick={() => void onReject(row.attendanceId)}
-                            disabled={isLoading}
-                            className="gap-2 flex-1"
-                        >
-                            {isLoading && (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            )}
-                            Reject
-                        </Button>
+                            loading={isLoading}
+                            size="default"
+                        />
                     </div>
                 </SheetContent>
             </Sheet>
@@ -264,7 +281,6 @@ export default function ProofReviewSheet({
                     <DialogTitle className="sr-only">Proof Preview</DialogTitle>
                     {row.proofUrl && isImage(row.proofUrl) ? (
                         <div className="relative inline-block">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={row.proofUrl}
                                 alt="Proof fullscreen"
