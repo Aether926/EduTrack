@@ -38,6 +38,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
+
 import PdFormModal, {
     type FormData as PdFormData,
 } from "@/app/(main)/add-training-seminar/component/pd-form-modal";
@@ -65,27 +67,6 @@ type BrowsableTraining = {
 type View = "browse" | "upload" | "create";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const levelCls: Record<string, string> = {
-    regional: "bg-amber-500/10 text-amber-400 border-amber-500/40",
-    national: "bg-blue-500/10 text-blue-400 border-blue-500/40",
-    international: "bg-rose-500/10 text-rose-400 border-rose-500/40",
-};
-
-const typeCls: Record<string, string> = {
-    training: "bg-teal-500/10 text-teal-400 border-teal-500/40",
-    seminar: "bg-violet-500/10 text-violet-400 border-violet-500/40",
-};
-
-function Chip({ label, cls }: { label: string; cls: string }) {
-    return (
-        <span
-            className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${cls}`}
-        >
-            {label}
-        </span>
-    );
-}
 
 // ── PDF first-page thumbnail via PDF.js ────────────────────────────────────────
 
@@ -654,16 +635,11 @@ export default function SelfEnrollModal({
                                                                             }
                                                                         >
                                                                             <TableCell>
-                                                                                <Chip
-                                                                                    label={
+                                                                                <TypeBadge
+                                                                                    type={
                                                                                         t.type
                                                                                     }
-                                                                                    cls={
-                                                                                        typeCls[
-                                                                                            t.type.toLowerCase()
-                                                                                        ] ??
-                                                                                        "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                                    }
+                                                                                    size="xs"
                                                                                 />
                                                                             </TableCell>
                                                                             <TableCell>
@@ -685,16 +661,11 @@ export default function SelfEnrollModal({
                                                                                 )}
                                                                             </TableCell>
                                                                             <TableCell>
-                                                                                <Chip
-                                                                                    label={
+                                                                                <LevelBadge
+                                                                                    level={
                                                                                         t.level
                                                                                     }
-                                                                                    cls={
-                                                                                        levelCls[
-                                                                                            t.level.toLowerCase()
-                                                                                        ] ??
-                                                                                        "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                                    }
+                                                                                    size="xs"
                                                                                 />
                                                                             </TableCell>
                                                                             <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
@@ -747,29 +718,19 @@ export default function SelfEnrollModal({
                                                                             t.title
                                                                         }
                                                                     </span>
-                                                                    <Chip
-                                                                        label={
+                                                                    <TypeBadge
+                                                                        type={
                                                                             t.type
                                                                         }
-                                                                        cls={
-                                                                            typeCls[
-                                                                                t.type.toLowerCase()
-                                                                            ] ??
-                                                                            "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                        }
+                                                                        size="xs"
                                                                     />
                                                                 </div>
                                                                 <div className="flex flex-wrap gap-1.5 items-center">
-                                                                    <Chip
-                                                                        label={
+                                                                    <LevelBadge
+                                                                        level={
                                                                             t.level
                                                                         }
-                                                                        cls={
-                                                                            levelCls[
-                                                                                t.level.toLowerCase()
-                                                                            ] ??
-                                                                            "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                                        }
+                                                                        size="xs"
                                                                     />
                                                                     <span className="text-xs text-muted-foreground">
                                                                         {
@@ -887,23 +848,13 @@ export default function SelfEnrollModal({
                                     {/* Training summary card */}
                                     <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
                                         <div className="flex flex-wrap gap-1.5">
-                                            <Chip
-                                                label={selected.type}
-                                                cls={
-                                                    typeCls[
-                                                        selected.type.toLowerCase()
-                                                    ] ??
-                                                    "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                }
+                                            <TypeBadge
+                                                type={selected.type}
+                                                size="xs"
                                             />
-                                            <Chip
-                                                label={selected.level}
-                                                cls={
-                                                    levelCls[
-                                                        selected.level.toLowerCase()
-                                                    ] ??
-                                                    "bg-slate-500/10 text-slate-400 border-slate-500/40"
-                                                }
+                                            <LevelBadge
+                                                level={selected.level}
+                                                size="xs"
                                             />
                                             {selected.source ===
                                                 "SELF_REPORTED" && (
