@@ -715,10 +715,10 @@ export default function AdminTrainingCalendar({
                                     highlightRange.has(key) &&
                                     !isRangeStart &&
                                     !isRangeEnd;
+
                                 const eventsOnDay = byDay.get(key);
                                 const hasEvent = !!eventsOnDay;
                                 const eventCount = eventsOnDay?.length ?? 0;
-                                const isPast = key < todayKey;
                                 const teacherCount = eventsOnDay
                                     ? new Set(
                                           eventsOnDay.flatMap((e) =>
@@ -727,14 +727,26 @@ export default function AdminTrainingCalendar({
                                       ).size
                                     : 0;
 
+                                const eventStart = eventsOnDay
+                                    ? eventsOnDay[0].start
+                                    : null;
+                                const eventEnd = eventsOnDay
+                                    ? eventsOnDay[0].end
+                                    : null;
+                                const isSingleEventDay =
+                                    eventStart === eventEnd;
                                 const isSingleDayRange =
                                     isRangeStart && isRangeEnd;
+
                                 const bandRgb = isRangeUpcoming
                                     ? "245,158,11"
                                     : "59,130,246";
                                 const bandAlpha = isDark ? "0.45" : "0.60";
                                 const bandStyle: React.CSSProperties =
-                                    isSingleDayRange
+                                    isSingleDayRange ||
+                                    (isSingleEventDay &&
+                                        !isRangeEnd &&
+                                        !isInRange)
                                         ? {}
                                         : isRangeStart
                                           ? {

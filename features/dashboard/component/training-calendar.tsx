@@ -474,6 +474,8 @@ export default function TrainingCalendar({
                                             }
                                           : {};
 
+                            // console.log(isRangeStart, isRangeEnd);
+
                             return (
                                 <div
                                     key={key}
