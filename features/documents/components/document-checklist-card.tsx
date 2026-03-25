@@ -261,7 +261,7 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                         const canRequestResubmit =
                             !!submission &&
                             !hasPending &&
-                            (status === "SUBMITTED" || status === "APPROVED");
+                            status === "APPROVED";
                         const canRequestDelete = !!submission && !hasPending;
 
                         return (
@@ -341,7 +341,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
 
                                         {/* Desktop buttons */}
                                         <div className="hidden sm:flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-
                                             {canUpload && (
                                                 <Button
                                                     size="sm"
@@ -827,8 +826,7 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                     const canRequestResubmit =
                                         !!submission &&
                                         !hasPending &&
-                                        (status === "SUBMITTED" ||
-                                            status === "APPROVED");
+                                        status === "APPROVED";
                                     const canRequestDelete =
                                         !!submission && !hasPending;
 

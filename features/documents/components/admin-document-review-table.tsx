@@ -307,20 +307,22 @@ function PendingSubmissionsTable({ docs }: { docs: AdminDocumentRow[] }) {
                                                     <XCircle className="h-3.5 w-3.5" />
                                                     Reject
                                                 </Button>
-
-                                                <Button
-                                                    size="sm"
-                                                    className="gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 hover:border-amber-500/40"
-                                                    onClick={() => {
-                                                        setResubmitModal(doc);
-                                                        setResubmitNote("");
-                                                    }}
-                                                    disabled={isLoading}
-                                                >
-                                                    <RotateCcw className="h-3.5 w-3.5" />
-                                                    Request Resubmit
-                                                </Button>
-
+                                                {doc.status === "APPROVED" && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 hover:border-amber-500/40"
+                                                        onClick={() => {
+                                                            setResubmitModal(
+                                                                doc,
+                                                            );
+                                                            setResubmitNote("");
+                                                        }}
+                                                        disabled={isLoading}
+                                                    >
+                                                        <RotateCcw className="h-3.5 w-3.5" />
+                                                        Request Resubmit
+                                                    </Button>
+                                                )}
                                                 <Button
                                                     size="sm"
                                                     className="gap-1.5 bg-rose-900/10 text-rose-800 border border-rose-700/60 hover:bg-rose-900/30 hover:border-rose-600/40"
