@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getUser, createAdminClient } from "@/lib/supabase/server";
-import AdminTeacherTable from "@/features/admin-actions/teachers/components/teacher-table";
+import TeacherTable from "@/app/(main)/teacher-profiles/component/teacher-table";
 import { Badge } from "@/components/ui/badge";
 import { Users, CheckCircle2 } from "lucide-react";
 
@@ -28,7 +28,9 @@ export default async function AdminTeachersPage() {
 
     const { data: profiles } = await admin
         .from("Profile")
-        .select("id, firstName, lastName, middleInitial, email, profileImage, contactNumber, subjectSpecialization")
+        .select(
+            "id, firstName, lastName, middleInitial, email, profileImage, contactNumber, subjectSpecialization",
+        )
         .in("id", approvedTeacherIds)
         .order("lastName", { ascending: true });
 
@@ -94,7 +96,7 @@ export default async function AdminTeachersPage() {
         employeeid: hrMap.get(p.id)?.employeeId ?? "",
         position: hrMap.get(p.id)?.position ?? "",
         status: "active",
-        subjectSpecialization: p.subjectSpecialization ?? null
+        subjectSpecialization: p.subjectSpecialization ?? null,
     }));
 
     return (
@@ -134,7 +136,11 @@ export default async function AdminTeachersPage() {
                 </div>
             </div>
 
-            <AdminTeacherTable data={teachers} />
+            <TeacherTable
+                data={teachers}
+                viewerRole="ADMIN"
+                showManage={true}
+            />
         </div>
     );
 }

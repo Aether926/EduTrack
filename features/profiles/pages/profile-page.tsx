@@ -34,12 +34,15 @@ type EditableCard =
 export default function ProfilePage({
     userId,
     initialProfile,
+    targetUserId,
+    isAdminEditing,
 }: {
     userId: string;
     initialProfile: ProfileState;
+    targetUserId?: string;
+    isAdminEditing?: boolean;
 }) {
     const { theme } = useTheme();
-    
 
     const {
         isSaving,
@@ -97,7 +100,6 @@ export default function ProfilePage({
 
     return (
         <div className="min-h-screen w-full max-w-full overflow-x-clip bg-gray-100 dark:bg-gray-950 space-y-6">
-
             {/* Header — no more global Edit button, just share/QR/PDF */}
             <ProfileHeader
                 teacherId={userId}
@@ -108,11 +110,11 @@ export default function ProfilePage({
                 showRecordsButton={false}
                 savedFirstName={savedFirstName}
                 tempProfileData={{
-                    firstName:     tempProfileData.firstName,
+                    firstName: tempProfileData.firstName,
                     middleInitial: tempProfileData.middleInitial,
-                    lastName:      tempProfileData.lastName,
-                    position:      tempProfileData.position,
-                    username:      tempProfileData.username,
+                    lastName: tempProfileData.lastName,
+                    position: tempProfileData.position,
+                    username: tempProfileData.username,
                 }}
                 profileData={profileData}
                 onImageChange={previewImage}

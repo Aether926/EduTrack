@@ -64,11 +64,13 @@ const fmtPhone = fmtContact;
 interface TeacherTableProps {
     data: TeacherTableRow[];
     viewerRole?: "ADMIN" | "TEACHER";
+    showManage?: boolean;
 }
 
 export default function TeacherTable({
     data,
     viewerRole = "TEACHER",
+    showManage = false,
 }: TeacherTableProps) {
     const router = useRouter();
     const isAdmin = viewerRole === "ADMIN";
@@ -106,13 +108,19 @@ export default function TeacherTable({
                       {
                           accessorKey: "employeeid",
                           header: "Employee ID",
-                          cell: ({ row }) => (
-                              <div className="font-mono text-xs text-muted-foreground">
-                                  {fmtEmployeeId(
-                                      String(row.getValue("employeeid") ?? ""),
-                                  )}
-                              </div>
-                          ),
+                          cell: ({ row }) => {
+                              const raw = String(
+                                  row.getValue("employeeid") ?? "",
+                              );
+                              const formatted = fmtEmployeeId(raw);
+                              const display =
+                                  formatted === "—" ? raw : formatted;
+                              return (
+                                  <div className="font-mono text-xs text-muted-foreground">
+                                      {display || "—"}
+                                  </div>
+                              );
+                          },
                       },
                   ] as ColumnDef<TeacherTableRow>[])
                 : []),
@@ -169,7 +177,7 @@ export default function TeacherTable({
                                                 <div className="truncate text-xs text-muted-foreground font-mono">
                                                     {fmtPhone(
                                                         row.original.contact,
-                                                    ) ?? "—"}
+                                                    ) ?? row.original.contact}
                                                 </div>
                                             )}
                                         {showPosition &&
@@ -193,7 +201,7 @@ export default function TeacherTable({
                                                     <span className="font-mono ml-1">
                                                         {fmtPhone(
                                                             emergencyContact,
-                                                        ) ?? "—"}
+                                                        ) ?? emergencyContact}
                                                     </span>
                                                 )}
                                             </div>
@@ -232,24 +240,18 @@ export default function TeacherTable({
                 accessorKey: "contact",
                 header: "Contact",
                 cell: ({ row }) => {
-                    const ps = (row.original as any).privacySettings ?? {};
+                    const rowValue = row.original;
+                    const ps = (rowValue as any).privacySettings ?? {};
                     const showContact = isAdmin || (ps.contactInfo ?? false);
-                    const showEmergency =
-                        isAdmin || (ps.emergencyContact ?? false);
-                    const emergencyName = String(
-                        (row.original as any).emergencyName ?? "",
-                    );
-                    const emergencyContact = String(
-                        (row.original as any).emergencyContact ?? "",
-                    );
+                    const constactNumber = rowValue.contact;
+                    const formattedPhone =
+                        fmtPhone(constactNumber) ?? constactNumber;
 
                     return (
                         <div className="space-y-0.5">
                             {showContact ? (
                                 <div className="font-mono text-xs text-muted-foreground">
-                                    {fmtPhone(
-                                        String(row.getValue("contact") ?? ""),
-                                    ) ?? "—"}
+                                    {formattedPhone ?? "—"}
                                 </div>
                             ) : (
                                 <div className="text-xs text-muted-foreground/40 italic">
@@ -276,8 +278,6 @@ export default function TeacherTable({
                         (row.original as any).emergencyContact ?? "",
                     );
 
-                    // console.log(row.original);
-
                     if (!showEmergency)
                         return (
                             <div className="text-xs text-muted-foreground/40 italic">
@@ -297,7 +297,8 @@ export default function TeacherTable({
                             </div>
                             {emergencyContact && (
                                 <div className="font-mono text-xs text-muted-foreground/70">
-                                    {fmtPhone(emergencyContact) ?? "—"}
+                                    {fmtPhone(emergencyContact) ??
+                                        emergencyContact}
                                 </div>
                             )}
                         </div>
@@ -310,17 +311,27 @@ export default function TeacherTable({
                 id: "view",
                 header: "",
                 enableSorting: false,
-                cell: () => (
-                    <div className="flex items-center justify-end gap-2 text-muted-foreground">
-                        <span className="hidden md:inline text-xs">
-                            View profile
-                        </span>
-                        <ChevronRight className="h-4 w-4" />
+                cell: ({ row }) => (
+                    <div className="flex items-center justify-end gap-2">
+                        {isAdmin && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(
+                                        `/admin-actions/teachers/${row.original.id}`,
+                                    );
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+                            >
+                                Manage
+                            </button>
+                        )}
+                        <ChevronRight className="hidden md:block h-3.5 w-3.5 text-muted-foreground/50" />
                     </div>
                 ),
             },
         ],
-        [isAdmin],
+        [isAdmin, showManage, router],
     );
 
     const filteredData = useMemo(() => {

@@ -341,7 +341,7 @@ export default async function AdminActionsPage() {
                                         size="sm"
                                         className="w-full"
                                     >
-                                        <Link href="/admin-actions/teachers">
+                                        <Link href="/teacher-profiles">
                                             Open teacher directory
                                         </Link>
                                     </Button>

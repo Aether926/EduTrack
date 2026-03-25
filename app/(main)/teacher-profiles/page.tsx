@@ -70,6 +70,9 @@ export default function TeacherProfilesPage() {
                 )
                 .order("lastName", { ascending: true });
 
+            // console.log("profile:", profiles);
+            // console.log("profiles error", error);
+
             // console.log(profiles);
 
             if (error) {
@@ -84,7 +87,12 @@ export default function TeacherProfilesPage() {
                 .select("*");
 
             const tableData: TeacherTableRow[] = (profiles ?? [])
-                .filter((profile: any) => profile.id !== authUser.id)
+                .filter(
+                    (profile: any) =>
+                        profile.id !== authUser.id &&
+                        profile.User?.role === "TEACHER" &&
+                        profile.User?.status === "APPROVED",
+                )
                 .map((profile: any) => {
                     const hrProf = hrProfiles?.find(
                         (hr) => hr.id === profile.id,
