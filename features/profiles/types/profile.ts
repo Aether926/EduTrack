@@ -157,13 +157,9 @@ export type ProfileState = {
 
     // Residential
     residentialCountry: string;
-    residentialCountryName: string;
     residentialRegion: string;
-    residentialRegionName: string;
 
     // Permanent
     permanentCountry: string;
-    permanentCountryName: string;
     permanentRegion: string;
-    permanentRegionName: string;
 };
