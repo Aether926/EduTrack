@@ -424,6 +424,18 @@ export default function FillUpPage() {
             toast.error("Please select or enter your position.");
             return;
         }
+        const { data: existingId } = await supabase
+            .from("ProfileHR")
+            .select("employeeId")
+            .eq("employeeId", formData.employeeId)
+            .maybeSingle();
+
+        if (existingId) {
+            toast.error(
+                "This Employee ID is already taken. Please check your ID.",
+            );
+            return;
+        }
 
         setSubmitting(true);
         let success = false;
@@ -817,6 +829,7 @@ export default function FillUpPage() {
                                         value={dateOflatestAppointment}
                                         onChange={setDateOfLatestAppointment}
                                         maxDate={new Date()}
+                                        minDate={dateOfOriginalAppointment}
                                     />
                                     {dateOflatestAppointment && (
                                         <button

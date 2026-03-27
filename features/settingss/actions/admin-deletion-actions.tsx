@@ -50,18 +50,16 @@ async function insertActivity(
     const admin = createAdminClient();
     await admin.from("ActivityLog").insert(
         rows.map((r) => ({
-            actor_id:       r.actor_id,
+            actor_id: r.actor_id,
             target_user_id: r.target_user_id,
-            action:         r.action,
-            entity_type:    r.entity_type,
-            entity_id:      r.entity_id,
-            message:        r.message,
-            meta:           r.meta ?? null,
+            action: r.action,
+            entity_type: r.entity_type,
+            entity_id: r.entity_id,
+            message: r.message,
+            meta: r.meta ?? null,
         })),
     );
 }
-
-// ── Get all pending deletion requests ────────────────────────────────────────
 
 export async function getAllDeletionRequests() {
     const admin = createAdminClient();
@@ -80,23 +78,20 @@ export async function getAllDeletionRequests() {
             .from("Profile")
             .select("id, firstName, lastName, email")
             .in("id", userIds),
-        admin
-            .from("ProfileHR")
-            .select("id, employeeId")
-            .in("id", userIds),
+        admin.from("ProfileHR").select("id, employeeId").in("id", userIds),
     ]);
 
     const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-    const hrMap      = new Map((hrs ?? []).map((h) => [h.id, h]));
+    const hrMap = new Map((hrs ?? []).map((h) => [h.id, h]));
 
     return requests.map((r) => ({
         ...r,
         user: {
-            id:         r.user_id,
-            firstName:  profileMap.get(r.user_id)?.firstName  ?? null,
-            lastName:   profileMap.get(r.user_id)?.lastName   ?? null,
-            email:      profileMap.get(r.user_id)?.email      ?? null,
-            employeeId: hrMap.get(r.user_id)?.employeeId      ?? null,
+            id: r.user_id,
+            firstName: profileMap.get(r.user_id)?.firstName ?? null,
+            lastName: profileMap.get(r.user_id)?.lastName ?? null,
+            email: profileMap.get(r.user_id)?.email ?? null,
+            employeeId: hrMap.get(r.user_id)?.employeeId ?? null,
         },
     }));
 }
@@ -125,7 +120,7 @@ export async function adminInitiateDeletion(
         if (existing)
             return {
                 ok: false,
-                error: "This teacher already has a pending deletion request.",
+                error: "This user already has a pending deactivation request.",
             };
 
         const isDev = process.env.NODE_ENV === "development";
@@ -136,9 +131,9 @@ export async function adminInitiateDeletion(
         const { data: req, error } = await admin
             .from("AccountDeletionRequest")
             .insert({
-                user_id:      teacherId,
-                reason:       reason.trim(),
-                status:       "PENDING",
+                user_id: teacherId,
+                reason: reason.trim(),
+                status: "PENDING",
                 initiated_by: "ADMIN",
                 admin_reason: reason.trim(),
                 scheduled_at: scheduledAt.toISOString(),
@@ -150,14 +145,15 @@ export async function adminInitiateDeletion(
 
         await insertActivity([
             {
-                actor_id:       adminCheck.userId!,
+                actor_id: adminCheck.userId!,
                 target_user_id: teacherId,
-                action:         "ACCOUNT_DELETION_INITIATED_BY_ADMIN",
-                entity_type:    "AccountDeletionRequest",
-                entity_id:      req.id,
-                message:        "Admin has initiated account archival. Your account will be archived after the grace period.",
+                action: "ACCOUNT_DEACTIVAITON_INITIATED_BY_ADMIN",
+                entity_type: "AccountDeletionRequest",
+                entity_id: req.id,
+                message:
+                    "Admin has initiated account archival. Your account will be archived after the grace period.",
                 meta: {
-                    reason:      reason.trim(),
+                    reason: reason.trim(),
                     scheduledAt: scheduledAt.toISOString(),
                 },
             },
@@ -171,8 +167,6 @@ export async function adminInitiateDeletion(
     }
 }
 
-// ── Admin cancel deletion request ────────────────────────────────────────────
-
 export async function adminCancelDeletion(
     requestId: string,
 ): Promise<ActionResult> {
@@ -181,7 +175,7 @@ export async function adminCancelDeletion(
         if (!adminCheck.ok) return { ok: false, error: adminCheck.error };
 
         const admin = createAdminClient();
-        const now   = new Date().toISOString();
+        const now = new Date().toISOString();
 
         const { data: req } = await admin
             .from("AccountDeletionRequest")
@@ -194,7 +188,7 @@ export async function adminCancelDeletion(
         const { error } = await admin
             .from("AccountDeletionRequest")
             .update({
-                status:       "CANCELLED",
+                status: "CANCELLED",
                 cancelled_at: now,
                 cancelled_by: adminCheck.userId,
             })
@@ -205,12 +199,12 @@ export async function adminCancelDeletion(
 
         await insertActivity([
             {
-                actor_id:       adminCheck.userId!,
+                actor_id: adminCheck.userId!,
                 target_user_id: req.user_id,
-                action:         "ACCOUNT_DELETION_CANCELLED_BY_ADMIN",
-                entity_type:    "AccountDeletionRequest",
-                entity_id:      requestId,
-                message:        "Admin has cancelled the account archival request.",
+                action: "ACCOUNT_DELETION_CANCELLED_BY_ADMIN",
+                entity_type: "AccountDeletionRequest",
+                entity_id: requestId,
+                message: "Admin has cancelled the account archival request.",
             },
         ]);
 
@@ -222,8 +216,6 @@ export async function adminCancelDeletion(
     }
 }
 
-// ── Admin finalize — archive user after grace period ──────────────────────────
-
 export async function adminFinalizeDeleteAccount(
     requestId: string,
 ): Promise<ActionResult> {
@@ -232,7 +224,7 @@ export async function adminFinalizeDeleteAccount(
         if (!adminCheck.ok) return { ok: false, error: adminCheck.error };
 
         const admin = createAdminClient();
-        const now   = new Date().toISOString();
+        const now = new Date().toISOString();
 
         const { data: req } = await admin
             .from("AccountDeletionRequest")
@@ -247,7 +239,7 @@ export async function adminFinalizeDeleteAccount(
         // Check grace period has passed
         if (req.scheduled_at && new Date(req.scheduled_at) > new Date()) {
             const remaining = new Date(req.scheduled_at).getTime() - Date.now();
-            const mins      = Math.ceil(remaining / 60000);
+            const mins = Math.ceil(remaining / 60000);
             return {
                 ok: false,
                 error: `Grace period has not passed yet. ${mins} minute(s) remaining.`,
@@ -258,7 +250,7 @@ export async function adminFinalizeDeleteAccount(
         await admin
             .from("AccountDeletionRequest")
             .update({
-                status:      "APPROVED",
+                status: "APPROVED",
                 reviewed_by: adminCheck.userId,
                 reviewed_at: now,
             })
@@ -268,9 +260,10 @@ export async function adminFinalizeDeleteAccount(
         const { error: archiveErr } = await admin
             .from("User")
             .update({
-                status:        "ARCHIVED",
-                archivedAt:    now,
-                archiveReason: req.reason ?? req.admin_reason ?? "No reason provided",
+                status: "ARCHIVED",
+                archivedAt: now,
+                archiveReason:
+                    req.reason ?? req.admin_reason ?? "No reason provided",
             })
             .eq("id", req.user_id);
 
@@ -278,19 +271,19 @@ export async function adminFinalizeDeleteAccount(
 
         // Force logout the archived user
         await admin.auth.admin.signOut(req.user_id, "global");
-        
+
         await admin.auth.admin.updateUserById(req.user_id, {
             ban_duration: "876000h", // ~100 years = effectively permanent
         });
 
         await insertActivity([
             {
-                actor_id:       adminCheck.userId!,
+                actor_id: adminCheck.userId!,
                 target_user_id: req.user_id,
-                action:         "ACCOUNT_ARCHIVED",
-                entity_type:    "AccountDeletionRequest",
-                entity_id:      requestId,
-                message:        "Your account has been archived.",
+                action: "ACCOUNT_ARCHIVED",
+                entity_type: "AccountDeletionRequest",
+                entity_id: requestId,
+                message: "Your account has been archived.",
                 meta: {
                     reason: req.reason ?? req.admin_reason,
                 },

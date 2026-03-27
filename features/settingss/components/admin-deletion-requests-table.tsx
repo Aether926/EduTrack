@@ -109,7 +109,7 @@ function RequestRow({
             setFinalizeModal(false);
             onUpdate();
         } catch {
-            toast.error("Failed to delete account.");
+            toast.error("Failed to deactivate account.");
         } finally {
             setLoading(false);
         }
@@ -208,7 +208,7 @@ function RequestRow({
                             }
                         >
                             <Trash2 className="h-3.5 w-3.5" />
-                            Delete
+                            Deactivate
                         </Button>
                         <Button
                             size="sm"
@@ -237,7 +237,8 @@ function RequestRow({
                             Archive Account
                         </DialogTitle>
                         <DialogDescription>
-                            This will remove the user from active records, but can be restored later.
+                            This will remove the user from active records, but
+                            can be restored later.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -247,10 +248,12 @@ function RequestRow({
                             You are about to archive the account of{" "}
                             <strong>
                                 {req.user.firstName} {req.user.lastName}
-                            </strong>.
+                            </strong>
+                            .
                         </p>
                         <p className="text-amber-400/70">
-                            The user will no longer have access, but their data will be saved and can be restored if needed.
+                            The user will no longer have access, but their data
+                            will be saved and can be restored if needed.
                         </p>
                     </div>
 

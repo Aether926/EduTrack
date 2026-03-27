@@ -880,7 +880,6 @@ export default function AdminTeacherManage(props: {
                         />
                     </div>
                 </div>
-
                 {/* Danger Zone */}
                 <AdminDangerZone teacherId={teacherId} teacherName={fullName} />
             </div>

@@ -213,7 +213,7 @@ export default async function AdminActionsPage() {
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="deletions" className="gap-2">
                         <Trash2 className="h-3.5 w-3.5" />
-                        Account Deletions
+                        Account Deactivation
                         {deletionRequests.length > 0 && (
                             <Badge variant="secondary" className="ml-1">
                                 {deletionRequests.length}
@@ -354,10 +354,10 @@ export default async function AdminActionsPage() {
                     <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-background overflow-hidden">
                         <div className="px-5 py-4 border-b border-border/60">
                             <h2 className="text-sm font-semibold">
-                                Account deletion requests
+                                Account deactivation requests
                             </h2>
                             <p className="text-[12px] text-muted-foreground mt-0.5">
-                                Review and approve deletion requests. This
+                                Review and approve deactivation requests. This
                                 action is sensitive.
                             </p>
                         </div>

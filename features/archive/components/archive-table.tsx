@@ -3,9 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { ArchivedUser } from "../actions/archive-actions";
-import {
-    restoreUser
-} from "@/features/superadmin/actions/superadmin-actions";
+import { restoreUser } from "@/features/superadmin/actions/superadmin-actions";
 import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -309,53 +307,6 @@ export default function ArchiveTable({
                                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                             )}
                             Restore
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete confirm dialog */}
-            <Dialog
-                open={!!deleteConfirm}
-                onOpenChange={(o) => !o && setDeleteConfirm(null)}
-            >
-                <DialogContent className="max-w-sm w-[90vw] p-0 gap-0 overflow-hidden">
-                    <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent pointer-events-none" />
-                        <DialogHeader className="relative">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-2">
-                                    <AlertTriangle className="h-4 w-4 text-rose-400" />
-                                </div>
-                                <DialogTitle className="text-sm font-medium text-muted-foreground">
-                                    Delete Permanently
-                                </DialogTitle>
-                            </div>
-                            <p className="text-base font-semibold leading-snug">
-                                Delete{" "}
-                                {deleteConfirm ? fullName(deleteConfirm) : ""}
-                                &apos;s account?
-                            </p>
-                            <DialogDescription className="mt-1">
-                                This will permanently remove all data. This
-                                cannot be undone.
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
-                    <div className="px-6 py-4 rounded-lg mx-6 mb-2 border border-rose-500/30 bg-rose-500/10 text-sm text-rose-400">
-                        <p className="font-semibold mb-0.5">⚠ Warning</p>
-                        <p>
-                            All profile data, documents, and records will be
-                            permanently removed.
-                        </p>
-                    </div>
-                    <DialogFooter className="px-6 py-4 flex gap-2 justify-end">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDeleteConfirm(null)}
-                        >
-                            Cancel
                         </Button>
                     </DialogFooter>
                 </DialogContent>
