@@ -4,18 +4,21 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export type PrivacySettings = {
-    contactInfo:          boolean;
-    emergencyContact:     boolean;
-    showPosition:         boolean;
+    contactInfo: boolean;
+    emergencyContact: boolean;
+    showPosition: boolean;
     educationCredentials: boolean;
-    educationBackground:  boolean;
+    educationBackground: boolean;
 };
 
 export async function savePrivacySettings(
-    settings: PrivacySettings
+    settings: PrivacySettings,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
 
     if (!user || authError) return { ok: false, error: "Not authenticated" };
 

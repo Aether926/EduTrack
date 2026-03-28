@@ -2,6 +2,7 @@
 
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { insertActivity } from "@/lib/database/activity";
 
 export type ActionResult<T = null> =
     | { ok: true; data?: T }
@@ -11,32 +12,6 @@ function errMsg(e: unknown) {
     if (e instanceof Error) return e.message;
     if (typeof e === "string") return e;
     return "something went wrong";
-}
-
-type ActivityInsert = {
-    actor_id: string | null;
-    target_user_id: string | null;
-    action: string;
-    entity_type: string | null;
-    entity_id: string | null;
-    message: string;
-    meta?: Record<string, unknown> | null;
-};
-
-async function insertActivity(rows: ActivityInsert[]) {
-    if (!rows.length) return;
-    const admin = createAdminClient();
-    await admin.from("ActivityLog").insert(
-        rows.map((r) => ({
-            actor_id: r.actor_id,
-            target_user_id: r.target_user_id,
-            action: r.action,
-            entity_type: r.entity_type,
-            entity_id: r.entity_id,
-            message: r.message,
-            meta: r.meta ?? null,
-        })),
-    );
 }
 
 const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
@@ -156,21 +131,38 @@ export async function saveTrainingAssignments(
         .eq("id", trainingId)
         .single();
 
-    await insertActivity(
-        toAssign.map((teacherId) => ({
+    await insertActivity([
+        // Actor row for admin
+        {
+            actor_id: adminCheck.userId,
+            target_user_id: adminCheck.userId!,
+            action: "ASSIGNED_TO_TRAINING",
+            entity_type: "PROFESSIONAL_DEVELOPMENT",
+            entity_id: trainingId,
+            message: `You assigned ${toAssign.length} teacher(s) to "${pd?.title ?? "a training"}".`,
+            recipient_role: "actor",
+            meta: {
+                trainingId,
+                title: pd?.title ?? null,
+                type: pd?.type ?? null,
+            },
+        },
+        // Receiver rows for each teacher
+        ...toAssign.map((teacherId) => ({
             actor_id: adminCheck.userId,
             target_user_id: teacherId,
             action: "ASSIGNED_TO_TRAINING",
             entity_type: "PROFESSIONAL_DEVELOPMENT",
             entity_id: trainingId,
-            message: `You were assigned to ${pd?.title ?? "a training"}.`,
+            message: `You were assigned to "${pd?.title ?? "a training"}".`,
+            recipient_role: "receiver" as const,
             meta: {
                 trainingId,
                 title: pd?.title ?? null,
                 type: pd?.type ?? null,
             },
         })),
-    );
+    ]);
 
     revalidatePath(`/add-training-seminar/${trainingId}/assign`);
     revalidatePath("/add-training-seminar");
@@ -241,6 +233,7 @@ export async function submitAttendanceProof(
                 action: "PROOF_SUBMITTED",
                 entity_type: "ATTENDANCE",
                 entity_id: attendanceId,
+                recipient_role: "actor",
                 message: "You submitted proof for a training.",
                 meta: { attendanceId, trainingId: attendance.training_id },
             },
@@ -301,11 +294,26 @@ export async function approveAttendance(
         await insertActivity([
             {
                 actor_id: adminCheck.userId,
+                target_user_id: adminCheck.userId!,
+                action: "PROOF_APPROVED",
+                entity_type: "ATTENDANCE",
+                entity_id: attendanceId,
+                message: `You approved proof for "${pd?.title ?? "a training"}".`,
+                recipient_role: "actor",
+                meta: {
+                    attendanceId,
+                    trainingId: att?.training_id ?? null,
+                    title: pd?.title ?? null,
+                },
+            },
+            {
+                actor_id: adminCheck.userId,
                 target_user_id: String(att?.teacher_id ?? ""),
                 action: "PROOF_APPROVED",
                 entity_type: "ATTENDANCE",
                 entity_id: attendanceId,
-                message: "Your proof was approved.",
+                message: `Your proof for "${pd?.title ?? "a training"}" was approved.`,
+                recipient_role: "receiver",
                 meta: {
                     attendanceId,
                     trainingId: att?.training_id ?? null,
@@ -369,11 +377,26 @@ export async function rejectAttendance(
         await insertActivity([
             {
                 actor_id: adminCheck.userId,
+                target_user_id: adminCheck.userId!,
+                action: "PROOF_REJECTED",
+                entity_type: "ATTENDANCE",
+                entity_id: attendanceId,
+                message: `You rejected proof for a training. Reason: "${remarks.trim()}".`,
+                recipient_role: "actor",
+                meta: {
+                    attendanceId,
+                    trainingId: att?.training_id ?? null,
+                    reason: remarks.trim(),
+                },
+            },
+            {
+                actor_id: adminCheck.userId,
                 target_user_id: String(att?.teacher_id ?? ""),
                 action: "PROOF_REJECTED",
                 entity_type: "ATTENDANCE",
                 entity_id: attendanceId,
-                message: "Your proof was rejected.",
+                message: `Your proof was rejected. Reason: "${remarks.trim()}".`,
+                recipient_role: "receiver",
                 meta: {
                     attendanceId,
                     trainingId: att?.training_id ?? null,

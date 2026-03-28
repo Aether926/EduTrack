@@ -1,7 +1,9 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
 
-async function getUserRole(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string | null> {
+async function getUserRole(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<string | null> {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return null;
     const { data } = await supabase
@@ -21,19 +23,37 @@ export async function fetchNotifications() {
     const isPrivileged =
         role === "ADMIN" || role === "SUPERADMIN" || role === "PRINCIPAL";
 
-    const base = supabase
-        .from("ActivityLog")
-        .select("id, action, message, meta, created_at, read_at, actor_id, target_user_id")
-        .order("created_at", { ascending: false })
-        .limit(20);
+    const userId = auth.user.id;
 
-    // Privileged roles see everything; others only see their own
-    const { data, error } = await (
-        isPrivileged ? base : base.eq("target_user_id", auth.user.id)
-    );
+    if (isPrivileged) {
+        // Admin only sees their own actor rows
+        const { data, error } = await supabase
+            .from("ActivityLog")
+            .select(
+                "id, action, message, meta, created_at, read_at, actor_id, target_user_id, recipient_role",
+            )
+            .eq("actor_id", userId)
+            .eq("recipient_role", "actor")
+            .order("created_at", { ascending: false })
+            .limit(20);
 
-    if (error) return [];
-    return data ?? [];
+        if (error) return [];
+        return data ?? [];
+    } else {
+        // Teacher only sees rows targeted at them as receiver
+        const { data, error } = await supabase
+            .from("ActivityLog")
+            .select(
+                "id, action, message, meta, created_at, read_at, actor_id, target_user_id, recipient_role",
+            )
+            .eq("target_user_id", userId)
+            .eq("recipient_role", "receiver")
+            .order("created_at", { ascending: false })
+            .limit(20);
+
+        if (error) return [];
+        return data ?? [];
+    }
 }
 
 export async function markAllRead() {
@@ -43,11 +63,10 @@ export async function markAllRead() {
 
 export async function clearAllNotifications() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase
-        .from("ActivityLog")
-        .delete()
-        .eq("target_user_id", user.id);
+    await supabase.from("ActivityLog").delete().eq("target_user_id", user.id);
 }

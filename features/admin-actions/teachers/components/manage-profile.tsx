@@ -174,7 +174,7 @@ function EmployeeIdField({
     isEditing: boolean;
     onChange: (val: string) => void;
 }) {
-    const isValid = /^\d{7}$/.test(value.replace(/\D/g, ""));
+    const isValid = /^\d{7}$/.test((value ?? "").replace(/\D/g, ""));
     return (
         <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
@@ -466,8 +466,22 @@ export default function AdminTeacherManage(props: {
     hr: TeacherHRFields;
     appointmentHistory: any[];
     trainings: TrainingRow[];
+    deletionRequest: {
+        id: string;
+        reason: string;
+        scheduled_at: string;
+        status: string;
+    } | null;
 }) {
-    const { teacherId, profile, hr, appointmentHistory, trainings } = props;
+    const {
+        teacherId,
+        profile,
+        hr,
+        appointmentHistory,
+        trainings,
+        deletionRequest,
+    } = props;
+
     const router = useRouter();
 
     const {
@@ -881,7 +895,13 @@ export default function AdminTeacherManage(props: {
                     </div>
                 </div>
                 {/* Danger Zone */}
-                <AdminDangerZone teacherId={teacherId} teacherName={fullName} />
+                <AdminDangerZone
+                    teacherId={teacherId}
+                    teacherName={fullName}
+                    isDeactivating={!!deletionRequest}
+                    deactivationScheduledAt={deletionRequest?.scheduled_at}
+                    deactivationReason={deletionRequest?.reason}
+                />
             </div>
         </main>
     );

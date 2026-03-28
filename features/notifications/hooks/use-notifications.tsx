@@ -16,6 +16,7 @@ export type NotificationRow = {
     read_at: string | null;
     actor_id: string | null;
     target_user_id: string | null;
+    recipient_role: "actor" | "receiver" | null;
 };
 
 export function useNotifications() {

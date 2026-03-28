@@ -3,11 +3,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function generateUsername(firstName: string, lastName: string): Promise<string> {
-    const supabase  = await createClient();
-    const base      = `${firstName.toLowerCase().trim()}.${lastName.toLowerCase().trim()}`
-        .replace(/\s+/g, "")
-        .replace(/[^a-z0-9.]/g, "");
+export async function generateUsername(
+    firstName: string,
+    lastName: string,
+): Promise<string> {
+    const supabase = await createClient();
+    const base =
+        `${firstName.toLowerCase().trim()}.${lastName.toLowerCase().trim()}`
+            .replace(/\s+/g, "")
+            .replace(/[^a-z0-9.]/g, "");
 
     // Check if base username exists
     const { data } = await supabase
@@ -24,9 +28,14 @@ export async function generateUsername(firstName: string, lastName: string): Pro
     return `${base}${i}`;
 }
 
-export async function updateUsername(newUsername: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function updateUsername(
+    newUsername: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
 
     if (!user || authError) return { ok: false, error: "Not authenticated" };
 
@@ -38,12 +47,14 @@ export async function updateUsername(newUsername: string): Promise<{ ok: true } 
         .single();
 
     if (profile?.lastUsernameChange) {
-        const last     = new Date(profile.lastUsernameChange).getTime();
-        const elapsed  = Date.now() - last;
+        const last = new Date(profile.lastUsernameChange).getTime();
+        const elapsed = Date.now() - last;
         const oneDayMs = 1000 * 60 * 60 * 24;
 
         if (elapsed < oneDayMs) {
-            const hoursLeft = Math.ceil((oneDayMs - elapsed) / (1000 * 60 * 60));
+            const hoursLeft = Math.ceil(
+                (oneDayMs - elapsed) / (1000 * 60 * 60),
+            );
             return {
                 ok: false,
                 error: `You can change your username again in ${hoursLeft} hour${hoursLeft === 1 ? "" : "s"}.`,
@@ -65,7 +76,7 @@ export async function updateUsername(newUsername: string): Promise<{ ok: true } 
     const { error } = await supabase
         .from("Profile")
         .update({
-            username:           newUsername,
+            username: newUsername,
             lastUsernameChange: new Date().toISOString(),
         })
         .eq("id", user.id);

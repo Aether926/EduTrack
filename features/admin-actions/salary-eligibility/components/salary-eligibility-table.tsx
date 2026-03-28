@@ -25,6 +25,7 @@ import {
     Loader2,
     Handshake,
     TrendingUp,
+    AlertTriangle,
 } from "lucide-react";
 
 import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
@@ -58,6 +59,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
 
 import type {
     TeacherEligibilityRow,
@@ -89,11 +98,7 @@ function formatDisplayName(
     return parts.join(" ");
 }
 
-// ── Loyalty math ─────────────────────────────────────────────────────────────
-//
-//  Loyalty milestones: 10 years first, then every 5 years (15, 20, 25, …)
-//  Uses dateOfOriginalAppointment from the row.
-//  The row must expose this field; add it to TeacherEligibilityRow if needed.
+// ── Loyalty math ──────────────────────────────────────────────────────────────
 
 interface LoyaltyResult {
     milestone: number;
@@ -101,12 +106,12 @@ interface LoyaltyResult {
     intervalStart: Date;
     intervalMs: number;
     elapsedMs: number;
-    pct: number; // 0-100 progress into current interval
+    pct: number;
     yearsRemaining: number;
     monthsRemaining: number;
     daysRemainingPart: number;
     daysRemaining: number;
-    nextEligibleDateStr: string; // "YYYY-MM-DD"
+    nextEligibleDateStr: string;
     status: "ELIGIBLE" | "APPROACHING" | "ON_TRACK";
     totalYears: number;
 }
@@ -165,7 +170,6 @@ function computeLoyalty(
     const pad = (n: number) => String(n).padStart(2, "0");
     const nextEligibleDateStr = `${milestoneDate.getFullYear()}-${pad(milestoneDate.getMonth() + 1)}-${pad(milestoneDate.getDate())}`;
 
-    // Status thresholds: ELIGIBLE if reached, APPROACHING if ≤180 days away
     const status: LoyaltyResult["status"] =
         daysRemaining === 0
             ? "ELIGIBLE"
@@ -190,7 +194,7 @@ function computeLoyalty(
     };
 }
 
-// ── Cycle progress bar ─────────────────────────────────────────────────────────
+// ── Cycle progress bar ────────────────────────────────────────────────────────
 
 function CycleBar({
     row,
@@ -225,16 +229,14 @@ function CycleBar({
         );
     }
 
-    // Loyalty mode
     const loyalty = computeLoyalty(
         (row as TeacherEligibilityRow & { dateOfOriginalAppointment?: string })
             .dateOfOriginalAppointment,
     );
-    if (!loyalty) {
+    if (!loyalty)
         return (
             <div className="text-[10px] text-muted-foreground italic">—</div>
         );
-    }
 
     const color =
         loyalty.status === "ELIGIBLE"
@@ -242,7 +244,6 @@ function CycleBar({
             : loyalty.status === "APPROACHING"
               ? "bg-amber-500"
               : "bg-rose-400";
-
     const displayPct = loyalty.status === "ELIGIBLE" ? 100 : loyalty.pct;
 
     return (
@@ -273,8 +274,7 @@ function NextIncreaseCell({
     if (mode === "step") {
         return row.status === "ELIGIBLE" ? (
             <span className="text-emerald-400 font-semibold text-sm flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Now
+                <CheckCircle2 className="h-3.5 w-3.5" /> Now
             </span>
         ) : (
             <div>
@@ -287,21 +287,18 @@ function NextIncreaseCell({
         );
     }
 
-    // Loyalty mode
     const loyalty = computeLoyalty(
         (row as TeacherEligibilityRow & { dateOfOriginalAppointment?: string })
             .dateOfOriginalAppointment,
     );
-    if (!loyalty) {
+    if (!loyalty)
         return (
             <div className="text-[10px] text-muted-foreground italic">—</div>
         );
-    }
 
     return loyalty.status === "ELIGIBLE" ? (
         <span className="text-rose-400 font-semibold text-sm flex items-center gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Now
+            <CheckCircle2 className="h-3.5 w-3.5" /> Now
         </span>
     ) : (
         <div>
@@ -326,48 +323,129 @@ function LoyaltyStatusCell({ row }: { row: TeacherEligibilityRow }) {
         return (
             <div className="text-[10px] text-muted-foreground italic">—</div>
         );
-    const key = loyalty.status.toLowerCase();
-    return <SalaryStatusBadge status={key} size="xs" />;
+    return (
+        <SalaryStatusBadge status={loyalty.status.toLowerCase()} size="xs" />
+    );
 }
 
-// ── Mark button ────────────────────────────────────────────────────────────────
+// ── Confirmation Dialog ───────────────────────────────────────────────────────
+
+function MarkConfirmDialog({
+    row,
+    open,
+    onClose,
+    onConfirm,
+    loading,
+}: {
+    row: TeacherEligibilityRow | null;
+    open: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    loading: boolean;
+}) {
+    if (!row) return null;
+    const fullName = formatDisplayName(
+        row.firstName,
+        row.lastName,
+        row.middleInitial,
+    );
+
+    return (
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                if (!o) onClose();
+            }}
+        >
+            <DialogContent className="max-w-md bg-card border-border/60">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-emerald-400">
+                        <BadgeDollarSign className="h-5 w-5" />
+                        Confirm Salary Increase
+                    </DialogTitle>
+                    <DialogDescription>
+                        Please review the details before marking this salary
+                        increase as given.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/8 p-4 space-y-2">
+                    <p className="text-[12px] font-semibold text-emerald-400 flex items-center gap-1.5">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Confirm Action
+                    </p>
+                    <p className="text-[12px] text-muted-foreground">
+                        You are marking salary increase as given for{" "}
+                        <span className="font-medium text-foreground">
+                            {fullName}
+                        </span>
+                        .
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                        Position:{" "}
+                        <span className="font-medium text-foreground">
+                            {row.position}
+                        </span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                        Cycle start:{" "}
+                        <span className="font-medium text-foreground">
+                            {row.cycleStartDate}
+                        </span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                        This action will reset the 3-year eligibility cycle for
+                        this teacher.
+                    </p>
+                </div>
+
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        onClick={onClose}
+                        disabled={loading}
+                        className="border-white/10 hover:bg-white/5"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={onConfirm}
+                        disabled={loading}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                    >
+                        {loading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <BadgeDollarSign className="h-4 w-4" />
+                        )}
+                        Confirm
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// ── Mark button ───────────────────────────────────────────────────────────────
 
 function MarkButton({
     row,
     onOptimisticUpdate,
+    onOpenDialog,
 }: {
     row: TeacherEligibilityRow;
     onOptimisticUpdate: (userId: string) => void;
+    onOpenDialog: (row: TeacherEligibilityRow) => void;
 }) {
-    const [loading, setLoading] = useState(false);
     if (row.status !== "ELIGIBLE") return null;
-
-    async function handle() {
-        setLoading(true);
-        onOptimisticUpdate(row.userId);
-        const res = await markSalaryIncreaseGivenAction(row.userId);
-        setLoading(false);
-        if (!res.ok) {
-            toast.error(res.error);
-            return;
-        }
-        toast.success(
-            `Salary increase marked for ${row.firstName} ${row.lastName}.`,
-        );
-    }
 
     return (
         <Button
             size="sm"
-            onClick={handle}
-            disabled={loading}
+            onClick={() => onOpenDialog(row)}
             className="gap-1.5 h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 whitespace-nowrap"
         >
-            {loading ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-                <BadgeDollarSign className="h-3 w-3" />
-            )}
+            <BadgeDollarSign className="h-3 w-3" />
             Mark Increased
         </Button>
     );
@@ -410,7 +488,7 @@ function ModeToggle({
     );
 }
 
-// ── Table component ────────────────────────────────────────────────────────────
+// ── Table component ───────────────────────────────────────────────────────────
 
 interface SalaryEligibilityTableProps {
     data: TeacherEligibilityRow[];
@@ -428,6 +506,40 @@ export default function SalaryEligibilityTable({
     );
     const [searchOpen, setSearchOpen] = useState(false);
     const [mode, setMode] = useState<EligibilityMode>("step");
+
+    // ── Dialog state ──────────────────────────────────────────────────────────
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedRow, setSelectedRow] =
+        useState<TeacherEligibilityRow | null>(null);
+    const [markLoading, setMarkLoading] = useState(false);
+
+    function handleOpenDialog(row: TeacherEligibilityRow) {
+        setSelectedRow(row);
+        setDialogOpen(true);
+    }
+
+    function handleCloseDialog() {
+        if (markLoading) return;
+        setDialogOpen(false);
+        setSelectedRow(null);
+    }
+
+    async function handleConfirm() {
+        if (!selectedRow) return;
+        setMarkLoading(true);
+        onOptimisticUpdate(selectedRow.userId);
+        const res = await markSalaryIncreaseGivenAction(selectedRow.userId);
+        setMarkLoading(false);
+        if (!res.ok) {
+            toast.error(res.error);
+            return;
+        }
+        toast.success(
+            `Salary increase marked for ${selectedRow.firstName} ${selectedRow.lastName}.`,
+        );
+        handleCloseDialog();
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const columns = useMemo<ColumnDef<TeacherEligibilityRow>[]>(
         () => [
@@ -454,11 +566,8 @@ export default function SalaryEligibilityTable({
             },
             {
                 id: "fullName",
-                accessorFn: (r) => {
-                    const fn = (r.firstName ?? "").trim();
-                    const ln = (r.lastName ?? "").trim();
-                    return `${fn} ${ln}`.trim();
-                },
+                accessorFn: (r) =>
+                    `${(r.firstName ?? "").trim()} ${(r.lastName ?? "").trim()}`.trim(),
                 header: ({ column }) => (
                     <Button
                         variant="ghost"
@@ -620,13 +729,14 @@ export default function SalaryEligibilityTable({
                             <MarkButton
                                 row={row.original}
                                 onOptimisticUpdate={onOptimisticUpdate}
+                                onOpenDialog={handleOpenDialog}
                             />
                         )}
                     </div>
                 ),
             },
         ],
-        [onOptimisticUpdate, mode],
+        [onOptimisticUpdate, mode], // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     const table = useReactTable({
@@ -669,7 +779,6 @@ export default function SalaryEligibilityTable({
         table.setPageIndex(0);
     }, [globalFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Reset status filter on mode change to avoid stale filter mismatch
     React.useEffect(() => {
         setStatusFilter("ALL");
         table.setPageIndex(0);
@@ -680,145 +789,119 @@ export default function SalaryEligibilityTable({
     const pageCount = table.getPageCount();
 
     return (
-        <Card className="min-w-0 overflow-hidden">
-            <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <CardTitle className="text-base">
+        <>
+            {/* ── Confirmation Dialog ── */}
+            <MarkConfirmDialog
+                row={selectedRow}
+                open={dialogOpen}
+                onClose={handleCloseDialog}
+                onConfirm={handleConfirm}
+                loading={markLoading}
+            />
+
+            <Card className="min-w-0 overflow-hidden">
+                <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <CardTitle className="text-base">
+                                {mode === "step"
+                                    ? "All Teachers"
+                                    : "Loyalty Eligibility"}
+                            </CardTitle>
+                            <ModeToggle mode={mode} onChange={setMode} />
+                        </div>
+                        <CardDescription>
                             {mode === "step"
-                                ? "All Teachers"
-                                : "Loyalty Eligibility"}
-                        </CardTitle>
-                        {/* ── Mode toggle — top right of card header ── */}
-                        <ModeToggle mode={mode} onChange={setMode} />
-                    </div>
-                    <CardDescription>
-                        {mode === "step"
-                            ? `${filteredCount} result${filteredCount === 1 ? "" : "s"} · 10 per page`
-                            : `${filteredCount} result${filteredCount === 1 ? "" : "s"} · loyalty milestones (10 yrs, then every 5 yrs)`}
-                    </CardDescription>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                    {/* Status filter */}
-                    <Select
-                        value={statusFilter}
-                        onValueChange={(v) =>
-                            setStatusFilter(v as EligibilityStatus | "ALL")
-                        }
-                    >
-                        <SelectTrigger className="h-9 w-[145px] text-xs">
-                            <SelectValue placeholder="All statuses" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">All statuses</SelectItem>
-                            <SelectItem value="ELIGIBLE">Eligible</SelectItem>
-                            <SelectItem value="APPROACHING">
-                                Approaching
-                            </SelectItem>
-                            <SelectItem value="ON_TRACK">On Track</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    {/* Desktop search */}
-                    <div className="hidden md:block w-[280px]">
-                        <Input
-                            value={globalFilter ?? ""}
-                            onChange={(e) => setGlobalFilter(e.target.value)}
-                            placeholder="Search name, employee ID, position..."
-                            className="h-9"
-                        />
+                                ? `${filteredCount} result${filteredCount === 1 ? "" : "s"} · 10 per page`
+                                : `${filteredCount} result${filteredCount === 1 ? "" : "s"} · loyalty milestones (10 yrs, then every 5 yrs)`}
+                        </CardDescription>
                     </div>
 
-                    {/* Mobile search */}
-                    <div className="flex md:hidden items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-9 w-9"
-                            onClick={() => setSearchOpen((v) => !v)}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                            value={statusFilter}
+                            onValueChange={(v) =>
+                                setStatusFilter(v as EligibilityStatus | "ALL")
+                            }
                         >
-                            {searchOpen ? (
-                                <X className="h-4 w-4" />
-                            ) : (
-                                <Search className="h-4 w-4" />
-                            )}
-                        </Button>
-                        <AnimatePresence initial={false}>
-                            {searchOpen && (
-                                <motion.div
-                                    initial={{ width: 0, opacity: 0 }}
-                                    animate={{
-                                        width: "min(240px, 55vw)",
-                                        opacity: 1,
-                                    }}
-                                    exit={{ width: 0, opacity: 0 }}
-                                    transition={{ duration: 0.18 }}
-                                    className="overflow-hidden"
-                                >
-                                    <Input
-                                        value={globalFilter ?? ""}
-                                        onChange={(e) =>
-                                            setGlobalFilter(e.target.value)
-                                        }
-                                        placeholder="Search..."
-                                        className="h-9"
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-            </CardHeader>
+                            <SelectTrigger className="h-9 w-[145px] text-xs">
+                                <SelectValue placeholder="All statuses" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">
+                                    All statuses
+                                </SelectItem>
+                                <SelectItem value="ELIGIBLE">
+                                    Eligible
+                                </SelectItem>
+                                <SelectItem value="APPROACHING">
+                                    Approaching
+                                </SelectItem>
+                                <SelectItem value="ON_TRACK">
+                                    On Track
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
 
-            <CardContent className="pt-0">
-                <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((hg) => (
-                                <TableRow key={hg.id}>
-                                    {hg.headers.map((header) => {
-                                        const colId = header.column.id;
-                                        const hideOnSmall =
-                                            colId === "position" ||
-                                            colId === "cycleProgress" ||
-                                            colId === "nextIncrease"
-                                                ? "hidden md:table-cell"
-                                                : "";
-                                        return (
-                                            <TableHead
-                                                key={header.id}
-                                                className={hideOnSmall}
-                                            >
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column
-                                                              .columnDef.header,
-                                                          header.getContext(),
-                                                      )}
-                                            </TableHead>
-                                        );
-                                    })}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
+                        <div className="hidden md:block w-[280px]">
+                            <Input
+                                value={globalFilter ?? ""}
+                                onChange={(e) =>
+                                    setGlobalFilter(e.target.value)
+                                }
+                                placeholder="Search name, employee ID, position..."
+                                className="h-9"
+                            />
+                        </div>
 
-                        <TableBody>
-                            {table.getRowModel().rows.length ? (
-                                table.getRowModel().rows.map((row, idx) => (
-                                    <motion.tr
-                                        key={row.id}
-                                        initial={{ opacity: 0, y: 6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{
-                                            duration: 0.16,
-                                            delay: Math.min(idx * 0.01, 0.15),
+                        <div className="flex md:hidden items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-9 w-9"
+                                onClick={() => setSearchOpen((v) => !v)}
+                            >
+                                {searchOpen ? (
+                                    <X className="h-4 w-4" />
+                                ) : (
+                                    <Search className="h-4 w-4" />
+                                )}
+                            </Button>
+                            <AnimatePresence initial={false}>
+                                {searchOpen && (
+                                    <motion.div
+                                        initial={{ width: 0, opacity: 0 }}
+                                        animate={{
+                                            width: "min(240px, 55vw)",
+                                            opacity: 1,
                                         }}
-                                        className="border-b last:border-b-0 hover:bg-accent/40"
+                                        exit={{ width: 0, opacity: 0 }}
+                                        transition={{ duration: 0.18 }}
+                                        className="overflow-hidden"
                                     >
-                                        {row.getVisibleCells().map((cell) => {
-                                            const colId = cell.column.id;
+                                        <Input
+                                            value={globalFilter ?? ""}
+                                            onChange={(e) =>
+                                                setGlobalFilter(e.target.value)
+                                            }
+                                            placeholder="Search..."
+                                            className="h-9"
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                </CardHeader>
+
+                <CardContent className="pt-0">
+                    <div className="rounded-md border overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                {table.getHeaderGroups().map((hg) => (
+                                    <TableRow key={hg.id}>
+                                        {hg.headers.map((header) => {
+                                            const colId = header.column.id;
                                             const hideOnSmall =
                                                 colId === "position" ||
                                                 colId === "cycleProgress" ||
@@ -826,58 +909,110 @@ export default function SalaryEligibilityTable({
                                                     ? "hidden md:table-cell"
                                                     : "";
                                             return (
-                                                <TableCell
-                                                    key={cell.id}
+                                                <TableHead
+                                                    key={header.id}
                                                     className={hideOnSmall}
                                                 >
-                                                    {flexRender(
-                                                        cell.column.columnDef
-                                                            .cell,
-                                                        cell.getContext(),
-                                                    )}
-                                                </TableCell>
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                              header.column
+                                                                  .columnDef
+                                                                  .header,
+                                                              header.getContext(),
+                                                          )}
+                                                </TableHead>
                                             );
                                         })}
-                                    </motion.tr>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={columns.length}
-                                        className="h-24 text-center text-muted-foreground"
-                                    >
-                                        No results.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
 
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-xs text-muted-foreground">
-                        Page {pageIndex + 1} of {pageCount}
+                            <TableBody>
+                                {table.getRowModel().rows.length ? (
+                                    table.getRowModel().rows.map((row, idx) => (
+                                        <motion.tr
+                                            key={row.id}
+                                            initial={{ opacity: 0, y: 6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{
+                                                duration: 0.16,
+                                                delay: Math.min(
+                                                    idx * 0.01,
+                                                    0.15,
+                                                ),
+                                            }}
+                                            className="border-b last:border-b-0 hover:bg-accent/40"
+                                        >
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => {
+                                                    const colId =
+                                                        cell.column.id;
+                                                    const hideOnSmall =
+                                                        colId === "position" ||
+                                                        colId ===
+                                                            "cycleProgress" ||
+                                                        colId === "nextIncrease"
+                                                            ? "hidden md:table-cell"
+                                                            : "";
+                                                    return (
+                                                        <TableCell
+                                                            key={cell.id}
+                                                            className={
+                                                                hideOnSmall
+                                                            }
+                                                        >
+                                                            {flexRender(
+                                                                cell.column
+                                                                    .columnDef
+                                                                    .cell,
+                                                                cell.getContext(),
+                                                            )}
+                                                        </TableCell>
+                                                    );
+                                                })}
+                                        </motion.tr>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-24 text-center text-muted-foreground"
+                                        >
+                                            No results.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
                     </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            Prev
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            Next
-                        </Button>
+
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-xs text-muted-foreground">
+                            Page {pageIndex + 1} of {pageCount}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                Prev
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                Next
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </>
     );
 }
