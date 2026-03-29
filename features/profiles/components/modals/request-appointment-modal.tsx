@@ -38,6 +38,7 @@ import {
     APPOINTMENT_TYPES,
     type AppointmentRequestForm,
 } from "@/features/profiles/appointment/types/appointment";
+import { PositionSelect } from "@/components/formatter/position-select";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -152,37 +153,6 @@ function DatePickerField(props: {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const POSITIONS = [
-    "Teacher I",
-    "Teacher II",
-    "Teacher III",
-    "Teacher IV",
-    "Teacher V",
-    "Teacher VI",
-    "Teacher VII",
-    "Master Teacher I",
-    "Master Teacher II",
-    "Master Teacher III",
-    "Master Teacher IV",
-    "Master Teacher V",
-    "Head Teacher I",
-    "Head Teacher II",
-    "Head Teacher III",
-    "Head Teacher IV",
-    "Head Teacher V",
-    "Head Teacher VI",
-    "Assistant School Principal I",
-    "Assistant School Principal II",
-    "Assistant School Principal III",
-    "Assistant School Principal IV",
-    "School Principal I",
-    "School Principal II",
-    "School Principal III",
-    "School Principal IV",
-    "School Principal V",
-    "Administrative Staff",
-];
-
 const REASONS = [
     "Promotion / Salary grade upgrade",
     "Transfer from another school",
@@ -270,21 +240,10 @@ export function RequestAppointmentModal(props: {
                             label="Position"
                             required
                         />
-                        <Select
+                        <PositionSelect
                             value={form.position}
-                            onValueChange={set("position")}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select position" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {POSITIONS.map((p) => (
-                                    <SelectItem key={p} value={p}>
-                                        {p}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            onChange={set("position")}
+                        />
                     </div>
 
                     {/* Appointment Type */}

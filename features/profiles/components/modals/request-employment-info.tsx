@@ -33,6 +33,8 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { ProfileState } from "@/features/profiles/types/profile";
 import type { HRChangeRequestPayload } from "@/features/profiles/types/employment-info";
+import { EmployeeIdInput } from "@/components/formatter/employee-id-format";
+import { PositionSelect } from "@/components/formatter/position-select";
 
 function parseDateLocal(value: string): Date | undefined {
     if (!value) return undefined;
@@ -142,37 +144,6 @@ function DatePickerField(props: {
     );
 }
 
-const POSITIONS = [
-    "Teacher I",
-    "Teacher II",
-    "Teacher III",
-    "Teacher IV",
-    "Teacher V",
-    "Teacher VI",
-    "Teacher VII",
-    "Master Teacher I",
-    "Master Teacher II",
-    "Master Teacher III",
-    "Master Teacher IV",
-    "Master Teacher V",
-    "Head Teacher I",
-    "Head Teacher II",
-    "Head Teacher III",
-    "Head Teacher IV",
-    "Head Teacher V",
-    "Head Teacher VI",
-    "Assistant School Principal I",
-    "Assistant School Principal II",
-    "Assistant School Principal III",
-    "Assistant School Principal IV",
-    "School Principal I",
-    "School Principal II",
-    "School Principal III",
-    "School Principal IV",
-    "School Principal V",
-    "Administrative Staff",
-];
-
 const REASONS = [
     "Correction of records",
     "Promotion / Salary grade upgrade",
@@ -276,9 +247,9 @@ export function RequestHRChangeModal(props: {
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
                     <div className="space-y-1.5">
                         <FieldLabel icon={FileText} label="Employee ID" />
-                        <Input
+                        <EmployeeIdInput
                             value={form.employeeId}
-                            onChange={(e) => set("employeeId")(e.target.value)}
+                            onChange={set("employeeId")}
                             placeholder={
                                 currentData.employeeId || "Current value"
                             }
@@ -290,21 +261,10 @@ export function RequestHRChangeModal(props: {
                             icon={Briefcase}
                             label="Position / Designation"
                         />
-                        <Select
+                        <PositionSelect
                             value={form.position}
-                            onValueChange={set("position")}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select position" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {POSITIONS.map((p) => (
-                                    <SelectItem key={p} value={p}>
-                                        {p}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            onChange={set("position")}
+                        />
                     </div>
 
                     <div className="space-y-1.5">

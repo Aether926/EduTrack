@@ -46,6 +46,8 @@ import { ChevronDownIcon } from "lucide-react";
 import { AdminDangerZone } from "@/features/admin-actions/teachers/components/admin-danger-zone";
 import { EmployeeIdInput } from "@/components/formatter/employee-id-format";
 import { PositionBadge } from "@/components/ui-elements/badges";
+import { PositionSelect } from "@/components/formatter/position-select";
+import { calculateAge } from "@/app/util/helper";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -57,37 +59,6 @@ function fmtPhone(raw: string | null | undefined): string | null {
         ? `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7)}`
         : null;
 }
-
-const POSITIONS = [
-    "Teacher I",
-    "Teacher II",
-    "Teacher III",
-    "Teacher IV",
-    "Teacher V",
-    "Teacher VI",
-    "Teacher VII",
-    "Master Teacher I",
-    "Master Teacher II",
-    "Master Teacher III",
-    "Master Teacher IV",
-    "Master Teacher V",
-    "Head Teacher I",
-    "Head Teacher II",
-    "Head Teacher III",
-    "Head Teacher IV",
-    "Head Teacher V",
-    "Head Teacher VI",
-    "Assistant School Principal I",
-    "Assistant School Principal II",
-    "Assistant School Principal III",
-    "Assistant School Principal IV",
-    "School Principal I",
-    "School Principal II",
-    "School Principal III",
-    "School Principal IV",
-    "School Principal V",
-    "Administrative Staff",
-];
 
 const TYPE_STYLE: Record<string, string> = {
     Original: "bg-blue-100 text-blue-800",
@@ -566,11 +537,11 @@ export default function AdminTeacherManage(props: {
                                 <div className="grid grid-cols-2 gap-4">
                                     <ReadField
                                         label="Age"
-                                        value={
-                                            profile.age
-                                                ? String(profile.age)
-                                                : null
-                                        }
+                                        value={calculateAge(
+                                            profile.dateOfBirth
+                                                ? new Date(profile.dateOfBirth)
+                                                : undefined,
+                                        )}
                                     />
                                     <ReadField
                                         label="Gender"
@@ -760,26 +731,12 @@ export default function AdminTeacherManage(props: {
                                             Position
                                         </label>
                                         {isEditing ? (
-                                            <Select
+                                            <PositionSelect
                                                 value={fields.position}
-                                                onValueChange={(v) =>
+                                                onChange={(v) =>
                                                     handleChange("position", v)
                                                 }
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {POSITIONS.map((p) => (
-                                                        <SelectItem
-                                                            key={p}
-                                                            value={p}
-                                                        >
-                                                            {p}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            />
                                         ) : (
                                             <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
                                                 {fields.position ? (

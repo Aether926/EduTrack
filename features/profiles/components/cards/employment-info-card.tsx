@@ -2,47 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Briefcase, FileText, Calendar, Pencil, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+
 import { RequestHRChangeModal } from "@/features/profiles/components/modals/request-employment-info";
 import { useEmploymentHR } from "@/features/profiles/hooks/use-employment-info";
 import type { ProfileState } from "@/features/profiles/types/profile";
-
-const POSITIONS = [
-    "Teacher I",
-    "Teacher II",
-    "Teacher III",
-    "Teacher IV",
-    "Teacher V",
-    "Teacher VI",
-    "Teacher VII",
-    "Master Teacher I",
-    "Master Teacher II",
-    "Master Teacher III",
-    "Master Teacher IV",
-    "Master Teacher V",
-    "Head Teacher I",
-    "Head Teacher II",
-    "Head Teacher III",
-    "Head Teacher IV",
-    "Head Teacher V",
-    "Head Teacher VI",
-    "Assistant School Principal I",
-    "Assistant School Principal II",
-    "Assistant School Principal III",
-    "Assistant School Principal IV",
-    "School Principal I",
-    "School Principal II",
-    "School Principal III",
-    "School Principal IV",
-    "School Principal V",
-    "Administrative Staff",
-];
+import { PositionSelect } from "@/components/formatter/position-select";
+import { EmployeeIdInput } from "@/components/formatter/employee-id-format";
 
 const STATUS_COLORS: Record<string, string> = {
     PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
@@ -213,33 +178,23 @@ export default function EmploymentInfoCard(props: {
                             Employee ID{" "}
                             <span className="text-rose-400 ml-0.5">*</span>
                         </FieldLabel>
-                        <Input
+                        <EmployeeIdInput
                             value={data.employeeId}
-                            onChange={(e) =>
-                                onInputChange("employeeId", e.target.value)
-                            }
+                            onChange={(v) => onInputChange("employeeId", v)}
                             className="bg-white/5 border-white/10 focus:border-blue-500/50"
+                            placeholder="7-digit employee ID"
                         />
                     </div>
                     <div className="space-y-1.5">
                         <FieldLabel icon={Briefcase as React.ElementType}>
                             Position / Designation
                         </FieldLabel>
-                        <Select
+                        <PositionSelect
                             value={data.position}
-                            onValueChange={(v) => onInputChange("position", v)}
-                        >
-                            <SelectTrigger className="bg-white/5 border-white/10 hover:bg-white/8">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {POSITIONS.map((p) => (
-                                    <SelectItem key={p} value={p}>
-                                        {p}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            onChange={(v) => onInputChange("position", v)}
+                            triggerClassName="w-full bg-white/5 border-white/10 hover:bg-white/8 text-[13.5px]"
+                            inputClassName="bg-white/5 border-white/10 text-foreground text-[13.5px] focus:border-blue-500/50"
+                        />
                     </div>
                 </div>
 

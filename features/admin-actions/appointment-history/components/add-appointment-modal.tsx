@@ -37,37 +37,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
-
-const POSITIONS = [
-    "Teacher I",
-    "Teacher II",
-    "Teacher III",
-    "Teacher IV",
-    "Teacher V",
-    "Teacher VI",
-    "Teacher VII",
-    "Master Teacher I",
-    "Master Teacher II",
-    "Master Teacher III",
-    "Master Teacher IV",
-    "Master Teacher V",
-    "Head Teacher I",
-    "Head Teacher II",
-    "Head Teacher III",
-    "Head Teacher IV",
-    "Head Teacher V",
-    "Head Teacher VI",
-    "Assistant School Principal I",
-    "Assistant School Principal II",
-    "Assistant School Principal III",
-    "Assistant School Principal IV",
-    "School Principal I",
-    "School Principal II",
-    "School Principal III",
-    "School Principal IV",
-    "School Principal V",
-    "Administrative Staff",
-];
+import { PositionSelect } from "@/components/formatter/position-select";
 
 const APPOINTMENT_TYPES = [
     "Original",
@@ -354,25 +324,13 @@ export function AddAppointmentSheet(props: {
                         {/* Position */}
                         <div>
                             <FieldLabel>Position</FieldLabel>
-                            <Select
+                            <PositionSelect
                                 value={form.position}
-                                onValueChange={set("position")}
-                            >
-                                <SelectTrigger
-                                    className={cn(
-                                        errors.position && "border-rose-500/50",
-                                    )}
-                                >
-                                    <SelectValue placeholder="Select position..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {POSITIONS.map((p) => (
-                                        <SelectItem key={p} value={p}>
-                                            {p}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onChange={set("position")}
+                            />
+                            {errors.position && (
+                                <FieldError message={errors.position} />
+                            )}
                             <FieldError message={errors.position} />
                         </div>
 

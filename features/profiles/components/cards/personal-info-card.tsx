@@ -17,6 +17,7 @@ import {
     X,
 } from "lucide-react";
 
+import { calculateAge } from "@/app/util/helper";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/combobox";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+    BLOOD_TYPES,
+    NAME_EXTENSIONS,
+    NATIONALITIES,
+    RELIGIONS,
+} from "@/components/constant-data";
 
 import type { ProfileState } from "@/features/profiles/types/profile";
 import { formatName } from "@/app/util/helper";
@@ -470,44 +477,6 @@ function AddressBlock(props: {
     );
 }
 
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
-const NAME_EXTENSIONS = ["Jr.", "Sr.", "II", "III", "IV", "V"];
-const nationalities = [
-    { value: "american", label: "American" },
-    { value: "australian", label: "Australian" },
-    { value: "british", label: "British" },
-    { value: "canadian", label: "Canadian" },
-    { value: "chinese", label: "Chinese" },
-    { value: "emirati", label: "Emirati" },
-    { value: "filipino", label: "Filipino" },
-    { value: "french", label: "French" },
-    { value: "german", label: "German" },
-    { value: "indian", label: "Indian" },
-    { value: "indonesian", label: "Indonesian" },
-    { value: "italian", label: "Italian" },
-    { value: "japanese", label: "Japanese" },
-    { value: "korean", label: "Korean" },
-    { value: "kuwaiti", label: "Kuwaiti" },
-    { value: "malaysian", label: "Malaysian" },
-    { value: "qatari", label: "Qatari" },
-    { value: "saudi", label: "Saudi" },
-    { value: "singaporean", label: "Singaporean" },
-    { value: "spanish", label: "Spanish" },
-    { value: "taiwanese", label: "Taiwanese" },
-    { value: "thai", label: "Thai" },
-    { value: "vietnamese", label: "Vietnamese" },
-];
-const religions = [
-    { value: "roman catholic", label: "Roman Catholic" },
-    { value: "islam", label: "Islam" },
-    { value: "evangelical", label: "Evangelical" },
-    { value: "protestant", label: "Protestant" },
-    { value: "iglesia ni Cristo", label: "Iglesia ni Cristo" },
-    { value: "seventh-day Adventist", label: "Seventh-day Adventist" },
-];
-
 // ── PersonalInfoForm ───────────────────────────────────────────────────────────
 
 function PersonalInfoForm({
@@ -642,7 +611,7 @@ function PersonalInfoForm({
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                         <FieldLabel>Age</FieldLabel>
-                        <DisplayValue value={data.age} />
+                        <DisplayValue value={calculateAge(data.dateOfBirth)} />
                     </div>
                     <div className="space-y-1.5">
                         <FieldLabel>Gender</FieldLabel>
@@ -794,7 +763,7 @@ function PersonalInfoForm({
                     {isEditing ? (
                         <Combobox
                             label="Nationality"
-                            options={nationalities}
+                            options={NATIONALITIES}
                             onChangeValue={(v: string) =>
                                 onInputChange("nationality", v)
                             }
@@ -808,7 +777,7 @@ function PersonalInfoForm({
                     {isEditing ? (
                         <Combobox
                             label="Religion"
-                            options={religions}
+                            options={RELIGIONS}
                             onChangeValue={(v: string) =>
                                 onInputChange("religion", v)
                             }
