@@ -53,8 +53,8 @@ function IconPill({
 // ── Type ──────────────────────────────────────────────────────────────────────
 
 const TYPE: Record<string, string> = {
-    training: "bg-violet-500/15 text-violet-400 border-violet-500/30",
-    seminar: "bg-teal-500/15 text-teal-400 border-teal-500/30",
+    training: "bg-teal-500/15 text-teal-400 border-teal-500/30",
+    seminar: "bg-violet-500/15 text-violet-400 border-violet-500/30",
     workshop: "bg-amber-500/15 text-amber-400 border-amber-500/30",
     webinar: "bg-sky-500/15 text-sky-400 border-sky-500/30",
     conference: "bg-pink-500/15 text-pink-400 border-pink-500/30",

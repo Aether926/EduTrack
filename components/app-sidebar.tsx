@@ -51,7 +51,7 @@ import {
 
 import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
 import DropdownRedirect from "@/components/dropdown-redirect";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/ui-elements/theme-toggle";
 import { logSignOut } from "@/app/actions/auth-log-actions";
 import { useIsMobile } from "@/hooks/use-mobile";
 
