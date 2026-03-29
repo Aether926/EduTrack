@@ -1,7 +1,13 @@
 "use server";
 
+import {
+    LOG_ACTIONS,
+    LOG_MESSAGES,
+} from "@/lib/database/activity-log-messages";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { format } from "date-fns";
+import { insertActivity } from "@/lib/database/activity";
 
 export type ActionResult<T = null> =
     | { ok: true; data?: T }
@@ -36,33 +42,6 @@ async function requireAdmin() {
     };
 }
 
-async function insertActivity(
-    rows: {
-        actor_id: string;
-        target_user_id: string;
-        action: string;
-        entity_type: string;
-        entity_id: string;
-        message: string;
-        meta?: Record<string, unknown>;
-    }[],
-) {
-    const admin = createAdminClient();
-    await admin.from("ActivityLog").insert(
-        rows.map((r) => ({
-            actor_id:       r.actor_id,
-            target_user_id: r.target_user_id,
-            action:         r.action,
-            entity_type:    r.entity_type,
-            entity_id:      r.entity_id,
-            message:        r.message,
-            meta:           r.meta ?? null,
-        })),
-    );
-}
-
-// ── Get all pending deletion requests ────────────────────────────────────────
-
 export async function getAllDeletionRequests() {
     const admin = createAdminClient();
 
@@ -80,28 +59,23 @@ export async function getAllDeletionRequests() {
             .from("Profile")
             .select("id, firstName, lastName, email")
             .in("id", userIds),
-        admin
-            .from("ProfileHR")
-            .select("id, employeeId")
-            .in("id", userIds),
+        admin.from("ProfileHR").select("id, employeeId").in("id", userIds),
     ]);
 
     const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-    const hrMap      = new Map((hrs ?? []).map((h) => [h.id, h]));
+    const hrMap = new Map((hrs ?? []).map((h) => [h.id, h]));
 
     return requests.map((r) => ({
         ...r,
         user: {
-            id:         r.user_id,
-            firstName:  profileMap.get(r.user_id)?.firstName  ?? null,
-            lastName:   profileMap.get(r.user_id)?.lastName   ?? null,
-            email:      profileMap.get(r.user_id)?.email      ?? null,
-            employeeId: hrMap.get(r.user_id)?.employeeId      ?? null,
+            id: r.user_id,
+            firstName: profileMap.get(r.user_id)?.firstName ?? null,
+            lastName: profileMap.get(r.user_id)?.lastName ?? null,
+            email: profileMap.get(r.user_id)?.email ?? null,
+            employeeId: hrMap.get(r.user_id)?.employeeId ?? null,
         },
     }));
 }
-
-// ── Admin initiates deletion ──────────────────────────────────────────────────
 
 export async function adminInitiateDeletion(
     teacherId: string,
@@ -115,6 +89,16 @@ export async function adminInitiateDeletion(
 
         const admin = createAdminClient();
 
+        const { data: teacherProfile } = await admin
+            .from("Profile")
+            .select("firstName, lastName")
+            .eq("id", teacherId)
+            .single();
+
+        const teacherName = teacherProfile
+            ? `${teacherProfile.firstName ?? ""} ${teacherProfile.lastName ?? ""}`.trim()
+            : "Teacher";
+
         const { data: existing } = await admin
             .from("AccountDeletionRequest")
             .select("id")
@@ -125,20 +109,23 @@ export async function adminInitiateDeletion(
         if (existing)
             return {
                 ok: false,
-                error: "This teacher already has a pending deletion request.",
+                error: "This user already has a pending deactivation request.",
             };
 
         const isDev = process.env.NODE_ENV === "development";
         const scheduledAt = new Date(
             Date.now() + (isDev ? 5 * 60 * 1000 : 72 * 60 * 60 * 1000),
         );
-
+        const formattedScheduledAt = format(
+            scheduledAt,
+            "MMMM d, yyyy 'at' h:mm a",
+        );
         const { data: req, error } = await admin
             .from("AccountDeletionRequest")
             .insert({
-                user_id:      teacherId,
-                reason:       reason.trim(),
-                status:       "PENDING",
+                user_id: teacherId,
+                reason: reason.trim(),
+                status: "PENDING",
                 initiated_by: "ADMIN",
                 admin_reason: reason.trim(),
                 scheduled_at: scheduledAt.toISOString(),
@@ -148,16 +135,36 @@ export async function adminInitiateDeletion(
 
         if (error) return { ok: false, error: error.message };
 
+        const msg = LOG_MESSAGES.ACCOUNT_DEACTIVATION_INITIATED(
+            teacherName,
+            reason.trim(),
+            formattedScheduledAt,
+        );
+
         await insertActivity([
             {
-                actor_id:       adminCheck.userId!,
-                target_user_id: teacherId,
-                action:         "ACCOUNT_DELETION_INITIATED_BY_ADMIN",
-                entity_type:    "AccountDeletionRequest",
-                entity_id:      req.id,
-                message:        "Admin has initiated account archival. Your account will be archived after the grace period.",
+                actor_id: adminCheck.userId!,
+                target_user_id: adminCheck.userId!,
+                action: LOG_ACTIONS.ACCOUNT_DEACTIVATION_INITIATED,
+                entity_type: "AccountDeletionRequest",
+                entity_id: req.id,
+                message: msg.actor,
+                recipient_role: "actor",
                 meta: {
-                    reason:      reason.trim(),
+                    reason: reason.trim(),
+                    scheduledAt: scheduledAt.toISOString(),
+                },
+            },
+            {
+                actor_id: adminCheck.userId!,
+                target_user_id: teacherId,
+                action: LOG_ACTIONS.ACCOUNT_DEACTIVATION_INITIATED,
+                entity_type: "AccountDeletionRequest",
+                entity_id: req.id,
+                message: msg.receiver,
+                recipient_role: "receiver",
+                meta: {
+                    reason: reason.trim(),
                     scheduledAt: scheduledAt.toISOString(),
                 },
             },
@@ -171,8 +178,6 @@ export async function adminInitiateDeletion(
     }
 }
 
-// ── Admin cancel deletion request ────────────────────────────────────────────
-
 export async function adminCancelDeletion(
     requestId: string,
 ): Promise<ActionResult> {
@@ -181,7 +186,7 @@ export async function adminCancelDeletion(
         if (!adminCheck.ok) return { ok: false, error: adminCheck.error };
 
         const admin = createAdminClient();
-        const now   = new Date().toISOString();
+        const now = new Date().toISOString();
 
         const { data: req } = await admin
             .from("AccountDeletionRequest")
@@ -191,10 +196,37 @@ export async function adminCancelDeletion(
 
         if (!req) return { ok: false, error: "Request not found" };
 
+        const [{ data: teacherProfile }, { data: adminProfile }] =
+            await Promise.all([
+                admin
+                    .from("Profile")
+                    .select("firstName, lastName")
+                    .eq("id", req.user_id)
+                    .single(),
+                admin
+                    .from("Profile")
+                    .select("firstName, lastName")
+                    .eq("id", adminCheck.userId!)
+                    .single(),
+            ]);
+
+        const teacherName = teacherProfile
+            ? `${teacherProfile.firstName ?? ""} ${teacherProfile.lastName ?? ""}`.trim()
+            : "Teacher";
+
+        const adminName = adminProfile
+            ? `${adminProfile.firstName ?? ""} ${adminProfile.lastName ?? ""}`.trim()
+            : "Admin";
+
+        const msg = LOG_MESSAGES.ACCOUNT_DEACTIVATION_CANCELLED(
+            teacherName,
+            adminName,
+        );
+
         const { error } = await admin
             .from("AccountDeletionRequest")
             .update({
-                status:       "CANCELLED",
+                status: "CANCELLED",
                 cancelled_at: now,
                 cancelled_by: adminCheck.userId,
             })
@@ -205,12 +237,22 @@ export async function adminCancelDeletion(
 
         await insertActivity([
             {
-                actor_id:       adminCheck.userId!,
+                actor_id: adminCheck.userId!,
+                target_user_id: adminCheck.userId!,
+                action: LOG_ACTIONS.ACCOUNT_DEACTIVATION_CANCELLED,
+                entity_type: "AccountDeletionRequest",
+                entity_id: requestId,
+                message: msg.actor,
+                recipient_role: "actor",
+            },
+            {
+                actor_id: adminCheck.userId!,
                 target_user_id: req.user_id,
-                action:         "ACCOUNT_DELETION_CANCELLED_BY_ADMIN",
-                entity_type:    "AccountDeletionRequest",
-                entity_id:      requestId,
-                message:        "Admin has cancelled the account archival request.",
+                action: LOG_ACTIONS.ACCOUNT_DEACTIVATION_CANCELLED,
+                entity_type: "AccountDeletionRequest",
+                entity_id: requestId,
+                message: msg.receiver,
+                recipient_role: "receiver",
             },
         ]);
 
@@ -222,8 +264,6 @@ export async function adminCancelDeletion(
     }
 }
 
-// ── Admin finalize — archive user after grace period ──────────────────────────
-
 export async function adminFinalizeDeleteAccount(
     requestId: string,
 ): Promise<ActionResult> {
@@ -232,7 +272,7 @@ export async function adminFinalizeDeleteAccount(
         if (!adminCheck.ok) return { ok: false, error: adminCheck.error };
 
         const admin = createAdminClient();
-        const now   = new Date().toISOString();
+        const now = new Date().toISOString();
 
         const { data: req } = await admin
             .from("AccountDeletionRequest")
@@ -247,18 +287,48 @@ export async function adminFinalizeDeleteAccount(
         // Check grace period has passed
         if (req.scheduled_at && new Date(req.scheduled_at) > new Date()) {
             const remaining = new Date(req.scheduled_at).getTime() - Date.now();
-            const mins      = Math.ceil(remaining / 60000);
+            const mins = Math.ceil(remaining / 60000);
             return {
                 ok: false,
                 error: `Grace period has not passed yet. ${mins} minute(s) remaining.`,
             };
         }
 
+        // ── Fetch names ───────────────────────────────────────────────────────
+        const [{ data: teacherProfile }, { data: adminProfile }] =
+            await Promise.all([
+                admin
+                    .from("Profile")
+                    .select("firstName, lastName")
+                    .eq("id", req.user_id)
+                    .single(),
+                admin
+                    .from("Profile")
+                    .select("firstName, lastName")
+                    .eq("id", adminCheck.userId!)
+                    .single(),
+            ]);
+
+        const teacherName = teacherProfile
+            ? `${teacherProfile.firstName ?? ""} ${teacherProfile.lastName ?? ""}`.trim()
+            : "Teacher";
+
+        const adminName = adminProfile
+            ? `${adminProfile.firstName ?? ""} ${adminProfile.lastName ?? ""}`.trim()
+            : "Admin";
+
+        const msg = LOG_MESSAGES.ACCOUNT_ARCHIVED(
+            teacherName,
+            adminName,
+            req.reason ?? req.admin_reason ?? "No reason provided",
+        );
+        // ─────────────────────────────────────────────────────────────────────
+
         // Mark request as approved
         await admin
             .from("AccountDeletionRequest")
             .update({
-                status:      "APPROVED",
+                status: "APPROVED",
                 reviewed_by: adminCheck.userId,
                 reviewed_at: now,
             })
@@ -268,32 +338,41 @@ export async function adminFinalizeDeleteAccount(
         const { error: archiveErr } = await admin
             .from("User")
             .update({
-                status:        "ARCHIVED",
-                archivedAt:    now,
-                archiveReason: req.reason ?? req.admin_reason ?? "No reason provided",
+                status: "ARCHIVED",
+                archivedAt: now,
+                archiveReason:
+                    req.reason ?? req.admin_reason ?? "No reason provided",
             })
             .eq("id", req.user_id);
 
         if (archiveErr) return { ok: false, error: archiveErr.message };
 
-        // Force logout the archived user
         await admin.auth.admin.signOut(req.user_id, "global");
-        
+
         await admin.auth.admin.updateUserById(req.user_id, {
-            ban_duration: "876000h", // ~100 years = effectively permanent
+            ban_duration: "876000h",
         });
 
         await insertActivity([
             {
-                actor_id:       adminCheck.userId!,
+                actor_id: adminCheck.userId!,
+                target_user_id: adminCheck.userId!,
+                action: LOG_ACTIONS.ACCOUNT_ARCHIVED,
+                entity_type: "AccountDeletionRequest",
+                entity_id: requestId,
+                message: msg.actor,
+                recipient_role: "actor",
+                meta: { reason: req.reason ?? req.admin_reason },
+            },
+            {
+                actor_id: adminCheck.userId!,
                 target_user_id: req.user_id,
-                action:         "ACCOUNT_ARCHIVED",
-                entity_type:    "AccountDeletionRequest",
-                entity_id:      requestId,
-                message:        "Your account has been archived.",
-                meta: {
-                    reason: req.reason ?? req.admin_reason,
-                },
+                action: LOG_ACTIONS.ACCOUNT_ARCHIVED,
+                entity_type: "AccountDeletionRequest",
+                entity_id: requestId,
+                message: msg.receiver,
+                recipient_role: "receiver",
+                meta: { reason: req.reason ?? req.admin_reason },
             },
         ]);
 

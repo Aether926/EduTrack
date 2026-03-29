@@ -8,7 +8,7 @@ const ALLOWED = ["ADMIN", "SUPERADMIN"] as const;
 export default async function SalaryEligibilityPage() {
     const user = await getUser();
     if (!user) redirect("/signin");
-    
+
     const roleLabel = (user.user_metadata?.role ?? "TEACHER").toString();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!ALLOWED.includes(roleLabel as any)) redirect("/dashboard");

@@ -98,18 +98,20 @@ export function DeletionWarningBanner() {
                         <div className="flex-1 min-w-0">
                             <span className="font-semibold mr-1.5">
                                 {isAdminInitiated
-                                    ? "Your account has been scheduled for deletion by an administrator."
-                                    : "Your account deletion request is pending admin review."}
+                                    ? "Your account has been scheduled for deactivation by an administrator."
+                                    : "Your account deactivation is pending admin review."}
                             </span>
                             {request.admin_note && (
                                 <span className="text-xs opacity-80 mr-1.5">
                                     Reason: {request.admin_note}.
                                 </span>
                             )}
-                            <span className="inline-flex items-center gap-1 text-xs font-medium">
-                                <Clock className="h-3 w-3" />
-                                {remaining}
-                            </span>
+                            {remaining && (
+                                <span className="inline-flex items-center gap-1 text-xs font-medium">
+                                    <Clock className="h-3 w-3" />
+                                    {remaining}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -144,9 +146,9 @@ export function DeletionWarningBanner() {
             >
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
-                        <DialogTitle>Cancel Deletion Request</DialogTitle>
+                        <DialogTitle>Cancel Deactivation Request</DialogTitle>
                         <DialogDescription>
-                            Are you sure? Your account deletion request will be
+                            Are you sure? Your deactivation request will be
                             cancelled and your account will remain active.
                         </DialogDescription>
                     </DialogHeader>

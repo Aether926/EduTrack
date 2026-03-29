@@ -16,10 +16,10 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { StatusBadge } from "@/components/ui-elements/badges";
 
 import { HRQueueRow } from "@/features/admin-actions/queue/components/queue-row";
 import { AppointmentQueueRow } from "@/features/admin-actions/queue/components/appointment-queue-row";
@@ -34,56 +34,6 @@ import {
 } from "@/features/admin-actions/responsibilities/actions/admin-responsibility-actions";
 import { toast } from "sonner";
 
-// ── Status badge ───────────────────────────────────────────────────────────────
-
-function MiniStatusBadge({ status }: { status: string }) {
-    const s = (status ?? "").toUpperCase();
-    if (s === "APPROVED")
-        return (
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                <span className="h-1 w-1 rounded-full bg-emerald-400" />
-                Approved
-            </span>
-        );
-    if (s === "REJECTED")
-        return (
-            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/15 px-2 py-0.5 text-[10px] font-semibold text-rose-400">
-                <span className="h-1 w-1 rounded-full bg-rose-400" />
-                Rejected
-            </span>
-        );
-    return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
-            <span className="h-1 w-1 rounded-full bg-amber-400" />
-            Pending
-        </span>
-    );
-}
-
-function StatusBadge({ status }: { status: string }) {
-    const s = status.toUpperCase();
-    if (s === "APPROVED")
-        return (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                Approved
-            </span>
-        );
-    if (s === "REJECTED")
-        return (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-rose-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                Rejected
-            </span>
-        );
-    return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-amber-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            Pending
-        </span>
-    );
-}
-
 // ── Queue row shell ────────────────────────────────────────────────────────────
 
 function QueueRowShell({
@@ -94,7 +44,6 @@ function QueueRowShell({
     expanded,
     onToggle,
     children,
-    sub,
     profileImage,
 }: {
     fullName: string;
@@ -125,7 +74,7 @@ function QueueRowShell({
                             {email ?? "—"}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
-                            <MiniStatusBadge status={status} />
+                            <StatusBadge status={status} size="xs" />
                             <span className="text-xs text-muted-foreground font-mono">
                                 {date}
                             </span>
@@ -429,7 +378,6 @@ function PaginatedList<T extends { id: string }>({
             {totalPages > 1 && (
                 <div className="pt-1 w-full">
                     <div className="flex items-center justify-center gap-1 flex-nowrap">
-                        {/* Prev */}
                         <button
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={safePage === 1}
@@ -438,7 +386,6 @@ function PaginatedList<T extends { id: string }>({
                             <ChevronLeft className="h-3.5 w-3.5" />
                         </button>
 
-                        {/* Page numbers */}
                         {pageNumbers.map((p, i) =>
                             p === "ellipsis" ? (
                                 <span
@@ -462,7 +409,6 @@ function PaginatedList<T extends { id: string }>({
                             ),
                         )}
 
-                        {/* Next */}
                         <button
                             onClick={() =>
                                 setPage((p) => Math.min(totalPages, p + 1))

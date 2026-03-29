@@ -3,7 +3,7 @@
 import React from "react";
 import { Phone, Mail, Edit2, Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { ContactInput } from "@/components/formatter/contact-input";
+import { ContactInput } from "@/components/formatter/contact-format";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {

@@ -3,9 +3,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function uploadProfileImage(formData: FormData): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+export async function uploadProfileImage(
+    formData: FormData,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
 
     if (!user || authError) return { ok: false, error: "Not authenticated" };
 
@@ -15,7 +20,10 @@ export async function uploadProfileImage(formData: FormData): Promise<{ ok: true
     // Validate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
-        return { ok: false, error: "Only image files are allowed (JPEG, PNG, WebP, GIF)" };
+        return {
+            ok: false,
+            error: "Only image files are allowed (JPEG, PNG, WebP, GIF)",
+        };
     }
 
     // Validate file size — 5MB max
@@ -23,7 +31,7 @@ export async function uploadProfileImage(formData: FormData): Promise<{ ok: true
         return { ok: false, error: "File size must be under 5MB" };
     }
 
-    const ext      = file.name.split(".").pop() ?? "jpg";
+    const ext = file.name.split(".").pop() ?? "jpg";
     const filePath = `${user.id}/avatar.${ext}`;
 
     // Delete old file first — ignore error if doesn't exist
@@ -45,9 +53,9 @@ export async function uploadProfileImage(formData: FormData): Promise<{ ok: true
     if (uploadError) return { ok: false, error: uploadError.message };
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-        .from("profile-picture")
-        .getPublicUrl(filePath);
+    const {
+        data: { publicUrl },
+    } = supabase.storage.from("profile-picture").getPublicUrl(filePath);
 
     // Save URL to Profile table
     const { error: dbError } = await supabase
@@ -64,9 +72,14 @@ export async function uploadProfileImage(formData: FormData): Promise<{ ok: true
     return { ok: true, url: publicUrl };
 }
 
-export async function deleteProfileImage(): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function deleteProfileImage(): Promise<
+    { ok: true } | { ok: false; error: string }
+> {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
 
     if (!user || authError) return { ok: false, error: "Not authenticated" };
 

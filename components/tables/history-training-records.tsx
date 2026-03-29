@@ -33,7 +33,7 @@ import {
     useReactTable,
     VisibilityState,
 } from "@tanstack/react-table";
-import PaginationBar from "@/components/pagination";
+import PaginationBar from "@/components/ui-elements/pagination";
 import { useRouter } from "next/navigation";
 
 export type TrainingSeminarHistory = {
@@ -301,9 +301,7 @@ export default function TrainingHistory({
         .getFilteredSelectedRowModel()
         .rows.map((row) => row.original);
 
-    const handleDelete = () => {
-        
-    };
+    const handleDelete = () => {};
 
     return (
         <div className="w-full min-h-screen flex flex-col">
@@ -377,7 +375,7 @@ export default function TrainingHistory({
                                                 : flexRender(
                                                       header.column.columnDef
                                                           .header,
-                                                      header.getContext()
+                                                      header.getContext(),
                                                   )}
                                         </TableHead>
                                     ))}
@@ -397,7 +395,7 @@ export default function TrainingHistory({
                                             <TableCell key={cell.id}>
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
-                                                    cell.getContext()
+                                                    cell.getContext(),
                                                 )}
                                             </TableCell>
                                         ))}

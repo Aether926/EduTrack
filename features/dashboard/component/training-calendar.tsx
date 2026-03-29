@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronLeft,
@@ -18,180 +18,27 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/ui-elements/badges";
+import { StatusBadge, TypeBadge } from "@/components/ui-elements/badges";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
-const MONTHS_SHORT = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-];
-
-const YEAR_RANGE_BACK = 10;
-const YEAR_RANGE_FORWARD = 5;
-
-// ── Picker overlay ─────────────────────────────────────────────────────────────
-
-function PickerOverlay({
-    viewYear,
-    viewMonth,
-    pickerYear,
-    today,
-    setPickerYear,
-    selectMonthYear,
-}: {
-    viewYear: number;
-    viewMonth: number;
-    pickerYear: number;
-    today: Date;
-    setPickerYear: React.Dispatch<React.SetStateAction<number>>;
-    selectMonthYear: (month: number) => void;
-}) {
-    const currentYear = today.getFullYear();
-    const years = Array.from(
-        { length: YEAR_RANGE_BACK + YEAR_RANGE_FORWARD + 1 },
-        (_, i) => currentYear - YEAR_RANGE_BACK + i,
-    );
-    const yearListRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const el = yearListRef.current?.querySelector(
-            `[data-year="${pickerYear}"]`,
-        ) as HTMLElement | null;
-        if (el) el.scrollIntoView({ block: "center", behavior: "instant" });
-    }, [pickerYear]);
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}
-            className="absolute inset-x-0 top-[2.75rem] z-20 mx-3 rounded-lg border bg-card shadow-lg p-3"
-        >
-            <div className="flex gap-3">
-                {/* Year column — scrollable */}
-                <div className="flex flex-col gap-0.5 w-16 shrink-0">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 text-center">
-                        Year
-                    </p>
-                    <div
-                        ref={yearListRef}
-                        className="overflow-y-auto max-h-[168px] flex flex-col gap-0.5"
-                        style={{ scrollbarWidth: "none" }}
-                    >
-                        {years.map((y) => {
-                            const isPickerYear = y === pickerYear;
-                            const isViewYear = y === viewYear;
-                            const isTodayYear = y === currentYear;
-                            return (
-                                <button
-                                    key={y}
-                                    data-year={y}
-                                    onClick={() => setPickerYear(y)}
-                                    className={[
-                                        "rounded-md py-1.5 text-sm w-full transition-colors",
-                                        isPickerYear
-                                            ? "bg-blue-500/20 text-blue-300 font-semibold"
-                                            : isViewYear
-                                              ? "bg-muted/50 text-foreground font-semibold"
-                                              : isTodayYear
-                                                ? "border border-blue-500/30 text-blue-300 hover:bg-accent"
-                                                : "hover:bg-accent text-foreground/80",
-                                    ].join(" ")}
-                                >
-                                    {y}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-                {/* Divider */}
-                <div className="w-px bg-border/40 self-stretch" />
-                {/* Month grid */}
-                <div className="flex-1">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 text-center">
-                        Month
-                    </p>
-                    <div className="grid grid-cols-3 gap-1">
-                        {MONTHS_SHORT.map((m, i) => {
-                            const isCurrent =
-                                i === viewMonth && pickerYear === viewYear;
-                            const isNow =
-                                i === today.getMonth() &&
-                                pickerYear === today.getFullYear();
-                            return (
-                                <button
-                                    key={m}
-                                    onClick={() => selectMonthYear(i)}
-                                    className={[
-                                        "rounded-md py-2 text-sm transition-colors",
-                                        isCurrent
-                                            ? "bg-blue-500/20 text-blue-300 font-semibold"
-                                            : isNow
-                                              ? "border border-amber-500/40 text-amber-300 font-semibold hover:bg-accent"
-                                              : "hover:bg-accent text-foreground/80",
-                                    ].join(" ")}
-                                >
-                                    {m}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </motion.div>
-    );
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function pad(n: number) {
-    return n < 10 ? `0${n}` : String(n);
-}
-function localKey(y: number, m: number, d: number) {
-    return `${y}-${pad(m + 1)}-${pad(d)}`;
-}
-function parseDateOnlyToLocal(s: string) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-    if (!match) return null;
-    const d = new Date(
-        Number(match[1]),
-        Number(match[2]) - 1,
-        Number(match[3]),
-    );
-    return isNaN(d.getTime()) ? null : d;
-}
-function formatDisplayDate(key: string) {
-    const [y, m, d] = key.split("-");
-    return `${MONTHS[Number(m) - 1]} ${Number(d)}, ${y}`;
-}
+import { Calendar } from "@/components/ui/calendar";
+import type { DayProps } from "react-day-picker";
+import {
+    MONTHS,
+    dateToKey,
+    formatDisplayDate,
+    getDayCellBandStyle,
+    getDayCellButtonClass,
+    getCountBubbleClass,
+    getEventTypeStyles,
+    OUTSIDE_DAY_BTN_CLS,
+    useDarkMode,
+    useCalendarEvents,
+} from "@/components/calendar/dashboard/calendar-shared";
+import {
+    CalendarMonthYearPickerContent,
+    CalendarAgendaEmptyState,
+} from "@/components/calendar/dashboard/calendar-components";
 
 // ── Main export ────────────────────────────────────────────────────────────────
 
@@ -201,149 +48,194 @@ export default function TrainingCalendar({
     events: CalendarEvent[];
 }) {
     const today = new Date();
-    const todayKey = localKey(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
+    const todayKey = dateToKey(today);
+    const isDark = useDarkMode();
+
+    const [selectedDate, setSelectedDate] = useState<Date>(today);
+    const selectedKey = dateToKey(selectedDate);
+
+    const [viewMonth, setViewMonth] = useState<Date>(
+        new Date(today.getFullYear(), today.getMonth(), 1),
     );
+    const viewYear = viewMonth.getFullYear();
+    const viewMonthIdx = viewMonth.getMonth();
 
-    // Stable events reference — eventIds is a plain string so exhaustive-deps is satisfied.
-    const eventIds = events.map((e) => e.id).join(",");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const stableEvents = useMemo(() => events, [eventIds]);
-
-    // Auto-select: prefer today if it has events, otherwise nearest upcoming
-    // event date, otherwise first event date, otherwise today.
-    const defaultSelectedKey = useMemo(() => {
-        const keys = stableEvents
-            .map((e) => {
-                const d = parseDateOnlyToLocal(e.start);
-                if (!d) return null;
-                return localKey(d.getFullYear(), d.getMonth(), d.getDate());
-            })
-            .filter(Boolean) as string[];
-        const unique = Array.from(new Set(keys)).sort();
-        if (unique.includes(todayKey)) return todayKey;
-        const upcoming = unique.find((k) => k >= todayKey);
-        return upcoming ?? unique[0] ?? todayKey;
-    }, [stableEvents, todayKey]);
-
-    const [selectedKey, setSelectedKey] = useState(defaultSelectedKey);
-    const [viewYear, setViewYear] = useState(today.getFullYear());
-    const [viewMonth, setViewMonth] = useState(today.getMonth());
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerYear, setPickerYear] = useState(today.getFullYear());
-    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-    // Detect dark mode (class-based, e.g. next-themes)
-    const [isDark, setIsDark] = React.useState(
-        () =>
-            typeof document !== "undefined" &&
-            document.documentElement.classList.contains("dark"),
-    );
-    React.useEffect(() => {
-        const check = () =>
-            setIsDark(document.documentElement.classList.contains("dark"));
-        const observer = new MutationObserver(check);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ["class"],
-        });
-        return () => observer.disconnect();
-    }, []);
-
-    const byDay = useMemo(() => {
-        const map = new Map<string, CalendarEvent[]>();
-        for (const e of stableEvents) {
-            const d = parseDateOnlyToLocal(e.start);
-            if (!d) continue;
-            const key = localKey(d.getFullYear(), d.getMonth(), d.getDate());
-            map.set(key, [...(map.get(key) ?? []), e]);
-        }
-        return map;
-    }, [stableEvents]);
-
-    const { highlightRange, rangeStart, rangeEnd, isRangeUpcoming } =
-        useMemo(() => {
-            if (!selectedEventId)
-                return {
-                    highlightRange: new Set<string>(),
-                    rangeStart: null,
-                    rangeEnd: null,
-                    isRangeUpcoming: false,
-                };
-            const event = stableEvents.find((e) => e.id === selectedEventId);
-            if (!event?.start)
-                return {
-                    highlightRange: new Set<string>(),
-                    rangeStart: null,
-                    rangeEnd: null,
-                    isRangeUpcoming: false,
-                };
-            const range = new Set<string>();
-            const start = parseDateOnlyToLocal(event.start);
-            const end = event.end ? parseDateOnlyToLocal(event.end) : start;
-            if (!start)
-                return {
-                    highlightRange: range,
-                    rangeStart: null,
-                    rangeEnd: null,
-                    isRangeUpcoming: false,
-                };
-            const cur = new Date(start);
-            const last = end ?? start;
-            while (cur <= last) {
-                range.add(
-                    localKey(cur.getFullYear(), cur.getMonth(), cur.getDate()),
-                );
-                cur.setDate(cur.getDate() + 1);
-            }
-            const sorted = Array.from(range).sort();
-            return {
-                highlightRange: range,
-                rangeStart: sorted[0] ?? null,
-                rangeEnd: sorted[sorted.length - 1] ?? null,
-                isRangeUpcoming: event.start > todayKey,
-            };
-        }, [selectedEventId, stableEvents, todayKey]);
-
-    const selectedEvents = byDay.get(selectedKey) ?? [];
-
-    // Auto-highlight: 1 event → select it automatically; multiple → let user click.
-    const prevSelectedKeyRef = useRef<string | null>(null);
-    useEffect(() => {
-        if (prevSelectedKeyRef.current === selectedKey) return;
-        prevSelectedKeyRef.current = selectedKey;
-        const eventsOnDay = byDay.get(selectedKey) ?? [];
-        setSelectedEventId(eventsOnDay.length === 1 ? eventsOnDay[0].id : null);
-    }, [selectedKey, byDay]);
-
-    const prevMonth = () => {
-        if (viewMonth === 0) {
-            setViewYear((y) => y - 1);
-            setViewMonth(11);
-        } else setViewMonth((m) => m - 1);
-    };
-    const nextMonth = () => {
-        if (viewMonth === 11) {
-            setViewYear((y) => y + 1);
-            setViewMonth(0);
-        } else setViewMonth((m) => m + 1);
-    };
+    const {
+        byDay,
+        highlightRange,
+        rangeStart,
+        rangeEnd,
+        isRangeUpcoming,
+        selectedEventId,
+        setSelectedEventId,
+        selectedEvents,
+    } = useCalendarEvents(events, selectedKey, todayKey);
 
     const selectMonthYear = (month: number) => {
-        setViewMonth(month);
-        setViewYear(pickerYear);
+        setViewMonth(new Date(pickerYear, month, 1));
         setPickerOpen(false);
     };
 
-    const totalDays = new Date(viewYear, viewMonth + 1, 0).getDate();
-    const startDay = new Date(viewYear, viewMonth, 1).getDay();
-    const cells: (number | null)[] = [
-        ...Array(startDay).fill(null),
-        ...Array.from({ length: totalDays }, (_, i) => i + 1),
-    ];
-    while (cells.length % 7 !== 0) cells.push(null);
+    // ── Custom Day component injected into shadcn Calendar ─────────────────────
+    const CustomDay = useMemo(() => {
+        return function Day({ day, modifiers }: DayProps) {
+            const date = day.date;
+            const key = dateToKey(date);
+
+            if (modifiers.outside) {
+                const isOutsideRangeStart = !!rangeStart && key === rangeStart;
+                const isOutsideRangeEnd =
+                    !!rangeEnd && key === rangeEnd && rangeEnd !== rangeStart;
+                const isOutsideRangeEdge =
+                    isOutsideRangeStart || isOutsideRangeEnd;
+                const isOutsideInRange =
+                    highlightRange.has(key) && !isOutsideRangeEdge;
+
+                // Same rgba the band uses — so circle and connector are
+                // literally the same colour
+                const bandRgb = isRangeUpcoming ? "245,158,11" : "59,130,246";
+                const bandAlpha = isDark ? "0.45" : "0.60";
+                const bandRgba = `rgba(${bandRgb},${bandAlpha})`;
+
+                return (
+                    <div
+                        style={
+                            isOutsideRangeEdge || isOutsideInRange
+                                ? getDayCellBandStyle({
+                                      key,
+                                      rangeStart,
+                                      rangeEnd,
+                                      highlightRange,
+                                      isRangeUpcoming,
+                                      isDark,
+                                  })
+                                : undefined
+                        }
+                        className="relative flex items-center justify-center"
+                    >
+                        <button
+                            onClick={() => {
+                                setSelectedDate(date);
+                                setViewMonth(
+                                    new Date(
+                                        date.getFullYear(),
+                                        date.getMonth(),
+                                        1,
+                                    ),
+                                );
+                            }}
+                            style={
+                                isOutsideRangeEdge
+                                    ? { backgroundColor: bandRgba }
+                                    : undefined
+                            }
+                            className={
+                                isOutsideRangeEdge
+                                    ? "relative flex h-10 w-10 flex-col items-center justify-center rounded-full text-sm font-semibold text-muted-foreground/50 transition-colors"
+                                    : OUTSIDE_DAY_BTN_CLS
+                            }
+                        >
+                            <span className="leading-none">
+                                {date.getDate()}
+                            </span>
+                        </button>
+                    </div>
+                );
+            }
+
+            const eventsOnDay = byDay.get(key);
+            const hasEvent = !!eventsOnDay;
+            const eventCount = eventsOnDay?.length ?? 0;
+            const isRangeStartKey = !!rangeStart && key === rangeStart;
+            const isRangeEndKey =
+                !!rangeEnd && key === rangeEnd && rangeEnd !== rangeStart;
+            const isActiveCell =
+                key === selectedKey || isRangeStartKey || isRangeEndKey;
+
+            const bandStyle = getDayCellBandStyle({
+                key,
+                rangeStart,
+                rangeEnd,
+                highlightRange,
+                isRangeUpcoming,
+                isDark,
+            });
+            const btnCls = getDayCellButtonClass({
+                key,
+                todayKey,
+                selectedKey,
+                rangeStart,
+                rangeEnd,
+                highlightRange,
+                isRangeUpcoming,
+                isDark,
+                hasEvent,
+            });
+
+            // Dot colour — driven by status/result, unique to the user calendar
+            let dotCls = "";
+            if (hasEvent) {
+                const statuses = (eventsOnDay ?? []).map((ev) =>
+                    ev.status?.toUpperCase(),
+                );
+                const results = (eventsOnDay ?? []).map((ev) =>
+                    ev.result?.toUpperCase(),
+                );
+                const hasRejected = statuses.includes("REJECTED");
+                const hasApproved = statuses.some(
+                    (s, i) => s === "APPROVED" && results[i] === "PASSED",
+                );
+                dotCls = isActiveCell
+                    ? "bg-white/50"
+                    : hasRejected
+                      ? "bg-rose-400/70"
+                      : hasApproved
+                        ? "bg-emerald-400/70"
+                        : key > todayKey
+                          ? "bg-amber-400/70"
+                          : "bg-blue-400/70";
+            }
+
+            return (
+                <div
+                    style={bandStyle}
+                    className="relative flex items-center justify-center"
+                >
+                    <button
+                        onClick={() => setSelectedDate(date)}
+                        className={btnCls}
+                    >
+                        <span className="leading-none">{date.getDate()}</span>
+                        {hasEvent && (
+                            <span
+                                className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full ${dotCls}`}
+                            />
+                        )}
+                        {eventCount > 1 && !isActiveCell && (
+                            <span
+                                className={`absolute -top-0.5 -right-0.5 h-4 min-w-4 rounded-full text-[9px] font-bold flex items-center justify-center px-0.5 ${getCountBubbleClass(key, todayKey, isDark)}`}
+                            >
+                                {eventCount}
+                            </span>
+                        )}
+                    </button>
+                </div>
+            );
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        byDay,
+        selectedKey,
+        rangeStart,
+        rangeEnd,
+        highlightRange,
+        isRangeUpcoming,
+        todayKey,
+        isDark,
+    ]);
 
     return (
         <Card className="overflow-hidden md:rounded-tr-none md:rounded-br-none md:flex md:flex-col md:max-h-[calc(100vh-8rem)]">
@@ -371,212 +263,134 @@ export default function TrainingCalendar({
             >
                 {/* Calendar */}
                 <div className="rounded-lg border bg-muted/20 p-3 relative mb-3">
-                    {/* month nav */}
+                    {/* Custom month/year nav */}
                     <div className="flex items-center justify-between mb-3 px-1">
                         <Button
                             variant="outline"
                             size="icon"
                             className="h-7 w-7"
-                            onClick={prevMonth}
+                            onClick={() =>
+                                setViewMonth(
+                                    new Date(
+                                        viewMonthIdx === 0
+                                            ? viewYear - 1
+                                            : viewYear,
+                                        viewMonthIdx === 0
+                                            ? 11
+                                            : viewMonthIdx - 1,
+                                        1,
+                                    ),
+                                )
+                            }
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
+
                         <button
                             onClick={() => {
-                                setPickerYear(viewYear);
+                                if (!pickerOpen) setPickerYear(viewYear);
                                 setPickerOpen((v) => !v);
                             }}
                             className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium hover:bg-accent transition-colors"
                         >
-                            {MONTHS[viewMonth]} {viewYear}
+                            {MONTHS[viewMonthIdx]} {viewYear}
                             {pickerOpen ? (
                                 <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
                             ) : (
                                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                             )}
                         </button>
+
                         <Button
                             variant="outline"
                             size="icon"
                             className="h-7 w-7"
-                            onClick={nextMonth}
+                            onClick={() =>
+                                setViewMonth(
+                                    new Date(
+                                        viewMonthIdx === 11
+                                            ? viewYear + 1
+                                            : viewYear,
+                                        viewMonthIdx === 11
+                                            ? 0
+                                            : viewMonthIdx + 1,
+                                        1,
+                                    ),
+                                )
+                            }
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
 
-                    {/* month/year picker */}
+                    {/* Month/year picker — inline absolute overlay (same as admin calendar) */}
                     <AnimatePresence>
                         {pickerOpen && (
-                            <PickerOverlay
-                                viewYear={viewYear}
-                                viewMonth={viewMonth}
-                                pickerYear={pickerYear}
-                                today={today}
-                                setPickerYear={setPickerYear}
-                                selectMonthYear={selectMonthYear}
-                            />
+                            <motion.div
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute inset-x-0 top-11 z-20 mx-3 rounded-lg border bg-card shadow-lg"
+                            >
+                                <CalendarMonthYearPickerContent
+                                    viewYear={viewYear}
+                                    viewMonth={viewMonthIdx}
+                                    pickerYear={pickerYear}
+                                    today={today}
+                                    setPickerYear={setPickerYear}
+                                    selectMonthYear={selectMonthYear}
+                                />
+                            </motion.div>
                         )}
                     </AnimatePresence>
 
-                    {/* day headers */}
-                    <div className="grid grid-cols-7 mb-1">
-                        {DAYS.map((d) => (
-                            <div
-                                key={d}
-                                className="text-center text-[0.7rem] text-muted-foreground py-1"
-                            >
-                                {d}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* day cells */}
-                    <div className="grid grid-cols-7">
-                        {cells.map((day, i) => {
-                            if (day === null) return <div key={`e-${i}`} />;
-                            const key = localKey(viewYear, viewMonth, day);
-                            const isToday = key === todayKey;
-                            const isSelected = key === selectedKey;
-                            const isRangeStart =
-                                !!rangeStart && key === rangeStart;
-                            const isRangeEnd =
-                                !!rangeEnd &&
-                                key === rangeEnd &&
-                                rangeEnd !== rangeStart;
-                            const isInRange =
-                                highlightRange.has(key) &&
-                                !isRangeStart &&
-                                !isRangeEnd;
-                            const eventsOnDay = byDay.get(key);
-                            const hasEvent = !!eventsOnDay;
-                            const eventCount = eventsOnDay?.length ?? 0;
-                            const isPast = key < todayKey;
-                            const isSingleDayRange = isRangeStart && isRangeEnd;
-                            const bandRgb = isRangeUpcoming
-                                ? "245,158,11"
-                                : "59,130,246";
-                            const bandAlpha = isDark ? "0.45" : "0.60";
-                            const bandStyle: React.CSSProperties =
-                                isSingleDayRange
-                                    ? {}
-                                    : isRangeStart
-                                      ? {
-                                            background: `linear-gradient(to right, transparent 50%, rgba(${bandRgb},${bandAlpha}) 50%)`,
-                                        }
-                                      : isRangeEnd
-                                        ? {
-                                              background: `linear-gradient(to left, transparent 50%, rgba(${bandRgb},${bandAlpha}) 50%)`,
-                                          }
-                                        : isInRange
-                                          ? {
-                                                background: `rgba(${bandRgb},${bandAlpha})`,
-                                            }
-                                          : {};
-
-                            return (
-                                <div
-                                    key={key}
-                                    style={bandStyle}
-                                    className="relative flex items-center justify-center"
-                                >
-                                    <button
-                                        onClick={() => setSelectedKey(key)}
-                                        className={[
-                                            "relative flex h-10 w-10 flex-col items-center justify-center rounded-full text-sm transition-colors",
-                                            isRangeStart || isRangeEnd
-                                                ? isRangeUpcoming
-                                                    ? "bg-amber-500 text-white font-semibold shadow-sm"
-                                                    : "bg-blue-500 text-white font-semibold shadow-sm"
-                                                : isInRange
-                                                  ? isRangeUpcoming
-                                                      ? isDark
-                                                          ? "text-amber-300 font-medium hover:bg-amber-500/30"
-                                                          : "text-amber-100 hover:bg-amber-500/30"
-                                                      : isDark
-                                                        ? "text-blue-300 font-medium hover:bg-blue-500/30"
-                                                        : "text-blue-100 hover:bg-blue-500/30"
-                                                  : isSelected
-                                                    ? "bg-blue-500/20 text-blue-300 font-semibold shadow-sm"
-                                                    : isToday
-                                                      ? isDark
-                                                          ? "border border-blue-500/50 text-blue-300 font-semibold hover:bg-accent"
-                                                          : "border border-blue-500/80 text-blue-500/80 font-semibold hover:bg-accent"
-                                                      : hasEvent
-                                                        ? "font-semibold hover:bg-accent"
-                                                        : "hover:bg-accent text-foreground/80",
-                                        ]
-                                            .filter(Boolean)
-                                            .join(" ")}
-                                    >
-                                        <span className="leading-none">
-                                            {day}
-                                        </span>
-                                        {/* dot — color by worst status on this day */}
-                                        {hasEvent &&
-                                            (() => {
-                                                const statuses = (
-                                                    eventsOnDay ?? []
-                                                ).map((ev) =>
-                                                    ev.status?.toUpperCase(),
-                                                );
-                                                const results = (
-                                                    eventsOnDay ?? []
-                                                ).map((ev) =>
-                                                    ev.result?.toUpperCase(),
-                                                );
-                                                const hasRejected =
-                                                    statuses.includes(
-                                                        "REJECTED",
-                                                    );
-                                                const hasApproved =
-                                                    statuses.some(
-                                                        (s, i) =>
-                                                            s === "APPROVED" &&
-                                                            results[i] ===
-                                                                "PASSED",
-                                                    );
-                                                const dotCls =
-                                                    isSelected ||
-                                                    isRangeStart ||
-                                                    isRangeEnd
-                                                        ? "bg-white/50"
-                                                        : hasRejected
-                                                          ? "bg-rose-400/70"
-                                                          : hasApproved
-                                                            ? "bg-emerald-400/70"
-                                                            : key > todayKey
-                                                              ? "bg-amber-400/70"
-                                                              : "bg-blue-400/70";
-                                                return (
-                                                    <span
-                                                        className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full ${dotCls}`}
-                                                    />
-                                                );
-                                            })()}
-                                        {/* count / teacher badge */}
-                                        {eventCount > 1 &&
-                                            !isSelected &&
-                                            !isRangeStart &&
-                                            !isRangeEnd && (
-                                                <span
-                                                    className={`absolute -top-0.5 -right-0.5 h-4 min-w-4 rounded-full text-[9px] font-bold flex items-center justify-center px-0.5 ${key > todayKey ? (isDark ? "bg-amber-500 text-white" : "bg-amber-500/80 text-white") : isDark ? "bg-blue-500 text-white" : "bg-blue-500/80 text-white"}`}
-                                                >
-                                                    {eventCount}
-                                                </span>
-                                            )}
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    {/* shadcn Calendar — nav + caption hidden, Day fully overridden */}
+                    <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => date && setSelectedDate(date)}
+                        month={viewMonth}
+                        onMonthChange={setViewMonth}
+                        showOutsideDays={true}
+                        className="p-0 w-full"
+                        components={{
+                            Day: CustomDay,
+                            Nav: () => <></>,
+                            MonthCaption: () => <></>,
+                        }}
+                        classNames={{
+                            months: "w-full",
+                            month: "w-full",
+                            month_caption: "hidden",
+                            nav: "hidden",
+                            caption_label: "hidden",
+                            month_grid: "w-full border-collapse",
+                            weekdays: "grid grid-cols-7 mb-1",
+                            weekday:
+                                "text-center text-[0.7rem] text-muted-foreground py-1",
+                            weeks: "w-full",
+                            week: "grid grid-cols-7 w-full",
+                            day: "p-0 flex items-center justify-center",
+                            day_button: "hidden",
+                            selected: "",
+                            today: "",
+                            outside: "",
+                            disabled: "",
+                            range_start: "",
+                            range_end: "",
+                            range_middle: "",
+                            hidden: "invisible",
+                        }}
+                    />
                 </div>
+
                 {/* Agenda section */}
                 <div className="rounded-lg border bg-card mt-3">
                     <div className="flex items-center justify-between px-3 py-3">
                         <div className="min-w-0">
                             <div className="text-sm font-medium truncate">
-                                {selectedKey}
+                                {formatDisplayDate(selectedKey)}
                             </div>
                             <div className="text-xs text-muted-foreground">
                                 {selectedEvents.length
@@ -590,21 +404,7 @@ export default function TrainingCalendar({
                     <div className="p-3">
                         <AnimatePresence mode="wait">
                             {selectedEvents.length === 0 ? (
-                                <motion.div
-                                    key="empty"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="flex flex-col items-center justify-center gap-2 py-10 text-center rounded-lg border border-dashed border-border/40 bg-muted/10"
-                                >
-                                    <CalendarDays className="h-7 w-7 text-muted-foreground/30" />
-                                    <p className="text-sm text-muted-foreground">
-                                        No trainings on this date
-                                    </p>
-                                    <p className="text-xs text-muted-foreground/50">
-                                        Select a highlighted date
-                                    </p>
-                                </motion.div>
+                                <CalendarAgendaEmptyState />
                             ) : (
                                 <motion.div
                                     key={selectedKey}
@@ -620,25 +420,9 @@ export default function TrainingCalendar({
                                         const isPending =
                                             s === "APPROVED" && r === "PENDING";
                                         const isRejected = s === "REJECTED";
-
-                                        const eType = (
-                                            e.type ?? ""
-                                        ).toLowerCase();
-                                        const isSeminar = eType === "seminar";
-                                        const isWorkshop = eType === "workshop";
-                                        const isWebinar = eType === "webinar";
-                                        const isConference =
-                                            eType === "conference";
-
-                                        const borderCls = isSeminar
-                                            ? "border-l-4 border-l-teal-500/60"
-                                            : isWorkshop
-                                              ? "border-l-4 border-l-amber-500/60"
-                                              : isWebinar
-                                                ? "border-l-4 border-l-sky-500/60"
-                                                : isConference
-                                                  ? "border-l-4 border-l-pink-500/60"
-                                                  : "border-l-4 border-l-violet-500/60";
+                                        const isUpcoming = e.start > todayKey;
+                                        const { border, ring } =
+                                            getEventTypeStyles(e.type);
 
                                         return (
                                             <motion.div
@@ -659,13 +443,34 @@ export default function TrainingCalendar({
                                                             : e.id,
                                                     )
                                                 }
-                                                className={`rounded-lg border overflow-hidden bg-card transition-colors cursor-pointer hover:bg-accent/20 ${borderCls} ${selectedEventId === e.id ? (isSeminar ? "ring-1 ring-teal-500/40" : isWorkshop ? "ring-1 ring-amber-500/40" : isWebinar ? "ring-1 ring-sky-500/40" : isConference ? "ring-1 ring-pink-500/40" : "ring-1 ring-violet-500/40") : ""}`}
+                                                className={`rounded-lg border overflow-hidden bg-card transition-colors cursor-pointer hover:bg-accent/20 ${border} ${selectedEventId === e.id ? ring : ""}`}
                                             >
-                                                <div className="p-3">
-                                                    <div className="font-medium text-sm text-foreground">
-                                                        {e.title}
+                                                <div className="px-4 py-3 flex flex-col gap-2">
+                                                    <div>
+                                                        <div className="font-medium text-sm text-foreground leading-snug">
+                                                            {e.title}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground mt-0.5">
+                                                            {e.start}
+                                                            {e.end &&
+                                                            e.end !== e.start
+                                                                ? ` → ${e.end}`
+                                                                : ""}
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2 mt-1">
+                                                    <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted/50 border border-border/40 text-muted-foreground">
+                                                            {isUpcoming
+                                                                ? "Upcoming"
+                                                                : "Past"}
+                                                        </span>
+                                                        <TypeBadge
+                                                            type={
+                                                                e.type ??
+                                                                "Training"
+                                                            }
+                                                            size="xs"
+                                                        />
                                                         <StatusBadge
                                                             status={
                                                                 isApproved
@@ -678,12 +483,6 @@ export default function TrainingCalendar({
                                                             }
                                                             size="xs"
                                                         />
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {e.start}
-                                                            {e.end
-                                                                ? ` → ${e.end}`
-                                                                : ""}
-                                                        </span>
                                                     </div>
                                                 </div>
                                             </motion.div>

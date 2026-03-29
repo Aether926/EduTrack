@@ -1,8 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -25,14 +23,26 @@ import {
     Search,
     X,
     ChevronRight,
-    ChevronLeft,
-    Users,
+    ChevronDown,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AvatarColor from "@/components/ui-elements/avatars/avatar-color";
-
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import { PositionBadge } from "@/components/ui-elements/badges";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import {
     Table,
     TableBody,
@@ -42,107 +52,213 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-export default function AdminTeacherTable({
-    data,
-}: {
+import { fmtContact } from "@/components/formatter/contact-format";
+import { fmtEmployeeId } from "@/components/formatter/employee-id-format";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const fmtPhone = fmtContact;
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+interface TeacherTableProps {
     data: TeacherTableRow[];
-}) {
+}
+
+export default function TeacherTable({ data }: TeacherTableProps) {
     const router = useRouter();
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
+    const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
+    const [positionFilter, setPositionFilter] = useState<string | null>(null);
+
+    const subjectOptions = useMemo(() => {
+        const set = new Set<string>();
+        for (const row of data) {
+            const val = (row as any).subjectSpecialization;
+            if (val) set.add(val);
+        }
+        return Array.from(set).sort();
+    }, [data]);
+
+    const positionOptions = useMemo(() => {
+        const set = new Set<string>();
+        for (const row of data) {
+            if (row.position) set.add(row.position);
+        }
+        return Array.from(set).sort();
+    }, [data]);
 
     const columns = useMemo<ColumnDef<TeacherTableRow>[]>(
         () => [
+            // Employee ID — always visible (admin only table)
             {
                 accessorKey: "employeeid",
-                header: ({ column }) => (
-                    <button
-                        className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold hover:text-foreground transition-colors"
-                        onClick={() =>
-                            column.toggleSorting(column.getIsSorted() === "asc")
-                        }
-                    >
-                        Employee ID <ArrowUpDown className="h-3 w-3" />
-                    </button>
-                ),
+                header: "Employee ID",
                 cell: ({ row }) => (
                     <div className="font-mono text-xs text-muted-foreground">
-                        {row.getValue("employeeid") || "N/A"}
+                        {fmtEmployeeId(
+                            String(row.getValue("employeeid") ?? ""),
+                        )}
                     </div>
                 ),
             },
+
+            // Name + inline info
             {
                 accessorKey: "fullname",
                 header: ({ column }) => (
-                    <button
-                        className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold hover:text-foreground transition-colors"
+                    <Button
+                        variant="ghost"
                         onClick={() =>
                             column.toggleSorting(column.getIsSorted() === "asc")
                         }
+                        className="px-2"
                     >
-                        Name <ArrowUpDown className="h-3 w-3" />
-                    </button>
+                        Name <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
                 ),
                 cell: ({ row }) => {
-                    const fullname =
-                        (row.getValue("fullname") as string) || "Unknown";
-                    const profileImage = row.original.profileImage;
-                    const position = row.original.position;
-                    const email = row.original.email;
+                    const fullname = row.getValue("fullname") as string;
+                    const emergencyName = String(
+                        (row.original as any).emergencyName ?? "",
+                    );
+                    const emergencyContact = String(
+                        (row.original as any).emergencyContact ?? "",
+                    );
 
                     return (
                         <div className="flex items-center gap-3 min-w-0">
-                            <Avatar className="h-8 w-8 shrink-0">
-                                <AvatarImage src={profileImage || undefined} />
-                                <AvatarFallback className="p-0 overflow-hidden">
-                                    <AvatarColor name={fullname} />
-                                </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar
+                                name={fullname}
+                                src={row.original.profileImage}
+                                className="h-8 w-8 shrink-0"
+                            />
                             <div className="min-w-0">
-                                <div className="truncate text-sm font-medium text-foreground">
+                                <div className="truncate font-medium">
                                     {fullname}
                                 </div>
-                                <div className="truncate text-[11px] text-muted-foreground hidden md:block">
-                                    {email || "—"}
-                                </div>
-                                <div className="md:hidden mt-0.5 truncate text-[11px] text-muted-foreground">
-                                    {position || "N/A"}
+                                <div className="md:hidden mt-0.5 space-y-0.5 min-w-0">
+                                    {row.original.contact && (
+                                        <div className="truncate text-xs text-muted-foreground font-mono">
+                                            {fmtPhone(row.original.contact) ??
+                                                "—"}
+                                        </div>
+                                    )}
+                                    {row.original.position && (
+                                        <div className="mt-1">
+                                            <PositionBadge
+                                                position={row.original.position}
+                                                size="xs"
+                                            />
+                                        </div>
+                                    )}
+                                    {emergencyName && (
+                                        <div className="truncate text-xs text-muted-foreground/70">
+                                            <span>Emrg: </span>
+                                            {emergencyName}
+                                            {emergencyContact && (
+                                                <span className="font-mono ml-1">
+                                                    {fmtPhone(
+                                                        emergencyContact,
+                                                    ) ?? "—"}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     );
                 },
             },
+
+            // Position — no privacy gate
             {
                 accessorKey: "position",
-                header: () => (
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                        Position
-                    </span>
-                ),
+                header: "Position",
                 cell: ({ row }) => (
-                    <div className="max-w-[260px] truncate text-sm text-muted-foreground">
-                        {(row.getValue("position") as string) || "N/A"}
-                    </div>
+                    <PositionBadge
+                        position={row.getValue("position") as string}
+                    />
                 ),
             },
+
+            // Contact — no privacy gate
             {
                 accessorKey: "contact",
-                header: () => (
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                        Contact
-                    </span>
-                ),
-                cell: ({ row }) => (
-                    <div className="font-mono text-xs text-muted-foreground">
-                        {(row.getValue("contact") as string) || "N/A"}
-                    </div>
-                ),
+                header: "Contact",
+                cell: ({ row }) => {
+                    const emergencyName = String(
+                        (row.original as any).emergencyName ?? "",
+                    );
+                    const emergencyContact = String(
+                        (row.original as any).emergencyContact ?? "",
+                    );
+
+                    return (
+                        <div className="space-y-0.5">
+                            <div className="font-mono text-xs text-muted-foreground">
+                                {fmtPhone(
+                                    String(row.getValue("contact") ?? ""),
+                                ) ?? "—"}
+                            </div>
+                            {emergencyName && (
+                                <div className="text-xs text-muted-foreground/70">
+                                    <span className="text-muted-foreground/50">
+                                        Emrg:{" "}
+                                    </span>
+                                    {emergencyName}
+                                    {emergencyContact && (
+                                        <span className="font-mono ml-1">
+                                            {fmtPhone(emergencyContact) ?? "—"}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                },
             },
+
+            // Emergency contact — no privacy gate
             {
-                id: "actions",
+                id: "emergency",
+                header: "Emergency Contact",
+                cell: ({ row }) => {
+                    const emergencyName = String(
+                        (row.original as any).emergencyName ?? "",
+                    );
+                    const emergencyContact = String(
+                        (row.original as any).emergencyContact ?? "",
+                    );
+
+                    if (!emergencyName)
+                        return (
+                            <div className="text-xs text-muted-foreground/40">
+                                —
+                            </div>
+                        );
+                    return (
+                        <div className="space-y-0.5">
+                            <div className="text-sm text-muted-foreground truncate max-w-[180px]">
+                                {emergencyName}
+                            </div>
+                            {emergencyContact && (
+                                <div className="font-mono text-xs text-muted-foreground/70">
+                                    {fmtPhone(emergencyContact) ?? "—"}
+                                </div>
+                            )}
+                        </div>
+                    );
+                },
+            },
+
+            // Actions
+            {
+                id: "view",
                 header: "",
                 enableSorting: false,
                 cell: ({ row }) => (
@@ -166,28 +282,38 @@ export default function AdminTeacherTable({
         [router],
     );
 
+    const filteredData = useMemo(() => {
+        return data.filter((row) => {
+            if (
+                subjectFilter &&
+                (row as any).subjectSpecialization !== subjectFilter
+            )
+                return false;
+            if (positionFilter && row.position !== positionFilter) return false;
+            return true;
+        });
+    }, [data, subjectFilter, positionFilter]);
+
     const table = useReactTable({
-        data,
+        data: filteredData,
         columns,
         state: { sorting, globalFilter },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
         globalFilterFn: (row, _columnId, filterValue) => {
-            const q = String(filterValue ?? "")
+            const v = String(filterValue ?? "")
                 .toLowerCase()
                 .trim();
-            if (!q) return true;
+            if (!v) return true;
             const full = String(row.original.fullname ?? "").toLowerCase();
             const emp = String(row.original.employeeid ?? "").toLowerCase();
             const pos = String(row.original.position ?? "").toLowerCase();
             const contact = String(row.original.contact ?? "").toLowerCase();
-            const email = String(row.original.email ?? "").toLowerCase();
             return (
-                full.includes(q) ||
-                emp.includes(q) ||
-                pos.includes(q) ||
-                contact.includes(q) ||
-                email.includes(q)
+                full.includes(v) ||
+                emp.includes(v) ||
+                pos.includes(v) ||
+                contact.includes(v)
             );
         },
         getCoreRowModel: getCoreRowModel(),
@@ -199,65 +325,53 @@ export default function AdminTeacherTable({
 
     useEffect(() => {
         table.setPageIndex(0);
-    }, [globalFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [globalFilter, subjectFilter, positionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const filteredCount = table.getFilteredRowModel().rows.length;
     const pageIndex = table.getState().pagination.pageIndex;
     const pageCount = table.getPageCount();
 
     return (
-        <div className="border border-border/60 shadow-lg w-full overflow-hidden rounded-xl bg-card">
-            {/* Header band */}
-            <div className="relative px-6 py-5 border-b border-border/60 bg-gradient-to-br from-card to-background">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/8 via-transparent to-violet-400/4 pointer-events-none" />
-                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="rounded-lg border border-violet-500/20 bg-violet-500/10 p-2.5 shrink-0">
-                            <Users className="h-5 w-5 text-violet-400" />
-                        </div>
-                        <div>
-                            <span className="text-lg font-semibold tracking-tight leading-tight text-foreground">
-                                Teachers
-                            </span>
-                            <p className="text-[13px] text-muted-foreground mt-0.5">
-                                {filteredCount} result
-                                {filteredCount === 1 ? "" : "s"} • 10 per page
-                            </p>
-                        </div>
+        <Card className="min-w-0 overflow-hidden">
+            <CardHeader className="gap-3">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div className="space-y-1">
+                        <CardTitle className="text-base">Teachers</CardTitle>
+                        <CardDescription>
+                            {filteredCount} result
+                            {filteredCount === 1 ? "" : "s"} • 10 per page
+                        </CardDescription>
                     </div>
 
-                    {/* Desktop search */}
-                    <div className="hidden md:block w-[300px]">
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                            <Input
-                                value={globalFilter ?? ""}
-                                onChange={(e) =>
-                                    setGlobalFilter(e.target.value)
-                                }
-                                placeholder="Search name, id, position..."
-                                className="pl-8 h-8 text-sm bg-white/5 border-white/10 focus:border-violet-500/40"
-                            />
-                        </div>
+                    <div className="hidden md:block w-[280px]">
+                        <Input
+                            value={globalFilter ?? ""}
+                            onChange={(e) => setGlobalFilter(e.target.value)}
+                            placeholder="Search name, email, ID..."
+                        />
                     </div>
 
-                    {/* Mobile search toggle */}
                     <div className="flex md:hidden items-center gap-2">
-                        <button
+                        <Button
+                            variant="outline"
+                            size="icon"
                             onClick={() => setSearchOpen((v) => !v)}
-                            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+                            aria-label="Search"
                         >
                             {searchOpen ? (
                                 <X className="h-4 w-4" />
                             ) : (
                                 <Search className="h-4 w-4" />
                             )}
-                        </button>
+                        </Button>
                         <AnimatePresence initial={false}>
                             {searchOpen && (
                                 <motion.div
                                     initial={{ width: 0, opacity: 0 }}
-                                    animate={{ width: "220px", opacity: 1 }}
+                                    animate={{
+                                        width: "min(240px, 55vw)",
+                                        opacity: 1,
+                                    }}
                                     exit={{ width: 0, opacity: 0 }}
                                     transition={{ duration: 0.18 }}
                                     className="overflow-hidden"
@@ -268,36 +382,117 @@ export default function AdminTeacherTable({
                                             setGlobalFilter(e.target.value)
                                         }
                                         placeholder="Search..."
-                                        className="h-8 text-sm bg-white/5 border-white/10"
+                                        className="h-9"
                                     />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
                 </div>
-            </div>
 
-            {/* Body */}
-            <div className="px-6 py-5">
-                <div className="rounded-md border border-white/8 overflow-hidden">
+                <div className="flex flex-wrap gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 min-w-[160px] justify-between"
+                            >
+                                <span className="truncate">
+                                    {subjectFilter ?? "All Subjects"}
+                                </span>
+                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="start"
+                            className="max-h-60 overflow-y-auto"
+                        >
+                            <DropdownMenuItem
+                                onClick={() => setSubjectFilter(null)}
+                            >
+                                All Subjects
+                            </DropdownMenuItem>
+                            {subjectOptions.map((s) => (
+                                <DropdownMenuItem
+                                    key={s}
+                                    onClick={() => setSubjectFilter(s)}
+                                >
+                                    {s}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 min-w-[140px] justify-between"
+                            >
+                                <span className="truncate">
+                                    {positionFilter ?? "All Positions"}
+                                </span>
+                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="start"
+                            className="max-h-60 overflow-y-auto"
+                        >
+                            <DropdownMenuItem
+                                onClick={() => setPositionFilter(null)}
+                            >
+                                All Positions
+                            </DropdownMenuItem>
+                            {positionOptions.map((p) => (
+                                <DropdownMenuItem
+                                    key={p}
+                                    onClick={() => setPositionFilter(p)}
+                                >
+                                    {p}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {(subjectFilter || positionFilter) && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                setSubjectFilter(null);
+                                setPositionFilter(null);
+                            }}
+                            className="text-muted-foreground gap-1"
+                        >
+                            <X className="h-3.5 w-3.5" /> Clear filters
+                        </Button>
+                    )}
+                </div>
+            </CardHeader>
+
+            <CardContent className="pt-0">
+                <div className="rounded-md border overflow-x-auto">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((hg) => (
-                                <TableRow
-                                    key={hg.id}
-                                    className="border-white/8 hover:bg-transparent"
-                                >
+                                <TableRow key={hg.id}>
                                     {hg.headers.map((header) => {
                                         const colId = header.column.id;
                                         const hideOnSmall =
                                             colId === "position" ||
-                                            colId === "contact"
+                                            colId === "contact" ||
+                                            colId === "emergency"
                                                 ? "hidden md:table-cell"
                                                 : "";
+                                        const viewCol =
+                                            colId === "view" ? "w-[1%]" : "";
                                         return (
                                             <TableHead
                                                 key={header.id}
-                                                className={hideOnSmall}
+                                                className={`${hideOnSmall} ${viewCol}`}
                                             >
                                                 {header.isPlaceholder
                                                     ? null
@@ -312,19 +507,18 @@ export default function AdminTeacherTable({
                                 </TableRow>
                             ))}
                         </TableHeader>
-
                         <TableBody>
                             {table.getRowModel().rows.length ? (
                                 table.getRowModel().rows.map((row, idx) => (
                                     <motion.tr
                                         key={row.id}
-                                        initial={{ opacity: 0, y: 4 }}
+                                        initial={{ opacity: 0, y: 6 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{
-                                            duration: 0.14,
-                                            delay: Math.min(idx * 0.01, 0.12),
+                                            duration: 0.16,
+                                            delay: Math.min(idx * 0.01, 0.15),
                                         }}
-                                        className="border-b border-white/8 last:border-b-0 cursor-pointer hover:bg-white/3 transition-colors"
+                                        className="border-b last:border-b-0 cursor-pointer hover:bg-accent/40"
                                         onClick={() =>
                                             router.push(
                                                 `/teacher-profiles/${row.original.id}`,
@@ -335,13 +529,14 @@ export default function AdminTeacherTable({
                                             const colId = cell.column.id;
                                             const hideOnSmall =
                                                 colId === "position" ||
-                                                colId === "contact"
+                                                colId === "contact" ||
+                                                colId === "emergency"
                                                     ? "hidden md:table-cell"
                                                     : "";
                                             return (
                                                 <TableCell
                                                     key={cell.id}
-                                                    className={`py-3 ${hideOnSmall}`}
+                                                    className={hideOnSmall}
                                                 >
                                                     {flexRender(
                                                         cell.column.columnDef
@@ -357,9 +552,9 @@ export default function AdminTeacherTable({
                                 <TableRow>
                                     <TableCell
                                         colSpan={columns.length}
-                                        className="h-24 text-center text-sm text-muted-foreground"
+                                        className="h-24 text-center text-muted-foreground"
                                     >
-                                        No results found.
+                                        No results.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -367,77 +562,30 @@ export default function AdminTeacherTable({
                     </Table>
                 </div>
 
-                {/* Pagination */}
-                {pageCount > 1 && (
-                    <div className="flex flex-col items-center gap-2 mt-3 px-1">
-                        <div className="flex items-center justify-between w-full">
-                            <span className="text-[11px] text-muted-foreground">
-                                Page {pageIndex + 1} of {pageCount}
-                            </span>
-                        </div>
-                        <div className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto w-full pb-1">
-                            <button
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
-                                className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                            >
-                                <ChevronLeft className="h-3.5 w-3.5" />
-                            </button>
-                            {(() => {
-                                const page = pageIndex + 1;
-                                const delta = 1;
-                                const range: (number | "…")[] = [];
-                                const left = Math.max(2, page - delta);
-                                const right = Math.min(
-                                    pageCount - 1,
-                                    page + delta,
-                                );
-
-                                range.push(1);
-                                if (left > 2) range.push("…");
-                                for (let i = left; i <= right; i++)
-                                    range.push(i);
-                                if (right < pageCount - 1) range.push("…");
-                                if (pageCount > 1) range.push(pageCount);
-
-                                return range.map((p, idx) =>
-                                    p === "…" ? (
-                                        <span
-                                            key={`ellipsis-${idx}`}
-                                            className="inline-flex h-6 w-6 items-center justify-center text-[11px] text-muted-foreground"
-                                        >
-                                            …
-                                        </span>
-                                    ) : (
-                                        <button
-                                            key={p}
-                                            onClick={() =>
-                                                table.setPageIndex(
-                                                    (p as number) - 1,
-                                                )
-                                            }
-                                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] font-medium transition ${
-                                                p === page
-                                                    ? "border-violet-500/40 bg-violet-500/20 text-violet-400"
-                                                    : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                                            }`}
-                                        >
-                                            {p}
-                                        </button>
-                                    ),
-                                );
-                            })()}
-                            <button
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                                className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                            >
-                                <ChevronRight className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-xs text-muted-foreground">
+                        Page {pageIndex + 1} of {pageCount}
                     </div>
-                )}
-            </div>
-        </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Prev
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
     );
 }

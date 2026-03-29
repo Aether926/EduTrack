@@ -53,8 +53,8 @@ function IconPill({
 // ── Type ──────────────────────────────────────────────────────────────────────
 
 const TYPE: Record<string, string> = {
-    training: "bg-violet-500/15 text-violet-400 border-violet-500/30",
-    seminar: "bg-teal-500/15 text-teal-400 border-teal-500/30",
+    training: "bg-teal-500/15 text-teal-400 border-teal-500/30",
+    seminar: "bg-violet-500/15 text-violet-400 border-violet-500/30",
     workshop: "bg-amber-500/15 text-amber-400 border-amber-500/30",
     webinar: "bg-sky-500/15 text-sky-400 border-sky-500/30",
     conference: "bg-pink-500/15 text-pink-400 border-pink-500/30",
@@ -308,5 +308,55 @@ export function SalaryStatusBadge({
         >
             {SAL_LABEL[key] ?? status}
         </IconPill>
+    );
+}
+
+// ── Position ──────────────────────────────────────────────────────────────────
+//
+// Uses startsWith matching so any new roman-numeral variant (e.g. Master Teacher VI,
+// Head Teacher VII) is automatically covered without touching this file.
+// Order matters — longer prefixes must come before shorter ones to avoid false
+// matches ("assistant school principal" before "school principal", etc.).
+
+const POSITION_PREFIX: [string, string][] = [
+    [
+        "assistant school principal",
+        "bg-teal-500/25 text-teal-300 border-teal-500/50",
+    ],
+    [
+        "school principal",
+        "bg-emerald-500/25 text-emerald-300 border-emerald-500/50",
+    ],
+    ["master teacher", "bg-purple-500/25 text-purple-300 border-purple-500/50"],
+    ["head teacher", "bg-sky-500/25 text-sky-300 border-sky-500/50"],
+    ["teacher", "bg-blue-500/25 text-blue-300 border-blue-500/50"],
+    ["administrative", "bg-amber-500/25 text-amber-300 border-amber-500/50"],
+];
+
+function positionCls(position: string): string {
+    const p = (position ?? "").toLowerCase();
+    for (const [prefix, cls] of POSITION_PREFIX) {
+        if (p.startsWith(prefix)) return cls;
+    }
+    return fallback;
+}
+
+export function PositionBadge({
+    position,
+    size = "sm",
+}: {
+    position: string;
+    size?: "sm" | "xs";
+}) {
+    if (!position)
+        return (
+            <Pill cls={fallback} size={size}>
+                —
+            </Pill>
+        );
+    return (
+        <Pill cls={positionCls(position)} size={size}>
+            {position}
+        </Pill>
     );
 }

@@ -11,14 +11,13 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X } from "lucide-react";
 
-import UserApprovalTable from "./user-approval-table";
+import UserApprovalTable from "@/features/account-approval/components/user-approval-table";
 
 const TABS = ["PENDING", "REJECTED"] as const;
 type Tab = (typeof TABS)[number];

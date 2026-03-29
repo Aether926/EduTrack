@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationPopover } from "@/features/notifications/components/notification-popover";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/ui-elements/theme-toggle";
 
 type MobileTopbarProps = {
     userId: string;

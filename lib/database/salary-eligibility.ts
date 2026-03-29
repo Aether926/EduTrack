@@ -1,5 +1,10 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { toLocalDateString } from "@/util/date";
+import { toLocalDateString } from "@/lib/utils";
+import { insertActivity } from "@/lib/database/activity";
+import {
+    LOG_ACTIONS,
+    LOG_MESSAGES,
+} from "@/lib/database/activity-log-messages";
 
 export type EligibilityStatus = "ELIGIBLE" | "APPROACHING" | "ON_TRACK";
 export type SortBy = "eligible_first" | "name" | "years_desc";
@@ -10,8 +15,10 @@ export type TeacherEligibilityRow = {
     firstName: string;
     lastName: string;
     middleInitial: string | null;
+    profileImage: string | null;
     position: string;
-    dateOfLatestAppointment: string;
+    dateOfLatestAppointment: string | null;
+    dateOfOriginalAppointment: string | null;
     lastSalaryIncreaseAt: string | null;
     cycleStartDate: string;
     cycleYears: number;
@@ -98,7 +105,22 @@ function computeCycle(
     };
 }
 
-export async function getTeacherSalaryEligibility(
+// ── Shared profile fetcher ────────────────────────────────────────────────────
+
+async function fetchProfileMap(
+    admin: ReturnType<typeof createAdminClient>,
+    ids: string[],
+) {
+    const { data: profiles } = await admin
+        .from("Profile")
+        .select("id, firstName, lastName, middleInitial, profileImage")
+        .in("id", ids);
+    return new Map((profiles ?? []).map((p) => [String(p.id), p]));
+}
+
+// ── STEP: approved TEACHER+ADMIN with dateOfLatestAppointment ─────────────────
+
+export async function getStepEligibility(
     page: number = 1,
     pageSize: number = 10,
     sortBy: SortBy = "eligible_first",
@@ -114,31 +136,35 @@ export async function getTeacherSalaryEligibility(
 
         const admin = createAdminClient();
 
-        // fetch ProfileHR
+        const { data: approvedUsers } = await admin
+            .from("User")
+            .select("id")
+            .eq("status", "APPROVED")
+            .or("role.eq.TEACHER,role.eq.ADMIN");
+
+        const approvedIds = (approvedUsers ?? []).map((u) => u.id);
+        if (approvedIds.length === 0) return { data: [], count: 0 };
+
         const { data: hrRows, error } = await admin
             .from("ProfileHR")
             .select(
-                "id, employeeId, position, dateOfLatestAppointment, last_salary_increase_at, salary_increase_notified_at",
+                "id, employeeId, position, dateOfLatestAppointment, dateOfOriginalAppointment, last_salary_increase_at, salary_increase_notified_at",
             )
+            .in("id", approvedIds)
             .not("dateOfLatestAppointment", "is", null);
 
         if (error || !hrRows || hrRows.length === 0)
             return { data: [], count: 0 };
 
-        // fetch Profile separately (id type mismatch: ProfileHR=uuid, Profile=text)
-        const hrIds = hrRows.map((r) => String(r.id));
-        const { data: profiles } = await admin
-            .from("Profile")
-            .select("id, firstName, lastName, middleInitial")
-            .in("id", hrIds);
-
-        const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+        const profileMap = await fetchProfileMap(
+            admin,
+            hrRows.map((r) => String(r.id)),
+        );
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // compute eligibility
-        const computed: TeacherEligibilityRow[] = hrRows.map((r) => {
+        const computed = hrRows.map((r) => {
             const profile = profileMap.get(String(r.id));
             const appointmentDate = new Date(
                 r.dateOfLatestAppointment + "T00:00:00",
@@ -146,7 +172,6 @@ export async function getTeacherSalaryEligibility(
             const lastIncreaseDate = r.last_salary_increase_at
                 ? new Date(r.last_salary_increase_at + "T00:00:00")
                 : null;
-
             const cycle = computeCycle(
                 appointmentDate,
                 lastIncreaseDate,
@@ -159,8 +184,10 @@ export async function getTeacherSalaryEligibility(
                 firstName: profile?.firstName ?? "",
                 lastName: profile?.lastName ?? "",
                 middleInitial: profile?.middleInitial ?? null,
+                profileImage: profile?.profileImage ?? null,
                 position: r.position ?? "—",
                 dateOfLatestAppointment: r.dateOfLatestAppointment,
+                dateOfOriginalAppointment: r.dateOfOriginalAppointment ?? null,
                 lastSalaryIncreaseAt: r.last_salary_increase_at ?? null,
                 cycleStartDate: toLocalDateString(cycle.cycleStartDate),
                 cycleYears: cycle.cycleYears,
@@ -170,61 +197,59 @@ export async function getTeacherSalaryEligibility(
                 nextEligibleDate: toLocalDateString(cycle.nextEligibleDate),
                 daysUntilEligible: cycle.daysUntilEligible,
                 status: cycle.status,
-                // internal fields for notification check
                 _notifiedAt: r.salary_increase_notified_at ?? null,
                 _cycleStartDate: toLocalDateString(cycle.cycleStartDate),
-            } as TeacherEligibilityRow & {
-                _notifiedAt: string | null;
-                _cycleStartDate: string;
             };
         });
 
-        const toNotify = computed.filter((r) => {
-            if (r.status !== "ELIGIBLE") return false;
-            const row = r as TeacherEligibilityRow & {
-                _notifiedAt: string | null;
-                _cycleStartDate: string;
-            };
-            return (
-                row._notifiedAt === null ||
-                row._notifiedAt < row._cycleStartDate
-            );
-        });
+        // ── Notifications for newly eligible teachers ─────────────────────────
+        const toNotify = computed.filter(
+            (r) =>
+                r.status === "ELIGIBLE" &&
+                (r._notifiedAt === null || r._notifiedAt < r._cycleStartDate),
+        );
 
         if (toNotify.length > 0) {
-            const activityRows = toNotify.flatMap((r) => [
-                {
-                    actor_id: auth.user.id,
-                    target_user_id: auth.user.id,
-                    action: "SALARY_INCREASE_ELIGIBLE",
-                    entity_type: "ProfileHR",
-                    entity_id: r.userId,
-                    message: `${r.lastName}, ${r.firstName} is eligible for a salary increase.`,
-                    meta: {
-                        teacherId: r.userId,
-                        employeeId: r.employeeId,
-                        position: r.position,
-                        cycleStartDate: r.cycleStartDate,
-                    },
-                },
-                // notify teacher
-                {
-                    actor_id: auth.user.id,
-                    target_user_id: r.userId,
-                    action: "SALARY_INCREASE_ELIGIBLE",
-                    entity_type: "ProfileHR",
-                    entity_id: r.userId,
-                    message: `You are eligible for a salary increase as of ${r.cycleStartDate}.`,
-                    meta: {
-                        cycleStartDate: r.cycleStartDate,
-                        position: r.position,
-                    },
-                },
-            ]);
+            await insertActivity(
+                toNotify.flatMap((r) => {
+                    const teacherName = `${r.lastName}, ${r.firstName}`;
+                    const msg = LOG_MESSAGES.SALARY_INCREASE_ELIGIBLE(
+                        teacherName,
+                        r.cycleStartDate,
+                    );
+                    return [
+                        {
+                            actor_id: auth.user!.id,
+                            target_user_id: auth.user!.id,
+                            action: LOG_ACTIONS.SALARY_INCREASE_ELIGIBLE,
+                            entity_type: "ProfileHR",
+                            entity_id: r.userId,
+                            message: msg.actor,
+                            recipient_role: "actor" as const,
+                            meta: {
+                                teacherId: r.userId,
+                                employeeId: r.employeeId,
+                                position: r.position,
+                                cycleStartDate: r.cycleStartDate,
+                            },
+                        },
+                        {
+                            actor_id: auth.user!.id,
+                            target_user_id: r.userId,
+                            action: LOG_ACTIONS.SALARY_INCREASE_ELIGIBLE,
+                            entity_type: "ProfileHR",
+                            entity_id: r.userId,
+                            message: msg.receiver,
+                            recipient_role: "receiver" as const,
+                            meta: {
+                                cycleStartDate: r.cycleStartDate,
+                                position: r.position,
+                            },
+                        },
+                    ];
+                }),
+            );
 
-            await admin.from("ActivityLog").insert(activityRows);
-
-            // update salary_increase_notified_at for all notified teachers
             await Promise.all(
                 toNotify.map((r) =>
                     admin
@@ -238,42 +263,135 @@ export async function getTeacherSalaryEligibility(
             );
         }
 
-        // clean up internal fields before returning
-        const cleaned = computed.map((r) => {
-            const { _notifiedAt, _cycleStartDate, ...rest } =
-                r as TeacherEligibilityRow & {
-                    _notifiedAt: string | null;
-                    _cycleStartDate: string;
-                };
-            return rest;
-        });
+        // Strip internals
+        const cleaned: TeacherEligibilityRow[] = computed.map(
+            ({ _notifiedAt: _n, _cycleStartDate: _c, ...rest }) => {
+                void _n;
+                void _c;
+                return rest;
+            },
+        );
 
-        // sort
-        const sorted = cleaned.sort((a, b) => {
-            if (sortBy === "eligible_first") {
-                const order = { ELIGIBLE: 0, APPROACHING: 1, ON_TRACK: 2 };
-                const diff = order[a.status] - order[b.status];
-                if (diff !== 0) return diff;
-                return b.cycleTotalDays - a.cycleTotalDays;
-            }
-            if (sortBy === "years_desc")
-                return b.cycleTotalDays - a.cycleTotalDays;
-            if (sortBy === "name")
-                return `${a.lastName}${a.firstName}`.localeCompare(
-                    `${b.lastName}${b.firstName}`,
-                );
-            return 0;
-        });
-
-        const count = sorted.length;
-        const from = (page - 1) * pageSize;
-        const paginated = sorted.slice(from, from + pageSize);
-
-        return { data: paginated, count };
+        return paginate(sort(cleaned, sortBy), page, pageSize);
     } catch {
         return { data: [], count: 0 };
     }
 }
+
+// ── LOYALTY: all approved users with dateOfOriginalAppointment ────────────────
+
+export async function getLoyaltyEligibility(
+    page: number = 1,
+    pageSize: number = 10,
+    sortBy: SortBy = "eligible_first",
+): Promise<{ data: TeacherEligibilityRow[]; count: number }> {
+    try {
+        const supabase = await createClient();
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) return { data: [], count: 0 };
+
+        const role = auth.user.user_metadata?.role ?? "TEACHER";
+        if (!["ADMIN", "SUPERADMIN"].includes(role))
+            return { data: [], count: 0 };
+
+        const admin = createAdminClient();
+
+        const { data: hrRows, error } = await admin
+            .from("ProfileHR")
+            .select(
+                "id, employeeId, position, dateOfOriginalAppointment, dateOfLatestAppointment, last_salary_increase_at",
+            )
+            .not("dateOfOriginalAppointment", "is", null);
+
+        if (error || !hrRows || hrRows.length === 0)
+            return { data: [], count: 0 };
+
+        const profileMap = await fetchProfileMap(
+            admin,
+            hrRows.map((r) => String(r.id)),
+        );
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const cleaned: TeacherEligibilityRow[] = hrRows.map((r) => {
+            const profile = profileMap.get(String(r.id));
+            const originalDate = new Date(
+                r.dateOfOriginalAppointment + "T00:00:00",
+            );
+            const tenure = computeTenure(originalDate, today);
+
+            return {
+                userId: String(r.id),
+                employeeId: r.employeeId ?? "—",
+                firstName: profile?.firstName ?? "",
+                lastName: profile?.lastName ?? "",
+                middleInitial: profile?.middleInitial ?? null,
+                profileImage: profile?.profileImage ?? null,
+                position: r.position ?? "—",
+                dateOfLatestAppointment: r.dateOfLatestAppointment ?? null,
+                dateOfOriginalAppointment: r.dateOfOriginalAppointment,
+                lastSalaryIncreaseAt: r.last_salary_increase_at ?? null,
+                cycleStartDate: "—",
+                cycleYears: tenure.years,
+                cycleMonths: tenure.months,
+                cycleDays: tenure.days,
+                cycleTotalDays: tenure.totalDays,
+                nextEligibleDate: "—",
+                daysUntilEligible: 0,
+                status: "ON_TRACK" as EligibilityStatus,
+            };
+        });
+
+        return paginate(sort(cleaned, sortBy), page, pageSize);
+    } catch {
+        return { data: [], count: 0 };
+    }
+}
+
+// ── Kept for backwards compatibility ─────────────────────────────────────────
+
+export async function getTeacherSalaryEligibility(
+    page: number = 1,
+    pageSize: number = 10,
+    sortBy: SortBy = "eligible_first",
+): Promise<{ data: TeacherEligibilityRow[]; count: number }> {
+    return getStepEligibility(page, pageSize, sortBy);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function sort(
+    rows: TeacherEligibilityRow[],
+    sortBy: SortBy,
+): TeacherEligibilityRow[] {
+    return [...rows].sort((a, b) => {
+        if (sortBy === "eligible_first") {
+            const order = { ELIGIBLE: 0, APPROACHING: 1, ON_TRACK: 2 };
+            const diff = order[a.status] - order[b.status];
+            if (diff !== 0) return diff;
+            return b.cycleTotalDays - a.cycleTotalDays;
+        }
+        if (sortBy === "years_desc") return b.cycleTotalDays - a.cycleTotalDays;
+        if (sortBy === "name")
+            return `${a.lastName}${a.firstName}`.localeCompare(
+                `${b.lastName}${b.firstName}`,
+            );
+        return 0;
+    });
+}
+
+function paginate(
+    rows: TeacherEligibilityRow[],
+    page: number,
+    pageSize: number,
+): { data: TeacherEligibilityRow[]; count: number } {
+    const count = rows.length;
+    const from = (page - 1) * pageSize;
+    return { data: rows.slice(from, from + pageSize), count };
+}
+
+// ── Mark salary increase given ────────────────────────────────────────────────
 
 export async function markSalaryIncreaseGiven(
     teacherUserId: string,
@@ -309,8 +427,6 @@ export async function markSalaryIncreaseGiven(
             : null;
 
         const cycle = computeCycle(appointmentDate, lastIncreaseDate, today);
-
-        // always anchor to the cycle mark date, not today
         const markDate = toLocalDateString(cycle.cycleStartDate);
 
         const { error } = await admin
@@ -320,35 +436,54 @@ export async function markSalaryIncreaseGiven(
 
         if (error) return { ok: false, error: error.message };
 
-        // fetch teacher name for the log message
-        const { data: profile } = await admin
-            .from("Profile")
-            .select("firstName, lastName")
-            .eq("id", teacherUserId)
-            .single();
+        // Fetch both profiles for message
+        const [{ data: teacherProfile }, { data: adminProfile }] =
+            await Promise.all([
+                admin
+                    .from("Profile")
+                    .select("firstName, lastName")
+                    .eq("id", teacherUserId)
+                    .single(),
+                admin
+                    .from("Profile")
+                    .select("firstName, lastName")
+                    .eq("id", auth.user.id)
+                    .single(),
+            ]);
 
-        const name = profile
-            ? `${profile.lastName}, ${profile.firstName}`
+        const teacherName = teacherProfile
+            ? `${teacherProfile.lastName}, ${teacherProfile.firstName}`
             : "Teacher";
 
-        // activity log — admin feed
-        await admin.from("ActivityLog").insert([
+        const adminName = adminProfile
+            ? `${adminProfile.firstName ?? ""} ${adminProfile.lastName ?? ""}`.trim()
+            : "Admin";
+
+        const msg = LOG_MESSAGES.SALARY_INCREASE_MARKED(
+            teacherName,
+            adminName,
+            markDate,
+        );
+
+        await insertActivity([
             {
                 actor_id: auth.user.id,
                 target_user_id: auth.user.id,
-                action: "SALARY_INCREASE_MARKED",
+                action: LOG_ACTIONS.SALARY_INCREASE_MARKED,
                 entity_type: "ProfileHR",
                 entity_id: teacherUserId,
-                message: `You marked salary increase for ${name} (cycle: ${markDate}).`,
+                message: msg.actor,
+                recipient_role: "actor",
                 meta: { teacherId: teacherUserId, cycleMarkDate: markDate },
             },
             {
                 actor_id: auth.user.id,
                 target_user_id: teacherUserId,
-                action: "SALARY_INCREASE_MARKED",
+                action: LOG_ACTIONS.SALARY_INCREASE_MARKED,
                 entity_type: "ProfileHR",
                 entity_id: teacherUserId,
-                message: `Your salary increase has been processed (cycle: ${markDate}).`,
+                message: msg.receiver,
+                recipient_role: "receiver",
                 meta: { cycleMarkDate: markDate },
             },
         ]);

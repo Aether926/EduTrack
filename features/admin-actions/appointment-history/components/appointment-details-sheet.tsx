@@ -63,7 +63,8 @@ import {
 } from "@/components/teacher-picker-modal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import { AppointmentTypeBadge } from "@/components/ui-elements/badges";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -79,10 +80,22 @@ const POSITIONS = [
     "Master Teacher II",
     "Master Teacher III",
     "Master Teacher IV",
+    "Master Teacher V",
+    "Head Teacher I",
+    "Head Teacher II",
+    "Head Teacher III",
+    "Head Teacher IV",
+    "Head Teacher V",
+    "Head Teacher VI",
+    "Assistant School Principal I",
+    "Assistant School Principal II",
+    "Assistant School Principal III",
+    "Assistant School Principal IV",
     "School Principal I",
     "School Principal II",
     "School Principal III",
     "School Principal IV",
+    "School Principal V",
     "Administrative Staff",
 ];
 
@@ -103,14 +116,6 @@ const REMARKS_OPTIONS = [
     "End of temporary appointment",
     "Other (specify below)",
 ];
-
-const TYPE_COLORS: Record<string, string> = {
-    Original: "text-blue-400 border-blue-500/30 bg-blue-500/10",
-    Promotion: "text-violet-400 border-violet-500/30 bg-violet-500/10",
-    Reappointment: "text-teal-400 border-teal-500/30 bg-teal-500/10",
-    Transfer: "text-orange-400 border-orange-500/30 bg-orange-500/10",
-    Reinstatement: "text-pink-400 border-pink-500/30 bg-pink-500/10",
-};
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -403,9 +408,6 @@ export function AppointmentDetailSheet({
     if (!row) return null;
 
     const isEdit = mode === "edit";
-    const typeColor =
-        TYPE_COLORS[row.appointment_type] ??
-        "text-muted-foreground border-border bg-muted/10";
 
     return (
         <>
@@ -428,17 +430,14 @@ export function AppointmentDetailSheet({
                                 </div>
                                 <div className="min-w-0">
                                     <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                                        <span
-                                            className={cn(
-                                                "inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider",
-                                                typeColor,
-                                            )}
-                                        >
-                                            {isEdit
-                                                ? appointmentType ||
-                                                  "Edit Entry"
-                                                : row.appointment_type}
-                                        </span>
+                                        <AppointmentTypeBadge
+                                            type={
+                                                isEdit
+                                                    ? appointmentType ||
+                                                      "Edit Entry"
+                                                    : row.appointment_type
+                                            }
+                                        />
                                         {isEdit && (
                                             <span className="inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-blue-400">
                                                 Editing
@@ -527,7 +526,7 @@ export function AppointmentDetailSheet({
                                 >
                                     {selectedTeacher ? (
                                         <span className="flex items-center gap-2">
-                                            <InitialAvatar
+                                            <UserAvatar
                                                 name={selectedTeacher.fullName}
                                                 src={
                                                     selectedTeacher.profileImage
@@ -542,7 +541,7 @@ export function AppointmentDetailSheet({
                                 </Button>
                             ) : (
                                 <div className="flex items-center gap-3 rounded-lg border bg-muted/20 px-3 py-2">
-                                    <InitialAvatar
+                                    <UserAvatar
                                         name={selectedTeacher?.fullName ?? "?"}
                                         src={selectedTeacher?.profileImage}
                                         className="h-8 w-8 shrink-0"

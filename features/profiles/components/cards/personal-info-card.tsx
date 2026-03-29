@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React from "react";
@@ -15,7 +16,7 @@ import {
     Save,
     X,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,10 @@ import { Combobox } from "@/components/combobox";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { ProfileState } from "@/features/profiles/types/profile";
-import { formatName } from "@/util/helper";
-
-// ── Read-only display value ────────────────────────────────────────────────────
+import { formatName } from "@/app/util/helper";
+import { LocationSelect, LocationValue } from "@/components/ui/location-select";
+import { provinces, regions } from "ph-locations";
+import { Country } from "country-state-city";
 
 function DisplayValue({ value }: { value?: string | null }) {
     return (
@@ -56,8 +58,6 @@ function DisplayValue({ value }: { value?: string | null }) {
         </div>
     );
 }
-
-// ── Field label ────────────────────────────────────────────────────────────────
 
 function FieldLabel({
     icon: Icon,
@@ -77,8 +77,6 @@ function FieldLabel({
     );
 }
 
-// ── Section divider ────────────────────────────────────────────────────────────
-
 function SectionDivider({ label }: { label: string }) {
     return (
         <div className="flex items-center gap-3 py-1">
@@ -90,8 +88,6 @@ function SectionDivider({ label }: { label: string }) {
         </div>
     );
 }
-
-// ── InputField ─────────────────────────────────────────────────────────────────
 
 function InputField(props: {
     label: string;
@@ -281,8 +277,6 @@ function SelectField(props: {
     );
 }
 
-// ── AddressBlock ───────────────────────────────────────────────────────────────
-
 function AddressBlock(props: {
     prefix: "residential" | "permanent";
     label: string;
@@ -295,50 +289,66 @@ function AddressBlock(props: {
     const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     const f = (suffix: string) =>
         `${prefix}${cap(suffix)}` as keyof ProfileState;
+
     const fields = [
         {
             key: "HouseNo",
             label: "House / Block / Lot No.",
             half: true,
             placeholder: "e.g. 12B",
+            zip: false,
         },
         {
             key: "Street",
             label: "Street",
             half: true,
             placeholder: "e.g. Rizal St.",
+            zip: false,
         },
         {
             key: "Subdivision",
             label: "Subdivision / Village",
             half: false,
-            placeholder: "e.g. Deca Homes.",
+            placeholder: "e.g. Deca Homes",
+            zip: false,
         },
         {
             key: "Barangay",
             label: "Barangay",
             half: true,
             placeholder: "e.g. Valencia",
-        },
-        {
-            key: "City",
-            label: "City / Municipality",
-            half: true,
-            placeholder: "e.g. Ormoc City",
-        },
-        {
-            key: "Province",
-            label: "Province",
-            half: true,
-            placeholder: "e.g. Leyte",
+            zip: false,
         },
         {
             key: "ZipCode",
             label: "ZIP Code",
             half: true,
             placeholder: "e.g. 6513",
+            zip: true,
         },
     ];
+    const labelClass =
+        "text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block";
+
+    const stored = (data[f("Province")] as string) ?? "";
+    const [] = stored.includes("|") ? stored.split("|") : ["", stored];
+
+    const locationValue: LocationValue = {
+        country: (data[f("Country")] as string) ?? "PH",
+        regionCode: (data[f("Region")] as string) ?? "",
+        regionName: "",
+        province: (data[f("Province")] as string) ?? "",
+        provinceName: "",
+        city: (data[f("City")] as string) ?? "",
+    };
+
+    const handleLocationChange = (val: LocationValue) => {
+        onInputChange(f("Country"), val.country);
+        onInputChange(f("Region"), val.regionCode);
+        onInputChange(f("Province"), val.province);
+        onInputChange(f("City"), val.city);
+    };
+
     return (
         <div className={disabled ? "opacity-40 pointer-events-none" : ""}>
             <div className="flex items-center gap-2 mb-3">
@@ -349,33 +359,112 @@ function AddressBlock(props: {
                     {label}
                 </span>
             </div>
-            <div className="grid grid-cols-2 max-[480px]:grid-cols-1 gap-3 items-end">
-                {fields.map((field) => (
-                    <div
-                        key={field.key}
-                        className={`space-y-1.5 ${!field.half ? "col-span-2 max-[480px]:col-span-1" : ""}`}
-                    >
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                            {field.label}
-                        </label>
-                        {isEditing && !disabled ? (
-                            <Input
-                                value={(data[f(field.key)] as string) ?? ""}
-                                onChange={(e) =>
-                                    onInputChange(f(field.key), e.target.value)
-                                }
-                                placeholder={field.placeholder}
-                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
-                            />
-                        ) : (
+
+            <div className="flex flex-col gap-3">
+                {/* Location dropdowns */}
+                {isEditing && !disabled ? (
+                    <LocationSelect
+                        value={locationValue}
+                        onChange={handleLocationChange}
+                        disabled={disabled}
+                    />
+                ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <label className={labelClass}>Country</label>
                             <DisplayValue
                                 value={
-                                    (data[f(field.key)] as string) || undefined
+                                    Country.getCountryByCode(
+                                        data[f("Country")] as string,
+                                    )?.name ??
+                                    (data[f("Country")] as string) ??
+                                    undefined
                                 }
                             />
-                        )}
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className={labelClass}>Region</label>
+                            <DisplayValue
+                                value={
+                                    (regions as any[]).find(
+                                        (r) => r.code === data[f("Region")],
+                                    )?.name ??
+                                    (data[f("Region")] as string) ??
+                                    undefined
+                                }
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className={labelClass}>Province</label>
+                            <DisplayValue
+                                value={
+                                    (provinces as any[]).find(
+                                        (p) => p.code === data[f("Province")],
+                                    )?.name ??
+                                    (data[f("Province")] as string) ??
+                                    undefined
+                                }
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className={labelClass}>
+                                City / Municipality
+                            </label>
+                            <DisplayValue
+                                value={(data[f("City")] as string) || undefined}
+                            />
+                        </div>
                     </div>
-                ))}
+                )}
+
+                {/* Manual fields */}
+                <div className="grid grid-cols-2 max-[480px]:grid-cols-1 gap-3 items-end">
+                    {fields.map((field) => (
+                        <div
+                            key={field.key}
+                            className={`space-y-1.5 ${!field.half ? "col-span-2 max-[480px]:col-span-1" : ""}`}
+                        >
+                            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                                {field.label}
+                            </label>
+                            {isEditing && !disabled ? (
+                                <Input
+                                    value={(data[f(field.key)] as string) ?? ""}
+                                    onChange={(e) => {
+                                        const isZip = field.zip;
+                                        const isPH =
+                                            (data[f("Country")] as string) ===
+                                            "PH";
+
+                                        const val = isZip
+                                            ? isPH
+                                                ? e.target.value
+                                                      .replace(/\D/g, "")
+                                                      .slice(0, 4)
+                                                : e.target.value.slice(0, 10)
+                                            : e.target.value;
+
+                                        onInputChange(f(field.key), val);
+                                    }}
+                                    inputMode={
+                                        field.zip &&
+                                        (data[f("Country")] as string) === "PH"
+                                            ? "numeric"
+                                            : "text"
+                                    }
+                                    className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                />
+                            ) : (
+                                <DisplayValue
+                                    value={
+                                        (data[f(field.key)] as string) ||
+                                        undefined
+                                    }
+                                />
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -440,12 +529,14 @@ function PersonalInfoForm({
             String(checked),
         );
         if (checked) {
+            onInputChange("permanentCountry", data.residentialCountry ?? "");
+            onInputChange("permanentRegion", data.residentialRegion ?? "");
+            onInputChange("permanentProvince", data.residentialProvince ?? "");
+            onInputChange("permanentCity", data.residentialCity);
             onInputChange("permanentHouseNo", data.residentialHouseNo);
             onInputChange("permanentStreet", data.residentialStreet);
             onInputChange("permanentSubdivision", data.residentialSubdivision);
             onInputChange("permanentBarangay", data.residentialBarangay);
-            onInputChange("permanentCity", data.residentialCity);
-            onInputChange("permanentProvince", data.residentialProvince);
             onInputChange("permanentZipCode", data.residentialZipCode);
         }
     };

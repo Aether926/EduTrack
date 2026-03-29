@@ -44,6 +44,19 @@ import {
 } from "@/components/ui/popover";
 import { ChevronDownIcon } from "lucide-react";
 import { AdminDangerZone } from "@/features/admin-actions/teachers/components/admin-danger-zone";
+import { EmployeeIdInput } from "@/components/formatter/employee-id-format";
+import { PositionBadge } from "@/components/ui-elements/badges";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtPhone(raw: string | null | undefined): string | null {
+    if (!raw) return null;
+    const d = raw.replace(/\D/g, "");
+    const n = d.startsWith("63") && d.length === 12 ? "0" + d.slice(2) : d;
+    return /^09\d{9}$/.test(n)
+        ? `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7)}`
+        : null;
+}
 
 const POSITIONS = [
     "Teacher I",
@@ -57,10 +70,22 @@ const POSITIONS = [
     "Master Teacher II",
     "Master Teacher III",
     "Master Teacher IV",
+    "Master Teacher V",
+    "Head Teacher I",
+    "Head Teacher II",
+    "Head Teacher III",
+    "Head Teacher IV",
+    "Head Teacher V",
+    "Head Teacher VI",
+    "Assistant School Principal I",
+    "Assistant School Principal II",
+    "Assistant School Principal III",
+    "Assistant School Principal IV",
     "School Principal I",
     "School Principal II",
     "School Principal III",
     "School Principal IV",
+    "School Principal V",
     "Administrative Staff",
 ];
 
@@ -77,19 +102,24 @@ function ReadField({
     label,
     value,
     icon: Icon,
+    phone,
 }: {
     label: string;
     value: string | null | undefined;
     icon?: React.ComponentType<{ size?: number; className?: string }>;
+    phone?: boolean;
 }) {
+    const display = phone ? (fmtPhone(value) ?? value) : value;
     return (
         <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
                 {Icon ? <Icon size={14} className="text-blue-600" /> : null}
                 {label}
             </label>
-            <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                {value || "—"}
+            <div
+                className={`px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium ${phone ? "font-mono" : ""}`}
+            >
+                {display || "—"}
             </div>
         </div>
     );
@@ -128,6 +158,45 @@ function Field(props: {
             ) : (
                 <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
                     {value || "—"}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Employee ID field — enforces exactly 7 digits ─────────────────
+function EmployeeIdField({
+    value,
+    isEditing,
+    onChange,
+}: {
+    value: string;
+    isEditing: boolean;
+    onChange: (val: string) => void;
+}) {
+    const isValid = /^\d{7}$/.test((value ?? "").replace(/\D/g, ""));
+    return (
+        <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+                <FileText size={14} className="text-blue-600" />
+                Employee ID
+            </label>
+            {isEditing ? (
+                <div className="space-y-1">
+                    <EmployeeIdInput
+                        value={value}
+                        onChange={onChange}
+                        placeholder="7-digit ID"
+                    />
+                    {value && !isValid && (
+                        <p className="text-xs text-rose-500">
+                            Must be exactly 7 digits.
+                        </p>
+                    )}
+                </div>
+            ) : (
+                <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium font-mono">
+                    {isValid ? value.replace(/\D/g, "") : value || "—"}
                 </div>
             )}
         </div>
@@ -397,8 +466,22 @@ export default function AdminTeacherManage(props: {
     hr: TeacherHRFields;
     appointmentHistory: any[];
     trainings: TrainingRow[];
+    deletionRequest: {
+        id: string;
+        reason: string;
+        scheduled_at: string;
+        status: string;
+    } | null;
 }) {
-    const { teacherId, profile, hr, appointmentHistory, trainings } = props;
+    const {
+        teacherId,
+        profile,
+        hr,
+        appointmentHistory,
+        trainings,
+        deletionRequest,
+    } = props;
+
     const router = useRouter();
 
     const {
@@ -440,7 +523,7 @@ export default function AdminTeacherManage(props: {
                                 {initials}
                             </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="space-y-1">
                             <h1 className="text-xl font-bold text-foreground">
                                 {fullName}
                             </h1>
@@ -448,9 +531,7 @@ export default function AdminTeacherManage(props: {
                                 {profile.email}
                             </p>
                             {fields.position && (
-                                <p className="text-sm text-blue-600 font-medium mt-0.5">
-                                    {fields.position}
-                                </p>
+                                <PositionBadge position={fields.position} />
                             )}
                         </div>
                         <div className="ml-auto">
@@ -537,6 +618,7 @@ export default function AdminTeacherManage(props: {
                                     label="Contact Number"
                                     icon={Phone}
                                     value={profile.contactNumber}
+                                    phone
                                 />
                                 <ReadField
                                     label="Address"
@@ -661,11 +743,9 @@ export default function AdminTeacherManage(props: {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Field
-                                        label="Employee ID"
+                                    {/* Employee ID — uses EmployeeIdInput when editing */}
+                                    <EmployeeIdField
                                         value={fields.employeeId}
-                                        fieldKey="employeeId"
-                                        icon={FileText}
                                         isEditing={isEditing}
                                         onChange={(v) =>
                                             handleChange("employeeId", v)
@@ -702,7 +782,15 @@ export default function AdminTeacherManage(props: {
                                             </Select>
                                         ) : (
                                             <div className="px-3 py-2 bg-gray-100 dark:bg-gray-900 rounded-md text-sm font-medium">
-                                                {fields.position || "—"}
+                                                {fields.position ? (
+                                                    <PositionBadge
+                                                        position={
+                                                            fields.position
+                                                        }
+                                                    />
+                                                ) : (
+                                                    "—"
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -749,10 +837,10 @@ export default function AdminTeacherManage(props: {
                                         isEditing={isEditing}
                                         minDate={
                                             fields.dateOfOriginalAppointment
-                                        } // 👈 block before original
+                                        }
                                         disabled={
                                             !fields.dateOfOriginalAppointment
-                                        } // optional UX
+                                        }
                                         onChange={(v) =>
                                             handleChange(
                                                 "dateOfLatestAppointment",
@@ -806,9 +894,14 @@ export default function AdminTeacherManage(props: {
                         />
                     </div>
                 </div>
-
                 {/* Danger Zone */}
-                <AdminDangerZone teacherId={teacherId} teacherName={fullName} />
+                <AdminDangerZone
+                    teacherId={teacherId}
+                    teacherName={fullName}
+                    isDeactivating={!!deletionRequest}
+                    deactivationScheduledAt={deletionRequest?.scheduled_at}
+                    deactivationReason={deletionRequest?.reason}
+                />
             </div>
         </main>
     );

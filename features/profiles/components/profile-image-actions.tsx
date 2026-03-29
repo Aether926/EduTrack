@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface ProfileImageActionsProps {
-    hasImage:    boolean;
-    uploading:   boolean;
+    hasImage: boolean;
+    uploading: boolean;
     onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onDelete:    () => Promise<void>;
+    onDelete: () => Promise<void>;
     fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
@@ -54,10 +54,14 @@ export default function ProfileImageActions({
                         disabled={uploading}
                         className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-blue-600 hover:bg-blue-700 p-2 rounded-lg shadow-lg transition disabled:opacity-50"
                     >
-                        {uploading
-                            ? <Loader2 size={16} className="text-white animate-spin" />
-                            : <Camera size={16} className="text-white" />
-                        }
+                        {uploading ? (
+                            <Loader2
+                                size={16}
+                                className="text-white animate-spin"
+                            />
+                        ) : (
+                            <Camera size={16} className="text-white" />
+                        )}
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -84,13 +88,18 @@ export default function ProfileImageActions({
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove profile picture?</AlertDialogTitle>
+                                        <AlertDialogTitle>
+                                            Remove profile picture?
+                                        </AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            Your profile picture will be permanently removed.
+                                            Your profile picture will be
+                                            permanently removed.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel>
+                                            Cancel
+                                        </AlertDialogCancel>
                                         <AlertDialogAction
                                             onClick={onDelete}
                                             className="bg-rose-600 hover:bg-rose-500 text-white"

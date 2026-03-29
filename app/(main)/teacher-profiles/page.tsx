@@ -25,10 +25,56 @@ export default async function TeacherProfilesPage() {
         return;
     }
 
-    const teachers: TeacherTableRow[] = (profiles.data ?? [])
-        .filter((profile: any) => profile.id !== authUser.id)
+    if (userRow) setUserRole(userRow.role as "ADMIN" | "TEACHER");
+
+    if (!userRow || userRow.status !== "APPROVED") {
+        setTeachers([]);
+        setLoading(false);
+        return;
+    }
+
+    const { data: profiles, error } = await supabase
+        .from("Profile")
+        .select(
+            `
+                    *,
+                    User!inner (
+                        status,
+                        role
+                    ),
+                    ProfileEmergencyContact (
+                        name,
+                        relationship,
+                        address,
+                        telephoneNo
+                    )
+                    `,
+        )
+        .order("lastName", { ascending: true });
+
+    // console.log("profile:", profiles);
+    // console.log("profiles error", error);
+
+    // console.log(profiles);
+
+    if (error) {
+        toast.error("Error fetching teachers.");
+        setTeachers([]);
+        setLoading(false);
+        return;
+    }
+
+    const { data: hrProfiles } = await supabase.from("ProfileHR").select("*");
+
+    const tableData: TeacherTableRow[] = (profiles ?? [])
+        .filter(
+            (profile: any) =>
+                profile.id !== authUser.id &&
+                profile.User?.role === "TEACHER" &&
+                profile.User?.status === "APPROVED",
+        )
         .map((profile: any) => {
-            const hrProf = hrProfiles.data?.find((hr) => hr.id === profile.id);
+            const hrProf = hrProfiles?.find((hr) => hr.id === profile.id);
             const emergencyContact =
                 profile.ProfileEmergencyContact?.[0] ?? null;
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Archive } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
     Dialog,
@@ -105,11 +105,11 @@ function RequestRow({
         try {
             const result = await adminFinalizeDeleteAccount(req.id);
             if (!result.ok) return toast.error(result.error);
-            toast.success("Account permanently deleted.");
+            toast.success("Account moved to archive.");
             setFinalizeModal(false);
             onUpdate();
         } catch {
-            toast.error("Failed to delete account.");
+            toast.error("Failed to deactivate account.");
         } finally {
             setLoading(false);
         }
@@ -208,7 +208,7 @@ function RequestRow({
                             }
                         >
                             <Trash2 className="h-3.5 w-3.5" />
-                            Delete
+                            Deactivate
                         </Button>
                         <Button
                             size="sm"
@@ -232,28 +232,31 @@ function RequestRow({
             >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-rose-400">
+                        <DialogTitle className="flex items-center gap-2 text-amber-400">
                             <AlertTriangle className="h-5 w-5" />
-                            Permanently Delete Account
+                            Archive Account
                         </DialogTitle>
                         <DialogDescription>
-                            This action cannot be undone.
+                            This will remove the user from active records, but
+                            can be restored later.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-400 space-y-1">
-                        <p className="font-semibold">⚠ Final Warning</p>
+
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400 space-y-1">
+                        <p className="font-semibold">⚠ Warning</p>
                         <p>
-                            You are about to permanently delete the account of{" "}
+                            You are about to archive the account of{" "}
                             <strong>
                                 {req.user.firstName} {req.user.lastName}
                             </strong>
                             .
                         </p>
-                        <p className="text-rose-400/70">
-                            All their data will be removed and cannot be
-                            recovered.
+                        <p className="text-amber-400/70">
+                            The user will no longer have access, but their data
+                            will be saved and can be restored if needed.
                         </p>
                     </div>
+
                     <DialogFooter>
                         <Button
                             variant="outline"
@@ -262,16 +265,16 @@ function RequestRow({
                             Cancel
                         </Button>
                         <Button
-                            className="bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 hover:border-rose-500/40"
+                            className="bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 hover:border-amber-500/40"
                             onClick={handleFinalize}
                             disabled={loading}
                         >
                             {loading ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                                <Trash2 className="h-4 w-4 mr-2" />
+                                <Archive className="h-4 w-4 mr-2" />
                             )}
-                            Yes, Delete Permanently
+                            Yes, Move to Archive
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -11,32 +11,28 @@ import {
     ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 
 import { Input } from "@/components/ui/input";
 import {
     NameInput,
     MiddleInitialInput,
-} from "@/components/formatter/name-input";
+} from "@/components/formatter/name-format";
 import {
     ContactInput,
     isValidContact,
-} from "@/components/formatter/contact-input";
+} from "@/components/formatter/contact-format";
 import {
     EmployeeIdInput,
     isValidEmployeeId,
-} from "@/components/formatter/employee-id-input";
+} from "@/components/formatter/employee-id-format";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { logSignUp } from "@/app/actions/auth-log-actions";
+import {
+    PositionSelect,
+    isValidPosition,
+} from "@/components/formatter/position-select";
 
-// ── Calendar constants ─────────────────────────────────────────────────────────
 const CAL_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const CAL_MONTHS_SHORT = [
     "Jan",
@@ -309,7 +305,6 @@ export default function FillUpPage() {
         contactNumber: "",
         employeeId: "",
         position: "",
-        customPosition: "",
     });
 
     const [dateOfOriginalAppointment, setDateOfOriginalAppointment] = useState<
@@ -318,7 +313,7 @@ export default function FillUpPage() {
     const [dateOfOriginalDeployment, setDateOfOriginalDeployment] = useState<
         Date | undefined
     >();
-    const [latestAppointment, setLatestAppointment] = useState<
+    const [dateOflatestAppointment, setDateOfLatestAppointment] = useState<
         Date | undefined
     >();
 
@@ -424,6 +419,22 @@ export default function FillUpPage() {
             );
             return;
         }
+        if (!isValidPosition(formData.position)) {
+            toast.error("Please select or enter your position.");
+            return;
+        }
+        const { data: existingId } = await supabase
+            .from("ProfileHR")
+            .select("employeeId")
+            .eq("employeeId", formData.employeeId)
+            .maybeSingle();
+
+        if (existingId) {
+            toast.error(
+                "This Employee ID is already taken. Please check your ID.",
+            );
+            return;
+        }
 
         setSubmitting(true);
         let success = false;
@@ -488,10 +499,7 @@ export default function FillUpPage() {
                 .from("ProfileHR")
                 .update({
                     employeeId: formData.employeeId,
-                    position:
-                        formData.position === "Other"
-                            ? formData.customPosition
-                            : formData.position,
+                    position: formData.position,
                     dateOfOriginalAppointment: format(
                         dateOfOriginalAppointment,
                         "yyyy-MM-dd",
@@ -500,12 +508,10 @@ export default function FillUpPage() {
                         dateOfOriginalDeployment,
                         "yyyy-MM-dd",
                     ),
-                    ...(latestAppointment && {
-                        latestAppointment: format(
-                            latestAppointment,
-                            "yyyy-MM-dd",
-                        ),
-                    }),
+                    dateOfLatestAppointment: format(
+                        dateOfOriginalAppointment,
+                        "yyyy-MM-dd",
+                    ),
                 })
                 .eq("id", user.id)
                 .select();
@@ -760,75 +766,16 @@ export default function FillUpPage() {
                                             (optional)
                                         </span>
                                     </label>
-                                    <Select
+                                    <PositionSelect
                                         value={formData.position}
-                                        onValueChange={(value) =>
+                                        onChange={(v) =>
                                             setFormData({
                                                 ...formData,
-                                                position: value,
-                                                customPosition: "",
+                                                position: v,
                                             })
                                         }
                                         required
-                                    >
-                                        <SelectTrigger className="w-full bg-[#1c1c1e] border-[#2e2e32] text-[13.5px] text-[#f0f0f0] focus:ring-[#5b8dee]/20 focus:border-[#5b8dee] rounded-lg">
-                                            <SelectValue placeholder="Select position" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-[#1c1c1e] border-[#2e2e32] text-[#f0f0f0]">
-                                            {[
-                                                "Teacher I",
-                                                "Teacher II",
-                                                "Teacher III",
-                                                "Teacher IV",
-                                                "Teacher V",
-                                                "Teacher VI",
-                                                "Teacher VII",
-                                                "Master Teacher I",
-                                                "Master Teacher II",
-                                                "Master Teacher III",
-                                                "Master Teacher IV",
-                                                "School Principal I",
-                                                "School Principal II",
-                                                "School Principal III",
-                                                "School Principal IV",
-                                                "Administrative Staff",
-                                            ].map((pos) => (
-                                                <SelectItem
-                                                    key={pos}
-                                                    value={pos}
-                                                    className="text-[13px] focus:bg-[#2e2e32] focus:text-[#f0f0f0] cursor-pointer"
-                                                >
-                                                    {pos}
-                                                </SelectItem>
-                                            ))}
-                                            <SelectItem
-                                                value="Other"
-                                                className="text-[13px] text-[#8a8a9a] focus:bg-[#2e2e32] focus:text-[#f0f0f0] cursor-pointer"
-                                            >
-                                                Other (not listed)
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-
-                                    {formData.position === "Other" && (
-                                        <div className="mt-2">
-                                            <Input
-                                                type="text"
-                                                className="dark-input"
-                                                value={formData.customPosition}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        customPosition:
-                                                            e.target.value,
-                                                    })
-                                                }
-                                                required
-                                                placeholder="Enter your position"
-                                                autoFocus
-                                            />
-                                        </div>
-                                    )}
+                                    />
                                 </div>
 
                                 {/* Date of Original Appointment */}
@@ -868,7 +815,7 @@ export default function FillUpPage() {
                                 {/* Latest Appointment */}
                                 <div>
                                     <label className="block mb-1.5 text-[12.5px] font-medium text-[#8a8a9a]">
-                                        Latest Appointment{" "}
+                                        Date of Latest Appointment{" "}
                                         <span className="text-[#555560] font-normal">
                                             (optional)
                                         </span>
@@ -878,15 +825,18 @@ export default function FillUpPage() {
                                         applicable
                                     </p>
                                     <MiniCalendar
-                                        value={latestAppointment}
-                                        onChange={setLatestAppointment}
+                                        value={dateOflatestAppointment}
+                                        onChange={setDateOfLatestAppointment}
                                         maxDate={new Date()}
+                                        minDate={dateOfOriginalAppointment}
                                     />
-                                    {latestAppointment && (
+                                    {dateOflatestAppointment && (
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                setLatestAppointment(undefined)
+                                                setDateOfLatestAppointment(
+                                                    undefined,
+                                                )
                                             }
                                             className="mt-1.5 text-[11px] text-[#555560] hover:text-[#8a8a9a] transition-colors"
                                         >

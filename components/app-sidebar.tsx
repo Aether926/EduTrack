@@ -13,7 +13,6 @@ import {
     Calendar,
     ClipboardListIcon,
     ShieldCheck,
-    User2,
     ChevronUp,
     Users,
     UserCheck,
@@ -50,8 +49,9 @@ import {
     DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
 
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
 import DropdownRedirect from "@/components/dropdown-redirect";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/ui-elements/theme-toggle";
 import { logSignOut } from "@/app/actions/auth-log-actions";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -81,13 +81,26 @@ type AppSidebarProps = {
     displayName: string;
     email: string;
     userId: string;
+    firstName?: string | null;
+    profileImage?: string | null;
+    username?: string | null;
 };
+
+/** Returns only the first name(s) — everything before the last word. */
+function getFirstNames(fullName: string): string {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length <= 1) return fullName;
+    return parts.slice(0, -1).join(" ");
+}
 
 export default function AppSidebar({
     role: userRole,
     displayName,
     email,
     userId,
+    firstName,
+    profileImage,
+    username,
 }: AppSidebarProps) {
     const [query, setQuery] = useState("");
     const pathname = usePathname();
@@ -106,14 +119,31 @@ export default function AppSidebar({
     const isAdmin = userRole === "ADMIN";
     const isSuperAdmin = userRole === "SUPERADMIN";
 
+    // Display label: username if set, else first name, else fallback
+    const shortName = username?.trim()
+        ? username.trim()
+        : firstName?.trim() || getFirstNames(displayName);
+
     const items: NavItem[] = [
         { title: "Home", url: "/dashboard", icon: Home },
         { title: "All Profiles", url: "/teacher-profiles", icon: Inbox },
         ...(!isAdmin || isSuperAdmin
             ? ([
-                  { title: "Training / Seminar Records", url: "/professional-dev", icon: Calendar },
-                  { title: "My Responsibilities", url: "/responsibilities", icon: ClipboardListIcon },
-                  { title: "My Compliance", url: "/compliance", icon: ShieldCheck },
+                  {
+                      title: "Training / Seminar Records",
+                      url: "/professional-dev",
+                      icon: Calendar,
+                  },
+                  {
+                      title: "My Responsibilities",
+                      url: "/responsibilities",
+                      icon: ClipboardListIcon,
+                  },
+                  {
+                      title: "My Compliance",
+                      url: "/compliance",
+                      icon: ShieldCheck,
+                  },
                   { title: "Repository", url: "/documents", icon: FileText },
               ] as NavItem[])
             : []),
@@ -121,8 +151,16 @@ export default function AppSidebar({
 
     const admin: AdminItem[] = [
         { title: "Manage Users", path: "admin-actions", icon: Users },
-        { title: "Account Approval", path: "account-approval", icon: UserCheck },
-        { title: "Trainings / Seminars", path: "add-training-seminar", icon: GraduationCap },
+        {
+            title: "Account Approval",
+            path: "account-approval",
+            icon: UserCheck,
+        },
+        {
+            title: "Trainings / Seminars",
+            path: "add-training-seminar",
+            icon: GraduationCap,
+        },
         { title: "Attendance", path: "proof-review", icon: ClipboardCheck },
         { title: "Documents", path: "admin-actions/documents", icon: FileText },
         { title: "Archive", path: "archive", icon: Archive },
@@ -150,7 +188,10 @@ export default function AppSidebar({
 
     const container = {
         hidden: { opacity: 1 },
-        show: { opacity: 1, transition: { staggerChildren: 0.045, delayChildren: 0.02 } },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.045, delayChildren: 0.02 },
+        },
     };
 
     const child = {
@@ -184,21 +225,38 @@ export default function AppSidebar({
                 tooltip={title}
                 className={[
                     "group relative w-full justify-start transition-colors",
-                    active ? "bg-accent text-accent-foreground shadow-sm" : "hover:bg-accent/60",
+                    active
+                        ? "bg-accent text-accent-foreground shadow-sm"
+                        : "hover:bg-accent/60",
                 ].join(" ")}
             >
-                <Link href={href} prefetch={false} className="flex items-center gap-3" onClick={handleClick}>
-                    <Icon className={[
-                        "h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-[1px]",
-                        active ? "text-foreground" : "text-muted-foreground",
-                    ].join(" ")} />
+                <Link
+                    href={href}
+                    prefetch={false}
+                    className="flex items-center gap-3"
+                    onClick={handleClick}
+                >
+                    <Icon
+                        className={[
+                            "h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-[1px]",
+                            active
+                                ? "text-foreground"
+                                : "text-muted-foreground",
+                        ].join(" ")}
+                    />
                     <span className="truncate">{title}</span>
                     {count && count > 0 ? (
-                        <Badge variant="destructive" className="ml-auto shrink-0 text-[10px]">
+                        <Badge
+                            variant="destructive"
+                            className="ml-auto shrink-0 text-[10px]"
+                        >
                             {count > 99 ? "99+" : count}
                         </Badge>
                     ) : tag ? (
-                        <Badge variant="secondary" className="ml-auto hidden shrink-0 text-[10px] sm:inline-flex">
+                        <Badge
+                            variant="secondary"
+                            className="ml-auto hidden shrink-0 text-[10px] sm:inline-flex"
+                        >
                             {tag}
                         </Badge>
                     ) : null}
@@ -227,18 +285,28 @@ export default function AppSidebar({
                             <>
                                 <div className="flex min-w-0 items-center gap-2">
                                     <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border bg-card">
-                                        <span className="text-sm font-semibold">📚</span>
+                                        <span className="text-sm font-semibold">
+                                            📚
+                                        </span>
                                     </div>
                                     <div className="min-w-0">
-                                        <div className="truncate text-sm font-semibold">EDUTRACK</div>
-                                        <div className="truncate text-xs text-muted-foreground">{userRole ?? "—"}</div>
+                                        <div className="truncate text-sm font-semibold">
+                                            EDUTRACK
+                                        </div>
+                                        <div className="truncate text-xs text-muted-foreground">
+                                            {userRole ?? "—"}
+                                        </div>
                                     </div>
                                 </div>
                                 {/* Desktop: collapse to icon rail | Mobile: close sheet */}
                                 <button
                                     onClick={toggleSidebar}
                                     className="grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-accent transition-colors"
-                                    aria-label={isMobile ? "Close sidebar" : "Collapse sidebar"}
+                                    aria-label={
+                                        isMobile
+                                            ? "Close sidebar"
+                                            : "Collapse sidebar"
+                                    }
                                 >
                                     <PanelLeft className="h-4 w-4 text-muted-foreground" />
                                 </button>
@@ -259,27 +327,57 @@ export default function AppSidebar({
                         </div>
                     )}
 
-                    {!isCollapsed && filteredMain.length > 0 && <Separator className="my-4" />}
+                    {!isCollapsed && filteredMain.length > 0 && (
+                        <Separator className="my-4" />
+                    )}
                 </div>
 
                 {/* Nav content */}
-<ScrollArea className="flex-1 px-1">
+                <ScrollArea className="flex-1 px-1">
                     <div className="pb-4">
                         {filteredMain.length > 0 && (
                             <SidebarGroup className={isAdmin ? "pb-0" : ""}>
                                 {!isCollapsed && (
-                                    <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">Main</div>
+                                    <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+                                        Main
+                                    </div>
                                 )}
                                 <SidebarGroupContent>
                                     <SidebarMenu>
-                                        <motion.div variants={container} initial="hidden" animate="show" className="space-y-1">
+                                        <motion.div
+                                            variants={container}
+                                            initial="hidden"
+                                            animate="show"
+                                            className="space-y-1"
+                                        >
                                             {filteredMain.map((item) => {
-                                                const active = pathname === item.url;
+                                                const active =
+                                                    pathname === item.url;
                                                 const Icon = item.icon;
                                                 return (
-                                                    <SidebarMenuItem key={item.title}>
-                                                        <motion.div variants={child} whileHover={{ x: 2 }} transition={{ type: "spring", stiffness: 450, damping: 28 }}>
-                                                            <NavRow href={item.url} title={item.title} Icon={Icon} active={active} tag={item.tag} />
+                                                    <SidebarMenuItem
+                                                        key={item.title}
+                                                    >
+                                                        <motion.div
+                                                            variants={child}
+                                                            whileHover={{
+                                                                x: 2,
+                                                            }}
+                                                            transition={{
+                                                                type: "spring",
+                                                                stiffness: 450,
+                                                                damping: 28,
+                                                            }}
+                                                        >
+                                                            <NavRow
+                                                                href={item.url}
+                                                                title={
+                                                                    item.title
+                                                                }
+                                                                Icon={Icon}
+                                                                active={active}
+                                                                tag={item.tag}
+                                                            />
                                                         </motion.div>
                                                     </SidebarMenuItem>
                                                 );
@@ -290,63 +388,160 @@ export default function AppSidebar({
                             </SidebarGroup>
                         )}
 
-                        {(userRole === "ADMIN" || isSuperAdmin) && filteredAdmin.length > 0 && (
-                            <>
-                                {!isCollapsed && !isAdmin && <Separator className="my-4" />}
-                                <SidebarGroup className={isAdmin ? "pt-0" : ""}>
+                        {(userRole === "ADMIN" || isSuperAdmin) &&
+                            filteredAdmin.length > 0 && (
+                                <>
                                     {!isCollapsed && !isAdmin && (
-                                        <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">Admin tools</div>
+                                        <Separator className="my-4" />
                                     )}
-                                    <SidebarGroupContent>
-                                        <SidebarMenu>
-                                            <motion.div variants={container} initial="hidden" animate="show" className="space-y-1">
-                                                {filteredAdmin.map((item) => {
-                                                    const href = `/${item.path}`;
-                                                    const active = pathname === href;
-                                                    const Icon = item.icon;
-                                                    return (
-                                                        <SidebarMenuItem key={item.path}>
-                                                            <motion.div variants={child} whileHover={{ x: 2 }} transition={{ type: "spring", stiffness: 450, damping: 28 }}>
-                                                                <NavRow href={href} title={item.title} Icon={Icon} active={active} tag={item.tag} />
-                                                            </motion.div>
-                                                        </SidebarMenuItem>
-                                                    );
-                                                })}
-                                            </motion.div>
-                                        </SidebarMenu>
-                                    </SidebarGroupContent>
-                                </SidebarGroup>
-                            </>
-                        )}
+                                    <SidebarGroup
+                                        className={isAdmin ? "pt-0" : ""}
+                                    >
+                                        {!isCollapsed && !isAdmin && (
+                                            <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+                                                Admin tools
+                                            </div>
+                                        )}
+                                        <SidebarGroupContent>
+                                            <SidebarMenu>
+                                                <motion.div
+                                                    variants={container}
+                                                    initial="hidden"
+                                                    animate="show"
+                                                    className="space-y-1"
+                                                >
+                                                    {filteredAdmin.map(
+                                                        (item) => {
+                                                            const href = `/${item.path}`;
+                                                            const active =
+                                                                pathname ===
+                                                                href;
+                                                            const Icon =
+                                                                item.icon;
+                                                            return (
+                                                                <SidebarMenuItem
+                                                                    key={
+                                                                        item.path
+                                                                    }
+                                                                >
+                                                                    <motion.div
+                                                                        variants={
+                                                                            child
+                                                                        }
+                                                                        whileHover={{
+                                                                            x: 2,
+                                                                        }}
+                                                                        transition={{
+                                                                            type: "spring",
+                                                                            stiffness: 450,
+                                                                            damping: 28,
+                                                                        }}
+                                                                    >
+                                                                        <NavRow
+                                                                            href={
+                                                                                href
+                                                                            }
+                                                                            title={
+                                                                                item.title
+                                                                            }
+                                                                            Icon={
+                                                                                Icon
+                                                                            }
+                                                                            active={
+                                                                                active
+                                                                            }
+                                                                            tag={
+                                                                                item.tag
+                                                                            }
+                                                                        />
+                                                                    </motion.div>
+                                                                </SidebarMenuItem>
+                                                            );
+                                                        },
+                                                    )}
+                                                </motion.div>
+                                            </SidebarMenu>
+                                        </SidebarGroupContent>
+                                    </SidebarGroup>
+                                </>
+                            )}
 
-                        {(userRole === "PRINCIPAL" || isSuperAdmin) && filteredPrincipal.length > 0 && (
-                            <>
-                                {!isCollapsed && <Separator className="my-4" />}
-                                <SidebarGroup>
+                        {(userRole === "PRINCIPAL" || isSuperAdmin) &&
+                            filteredPrincipal.length > 0 && (
+                                <>
                                     {!isCollapsed && (
-                                        <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">Principal tools</div>
+                                        <Separator className="my-4" />
                                     )}
-                                    <SidebarGroupContent>
-                                        <SidebarMenu>
-                                            <motion.div variants={container} initial="hidden" animate="show" className="space-y-1">
-                                                {filteredPrincipal.map((item) => {
-                                                    const href = item.path;
-                                                    const active = pathname === href;
-                                                    const Icon = item.icon;
-                                                    return (
-                                                        <SidebarMenuItem key={item.path}>
-                                                            <motion.div variants={child} whileHover={{ x: 2 }} transition={{ type: "spring", stiffness: 450, damping: 28 }}>
-                                                                <NavRow href={href} title={item.title} Icon={Icon} active={active} tag={item.tag} />
-                                                            </motion.div>
-                                                        </SidebarMenuItem>
-                                                    );
-                                                })}
-                                            </motion.div>
-                                        </SidebarMenu>
-                                    </SidebarGroupContent>
-                                </SidebarGroup>
-                            </>
-                        )}
+                                    <SidebarGroup>
+                                        {!isCollapsed && (
+                                            <div className="px-2 pb-2 text-xs font-medium text-muted-foreground">
+                                                Principal tools
+                                            </div>
+                                        )}
+                                        <SidebarGroupContent>
+                                            <SidebarMenu>
+                                                <motion.div
+                                                    variants={container}
+                                                    initial="hidden"
+                                                    animate="show"
+                                                    className="space-y-1"
+                                                >
+                                                    {filteredPrincipal.map(
+                                                        (item) => {
+                                                            const href =
+                                                                item.path;
+                                                            const active =
+                                                                pathname ===
+                                                                href;
+                                                            const Icon =
+                                                                item.icon;
+                                                            return (
+                                                                <SidebarMenuItem
+                                                                    key={
+                                                                        item.path
+                                                                    }
+                                                                >
+                                                                    <motion.div
+                                                                        variants={
+                                                                            child
+                                                                        }
+                                                                        whileHover={{
+                                                                            x: 2,
+                                                                        }}
+                                                                        transition={{
+                                                                            type: "spring",
+                                                                            stiffness: 450,
+                                                                            damping: 28,
+                                                                        }}
+                                                                    >
+                                                                        <NavRow
+                                                                            href={
+                                                                                href
+                                                                            }
+                                                                            title={
+                                                                                item.title
+                                                                            }
+                                                                            Icon={
+                                                                                Icon
+                                                                            }
+                                                                            active={
+                                                                                active
+                                                                            }
+                                                                            tag={
+                                                                                item.tag
+                                                                            }
+                                                                        />
+                                                                    </motion.div>
+                                                                </SidebarMenuItem>
+                                                            );
+                                                        },
+                                                    )}
+                                                </motion.div>
+                                            </SidebarMenu>
+                                        </SidebarGroupContent>
+                                    </SidebarGroup>
+                                </>
+                            )}
                     </div>
                 </ScrollArea>
             </SidebarContent>
@@ -355,39 +550,69 @@ export default function AppSidebar({
             <SidebarFooter className="border-t">
                 <div className="px-2 py-2">
                     <DropdownMenu>
-                        <div className="flex items-center gap-2">
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton
-                                    size="lg"
-                                    tooltip={displayName}
-                                    className="w-full justify-start"
+                        {isCollapsed ? (
+                            /* Collapsed: avatar centered, opens dropdown */
+                            <div className="flex justify-center">
+                                <DropdownMenuTrigger asChild>
+                                    <button className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                        <UserAvatar
+                                            name={displayName}
+                                            src={profileImage}
+                                            className="h-8 w-8"
+                                        />
+                                    </button>
+                                </DropdownMenuTrigger>
+                            </div>
+                        ) : (
+                            /* Expanded: avatar links to profile, name opens dropdown */
+                            <div className="flex items-center">
+                                <Link
+                                    href="/profile"
+                                    prefetch={false}
+                                    className="shrink-0"
                                 >
-                                    <User2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                    {!isCollapsed && (
-                                        <div className="ml-2 flex min-w-0 flex-col items-start">
-                                            <span className="truncate text-sm font-semibold">{displayName}</span>
-                                            <span className="truncate text-xs text-muted-foreground">{email || "—"}</span>
+                                    <UserAvatar
+                                        name={displayName}
+                                        src={profileImage}
+                                        className="h-8 w-8"
+                                    />
+                                </Link>
+
+                                <DropdownMenuTrigger asChild>
+                                    <SidebarMenuButton
+                                        size="lg"
+                                        tooltip={displayName}
+                                        className="w-full justify-start px-1"
+                                    >
+                                        <div className="ml-1 flex min-w-0 flex-col items-start">
+                                            <span className="truncate text-sm font-semibold">
+                                                {shortName}
+                                            </span>
                                         </div>
-                                    )}
-                                    {!isCollapsed && <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />}
-                                </SidebarMenuButton>
-                            </DropdownMenuTrigger>
+                                        <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />
+                                    </SidebarMenuButton>
+                                </DropdownMenuTrigger>
 
-                            {!isCollapsed && (
-                                <>
-                                    <div className="shrink-0">
-                                        <NotificationPopover viewerId={userId} />
-                                    </div>
-                                    <div className="shrink-0">
-                                        <ThemeToggle />
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                                <div className="shrink-0">
+                                    <NotificationPopover viewerId={userId} />
+                                </div>
+                                <div className="shrink-0">
+                                    <ThemeToggle />
+                                </div>
+                            </div>
+                        )}
 
-                        <DropdownMenuContent side="top" align="end" className="w-56">
-                            <DropdownRedirect path="/profile">Manage Profile</DropdownRedirect>
-                            <DropdownRedirect path="/settings">Settings</DropdownRedirect>
+                        <DropdownMenuContent
+                            side="top"
+                            align="end"
+                            className="w-56"
+                        >
+                            <DropdownRedirect path="/profile">
+                                Manage Profile
+                            </DropdownRedirect>
+                            <DropdownRedirect path="/settings">
+                                Settings
+                            </DropdownRedirect>
                             <button
                                 onClick={handleSignOut}
                                 className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"

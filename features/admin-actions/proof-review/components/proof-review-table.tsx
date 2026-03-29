@@ -7,9 +7,7 @@ import { fmt } from "../lib/utils";
 import { useMemo, useState } from "react";
 import { Search, X, Clock, GraduationCap, FileSearch } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
 import { Input } from "@/components/ui/input";
 import {
     Table,
@@ -20,31 +18,10 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import { StatusBadge } from "@/components/ui-elements/badges";
+import { ReviewButton } from "@/components/action-button";
 import ProofReviewSheet from "@/features/admin-actions/proof-review/components/proof-review-sheet";
-
-function StatusBadge({ status }: { status: string }) {
-    const s = (status ?? "").toUpperCase();
-    if (s === "APPROVED")
-        return (
-            <Badge className="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                Approved
-            </Badge>
-        );
-    if (s === "REJECTED")
-        return (
-            <Badge className="inline-flex items-center gap-1.5 bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/15">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                Rejected
-            </Badge>
-        );
-    return (
-        <Badge className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/15">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            {s.charAt(0) + s.slice(1).toLowerCase()}
-        </Badge>
-    );
-}
 
 export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
     const {
@@ -189,20 +166,24 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                                     </div>
                                                     <div className="md:hidden space-y-1.5 pt-2">
                                                         <div className="flex items-center gap-2">
-                                                            <InitialAvatar
+                                                            <UserAvatar
                                                                 name={
                                                                     r.teacher
                                                                         .name
                                                                 }
-                                                                src={r.teacher.profileImage}
-                                                                className="h-6 w-6 text-[10px] shrink-0"
+                                                                src={
+                                                                    r.teacher
+                                                                        .profileImage
+                                                                }
+                                                                className="h-6 w-6 shrink-0"
                                                             />
                                                             <span className="text-xs text-muted-foreground">
                                                                 {r.teacher.name}
                                                             </span>
                                                         </div>
                                                         <StatusBadge
-                                                            status={r.status}
+                                                            status={r.status.toLowerCase()}
+                                                            size="xs"
                                                         />
                                                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                                             <Clock className="h-3 w-3 shrink-0" />
@@ -213,10 +194,13 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                             </TableCell>
                                             <TableCell className="hidden lg:table-cell align-top py-3 overflow-hidden">
                                                 <div className="flex items-start gap-2.5 min-w-0">
-                                                    <InitialAvatar
+                                                    <UserAvatar
                                                         name={r.teacher.name}
-                                                        src={r.teacher.profileImage}
-                                                        className="h-8 w-8 text-xs shrink-0"
+                                                        src={
+                                                            r.teacher
+                                                                .profileImage
+                                                        }
+                                                        className="h-8 w-8 shrink-0"
                                                     />
                                                     <div className="leading-tight min-w-0">
                                                         <p className="text-sm font-medium break-words">
@@ -231,7 +215,7 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                             </TableCell>
                                             <TableCell className="hidden md:table-cell align-middle py-3">
                                                 <StatusBadge
-                                                    status={r.status}
+                                                    status={r.status.toLowerCase()}
                                                 />
                                             </TableCell>
                                             <TableCell className="hidden md:table-cell align-middle py-3 text-xs text-muted-foreground font-mono whitespace-normal">
@@ -243,9 +227,7 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                                     e.stopPropagation()
                                                 }
                                             >
-                                                <Button
-                                                    size="sm"
-                                                    className="gap-1.5 bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/25 hover:bg-fuchsia-500/20 hover:border-fuchsia-500/40"
+                                                <ReviewButton
                                                     onClick={() =>
                                                         setSelected(r)
                                                     }
@@ -253,9 +235,7 @@ export default function ProofReviewTable({ rows }: { rows: ProofReviewRow[] }) {
                                                         loadingId ===
                                                         r.attendanceId
                                                     }
-                                                >
-                                                    Review
-                                                </Button>
+                                                />
                                             </TableCell>
                                         </TableRow>
                                     );

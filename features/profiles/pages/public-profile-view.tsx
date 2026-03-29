@@ -72,6 +72,7 @@ export default function PublicProfileView(props: {
     hasSession?: boolean;
     showRecordButton?: boolean;
     isArchived?: boolean;
+    isAdminEditing?: boolean;
 }) {
     const {
         profile,
@@ -136,6 +137,8 @@ export default function PublicProfileView(props: {
             residentialBarangay: str(profile?.residentialBarangay),
             residentialCity: str(profile?.residentialCity),
             residentialProvince: str(profile?.residentialProvince),
+            residentialCountry: str(profile?.residentialCountry),
+            residentialRegion: str(profile?.residentialRegion),
             residentialZipCode: str(profile?.residentialZipCode),
             permanentHouseNo: str(profile?.permanentHouseNo),
             permanentStreet: str(profile?.permanentStreet),
@@ -143,6 +146,8 @@ export default function PublicProfileView(props: {
             permanentBarangay: str(profile?.permanentBarangay),
             permanentCity: str(profile?.permanentCity),
             permanentProvince: str(profile?.permanentProvince),
+            permanentCountry: str(profile?.permanentCountry),
+            permanentRegion: str(profile?.permanentRegion),
             permanentZipCode: str(profile?.permanentZipCode),
             sameAsResidential: Boolean(profile?.sameAsResidential),
             spouseSurname: str(profile?.spouseSurname),
@@ -204,21 +209,21 @@ export default function PublicProfileView(props: {
                 profile?.educationGraduateGraduated,
             ),
             educationGraduateHonors: str(profile?.educationGraduateHonors),
-            emergencyName: str(profile.ProfileEmergencyContact[0]?.name),
+            emergencyName: str(profile.ProfileEmergencyContact?.[0]?.name),
             emergencyRelationship: str(
-                profile.ProfileEmergencyContact[0]?.relationship,
+                profile.ProfileEmergencyContact?.[0]?.relationship,
             ),
-            emergencyAddress: str(profile.ProfileEmergencyContact[0]?.address),
+            emergencyAddress: str(
+                profile.ProfileEmergencyContact?.[0]?.address,
+            ),
             emergencyTelephoneNo: str(
-                profile.ProfileEmergencyContact[0]?.telephoneNo,
+                profile.ProfileEmergencyContact?.[0]?.telephoneNo,
             ),
             profileImage: profile?.profileImage ?? null,
             privacySettings: profile?.privacySettings ?? null,
         }),
         [profile],
     );
-
-    console.log(profile.ProfileEmergencyContact);
 
     const isAdmin = ["ADMIN", "SUPERADMIN"].includes(viewerRole);
     const isTeacher = viewerRole === "TEACHER";

@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+    TypeBadge,
+    LevelBadge,
+    StatusBadge,
+} from "@/components/ui-elements/badges";
 import { Separator } from "@/components/ui/separator";
 import { Upload, X, Loader2, CalendarDays, Clock, ZoomIn } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -130,10 +134,14 @@ export default function UploadProofSheet({
                         <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <Badge variant="secondary">TEACHER</Badge>
-                                    <Badge variant="outline">
-                                        Upload Proof
-                                    </Badge>
+                                    <TypeBadge
+                                        type={ctx.training.type}
+                                        size="xs"
+                                    />
+                                    <LevelBadge
+                                        level={ctx.training.level}
+                                        size="xs"
+                                    />
                                 </div>
                                 <SheetTitle className="text-base leading-snug truncate">
                                     {ctx.training.title}
@@ -177,7 +185,10 @@ export default function UploadProofSheet({
                                         Status
                                     </div>
                                     <div className="text-xs font-medium">
-                                        {ctx.status}
+                                        <StatusBadge
+                                            status={ctx.status.toLowerCase()}
+                                            size="xs"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -199,11 +210,9 @@ export default function UploadProofSheet({
                                     Select file
                                 </div>
                                 {file ? (
-                                    <Badge variant="secondary">
-                                        File selected
-                                    </Badge>
+                                    <StatusBadge status="submitted" size="xs" />
                                 ) : (
-                                    <Badge variant="outline">No file</Badge>
+                                    <StatusBadge status="draft" size="xs" />
                                 )}
                             </div>
                             <div className="text-xs text-muted-foreground">
