@@ -35,6 +35,7 @@ import {
 } from "@tanstack/react-table";
 import { PageNav } from "@/components/ui-elements/pagination/page-nav";
 import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
+import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
 import { useRouter } from "next/navigation";
 
 export type TrainingSeminarHistory = {
@@ -116,7 +117,9 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
                 <ArrowUpDown />
             </Button>
         ),
-        cell: ({ row }) => <div>{row.getValue("type")}</div>,
+        cell: ({ row }) => (
+            <TypeBadge type={row.getValue("type") as string} size="xs" />
+        ),
         size: 120,
     },
     {
@@ -149,7 +152,9 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("level")}</div>
+            <div className="flex justify-center">
+                <LevelBadge level={row.getValue("level") as string} size="xs" />
+            </div>
         ),
         size: 120,
     },
@@ -167,7 +172,7 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">
+            <div className="text-center w-full font-mono text-xs text-muted-foreground">
                 {row.getValue("startDate")}
             </div>
         ),
@@ -187,7 +192,9 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("endDate")}</div>
+            <div className="text-center w-full font-mono text-xs text-muted-foreground">
+                {row.getValue("endDate")}
+            </div>
         ),
         size: 130,
     },
@@ -205,8 +212,8 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">
-                {row.getValue("totalHours")}
+            <div className="text-center w-full tabular-nums text-sm">
+                {row.getValue("totalHours")}h
             </div>
         ),
         size: 120,
@@ -224,7 +231,11 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
                 <ArrowUpDown />
             </Button>
         ),
-        cell: ({ row }) => <div>{row.getValue("sponsor")}</div>,
+        cell: ({ row }) => (
+            <div className="text-sm text-muted-foreground">
+                {row.getValue("sponsor")}
+            </div>
+        ),
         size: 180,
     },
 ];

@@ -23,6 +23,7 @@ import type {
     ProfileState,
     ProfileChild,
 } from "@/features/profiles/types/profile";
+import { NameInput } from "@/components/formatter/name-format";
 
 // ── Display value ──────────────────────────────────────────────────────────────
 
@@ -58,7 +59,7 @@ function SectionDivider({ label }: { label: string }) {
     );
 }
 
-// ── Field ──────────────────────────────────────────────────────────────────────
+// ── Field — uses NameInput for name fields ─────────────────────────────────────
 
 function Field(props: {
     label: string;
@@ -67,6 +68,7 @@ function Field(props: {
     onChange: (value: string) => void;
     placeholder?: string;
     type?: string;
+    isName?: boolean;
 }) {
     const {
         label,
@@ -75,18 +77,32 @@ function Field(props: {
         onChange,
         placeholder,
         type = "text",
+        isName = false,
     } = props;
+
+    const inputCls =
+        "bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20";
+
     return (
         <div className="space-y-1.5">
             <FieldLabel>{label}</FieldLabel>
             {isEditing ? (
-                <Input
-                    type={type}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder={placeholder}
-                    className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
-                />
+                isName ? (
+                    <NameInput
+                        value={value}
+                        onChange={onChange}
+                        placeholder={placeholder}
+                        className={inputCls}
+                    />
+                ) : (
+                    <Input
+                        type={type}
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder={placeholder}
+                        className={inputCls}
+                    />
+                )
             ) : (
                 <DisplayValue value={value} />
             )}
@@ -185,6 +201,7 @@ function FamilyBackgroundForm({
                         isEditing={isEditing}
                         onChange={f("spouseSurname")}
                         placeholder="Surname"
+                        isName
                     />
                     <Field
                         label="First Name"
@@ -192,6 +209,7 @@ function FamilyBackgroundForm({
                         isEditing={isEditing}
                         onChange={f("spouseFirstName")}
                         placeholder="First Name"
+                        isName
                     />
                     <Field
                         label="Middle Name"
@@ -199,6 +217,7 @@ function FamilyBackgroundForm({
                         isEditing={isEditing}
                         onChange={f("spouseMiddleName")}
                         placeholder="Middle Name"
+                        isName
                     />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -279,6 +298,7 @@ function FamilyBackgroundForm({
                                         updateChild(index, "name", v)
                                     }
                                     placeholder="Write full name"
+                                    isName
                                 />
                                 <div className="space-y-1.5">
                                     <FieldLabel>Date of Birth</FieldLabel>
@@ -340,6 +360,7 @@ function FamilyBackgroundForm({
                     isEditing={isEditing}
                     onChange={f("fatherSurname")}
                     placeholder="Surname"
+                    isName
                 />
                 <Field
                     label="First Name"
@@ -347,6 +368,7 @@ function FamilyBackgroundForm({
                     isEditing={isEditing}
                     onChange={f("fatherFirstName")}
                     placeholder="First Name"
+                    isName
                 />
                 <Field
                     label="Middle Name"
@@ -354,6 +376,7 @@ function FamilyBackgroundForm({
                     isEditing={isEditing}
                     onChange={f("fatherMiddleName")}
                     placeholder="Middle Name"
+                    isName
                 />
                 <SelectField
                     label="Name Extension"
@@ -373,6 +396,7 @@ function FamilyBackgroundForm({
                     isEditing={isEditing}
                     onChange={f("motherSurname")}
                     placeholder="Maiden Surname"
+                    isName
                 />
                 <Field
                     label="First Name"
@@ -380,6 +404,7 @@ function FamilyBackgroundForm({
                     isEditing={isEditing}
                     onChange={f("motherFirstName")}
                     placeholder="First Name"
+                    isName
                 />
                 <Field
                     label="Middle Name"
@@ -387,6 +412,7 @@ function FamilyBackgroundForm({
                     isEditing={isEditing}
                     onChange={f("motherMiddleName")}
                     placeholder="Middle Name"
+                    isName
                 />
             </div>
         </div>

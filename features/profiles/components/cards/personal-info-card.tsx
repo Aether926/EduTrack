@@ -44,9 +44,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/combobox";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+    NameInput,
+    MiddleInitialInput,
+} from "@/components/formatter/name-format";
 
 import type { ProfileState } from "@/features/profiles/types/profile";
-import { formatName } from "@/app/util/helper";
 import { LocationSelect, LocationValue } from "@/components/ui/location-select";
 import { provinces, regions } from "ph-locations";
 import { Country } from "country-state-city";
@@ -99,7 +102,6 @@ function InputField(props: {
     rows?: number;
     isEditing: boolean;
     onInputChange: (field: keyof ProfileState, value: string) => void;
-    onBlur?: (field: keyof ProfileState) => void;
     required?: boolean;
     placeholder?: string;
 }) {
@@ -113,7 +115,6 @@ function InputField(props: {
         rows,
         isEditing,
         onInputChange,
-        onBlur,
         required,
         placeholder,
     } = props;
@@ -151,7 +152,6 @@ function InputField(props: {
                         type={type}
                         value={value}
                         onChange={(e) => onInputChange(field, e.target.value)}
-                        onBlur={() => onBlur?.(field)}
                         placeholder={placeholder || ""}
                         required={Boolean(required)}
                         className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
@@ -163,8 +163,6 @@ function InputField(props: {
         </div>
     );
 }
-
-// ── DatePickerField ────────────────────────────────────────────────────────────
 
 function DatePickerField(props: {
     label: string;
@@ -224,8 +222,6 @@ function DatePickerField(props: {
         </div>
     );
 }
-
-// ── SelectField ────────────────────────────────────────────────────────────────
 
 function SelectField(props: {
     label: string;
@@ -435,7 +431,6 @@ function AddressBlock(props: {
                                         const isPH =
                                             (data[f("Country")] as string) ===
                                             "PH";
-
                                         const val = isZip
                                             ? isPH
                                                 ? e.target.value
@@ -443,7 +438,6 @@ function AddressBlock(props: {
                                                       .slice(0, 4)
                                                 : e.target.value.slice(0, 10)
                                             : e.target.value;
-
                                         onInputChange(f(field.key), val);
                                     }}
                                     inputMode={
@@ -522,6 +516,8 @@ function PersonalInfoForm({
     onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
 }) {
     const isDualCitizen = data.citizenship === "Dual Citizenship";
+    const inputCls =
+        "bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20";
 
     const handleSameAsResidential = (checked: boolean) => {
         onInputChange(
@@ -545,23 +541,25 @@ function PersonalInfoForm({
         <div className="space-y-6">
             {/* ── Name ── */}
             <div className="space-y-4">
-                <InputField
-                    label="First Name"
-                    value={data.firstName}
-                    field="firstName"
-                    icon={User}
-                    isEditing={isEditing}
-                    onInputChange={onInputChange}
-                    onBlur={(f) => {
-                        if (f === "firstName")
-                            onInputChange(
-                                "firstName",
-                                formatName(data.firstName),
-                            );
-                    }}
-                    required
-                />
+                {/* First Name — NameInput handles proper-case on blur */}
+                <div className="space-y-1.5">
+                    <FieldLabel icon={User as React.ElementType} required>
+                        First Name
+                    </FieldLabel>
+                    {isEditing ? (
+                        <NameInput
+                            value={data.firstName}
+                            onChange={(v) => onInputChange("firstName", v)}
+                            placeholder="First name"
+                            className={inputCls}
+                        />
+                    ) : (
+                        <DisplayValue value={data.firstName} />
+                    )}
+                </div>
+
                 <div className="grid grid-cols-3 gap-3">
+                    {/* Middle Initial — MiddleInitialInput handles letter + dot */}
                     <div className="space-y-1.5">
                         <FieldLabel>
                             <span className="hidden md:inline">
@@ -570,57 +568,35 @@ function PersonalInfoForm({
                             <span className="inline md:hidden">M.I.</span>
                         </FieldLabel>
                         {isEditing ? (
-                            <Input
+                            <MiddleInitialInput
                                 value={data.middleInitial}
-                                onChange={(e) => {
-                                    const raw = e.target.value.replace(
-                                        /[^a-zA-Z.]/g,
-                                        "",
-                                    );
-                                    const letter = raw
-                                        .replace(/\./g, "")
-                                        .slice(0, 1)
-                                        .toUpperCase();
-                                    onInputChange(
-                                        "middleInitial",
-                                        letter ? `${letter}.` : "",
-                                    );
-                                }}
-                                onKeyDown={(e) => {
-                                    if (
-                                        (e.key === "Backspace" ||
-                                            e.key === "Delete") &&
-                                        data.middleInitial
-                                    ) {
-                                        e.preventDefault();
-                                        onInputChange("middleInitial", "");
-                                    }
-                                }}
+                                onChange={(v) =>
+                                    onInputChange("middleInitial", v)
+                                }
                                 placeholder="Optional"
-                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                className={inputCls}
                             />
                         ) : (
                             <DisplayValue value={data.middleInitial} />
                         )}
                     </div>
-                    <div className="col-span-2">
-                        <InputField
-                            label="Last Name"
-                            value={data.lastName}
-                            field="lastName"
-                            isEditing={isEditing}
-                            onInputChange={onInputChange}
-                            onBlur={(f) => {
-                                if (f === "lastName")
-                                    onInputChange(
-                                        "lastName",
-                                        formatName(data.lastName),
-                                    );
-                            }}
-                            required
-                        />
+
+                    {/* Last Name — NameInput handles proper-case on blur */}
+                    <div className="col-span-2 space-y-1.5">
+                        <FieldLabel required>Last Name</FieldLabel>
+                        {isEditing ? (
+                            <NameInput
+                                value={data.lastName}
+                                onChange={(v) => onInputChange("lastName", v)}
+                                placeholder="Last name"
+                                className={inputCls}
+                            />
+                        ) : (
+                            <DisplayValue value={data.lastName} />
+                        )}
                     </div>
                 </div>
+
                 <SelectField
                     label="Name Extension"
                     value={data.nameExtension ?? ""}
@@ -732,7 +708,7 @@ function PersonalInfoForm({
                                     onInputChange("height", e.target.value)
                                 }
                                 placeholder="e.g. 1.65"
-                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                className={inputCls}
                             />
                         ) : (
                             <DisplayValue value={data.height} />
@@ -750,7 +726,7 @@ function PersonalInfoForm({
                                     onInputChange("weight", e.target.value)
                                 }
                                 placeholder="e.g. 62.5"
-                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                className={inputCls}
                             />
                         ) : (
                             <DisplayValue value={data.weight} />
@@ -933,7 +909,6 @@ export default function PersonalInfoCard({
         <>
             {/* ── Read-only Card ── */}
             <div className="border border-border/60 shadow-lg w-full overflow-hidden rounded-xl bg-card">
-                {/* Decorative header band */}
                 <div className="relative px-6 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
                     <div className="relative flex items-center justify-between">
@@ -985,9 +960,7 @@ export default function PersonalInfoCard({
                             : "w-[500px] sm:w-[540px]",
                     ].join(" ")}
                 >
-                    {/* Sticky header band */}
                     <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10 shrink-0">
-                        {/* Decorative glow */}
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
                         <div className="relative flex items-center gap-2.5">
                             <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-1.5">
@@ -999,7 +972,6 @@ export default function PersonalInfoCard({
                         </div>
                     </SheetHeader>
 
-                    {/* Scrollable form */}
                     <div className="flex-1 overflow-y-auto px-5 py-5">
                         <PersonalInfoForm
                             data={data}
@@ -1009,7 +981,6 @@ export default function PersonalInfoCard({
                         />
                     </div>
 
-                    {/* Sticky footer */}
                     <SheetFooter className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-4 flex flex-row gap-2 shrink-0">
                         <Button
                             onClick={onSave}

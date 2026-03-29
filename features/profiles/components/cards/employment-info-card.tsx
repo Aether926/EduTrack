@@ -2,53 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Briefcase, FileText, Calendar, Pencil, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { RequestHRChangeModal } from "@/features/profiles/components/modals/request-employment-info";
 import { useEmploymentHR } from "@/features/profiles/hooks/use-employment-info";
 import type { ProfileState } from "@/features/profiles/types/profile";
-
-const POSITIONS = [
-    "Teacher I",
-    "Teacher II",
-    "Teacher III",
-    "Teacher IV",
-    "Teacher V",
-    "Teacher VI",
-    "Teacher VII",
-    "Master Teacher I",
-    "Master Teacher II",
-    "Master Teacher III",
-    "Master Teacher IV",
-    "Master Teacher V",
-    "Head Teacher I",
-    "Head Teacher II",
-    "Head Teacher III",
-    "Head Teacher IV",
-    "Head Teacher V",
-    "Head Teacher VI",
-    "Assistant School Principal I",
-    "Assistant School Principal II",
-    "Assistant School Principal III",
-    "Assistant School Principal IV",
-    "School Principal I",
-    "School Principal II",
-    "School Principal III",
-    "School Principal IV",
-    "School Principal V",
-    "Administrative Staff",
-];
-
-const STATUS_COLORS: Record<string, string> = {
-    PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    APPROVED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    REJECTED: "bg-rose-500/15 text-rose-400 border-rose-500/30",
-};
+import { StatusBadge } from "@/components/ui-elements/badges";
+import { PositionSelect } from "@/components/formatter/position-select";
+import {
+    fmtEmployeeId,
+    EmployeeIdInput,
+} from "@/components/formatter/employee-id-format";
 
 function DisplayValue({ value }: { value?: string | null }) {
     return (
@@ -107,9 +69,11 @@ function ReadOnlyField({
 function ReadOnlyDate({
     label,
     value,
+    legend,
 }: {
     label: string;
     value: Date | string | undefined;
+    legend?: string;
 }) {
     const formatted = value
         ? typeof value === "string"
@@ -125,6 +89,11 @@ function ReadOnlyDate({
                 {label}
             </FieldLabel>
             <DisplayValue value={formatted} />
+            {legend && (
+                <p className="text-[11px] text-muted-foreground/70 leading-tight pl-0.5">
+                    {legend}
+                </p>
+            )}
         </div>
     );
 }
@@ -213,11 +182,10 @@ export default function EmploymentInfoCard(props: {
                             Employee ID{" "}
                             <span className="text-rose-400 ml-0.5">*</span>
                         </FieldLabel>
-                        <Input
+                        <EmployeeIdInput
                             value={data.employeeId}
-                            onChange={(e) =>
-                                onInputChange("employeeId", e.target.value)
-                            }
+                            onChange={(v) => onInputChange("employeeId", v)}
+                            placeholder="7-digit ID"
                             className="bg-white/5 border-white/10 focus:border-blue-500/50"
                         />
                     </div>
@@ -225,21 +193,12 @@ export default function EmploymentInfoCard(props: {
                         <FieldLabel icon={Briefcase as React.ElementType}>
                             Position / Designation
                         </FieldLabel>
-                        <Select
+                        <PositionSelect
                             value={data.position}
-                            onValueChange={(v) => onInputChange("position", v)}
-                        >
-                            <SelectTrigger className="bg-white/5 border-white/10 hover:bg-white/8">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {POSITIONS.map((p) => (
-                                    <SelectItem key={p} value={p}>
-                                        {p}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            onChange={(v) => onInputChange("position", v)}
+                            triggerClassName="bg-white/5 border-white/10 hover:bg-white/8 focus:border-blue-500/50"
+                            inputClassName="bg-white/5 border-white/10 focus:border-blue-500/50"
+                        />
                     </div>
                 </div>
 
@@ -371,11 +330,7 @@ export default function EmploymentInfoCard(props: {
                         <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
                             Last request:
                         </span>
-                        <span
-                            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${STATUS_COLORS[lastRequest.status] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30"}`}
-                        >
-                            {lastRequest.status}
-                        </span>
+                        <StatusBadge status={lastRequest.status} size="xs" />
                         {lastRequest.review_note && (
                             <span className="text-muted-foreground text-xs truncate">
                                 — {lastRequest.review_note}
@@ -385,11 +340,10 @@ export default function EmploymentInfoCard(props: {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <ReadOnlyField
-                        label="Employee ID"
-                        value={data.employeeId}
-                        icon={FileText}
-                    />
+                    <div className="space-y-1.5">
+                        <FieldLabel icon={FileText}>Employee ID</FieldLabel>
+                        <DisplayValue value={fmtEmployeeId(data.employeeId)} />
+                    </div>
                     <ReadOnlyField
                         label="Position / Designation"
                         value={data.position}
@@ -408,14 +362,17 @@ export default function EmploymentInfoCard(props: {
                     <ReadOnlyDate
                         label="Date of Original Appointment"
                         value={data.dateOfOriginalAppointment}
+                        legend="First day of service in DepEd"
                     />
                     <ReadOnlyDate
                         label="Date of Latest Appointment"
                         value={data.dateOfLatestAppointment}
+                        legend="Most recent promotion or appointment"
                     />
                     <ReadOnlyDate
                         label="Date of Original Deployment"
                         value={data.dateOfOriginalDeployment}
+                        legend="Date first assigned to this school"
                     />
                 </div>
             </CardShell>
