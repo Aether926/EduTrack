@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { ArchivedUser } from "../actions/archive-actions";
 import { restoreUser } from "@/features/superadmin/actions/superadmin-actions";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,21 +24,11 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
-import {
-    Search,
-    Archive,
-    RotateCcw,
-    Trash2,
-    Loader2,
-    AlertTriangle,
-} from "lucide-react";
+import { Search, Archive, RotateCcw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { fmtFullName } from "@/components/formatter/name-format";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-function fullName(u: ArchivedUser) {
-    return `${u.firstName ?? ""} ${u.middleInitial ? u.middleInitial + ". " : ""}${u.lastName ?? ""}`.trim();
-}
 
 function fmtDate(dt: string | null) {
     if (!dt) return "—";
@@ -51,11 +41,6 @@ function fmtDate(dt: string | null) {
     } catch {
         return dt;
     }
-}
-
-/** Collapses accidental double-dots (e.g. "C.. IBARRA" → "C. IBARRA"). */
-function fixDoubleDots(name: string): string {
-    return name.replace(/\.{2,}/g, ".");
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
@@ -79,16 +64,19 @@ export default function ArchiveTable({
     const [restoreConfirm, setRestoreConfirm] = useState<ArchivedUser | null>(
         null,
     );
-    const [deleteConfirm, setDeleteConfirm] = useState<ArchivedUser | null>(
-        null,
-    );
 
     const filtered = useMemo(() => {
         const s = q.trim().toLowerCase();
         if (!s) return users;
         return users.filter(
             (u) =>
-                fullName(u).toLowerCase().includes(s) ||
+                fmtFullName({
+                    firstName: u.firstName,
+                    middleInitial: u.middleInitial,
+                    lastName: u.lastName,
+                })
+                    .toLowerCase()
+                    .includes(s) ||
                 (u.email ?? "").toLowerCase().includes(s) ||
                 (u.employeeId ?? "").toLowerCase().includes(s) ||
                 (u.position ?? "").toLowerCase().includes(s),
@@ -103,7 +91,9 @@ export default function ArchiveTable({
                 toast.error(res.error);
                 return;
             }
-            toast.success(`${fullName(u)} has been restored.`);
+            toast.success(
+                `${fmtFullName({ firstName: u.firstName, middleInitial: u.middleInitial, lastName: u.lastName })} has been restored.`,
+            );
             router.refresh();
         } finally {
             setLoadingId(null);
@@ -173,7 +163,12 @@ export default function ArchiveTable({
                             </TableHeader>
                             <TableBody>
                                 {filtered.map((u) => {
-                                    const name = fullName(u) || "(no name)";
+                                    const name =
+                                        fmtFullName({
+                                            firstName: u.firstName,
+                                            middleInitial: u.middleInitial,
+                                            lastName: u.lastName,
+                                        }) || "(no name)";
                                     const isLoading = loadingId === u.id;
                                     return (
                                         <TableRow
@@ -221,27 +216,23 @@ export default function ArchiveTable({
                                             >
                                                 <div className="flex items-center justify-center gap-1.5">
                                                     {isSuperadmin && (
-                                                        <>
-                                                            <Button
-                                                                size="sm"
-                                                                className="gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
-                                                                onClick={() =>
-                                                                    setRestoreConfirm(
-                                                                        u,
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    isLoading
-                                                                }
-                                                            >
-                                                                {isLoading ? (
-                                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                                ) : (
-                                                                    <RotateCcw className="h-3.5 w-3.5" />
-                                                                )}
-                                                                Restore
-                                                            </Button>
-                                                        </>
+                                                        <Button
+                                                            size="sm"
+                                                            className="gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
+                                                            onClick={() =>
+                                                                setRestoreConfirm(
+                                                                    u,
+                                                                )
+                                                            }
+                                                            disabled={isLoading}
+                                                        >
+                                                            {isLoading ? (
+                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                            ) : (
+                                                                <RotateCcw className="h-3.5 w-3.5" />
+                                                            )}
+                                                            Restore
+                                                        </Button>
                                                     )}
                                                     {!isSuperadmin && (
                                                         <Badge className="bg-slate-500/15 text-slate-400 border-slate-500/30">
@@ -278,7 +269,14 @@ export default function ArchiveTable({
                             </div>
                             <p className="text-base font-semibold leading-snug">
                                 Restore{" "}
-                                {restoreConfirm ? fullName(restoreConfirm) : ""}
+                                {restoreConfirm
+                                    ? fmtFullName({
+                                          firstName: restoreConfirm.firstName,
+                                          middleInitial:
+                                              restoreConfirm.middleInitial,
+                                          lastName: restoreConfirm.lastName,
+                                      })
+                                    : ""}
                                 ?
                             </p>
                             <DialogDescription className="mt-1">

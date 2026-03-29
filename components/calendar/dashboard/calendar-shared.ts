@@ -4,17 +4,24 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-export const MONTHS = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-] as const;
+import {
+    MONTHS as MONTHS_ENUM,
+    MONTHS_SHORT as MONTHS_SHORT_ENUM,
+    DAYS as DAYS_ENUM,
+} from "@/enums/date";
 
-export const MONTHS_SHORT = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-] as const;
+// Derive ordered string arrays from numeric enums (strips reverse-mapping keys)
+export const MONTHS = Object.keys(MONTHS_ENUM).filter(
+    (k) => isNaN(Number(k)),
+) as string[];
 
-export const DAYS_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const;
+export const MONTHS_SHORT = Object.keys(MONTHS_SHORT_ENUM).filter(
+    (k) => isNaN(Number(k)),
+) as string[];
+
+export const DAYS_SHORT = Object.keys(DAYS_ENUM).filter(
+    (k) => isNaN(Number(k)),
+) as string[];
 
 export const YEAR_RANGE_BACK = 10;
 export const YEAR_RANGE_FORWARD = 5;

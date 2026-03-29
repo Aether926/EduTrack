@@ -55,7 +55,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
 
 import { AddResponsibilitySheet } from "@/features/admin-actions/responsibilities/components/add-responsibility-modal";
 import { ResponsibilityDetailSheet } from "@/features/admin-actions/responsibilities/components/responsibility-details-sheet";

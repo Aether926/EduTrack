@@ -43,6 +43,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
+import { MONTHS, MONTHS_SHORT, DAYS } from "@/enums/date";
 
 export type Mode = "create" | "edit" | "view";
 
@@ -129,39 +130,17 @@ function FieldLabel({
     );
 }
 
-// ── Date picker (ported from pd-form-modal) ───────────────────────────────────
-
-const MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
-const MONTHS_SHORT = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-];
-const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const YEAR_RANGE_BACK = 10;
 const YEAR_RANGE_FORWARD = 5;
+
+// Derive ordered string arrays from numeric enums (strips reverse-mapping keys)
+const MONTHS_LIST = Object.keys(MONTHS).filter((k) =>
+    isNaN(Number(k)),
+) as string[];
+const MONTHS_SHORT_LIST = Object.keys(MONTHS_SHORT).filter((k) =>
+    isNaN(Number(k)),
+) as string[];
+const DAYS_LIST = Object.keys(DAYS).filter((k) => isNaN(Number(k))) as string[];
 
 function pad(n: number) {
     return n < 10 ? `0${n}` : String(n);
@@ -249,7 +228,7 @@ function PickerOverlay({
                         Month
                     </p>
                     <div className="grid grid-cols-3 gap-1">
-                        {MONTHS_SHORT.map((m, i) => {
+                        {MONTHS_SHORT_LIST.map((m, i) => {
                             const isCurrent =
                                 i === viewMonth && pickerYear === viewYear;
                             const isNow =
@@ -521,7 +500,7 @@ function RangeDatePicker({
                         }}
                         className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium hover:bg-accent transition-colors"
                     >
-                        {MONTHS[viewMonth]} {viewYear}
+                        {MONTHS_LIST[viewMonth]} {viewYear}
                         {pickerOpen ? (
                             <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
                         ) : (
@@ -557,7 +536,7 @@ function RangeDatePicker({
                 </AnimatePresence>
 
                 <div className="grid grid-cols-7 mb-1">
-                    {DAYS.map((d) => (
+                    {DAYS_LIST.map((d) => (
                         <div
                             key={d}
                             className="text-center text-[0.72rem] text-muted-foreground py-1"

@@ -35,6 +35,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
+import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
+
 export type Mode = "create" | "edit" | "view";
 
 export type FormData = {
@@ -103,35 +105,17 @@ const modeConfig = {
     },
 };
 
-const MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
-const MONTHS_SHORT = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-];
-const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+import { MONTHS, MONTHS_SHORT, DAYS } from "@/enums/date";
+
+// Derive ordered string arrays from numeric enums (strips reverse-mapping keys)
+const MONTHS_LIST = Object.keys(MONTHS).filter((k) =>
+    isNaN(Number(k)),
+) as string[];
+const MONTHS_SHORT_LIST = Object.keys(MONTHS_SHORT).filter((k) =>
+    isNaN(Number(k)),
+) as string[];
+const DAYS_LIST = Object.keys(DAYS).filter((k) => isNaN(Number(k))) as string[];
+
 const YEAR_RANGE_BACK = 10;
 const YEAR_RANGE_FORWARD = 5;
 
@@ -227,7 +211,7 @@ function PickerOverlay({
                         Month
                     </p>
                     <div className="grid grid-cols-3 gap-1">
-                        {MONTHS_SHORT.map((m, i) => {
+                        {MONTHS_SHORT_LIST.map((m, i) => {
                             const isCurrent =
                                 i === viewMonth && pickerYear === viewYear;
                             const isNow =
@@ -520,7 +504,7 @@ function RangeDatePicker({
                         }}
                         className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium hover:bg-accent transition-colors"
                     >
-                        {MONTHS[viewMonth]} {viewYear}
+                        {MONTHS_LIST[viewMonth]} {viewYear}
                         {pickerOpen ? (
                             <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
                         ) : (
@@ -558,7 +542,7 @@ function RangeDatePicker({
 
                 {/* Day headers */}
                 <div className="grid grid-cols-7 mb-1">
-                    {DAYS.map((d) => (
+                    {DAYS_LIST.map((d) => (
                         <div
                             key={d}
                             className="text-center text-[0.72rem] text-muted-foreground py-1"
@@ -731,63 +715,71 @@ export default function PdFormModal({
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <FieldLabel>Type</FieldLabel>
-                                <Select
-                                    value={formData.type}
-                                    onValueChange={(
-                                        value: "TRAINING" | "SEMINAR",
-                                    ) =>
-                                        setFormData({
-                                            ...formData,
-                                            type: value,
-                                        })
-                                    }
-                                    disabled={isReadOnly}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="TRAINING">
-                                            Training
-                                        </SelectItem>
-                                        <SelectItem value="SEMINAR">
-                                            Seminar
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {isReadOnly ? (
+                                    <TypeBadge type={formData.type} />
+                                ) : (
+                                    <Select
+                                        value={formData.type}
+                                        onValueChange={(
+                                            value: "TRAINING" | "SEMINAR",
+                                        ) =>
+                                            setFormData({
+                                                ...formData,
+                                                type: value,
+                                            })
+                                        }
+                                        disabled={isReadOnly}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="TRAINING">
+                                                Training
+                                            </SelectItem>
+                                            <SelectItem value="SEMINAR">
+                                                Seminar
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                             <div>
                                 <FieldLabel>Level</FieldLabel>
-                                <Select
-                                    value={formData.level}
-                                    onValueChange={(
-                                        value:
-                                            | "REGIONAL"
-                                            | "NATIONAL"
-                                            | "INTERNATIONAL",
-                                    ) =>
-                                        setFormData({
-                                            ...formData,
-                                            level: value,
-                                        })
-                                    }
-                                    disabled={isReadOnly}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="REGIONAL">
-                                            Regional
-                                        </SelectItem>
-                                        <SelectItem value="NATIONAL">
-                                            National
-                                        </SelectItem>
-                                        <SelectItem value="INTERNATIONAL">
-                                            International
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {isReadOnly ? (
+                                    <LevelBadge level={formData.level} />
+                                ) : (
+                                    <Select
+                                        value={formData.level}
+                                        onValueChange={(
+                                            value:
+                                                | "REGIONAL"
+                                                | "NATIONAL"
+                                                | "INTERNATIONAL",
+                                        ) =>
+                                            setFormData({
+                                                ...formData,
+                                                level: value,
+                                            })
+                                        }
+                                        disabled={isReadOnly}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="REGIONAL">
+                                                Regional
+                                            </SelectItem>
+                                            <SelectItem value="NATIONAL">
+                                                National
+                                            </SelectItem>
+                                            <SelectItem value="INTERNATIONAL">
+                                                International
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                         </div>
 

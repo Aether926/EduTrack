@@ -31,7 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import { PositionBadge } from "@/components/ui-elements/badges";
 import {
     DropdownMenu,

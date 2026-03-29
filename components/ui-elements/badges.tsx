@@ -360,3 +360,85 @@ export function PositionBadge({
         </Pill>
     );
 }
+
+// ── Security Action ───────────────────────────────────────────────────────────
+//
+// Used in the superadmin security log feed. Each action maps to a label and
+// a colour token so badge appearance stays consistent site-wide.
+
+const SECURITY_ACTION_MAP: Record<string, { label: string; cls: string }> = {
+    SIGNED_IN: {
+        label: "Signed in",
+        cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    },
+    SIGNED_OUT: {
+        label: "Signed out",
+        cls: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+    },
+    SIGNED_UP: {
+        label: "Signed up",
+        cls: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    },
+    PASSWORD_CHANGED: {
+        label: "Password changed",
+        cls: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    },
+    ACCOUNT_APPROVED: {
+        label: "Account approved",
+        cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    },
+    ACCOUNT_REJECTED: {
+        label: "Account rejected",
+        cls: "bg-rose-500/15 text-rose-400 border-rose-500/30",
+    },
+    ACCOUNT_SUSPENDED: {
+        label: "Account suspended",
+        cls: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+    },
+    ACCOUNT_UNSUSPENDED: {
+        label: "Unsuspended",
+        cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    },
+    ROLE_PROMOTED: {
+        label: "Role promoted",
+        cls: "bg-violet-500/15 text-violet-400 border-violet-500/30",
+    },
+    ROLE_DEMOTED: {
+        label: "Role demoted",
+        cls: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    },
+    SUPERADMIN_PROMOTED: {
+        label: "Superadmin",
+        cls: "bg-rose-500/15 text-rose-400 border-rose-500/30",
+    },
+    ACCOUNT_ARCHIVED: {
+        label: "Archived",
+        cls: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+    },
+    ACCOUNT_RESTORED: {
+        label: "Account restored",
+        cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    },
+    ACCOUNT_PERMANENTLY_DELETED: {
+        label: "Permanently deleted",
+        cls: "bg-rose-500/15 text-rose-400 border-rose-500/30",
+    },
+};
+
+export function SecurityActionBadge({
+    action,
+    size = "xs",
+}: {
+    action: string;
+    size?: "sm" | "xs";
+}) {
+    const entry = SECURITY_ACTION_MAP[action] ?? {
+        label: action,
+        cls: fallback,
+    };
+    return (
+        <Pill cls={entry.cls} size={size}>
+            {entry.label}
+        </Pill>
+    );
+}

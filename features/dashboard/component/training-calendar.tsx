@@ -38,7 +38,7 @@ import {
 import {
     CalendarMonthYearPickerContent,
     CalendarAgendaEmptyState,
-} from "@/components/calendar/dashboard/calendar-components";
+} from "@/components/calendar/dashboard/custom-calendar";
 
 // ── Main export ────────────────────────────────────────────────────────────────
 

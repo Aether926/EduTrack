@@ -14,7 +14,7 @@ import {
     RejectButton,
     DeleteButton,
 } from "@/components/action-button";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import {
     Table,
     TableBody,

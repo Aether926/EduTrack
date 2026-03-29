@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import { RoleBadge } from "@/components/ui-elements/badges";
 import { AdminDeletionRequestsTable } from "@/features/settingss/components/admin-deletion-requests-table";
 import { getAllDeletionRequests } from "@/features/settingss/actions/admin-deletion-actions";

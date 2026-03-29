@@ -36,7 +36,7 @@ import {
 } from "@/components/teacher-picker-modal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 
 const POSITIONS = [
     "Teacher I",

@@ -3,8 +3,10 @@
 import { UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// ── Color map ─────────────────────────────────────────────────────────────────
 // Violet: A B C D | Blue: E F G H | Teal: I J K L | Green: M N O P
 // Orange: Q R S T | Red:  U V W   | Pink: X Y Z
+
 const COLOR_MAP: {
     letters: string[];
     bg: string;
@@ -75,17 +77,16 @@ function getAvatarColor(name: string) {
     return LETTER_COLORS[first] ?? FALLBACK_COLOR;
 }
 
+// ── InitialAvatar ─────────────────────────────────────────────────────────────
+// Base avatar — pass any name and it derives initials + color automatically.
+
 interface InitialAvatarProps {
     name: string;
     src?: string | null;
     className?: string;
 }
 
-export default function InitialAvatar({
-    name,
-    src,
-    className,
-}: InitialAvatarProps) {
+export function InitialAvatar({ name, src, className }: InitialAvatarProps) {
     const color = getAvatarColor(name);
 
     const initials =
@@ -115,5 +116,32 @@ export default function InitialAvatar({
                 </span>
             </AvatarFallback>
         </Avatar>
+    );
+}
+
+// ── UserAvatar ────────────────────────────────────────────────────────────────
+// Convenience wrapper — shows first + last initials from a full name.
+
+function getFirstLastInitials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    // "D I" → InitialAvatar splits on space and shows "DI"
+    return `${parts[0][0].toUpperCase()} ${parts[parts.length - 1][0].toUpperCase()}`;
+}
+
+interface UserAvatarProps {
+    name: string;
+    src?: string | null;
+    className?: string;
+}
+
+export default function UserAvatar({ name, src, className }: UserAvatarProps) {
+    return (
+        <InitialAvatar
+            name={getFirstLastInitials(name)}
+            src={src}
+            className={className}
+        />
     );
 }

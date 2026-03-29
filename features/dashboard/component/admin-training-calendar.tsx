@@ -15,7 +15,7 @@ import type { AdminCalendarEvent } from "@/lib/database/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TypeBadge } from "@/components/ui-elements/badges";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import {
     MONTHS,
     DAYS_SHORT,
@@ -34,7 +34,7 @@ import {
 import {
     CalendarMonthYearPickerContent,
     CalendarAgendaEmptyState,
-} from "@/components/calendar/dashboard/calendar-components";
+} from "@/components/calendar/dashboard/custom-calendar";
 
 // ── Main export ────────────────────────────────────────────────────────────────
 

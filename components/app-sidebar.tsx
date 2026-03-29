@@ -49,7 +49,7 @@ import {
     DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
 
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import DropdownRedirect from "@/components/dropdown-redirect";
 import { ThemeToggle } from "@/components/ui-elements/theme-toggle";
 import { logSignOut } from "@/app/actions/auth-log-actions";

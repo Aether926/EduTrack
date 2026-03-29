@@ -11,7 +11,7 @@ import {
     rejectAppointmentRequest,
 } from "@/features/admin-actions/queue/actions/queue-actions";
 import type { AppointmentRequestWithTeacher } from "@/features/admin-actions/queue/types/queue";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
 import { StatusBadge } from "@/components/ui-elements/badges";
 
 export function AppointmentQueueRow(props: {
