@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
-import { GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -12,6 +12,8 @@ import {
 import type { TrainingRow } from "@/features/profiles/types/trainings";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import { fmtDateRange } from "@/features/profiles/lib/date";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
 
 // ── Type chip colours ──────────────────────────────────────────────────────────
 
@@ -67,10 +69,10 @@ export default function TrainingsCard(props: {
     loading: boolean;
     viewerRole?: ViewerRole;
 }) {
-    const { trainings, loading, viewerRole } = props;
+    const { trainings = [], loading, viewerRole } = props;
     const showProof = viewerRole === "ADMIN";
 
-    const PAGE_SIZE = 6;
+    const PAGE_SIZE = PAGE_SIZES.trainingsCard;
     const [page, setPage] = useState(1);
     const totalPages = Math.ceil(trainings.length / PAGE_SIZE);
     const paginated = trainings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -175,85 +177,25 @@ export default function TrainingsCard(props: {
                                 </TableBody>
                             </Table>
                         </div>
+
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex flex-col items-center gap-2 mt-3 px-1">
-                                <div className="flex items-center justify-between w-full">
-                                    <span className="text-[11px] text-muted-foreground">
-                                        Page {page} of {totalPages}
-                                    </span>
-                                    {viewerRole !== "ADMIN" && (
+                            <div className="mt-3">
+                                {viewerRole !== "ADMIN" && (
+                                    <div className="flex justify-end mb-1">
                                         <Link
                                             href="/professional-dev"
                                             className="text-[11px] text-blue-400 hover:text-blue-300 hover:underline"
                                         >
                                             View All
                                         </Link>
-                                    )}
-                                </div>
-                                <div className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto w-full pb-1">
-                                    <button
-                                        onClick={() =>
-                                            setPage((p) => Math.max(1, p - 1))
-                                        }
-                                        disabled={page === 1}
-                                        className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                    >
-                                        <ChevronLeft className="h-3.5 w-3.5" />
-                                    </button>
-                                    {(() => {
-                                        const delta = 1;
-                                        const range: (number | "…")[] = [];
-                                        const left = Math.max(2, page - delta);
-                                        const right = Math.min(
-                                            totalPages - 1,
-                                            page + delta,
-                                        );
-
-                                        range.push(1);
-                                        if (left > 2) range.push("…");
-                                        for (let i = left; i <= right; i++)
-                                            range.push(i);
-                                        if (right < totalPages - 1)
-                                            range.push("…");
-                                        if (totalPages > 1)
-                                            range.push(totalPages);
-
-                                        return range.map((p, idx) =>
-                                            p === "…" ? (
-                                                <span
-                                                    key={`ellipsis-${idx}`}
-                                                    className="inline-flex h-6 w-6 items-center justify-center text-[11px] text-muted-foreground"
-                                                >
-                                                    …
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    key={p}
-                                                    onClick={() => setPage(p)}
-                                                    className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] font-medium transition ${
-                                                        p === page
-                                                            ? "border-blue-500/40 bg-blue-500/20 text-blue-400"
-                                                            : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                                                    }`}
-                                                >
-                                                    {p}
-                                                </button>
-                                            ),
-                                        );
-                                    })()}
-                                    <button
-                                        onClick={() =>
-                                            setPage((p) =>
-                                                Math.min(totalPages, p + 1),
-                                            )
-                                        }
-                                        disabled={page === totalPages}
-                                        className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                    >
-                                        <ChevronRight className="h-3.5 w-3.5" />
-                                    </button>
-                                </div>
+                                    </div>
+                                )}
+                                <PageNav
+                                    page={page}
+                                    totalPages={totalPages}
+                                    onPageChange={setPage}
+                                />
                             </div>
                         )}
                     </>

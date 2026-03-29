@@ -33,7 +33,8 @@ import {
     useReactTable,
     VisibilityState,
 } from "@tanstack/react-table";
-import PaginationBar from "@/components/ui-elements/pagination";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
 import { useRouter } from "next/navigation";
 
 export type TrainingSeminarHistory = {
@@ -293,7 +294,9 @@ export default function TrainingHistory({
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-        initialState: { pagination: { pageSize: 8 } },
+        initialState: {
+            pagination: { pageSize: PAGE_SIZES.historyTrainingRecords },
+        },
         state: { sorting, columnFilters, columnVisibility, rowSelection },
     });
 
@@ -326,7 +329,6 @@ export default function TrainingHistory({
                             />
                         </div>
 
-                        {/* Delete button: show when at least 1 row selected - available for all users */}
                         {selectedRows.length >= 1 && (
                             <Button
                                 onClick={handleDelete}
@@ -424,7 +426,11 @@ export default function TrainingHistory({
                         selected.
                     </div>
                     <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-                        <PaginationBar table={table} />
+                        <PageNav
+                            page={table.getState().pagination.pageIndex + 1}
+                            totalPages={table.getPageCount()}
+                            onPageChange={(p) => table.setPageIndex(p - 1)}
+                        />
                     </div>
                 </div>
             </div>

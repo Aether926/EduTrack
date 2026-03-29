@@ -12,6 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
 
 export type Teacher = {
     employeeid: string;
@@ -202,13 +203,9 @@ export default function TeacherTable({
 }: TeacherTableProps) {
     const canManage = role === "ADMIN" || isAdmin || !role;
 
-    const handleAdd = (selectedRows: Teacher[]) => {
-        
-    };
+    const handleAdd = (selectedRows: Teacher[]) => {};
 
-    const handleDelete = (selectedRows: Teacher[]) => {
-        
-    };
+    const handleDelete = (selectedRows: Teacher[]) => {};
 
     return (
         <DataTable
@@ -216,7 +213,7 @@ export default function TeacherTable({
             columns={columns}
             filterColumn="fullname"
             filterPlaceholder="Filter names..."
-            pageSize={8}
+            pageSize={PAGE_SIZES.teacherTable}
             showAddButton={canManage}
             showDeleteButton={canManage}
             onAddClick={handleAdd}
