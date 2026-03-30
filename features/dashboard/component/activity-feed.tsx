@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui-elements/badges";
+import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import {
     Bell,
@@ -32,6 +34,7 @@ import {
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
+import router from "next/router";
 
 type FeedRow = ActivityRow & {
     actor_id?: string | null;
@@ -183,6 +186,7 @@ export default function ActivityFeed({
     const PAGE_SIZE = 8;
     const [page, setPage] = useState(1);
     const [searchOpen, setSearchOpen] = useState(false);
+    const router = useRouter();
 
     const enriched = useMemo(
         () => rows.map((r) => ({ ...r, _kind: classify(r) })),
@@ -203,6 +207,24 @@ export default function ActivityFeed({
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const shown = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    function getRedirect(r: FeedRow): string | null {
+        if (!r.entity_id) return null;
+
+        switch (r.entity_type) {
+            case "TeacherDocument":
+                return `/documents?highlight=${r.entity_id}`;
+
+            case "Appointment":
+                return `/appointments?highlight=${r.entity_id}`;
+
+            case "Training":
+                return `/trainings?highlight=${r.entity_id}`;
+
+            default:
+                return null;
+        }
+    }
 
     return (
         <Card className="overflow-hidden border-border/60">
@@ -324,6 +346,7 @@ export default function ActivityFeed({
                             const kind = (r as any)._kind as ReturnType<
                                 typeof classify
                             >;
+                            const redirect = getRedirect(r);
                             const msg = getDisplayMessage(r, viewerId);
                             return (
                                 <motion.div
@@ -337,7 +360,14 @@ export default function ActivityFeed({
                                     }}
                                 >
                                     <div
-                                        className={`rounded-lg border overflow-hidden transition-colors ${accentBorder(kind)} ${kind === "all" ? "border-zinc-500/20 bg-zinc-500/5 hover:bg-zinc-500/10" : "border-border/50 bg-muted/30 hover:bg-muted/50"}`}
+                                        onClick={() => {
+                                            if (redirect) router.push(redirect);
+                                        }}
+                                        className={`rounded-lg border overflow-hidden transition-colors ${accentBorder(kind)} ${
+                                            kind === "all"
+                                                ? "border-zinc-500/20 bg-zinc-500/5 hover:bg-zinc-500/10"
+                                                : "border-border/50 bg-muted/30 hover:bg-muted/50"
+                                        } ${redirect ? "cursor-pointer hover:scale-[1.01]" : ""}`}
                                     >
                                         <div className="flex gap-3 p-4">
                                             <div
@@ -352,9 +382,14 @@ export default function ActivityFeed({
                                                         size="xs"
                                                     />
                                                     <div className="text-xs text-muted-foreground">
-                                                        {(r as FeedRow)
-                                                            .display_time ??
-                                                            r.created_at}
+                                                        {formatDistanceToNow(
+                                                            new Date(
+                                                                r.created_at,
+                                                            ),
+                                                            {
+                                                                addSuffix: true,
+                                                            },
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="mt-2 text-sm leading-relaxed">
@@ -372,17 +407,6 @@ export default function ActivityFeed({
                                                         </div>
                                                     </div>
                                                 ) : null}
-                                                <Separator className="mt-4" />
-                                                <div className="flex items-center justify-between px-1 pt-3 text-xs text-muted-foreground gap-2">
-                                                    <span className="truncate">
-                                                        {r.entity_type ?? ""}
-                                                    </span>
-                                                    <span className="shrink-0">
-                                                        {r.entity_id
-                                                            ? `#${String(r.entity_id).slice(0, 8)}`
-                                                            : ""}
-                                                    </span>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -393,7 +417,7 @@ export default function ActivityFeed({
 
                     {filtered.length === 0 && (
                         <div className="rounded-lg border border-border/50 bg-muted/20 py-10 text-center text-sm text-muted-foreground">
-                            Nothing to show.
+                            No recent activity yet.
                         </div>
                     )}
 

@@ -147,7 +147,6 @@ type RequestType = "RESUBMIT" | "DELETE";
 
 function ChecklistRow({
     item,
-    viewingId,
     onOpen,
     indent = false,
 }: {
