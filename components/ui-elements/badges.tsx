@@ -77,11 +77,14 @@ export function TypeBadge({
 // ── Level ─────────────────────────────────────────────────────────────────────
 
 const LEVEL: Record<string, string> = {
+    withinInstitution: "bg-teal-500/15 text-teal-400 border-teal-500/30",
+    interInstitutional: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+    local: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     regional: "bg-amber-500/15 text-amber-400 border-amber-500/30",
     national: "bg-blue-500/15 text-blue-400 border-blue-500/30",
     international: "bg-rose-500/15 text-rose-400 border-rose-500/30",
     division: "bg-violet-500/15 text-violet-400 border-violet-500/30",
-    school: "bg-teal-500/15 text-teal-400 border-teal-500/30",
+    school: "bg-slate-500/15 text-slate-400 border-slate-500/30",
 };
 
 export function LevelBadge({

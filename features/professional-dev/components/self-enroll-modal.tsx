@@ -1,22 +1,18 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { useState, useCallback, useTransition, useRef, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Search,
-    X,
     Plus,
-    Upload,
     Loader2,
     ChevronLeft,
     ChevronRight,
     Clock,
     BookOpen,
     ArrowLeft,
-    FileText,
-    ZoomIn,
 } from "lucide-react";
 
 import { toLocalDateString } from "@/lib/utils";
@@ -39,6 +35,10 @@ import {
 } from "@/components/ui/table";
 
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
+import {
+    FileDropzone,
+    FileFullscreenPreview,
+} from "@/components/ui-elements/file-preview";
 
 import PdFormModal, {
     type FormData as PdFormData,
@@ -66,264 +66,12 @@ type BrowsableTraining = {
 
 type View = "browse" | "upload" | "create";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-// ── PDF first-page thumbnail via PDF.js ────────────────────────────────────────
-
-function PdfThumbnail({
-    file,
-    onFullscreen,
-}: {
-    file: File;
-    previewUrl: string;
-    onFullscreen: () => void;
-}) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
-
-    useEffect(() => {
-        let cancelled = false;
-        setLoading(true);
-        setError(false);
-
-        (async () => {
-            try {
-                if (typeof window === "undefined") return;
-
-                const pdfjsLib = await import("pdfjs-dist");
-                pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-                    "pdfjs-dist/build/pdf.worker.mjs",
-                    import.meta.url,
-                ).toString();
-
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer })
-                    .promise;
-                if (cancelled) return;
-
-                const page = await pdf.getPage(1);
-                if (cancelled) return;
-
-                const canvas = canvasRef.current;
-                if (!canvas) return;
-
-                const viewport = page.getViewport({ scale: 1 });
-                // Scale to fit container width (~400px max)
-                const scale = Math.min(400 / viewport.width, 2);
-                const scaled = page.getViewport({ scale });
-
-                canvas.width = scaled.width;
-                canvas.height = scaled.height;
-
-                const ctx = canvas.getContext("2d");
-                if (!ctx) return;
-                await page.render({
-                    canvas: canvas,
-                    canvasContext: ctx,
-                    viewport: scaled,
-                }).promise;
-
-                if (!cancelled) setLoading(false);
-            } catch (err) {
-                console.error("PDF render error:", err);
-
-                if (!cancelled) {
-                    setLoading(false);
-                    setError(true);
-                }
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [file]);
-
-    if (error) {
-        // Fallback: show file icon if canvas render fails
-        return (
-            <div className="flex items-center gap-2 rounded-lg border bg-muted/20 p-4">
-                <FileText className="h-8 w-8 text-teal-400 shrink-0" />
-                <div>
-                    <div className="text-sm font-medium">{file.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                        PDF document
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <button
-            type="button"
-            onClick={onFullscreen}
-            className="group relative w-full overflow-hidden rounded-lg border bg-muted/20 hover:border-border transition-colors"
-            aria-label="View fullscreen"
-        >
-            {loading && (
-                <div className="flex items-center justify-center h-40">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-            )}
-            <canvas
-                ref={canvasRef}
-                className={`w-full block ${loading ? "hidden" : ""}`}
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors rounded-lg">
-                <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-        </button>
-    );
-}
-
-// ── File drop zone ─────────────────────────────────────────────────────────────
-
-function ProofUpload({
-    file,
-    onFile,
-    onFullscreen,
-}: {
-    file: File | null;
-    onFile: (f: File | null) => void;
-    onFullscreen: (f: File) => void;
-}) {
-    const ref = useRef<HTMLInputElement>(null);
-    const [dragging, setDragging] = useState(false);
-
-    const onDrop = useCallback(
-        (e: React.DragEvent) => {
-            e.preventDefault();
-            setDragging(false);
-            const f = e.dataTransfer.files[0];
-            if (f) onFile(f);
-        },
-        [onFile],
-    );
-
-    const previewUrl = file ? URL.createObjectURL(file) : null;
-    const isImage = file?.type.startsWith("image/");
-    const isPdf = file?.type === "application/pdf";
-
-    return (
-        <div className="space-y-2 min-w-0 w-full overflow-hidden">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Proof of Attendance <span className="text-rose-400">*</span>
-            </p>
-
-            {/* Dropzone — only when no file */}
-            {!file && (
-                <div
-                    onDragOver={(e) => {
-                        e.preventDefault();
-                        setDragging(true);
-                    }}
-                    onDragLeave={() => setDragging(false)}
-                    onDrop={onDrop}
-                    onClick={() => ref.current?.click()}
-                    className={`cursor-pointer rounded-lg border-2 border-dashed p-5 text-center transition-colors
-            ${dragging ? "border-teal-500 bg-teal-500/5" : "border-border hover:border-muted-foreground/50"}`}
-                >
-                    <input
-                        ref={ref}
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden"
-                        onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-                    />
-                    <div className="space-y-1">
-                        <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                            Drop your proof here or{" "}
-                            <span className="text-teal-400 underline">
-                                browse
-                            </span>
-                        </p>
-                        <p className="text-[11px] text-muted-foreground/60">
-                            PDF, JPG, PNG accepted
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            {/* Preview — when file is selected */}
-            {file && previewUrl && (
-                <div className="space-y-2 min-w-0 overflow-hidden">
-                    {/* Image preview */}
-                    {isImage && (
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onFullscreen(file);
-                            }}
-                            className="group relative w-full overflow-hidden rounded-lg border bg-muted/20 hover:border-border transition-colors"
-                            aria-label="View fullscreen"
-                        >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src={previewUrl}
-                                alt="Preview"
-                                className="w-full max-h-64 object-contain block"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors rounded-lg">
-                                <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                        </button>
-                    )}
-
-                    {/* PDF preview — first page thumbnail via PDF.js */}
-                    {isPdf && (
-                        <PdfThumbnail
-                            file={file}
-                            previewUrl={previewUrl}
-                            onFullscreen={() => onFullscreen(file)}
-                        />
-                    )}
-
-                    {/* Non-previewable file (shouldn't happen with accept filter, but fallback) */}
-                    {!isImage && !isPdf && (
-                        <div className="flex items-center gap-2 rounded-lg border p-3">
-                            <FileText className="h-4 w-4 text-teal-400 shrink-0" />
-                            <span className="truncate text-sm text-foreground">
-                                {file.name}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* File info + remove */}
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                            <div className="truncate text-sm font-medium">
-                                {file.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                                {file.type || "file"} •{" "}
-                                {(file.size / 1024).toFixed(0)} KB
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => onFile(null)}
-                            className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-                            aria-label="Remove file"
-                        >
-                            <X className="h-3.5 w-3.5" />
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
 // ── Main modal ────────────────────────────────────────────────────────────────
 
 const DEFAULT_FORM: PdFormData = {
     title: "",
     type: "TRAINING",
-    level: "REGIONAL",
+    level: "local",
     sponsoring_agency: "",
     total_hours: "",
     start_date: undefined,
@@ -881,10 +629,12 @@ export default function SelfEnrollModal({
                                     </div>
 
                                     {/* Proof upload */}
-                                    <ProofUpload
+                                    <FileDropzone
                                         file={enrollProof}
                                         onFile={setEnrollProof}
                                         onFullscreen={setFullscreenFile}
+                                        label="Proof of Attendance"
+                                        required
                                     />
 
                                     <p className="text-xs text-muted-foreground">
@@ -939,10 +689,12 @@ export default function SelfEnrollModal({
                             onSubmit={handleCreateSubmit}
                             extraFooter={
                                 <div className="px-6 pb-5">
-                                    <ProofUpload
+                                    <FileDropzone
                                         file={createProof}
                                         onFile={setCreateProof}
                                         onFullscreen={setFullscreenFile}
+                                        label="Proof of Attendance"
+                                        required
                                     />
                                 </div>
                             }
@@ -952,52 +704,10 @@ export default function SelfEnrollModal({
             )}
 
             {/* ── Fullscreen proof preview ── */}
-            <Dialog
-                open={!!fullscreenFile}
-                onOpenChange={(open) => {
-                    if (!open) setFullscreenFile(null);
-                }}
-            >
-                <DialogContent className="max-w-screen w-screen h-screen p-0 border-0 bg-black/90 flex items-center justify-center rounded-none [&>button.absolute]:hidden">
-                    <DialogTitle className="sr-only">Image Preview</DialogTitle>
-                    {fullscreenFile?.type.startsWith("image/") ? (
-                        <div className="relative inline-block">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src={
-                                    fullscreenFile
-                                        ? URL.createObjectURL(fullscreenFile)
-                                        : ""
-                                }
-                                alt="Fullscreen preview"
-                                className="max-h-[90vh] max-w-[90vw] w-auto h-auto object-contain rounded-lg shadow-2xl block"
-                            />
-                            <button
-                                onClick={() => setFullscreenFile(null)}
-                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
-                                aria-label="Close fullscreen"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-                    ) : fullscreenFile ? (
-                        <div className="relative inline-block">
-                            <iframe
-                                src={URL.createObjectURL(fullscreenFile)}
-                                className="w-[90vw] h-[90vh] rounded-lg bg-white"
-                                title="Fullscreen preview"
-                            />
-                            <button
-                                onClick={() => setFullscreenFile(null)}
-                                className="absolute top-2 right-2 z-10 rounded-md bg-black/50 hover:bg-black/70 transition-colors p-1.5 text-white"
-                                aria-label="Close fullscreen"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-                    ) : null}
-                </DialogContent>
-            </Dialog>
+            <FileFullscreenPreview
+                file={fullscreenFile}
+                onClose={() => setFullscreenFile(null)}
+            />
         </>
     );
 }

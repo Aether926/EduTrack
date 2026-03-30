@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { CreateProfessionalDevelopmentInput } from '@/lib/user';
 import { toast } from 'sonner';
+import { TrainingLevel } from '@/enums/level';
 
 const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
 
@@ -11,7 +12,7 @@ type UpdatePayload = {
   id: string;
   title: string;
   type: "TRAINING" | "SEMINAR";
-  level: "REGIONAL" | "NATIONAL" | "INTERNATIONAL";
+  level: keyof typeof TrainingLevel;
   sponsoring_agency: string;
   total_hours: number;
   start_date: string;

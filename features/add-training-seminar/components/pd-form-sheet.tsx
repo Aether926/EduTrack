@@ -44,13 +44,14 @@ import {
 } from "@/components/ui/tooltip";
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
 import { MONTHS, MONTHS_SHORT, DAYS } from "@/enums/date";
+import { TrainingLevel } from "@/enums/level";
 
 export type Mode = "create" | "edit" | "view";
 
 export type FormData = {
     title: string;
     type: "TRAINING" | "SEMINAR";
-    level: "REGIONAL" | "NATIONAL" | "INTERNATIONAL";
+    level: keyof typeof TrainingLevel;
     sponsoring_agency: string;
     total_hours: string;
     start_date: Date | undefined;
@@ -743,7 +744,7 @@ export default function PdFormSheet({
                     <div className="flex-1 px-5 py-4 space-y-5">
                         {/* Type + Level — selects in create/edit only */}
                         {!isReadOnly && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex flex-wrap gap-4">
                                 <div>
                                     <FieldLabel>Type</FieldLabel>
                                     <Select
@@ -757,7 +758,7 @@ export default function PdFormSheet({
                                             })
                                         }
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-[130px]">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -775,10 +776,7 @@ export default function PdFormSheet({
                                     <Select
                                         value={formData.level}
                                         onValueChange={(
-                                            value:
-                                                | "REGIONAL"
-                                                | "NATIONAL"
-                                                | "INTERNATIONAL",
+                                            value: keyof typeof TrainingLevel,
                                         ) =>
                                             setFormData({
                                                 ...formData,
@@ -786,17 +784,26 @@ export default function PdFormSheet({
                                             })
                                         }
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-[175px]">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="REGIONAL">
+                                            <SelectItem value="withinInstitution">
+                                                Within Institution
+                                            </SelectItem>
+                                            <SelectItem value="interInstitutional">
+                                                Inter-Institutional
+                                            </SelectItem>
+                                            <SelectItem value="local">
+                                                Local
+                                            </SelectItem>
+                                            <SelectItem value="regional">
                                                 Regional
                                             </SelectItem>
-                                            <SelectItem value="NATIONAL">
+                                            <SelectItem value="national">
                                                 National
                                             </SelectItem>
-                                            <SelectItem value="INTERNATIONAL">
+                                            <SelectItem value="international">
                                                 International
                                             </SelectItem>
                                         </SelectContent>

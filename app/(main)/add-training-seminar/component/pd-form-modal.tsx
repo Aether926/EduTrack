@@ -36,13 +36,14 @@ import {
 } from "@/components/ui/select";
 
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
+import { TrainingLevel } from "@/enums/level";
 
 export type Mode = "create" | "edit" | "view";
 
 export type FormData = {
     title: string;
     type: "TRAINING" | "SEMINAR";
-    level: "REGIONAL" | "NATIONAL" | "INTERNATIONAL";
+    level: keyof typeof TrainingLevel;
     sponsoring_agency: string;
     total_hours: string;
     start_date: Date | undefined;
@@ -712,7 +713,7 @@ export default function PdFormModal({
                         </div>
 
                         {/* Type + Level — always side by side */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-wrap gap-4">
                             <div>
                                 <FieldLabel>Type</FieldLabel>
                                 {isReadOnly ? (
@@ -730,7 +731,7 @@ export default function PdFormModal({
                                         }
                                         disabled={isReadOnly}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-[130px]">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -752,10 +753,7 @@ export default function PdFormModal({
                                     <Select
                                         value={formData.level}
                                         onValueChange={(
-                                            value:
-                                                | "REGIONAL"
-                                                | "NATIONAL"
-                                                | "INTERNATIONAL",
+                                            value: keyof typeof TrainingLevel,
                                         ) =>
                                             setFormData({
                                                 ...formData,
@@ -764,17 +762,26 @@ export default function PdFormModal({
                                         }
                                         disabled={isReadOnly}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="w-[175px]">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="REGIONAL">
+                                            <SelectItem value="withinInstitution">
+                                                Within Institution
+                                            </SelectItem>
+                                            <SelectItem value="interInstitutional">
+                                                Inter-Institutional
+                                            </SelectItem>
+                                            <SelectItem value="local">
+                                                Local
+                                            </SelectItem>
+                                            <SelectItem value="regional">
                                                 Regional
                                             </SelectItem>
-                                            <SelectItem value="NATIONAL">
+                                            <SelectItem value="national">
                                                 National
                                             </SelectItem>
-                                            <SelectItem value="INTERNATIONAL">
+                                            <SelectItem value="international">
                                                 International
                                             </SelectItem>
                                         </SelectContent>

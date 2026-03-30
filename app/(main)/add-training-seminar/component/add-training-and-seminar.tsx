@@ -68,6 +68,16 @@ import {
 
 import PdFormSheet from "@/features/add-training-seminar/components/pd-form-sheet";
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
+import { TrainingLevel } from "@/enums/level";
+
+const LEVEL_LABELS: Record<string, string> = {
+    withinInstitution: "Within Institution",
+    interInstitutional: "Inter-Institutional",
+    local: "Local",
+    regional: "Regional",
+    national: "National",
+    international: "International",
+};
 
 interface AddTrainingAndSeminarProps {
     data: TrainingSeminarTableRow[];
@@ -117,7 +127,7 @@ export default function AddTrainingAndSeminar({
     const emptyForm = {
         title: "",
         type: "TRAINING" as "TRAINING" | "SEMINAR",
-        level: "REGIONAL" as "REGIONAL" | "NATIONAL" | "INTERNATIONAL",
+        level: "local" as keyof typeof TrainingLevel,
         sponsoring_agency: "",
         total_hours: "",
         start_date: undefined as Date | undefined,
@@ -132,7 +142,7 @@ export default function AddTrainingAndSeminar({
         setFormData({
             title: pd.title ?? "",
             type: pd.type as "TRAINING" | "SEMINAR",
-            level: pd.level as "REGIONAL" | "NATIONAL" | "INTERNATIONAL",
+            level: pd.level as keyof typeof TrainingLevel,
             sponsoring_agency: pd.sponsoring_agency ?? "",
             total_hours: String(pd.total_hours ?? ""),
             start_date: pd.start_date ? new Date(pd.start_date) : undefined,
@@ -561,8 +571,8 @@ export default function AddTrainingAndSeminar({
                                 >
                                     <span className="truncate">
                                         {levelFilter
-                                            ? levelFilter.charAt(0) +
-                                              levelFilter.slice(1).toLowerCase()
+                                            ? (LEVEL_LABELS[levelFilter] ??
+                                              levelFilter)
                                             : "All Levels"}
                                     </span>
                                     <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -575,18 +585,37 @@ export default function AddTrainingAndSeminar({
                                     All Levels
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() => setLevelFilter("REGIONAL")}
+                                    onClick={() =>
+                                        setLevelFilter("withinInstitution")
+                                    }
+                                >
+                                    Within Institution
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        setLevelFilter("interInstitutional")
+                                    }
+                                >
+                                    Inter-Institutional
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setLevelFilter("local")}
+                                >
+                                    Local
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setLevelFilter("regional")}
                                 >
                                     Regional
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() => setLevelFilter("NATIONAL")}
+                                    onClick={() => setLevelFilter("national")}
                                 >
                                     National
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() =>
-                                        setLevelFilter("INTERNATIONAL")
+                                        setLevelFilter("international")
                                     }
                                 >
                                     International

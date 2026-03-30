@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { TrainingLevel } from '@/enums/level';
 
 export type ActionResult<T = null> =
   | { success: true; data?: T }
@@ -16,7 +17,7 @@ function errMsg(e: unknown) {
 type TeacherSelfReportInput = {
   title: string;
   type: 'TRAINING' | 'SEMINAR';
-  level: 'REGIONAL' | 'NATIONAL' | 'INTERNATIONAL';
+  level: keyof typeof TrainingLevel;
   sponsoring_agency: string;
   total_hours: number;
   start_date: string;
@@ -314,4 +315,4 @@ export async function getBrowsableTrainings(
   } catch {
     return { data: [], count: 0 };
   }
-}
+} 
