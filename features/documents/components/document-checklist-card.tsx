@@ -19,7 +19,6 @@ import {
     Clock,
     XCircle,
     AlertCircle,
-    ExternalLink,
     Upload,
     RotateCcw,
     Trash2,
@@ -31,6 +30,8 @@ import {
     ArrowLeft,
     CalendarDays,
     ZoomIn,
+    ChevronDown,
+    ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DocumentStatusBadge } from "./document-status-badge";
@@ -45,7 +46,6 @@ import type {
     DocumentStatus,
 } from "@/features/documents/types/documents";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -88,39 +88,310 @@ function formatBytes(bytes: number | null | undefined) {
     return `${v.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
 }
 
+// ── Grouping helpers ──────────────────────────────────────────────────────────
+
+const GROUP_PREFIX = "Medical Certificate - ";
+const GROUP_PARENT_NAME = "Medical Certificate";
+
+type GroupedEntry =
+    | { type: "standalone"; item: ChecklistItem }
+    | { type: "parent"; parentName: string; subitems: ChecklistItem[] };
+
+function groupItems(allItems: ChecklistItem[]): GroupedEntry[] {
+    const result: GroupedEntry[] = [];
+    const medSubItems: ChecklistItem[] = [];
+    const others: ChecklistItem[] = [];
+
+    for (const item of allItems) {
+        if ((item as any).documentType.name.startsWith(GROUP_PREFIX)) {
+            medSubItems.push(item);
+        } else {
+            others.push(item);
+        }
+    }
+
+    for (const item of others) {
+        if (
+            (item as any).documentType.name === GROUP_PARENT_NAME &&
+            medSubItems.length > 0
+        ) {
+            result.push({
+                type: "parent",
+                parentName: GROUP_PARENT_NAME,
+                subitems: medSubItems,
+            });
+        } else {
+            result.push({ type: "standalone", item });
+        }
+    }
+
+    // If there's no parent "Medical Certificate" standalone item, still group the subitems
+    const alreadyHasParent = result.some(
+        (e) => e.type === "parent" && e.parentName === GROUP_PARENT_NAME,
+    );
+    if (!alreadyHasParent && medSubItems.length > 0) {
+        result.push({
+            type: "parent",
+            parentName: GROUP_PARENT_NAME,
+            subitems: medSubItems,
+        });
+    }
+
+    return result;
+}
+
+// ── Checklist row ─────────────────────────────────────────────────────────────
+
 type SheetView = "detail" | "upload" | "request";
 type RequestType = "RESUBMIT" | "DELETE";
+
+function ChecklistRow({
+    item,
+    viewingId,
+    onOpen,
+    indent = false,
+}: {
+    item: ChecklistItem;
+    viewingId: string | null;
+    onOpen: (
+        item: ChecklistItem,
+        view: SheetView,
+        reqType?: RequestType,
+    ) => void;
+    indent?: boolean;
+}) {
+    const { documentType, submission, pendingRequest } = item as any;
+    const status: DocumentStatus | "MISSING" = submission?.status ?? "MISSING";
+    const hasPending = !!pendingRequest;
+
+    const canUpload =
+        !hasPending && (status === "MISSING" || status === "REJECTED");
+    const canRequestResubmit =
+        !!submission && !hasPending && status === "APPROVED";
+    const canRequestDelete = !!submission && !hasPending;
+
+    return (
+        <div
+            className={[
+                "rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/40 cursor-pointer",
+                indent ? "ml-6 border-l-2 border-l-blue-500/20" : "",
+            ].join(" ")}
+            onClick={() => onOpen(item, "detail")}
+        >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                {/* LEFT */}
+                <div className="flex items-start gap-3 min-w-0">
+                    <div className="mt-0.5">{STATUS_ICON[status]}</div>
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium leading-tight">
+                            {indent
+                                ? documentType.name.replace(GROUP_PREFIX, "")
+                                : documentType.name}
+                            {documentType.required && (
+                                <span className="text-red-500 ml-1 text-xs">
+                                    *
+                                </span>
+                            )}
+                        </p>
+                        {submission?.submitted_at && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Submitted:{" "}
+                                {new Date(
+                                    submission.submitted_at,
+                                ).toLocaleDateString("en-PH")}
+                            </p>
+                        )}
+                        {status === "REJECTED" && submission?.reject_reason && (
+                            <p className="text-xs text-red-500 mt-1">
+                                Reason: {submission.reject_reason}
+                            </p>
+                        )}
+                        {hasPending && (
+                            <div className="flex items-center gap-1 mt-1">
+                                <HourglassIcon className="h-3 w-3 text-yellow-500" />
+                                <p className="text-xs text-yellow-500 font-medium">
+                                    {pendingRequest.type === "RESUBMIT"
+                                        ? "Resubmit request pending"
+                                        : "Delete request pending"}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* RIGHT */}
+                <div
+                    className="flex items-center justify-between gap-2 sm:justify-end"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {submission?.status ? (
+                        <div className="shrink-0">
+                            <DocumentStatusBadge status={submission.status} />
+                        </div>
+                    ) : (
+                        <div className="shrink-0" />
+                    )}
+
+                    {/* Desktop buttons */}
+                    <div className="hidden sm:flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                        {canUpload && (
+                            <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => onOpen(item, "upload")}
+                                className="gap-1.5"
+                            >
+                                <Upload className="h-3.5 w-3.5" />
+                                {status === "REJECTED" ? "Resubmit" : "Upload"}
+                            </Button>
+                        )}
+                        {canRequestResubmit && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-yellow-600 border-yellow-500/40 hover:bg-yellow-500/10"
+                                onClick={() =>
+                                    onOpen(item, "request", "RESUBMIT")
+                                }
+                            >
+                                <RotateCcw className="h-3.5 w-3.5" /> Request
+                                Resubmit
+                            </Button>
+                        )}
+                        {canRequestDelete && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-red-500 border-red-500/40 hover:bg-red-500/10"
+                                onClick={() =>
+                                    onOpen(item, "request", "DELETE")
+                                }
+                            >
+                                <Trash2 className="h-3.5 w-3.5" /> Request
+                                Delete
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ── Group row ─────────────────────────────────────────────────────────────────
+
+function GroupRow({
+    parentName,
+    subitems,
+    viewingId,
+    onOpen,
+}: {
+    parentName: string;
+    subitems: ChecklistItem[];
+    viewingId: string | null;
+    onOpen: (
+        item: ChecklistItem,
+        view: SheetView,
+        reqType?: RequestType,
+    ) => void;
+}) {
+    const [expanded, setExpanded] = useState(true);
+
+    const approvedCount = subitems.filter(
+        (c) => (c as any).submission?.status === "APPROVED",
+    ).length;
+    const total = subitems.length;
+    const allApproved = approvedCount === total;
+    const hasRejected = subitems.some(
+        (c) => (c as any).submission?.status === "REJECTED",
+    );
+    const hasMissing = subitems.some((c) => !(c as any).submission);
+
+    const summaryColor = allApproved
+        ? "text-emerald-500"
+        : hasRejected
+          ? "text-red-500"
+          : hasMissing
+            ? "text-orange-500"
+            : "text-blue-500";
+
+    return (
+        <div className="space-y-1.5">
+            <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 flex items-center justify-between gap-3 hover:bg-muted/70 transition-colors"
+            >
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-1.5 shrink-0">
+                        <FileText className="h-3.5 w-3.5 text-blue-400" />
+                    </div>
+                    <div className="text-left min-w-0">
+                        <p className="text-sm font-medium leading-tight">
+                            {parentName}
+                            <span className="text-red-500 ml-1 text-xs">*</span>
+                        </p>
+                        <p className={`text-xs mt-0.5 ${summaryColor}`}>
+                            {approvedCount}/{total} approved
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-muted-foreground">
+                        {expanded ? "Hide" : "Show"} subtypes
+                    </span>
+                    {expanded ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
+                </div>
+            </button>
+
+            {expanded && (
+                <div className="space-y-1.5 pl-4 border-l-2 border-blue-500/20 ml-3">
+                    {subitems.map((child) => (
+                        <ChecklistRow
+                            key={(child as any).documentType.id}
+                            item={child}
+                            viewingId={viewingId}
+                            onOpen={onOpen}
+                            indent
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
     const isMobile = useIsMobile();
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // sheet state
     const [sheetOpen, setSheetOpen] = useState(false);
     const [sheetView, setSheetView] = useState<SheetView>("detail");
     const [activeItem, setActiveItem] = useState<ChecklistItem | null>(null);
     const [requestType, setRequestType] = useState<RequestType>("RESUBMIT");
 
-    // upload state
     const [file, setFile] = useState<File | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    // request state
     const [requestReason, setRequestReason] = useState("");
     const [requesting, setRequesting] = useState(false);
 
-    // view doc
     const [viewingId, setViewingId] = useState<string | null>(null);
 
-    // inline preview
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [previewLoading, setPreviewLoading] = useState(false);
     const [previewFullscreen, setPreviewFullscreen] = useState(false);
 
     const approved = items.filter(
-        (i) => i.submission?.status === "APPROVED",
+        (i) => (i as any).submission?.status === "APPROVED",
     ).length;
-    const total = items.filter((i) => i.documentType.required).length;
+    const total = items.filter((i) => (i as any).documentType.required).length;
 
     const openSheet = (
         item: ChecklistItem,
@@ -135,10 +406,9 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
         setPreviewUrl(null);
         setSheetOpen(true);
 
-        // fetch preview when opening detail view with a file
-        if (view === "detail" && item.submission?.file_path) {
+        if (view === "detail" && (item as any).submission?.file_path) {
             setPreviewLoading(true);
-            getDocumentSignedUrl(item.submission.id)
+            getDocumentSignedUrl((item as any).submission.id)
                 .then((result) => {
                     if (result.ok) setPreviewUrl(result.data!.url);
                 })
@@ -154,19 +424,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
         setRequestReason("");
     };
 
-    const handleView = async (docId: string) => {
-        setViewingId(docId);
-        try {
-            const result = await getDocumentSignedUrl(docId);
-            if (!result.ok) return toast.error(result.error);
-            window.open(result.data!.url, "_blank", "noreferrer");
-        } catch {
-            toast.error("Failed to open document.");
-        } finally {
-            setViewingId(null);
-        }
-    };
-
     const handleUpload = async () => {
         if (!file || !activeItem) return toast.error("Please select a file.");
         setSubmitting(true);
@@ -174,12 +431,12 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
             const fd = new FormData();
             fd.append("file", file);
             const result = await submitTeacherDocument(
-                activeItem.documentType.id,
+                (activeItem as any).documentType.id,
                 fd,
             );
             if (!result.ok) return toast.error(result.error);
             toast.success(
-                activeItem.submission
+                (activeItem as any).submission
                     ? "Document resubmitted."
                     : "Document submitted.",
             );
@@ -193,14 +450,17 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
     };
 
     const handleRequest = async () => {
-        if (!activeItem?.submission) return;
+        if (!(activeItem as any)?.submission) return;
         if (!requestReason.trim())
             return toast.error("Please provide a reason.");
         setRequesting(true);
         try {
             const fn =
                 requestType === "RESUBMIT" ? requestResubmit : requestDelete;
-            const result = await fn(activeItem.submission.id, requestReason);
+            const result = await fn(
+                (activeItem as any).submission.id,
+                requestReason,
+            );
             if (!result.ok) return toast.error(result.error);
             toast.success(
                 requestType === "RESUBMIT"
@@ -217,10 +477,12 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
     };
 
     const item = activeItem;
-    const submission = item?.submission;
-    const documentType = item?.documentType;
+    const submission = (item as any)?.submission;
+    const documentType = (item as any)?.documentType;
     const pendingRequest = (item as any)?.pendingRequest;
-    const status = submission?.status ?? "MISSING";
+    const status: DocumentStatus | "MISSING" = submission?.status ?? "MISSING";
+
+    const grouped = groupItems(items);
 
     return (
         <>
@@ -248,157 +510,24 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                 </CardHeader>
 
                 <CardContent className="space-y-2">
-                    {items.map((item) => {
-                        const { documentType, submission, pendingRequest } =
-                            item as any;
-                        const status = submission?.status ?? "MISSING";
-                        const isViewing = viewingId === submission?.id;
-                        const hasPending = !!pendingRequest;
-
-                        const canUpload =
-                            !hasPending &&
-                            (status === "MISSING" || status === "REJECTED");
-                        const canRequestResubmit =
-                            !!submission &&
-                            !hasPending &&
-                            status === "APPROVED";
-                        const canRequestDelete = !!submission && !hasPending;
-
-                        return (
-                            <div
-                                key={documentType.id}
-                                className="rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/40 cursor-pointer"
-                                onClick={() => openSheet(item, "detail")}
-                            >
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                    {/* LEFT */}
-                                    <div className="flex items-start gap-3 min-w-0">
-                                        <div className="mt-0.5">
-                                            {
-                                                STATUS_ICON[
-                                                    status as
-                                                        | DocumentStatus
-                                                        | "MISSING"
-                                                ]
-                                            }
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium leading-tight">
-                                                {documentType.name}
-                                                {documentType.required && (
-                                                    <span className="text-red-500 ml-1 text-xs">
-                                                        *
-                                                    </span>
-                                                )}
-                                            </p>
-                                            {submission?.submitted_at && (
-                                                <p className="text-xs text-muted-foreground mt-0.5">
-                                                    Submitted:{" "}
-                                                    {new Date(
-                                                        submission.submitted_at,
-                                                    ).toLocaleDateString(
-                                                        "en-PH",
-                                                    )}
-                                                </p>
-                                            )}
-                                            {status === "REJECTED" &&
-                                                submission?.reject_reason && (
-                                                    <p className="text-xs text-red-500 mt-1">
-                                                        Reason:{" "}
-                                                        {
-                                                            submission.reject_reason
-                                                        }
-                                                    </p>
-                                                )}
-                                            {hasPending && (
-                                                <div className="flex items-center gap-1 mt-1">
-                                                    <HourglassIcon className="h-3 w-3 text-yellow-500" />
-                                                    <p className="text-xs text-yellow-500 font-medium">
-                                                        {pendingRequest.type ===
-                                                        "RESUBMIT"
-                                                            ? "Resubmit request pending"
-                                                            : "Delete request pending"}
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* RIGHT */}
-                                    <div
-                                        className="flex items-center justify-between gap-2 sm:justify-end"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        {submission?.status ? (
-                                            <div className="shrink-0">
-                                                <DocumentStatusBadge
-                                                    status={submission.status}
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="shrink-0" />
-                                        )}
-
-                                        {/* Desktop buttons */}
-                                        <div className="hidden sm:flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                                            {canUpload && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="default"
-                                                    onClick={() =>
-                                                        openSheet(
-                                                            item,
-                                                            "upload",
-                                                        )
-                                                    }
-                                                    className="gap-1.5"
-                                                >
-                                                    <Upload className="h-3.5 w-3.5" />
-                                                    {status === "REJECTED"
-                                                        ? "Resubmit"
-                                                        : "Upload"}
-                                                </Button>
-                                            )}
-                                            {canRequestResubmit && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 text-yellow-600 border-yellow-500/40 hover:bg-yellow-500/10"
-                                                    onClick={() =>
-                                                        openSheet(
-                                                            item,
-                                                            "request",
-                                                            "RESUBMIT",
-                                                        )
-                                                    }
-                                                >
-                                                    <RotateCcw className="h-3.5 w-3.5" />{" "}
-                                                    Request Resubmit
-                                                </Button>
-                                            )}
-                                            {canRequestDelete && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="gap-1.5 text-red-500 border-red-500/40 hover:bg-red-500/10"
-                                                    onClick={() =>
-                                                        openSheet(
-                                                            item,
-                                                            "request",
-                                                            "DELETE",
-                                                        )
-                                                    }
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />{" "}
-                                                    Request Delete
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                    {grouped.map((entry, idx) =>
+                        entry.type === "standalone" ? (
+                            <ChecklistRow
+                                key={(entry.item as any).documentType.id}
+                                item={entry.item}
+                                viewingId={viewingId}
+                                onOpen={openSheet}
+                            />
+                        ) : (
+                            <GroupRow
+                                key={`group-${entry.parentName}-${idx}`}
+                                parentName={entry.parentName}
+                                subitems={entry.subitems}
+                                viewingId={viewingId}
+                                onOpen={openSheet}
+                            />
+                        ),
+                    )}
                 </CardContent>
             </Card>
 
@@ -413,7 +542,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                             : "w-[480px] sm:w-[520px]",
                     ].join(" ")}
                 >
-                    {/* ── Header ── */}
                     <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-2 min-w-0">
@@ -473,9 +601,7 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                         </div>
                     </SheetHeader>
 
-                    {/* ── Body ── */}
                     <div className="flex-1 px-5 py-4 space-y-4">
-                        {/* ── DETAIL VIEW ── */}
                         {sheetView === "detail" && item && (
                             <>
                                 {documentType?.description && (
@@ -483,8 +609,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         {documentType.description}
                                     </p>
                                 )}
-
-                                {/* Pending request warning */}
                                 {pendingRequest && (
                                     <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 px-3 py-2 flex items-center gap-2">
                                         <HourglassIcon className="h-4 w-4 text-yellow-500 shrink-0" />
@@ -495,8 +619,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         </p>
                                     </div>
                                 )}
-
-                                {/* Rejection reason */}
                                 {status === "REJECTED" &&
                                     submission?.reject_reason && (
                                         <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
@@ -508,17 +630,13 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                             </p>
                                         </div>
                                     )}
-
                                 {submission ? (
                                     <>
                                         <Separator />
-
-                                        {/* Timeline */}
                                         <div className="space-y-3">
                                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 Timeline
                                             </div>
-
                                             <div className="space-y-2">
                                                 <div className="flex items-start gap-3 text-sm">
                                                     <CalendarDays className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
@@ -533,7 +651,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                         </div>
                                                     </div>
                                                 </div>
-
                                                 {submission.reviewed_at && (
                                                     <div className="flex items-start gap-3 text-sm">
                                                         <CalendarDays className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
@@ -549,7 +666,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                         </div>
                                                     </div>
                                                 )}
-
                                                 {submission.status ===
                                                     "APPROVED" &&
                                                     submission.reviewed_at && (
@@ -567,7 +683,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                             </div>
                                                         </div>
                                                     )}
-
                                                 {submission.expires_at && (
                                                     <div className="flex items-start gap-3 text-sm">
                                                         <Clock className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
@@ -585,10 +700,7 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                 )}
                                             </div>
                                         </div>
-
                                         <Separator />
-
-                                        {/* File preview */}
                                         <div className="space-y-2">
                                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 File
@@ -602,7 +714,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                     {submission.mime_type?.startsWith(
                                                         "image/",
                                                     ) ? (
-                                                        // eslint-disable-next-line @next/next/no-img-element
                                                         <div className="rounded-lg border overflow-hidden bg-muted/20">
                                                             <img
                                                                 src={previewUrl}
@@ -670,7 +781,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                             </>
                         )}
 
-                        {/* ── UPLOAD VIEW ── */}
                         {sheetView === "upload" && item && (
                             <>
                                 {documentType?.description && (
@@ -678,7 +788,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         {documentType.description}
                                     </p>
                                 )}
-
                                 {status === "REJECTED" &&
                                     submission?.reject_reason && (
                                         <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
@@ -690,7 +799,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                             </p>
                                         </div>
                                     )}
-
                                 <div className="text-xs text-muted-foreground space-y-1">
                                     {documentType?.allowed_mime && (
                                         <p>
@@ -704,7 +812,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         <p>Max size: {documentType.max_mb}MB</p>
                                     )}
                                 </div>
-
                                 <input
                                     ref={inputRef}
                                     type="file"
@@ -717,8 +824,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         setFile(e.target.files?.[0] ?? null)
                                     }
                                 />
-
-                                {/* Dropzone / preview */}
                                 {!file ? (
                                     <div
                                         className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-muted/10 transition-colors"
@@ -762,7 +867,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                             </>
                         )}
 
-                        {/* ── REQUEST VIEW ── */}
                         {sheetView === "request" && item && (
                             <>
                                 <p className="text-sm text-muted-foreground">
@@ -785,14 +889,12 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                         </>
                                     )}
                                 </p>
-
                                 {requestType === "DELETE" && (
                                     <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-400">
                                         This action is irreversible once
                                         approved by an admin.
                                     </div>
                                 )}
-
                                 <div className="space-y-1.5">
                                     <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                                         Reason
@@ -811,11 +913,9 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                         )}
                     </div>
 
-                    {/* ── Footer ── */}
                     <div className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-3 flex gap-2">
                         {sheetView === "detail" && (
                             <>
-                                {/* Quick actions from detail view */}
                                 {(() => {
                                     const hasPending = !!(item as any)
                                         ?.pendingRequest;
@@ -965,6 +1065,7 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                     </div>
                 </SheetContent>
             </Sheet>
+
             {previewFullscreen && previewUrl && (
                 <div
                     className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center"
@@ -977,9 +1078,7 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                     >
                         <X className="h-5 w-5" />
                     </button>
-
                     {submission?.mime_type?.startsWith("image/") ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                             src={previewUrl}
                             alt="Fullscreen preview"

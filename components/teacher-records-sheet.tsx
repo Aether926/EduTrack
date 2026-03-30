@@ -31,28 +31,23 @@ import {
     Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { fetchTeacherRecords, pingTeacherDocument } from "@/lib/database/teacher-records";
-
-const REQUIRED_DOCUMENT_TYPES: { id: string; name: string }[] = [
-    { id: "c4459e5a-0e49-4ad4-9cf7-a5c366ed64de", name: "Birth Certificate"     },
-    { id: "9fdc038d-9851-428a-904a-f882a6f7ee6b", name: "CSC Eligibility"       },
-    { id: "e7c4ea4e-0084-4765-9cd3-a2b698a98e1e", name: "Diploma"               },
-    { id: "acb0f575-09b6-4f1f-b154-69860df3355f", name: "IPCRF"                 },
-    { id: "d2f954b7-eecd-44b3-b329-8abecc627796", name: "Marriage Certificate"  },
-    { id: "54b25d9b-8dbd-4182-b0d5-cb38ef9e19ba", name: "Medical Certificate"   },
-    { id: "60ca9097-5fd8-454a-8605-28f03ceef61d", name: "PRC ID"                },
-    { id: "815b8305-c6c0-4b76-b53b-3539f8931ab7", name: "SALN"                  },
-    { id: "34d9dee9-9690-4325-bb6f-991fea48223c", name: "Service Record"        },
-    { id: "292d7259-644f-4e9c-81d6-4a7ccf33297a", name: "Transcript of Records" },
-];
+import {
+    fetchTeacherRecords,
+    pingTeacherDocument,
+} from "@/lib/database/teacher-records";
+import { REQUIRED_DOCUMENT_TYPES } from "@/components/constant-data";
 
 function fmtDate(dt: string | null | undefined) {
     if (!dt) return "—";
     try {
         return new Date(dt).toLocaleDateString("en-PH", {
-            year: "numeric", month: "short", day: "numeric",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
         });
-    } catch { return dt; }
+    } catch {
+        return dt;
+    }
 }
 
 function isExpiringSoon(expiresAt: string | null | undefined) {
@@ -71,18 +66,21 @@ function DocStatusBadge({ status }: { status: string }) {
     if (s === "APPROVED")
         return (
             <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px]">
-                <CheckCircle2 className="h-2.5 w-2.5 mr-1" />Approved
+                <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
+                Approved
             </Badge>
         );
     if (s === "REJECTED")
         return (
             <Badge className="bg-rose-500/15 text-rose-400 border-rose-500/30 text-[10px]">
-                <XCircle className="h-2.5 w-2.5 mr-1" />Rejected
+                <XCircle className="h-2.5 w-2.5 mr-1" />
+                Rejected
             </Badge>
         );
     return (
         <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-[10px]">
-            <Clock className="h-2.5 w-2.5 mr-1" />Pending
+            <Clock className="h-2.5 w-2.5 mr-1" />
+            Pending
         </Badge>
     );
 }
@@ -94,11 +92,11 @@ function DocumentViewer({
     mimeType,
     title,
 }: {
-    open:         boolean;
+    open: boolean;
     onOpenChange: (open: boolean) => void;
-    fileUrl:      string;
-    mimeType:     string;
-    title:        string;
+    fileUrl: string;
+    mimeType: string;
+    title: string;
 }) {
     const isPdf = mimeType === "application/pdf";
     return (
@@ -110,7 +108,6 @@ function DocumentViewer({
                             {title}
                         </DialogTitle>
                         <a
-                        
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -143,10 +140,10 @@ function DocumentViewer({
 }
 
 interface TeacherRecordsSheetProps {
-    open:         boolean;
+    open: boolean;
     onOpenChange: (open: boolean) => void;
-    teacherId:    string;
-    isArchived?:  boolean;
+    teacherId: string;
+    isArchived?: boolean;
 }
 
 type Records = Awaited<ReturnType<typeof fetchTeacherRecords>>;
@@ -157,13 +154,13 @@ export default function TeacherRecordsSheet({
     teacherId,
     isArchived = false,
 }: TeacherRecordsSheetProps) {
-    const [records, setRecords]     = useState<Records | null>(null);
-    const [loading, setLoading]     = useState(false);
+    const [records, setRecords] = useState<Records | null>(null);
+    const [loading, setLoading] = useState(false);
     const [pingingId, setPingingId] = useState<string | null>(null);
-    const [viewer, setViewer]       = useState<{
-        fileUrl:  string;
+    const [viewer, setViewer] = useState<{
+        fileUrl: string;
         mimeType: string;
-        title:    string;
+        title: string;
     } | null>(null);
 
     useEffect(() => {
@@ -176,20 +173,28 @@ export default function TeacherRecordsSheet({
     }, [open, teacherId]);
 
     const submittedTypeIds = new Set(
-        (records?.documents ?? []).map((d) => d.documentTypeId)
+        (records?.documents ?? []).map((d) => d.documentTypeId),
     );
-    const missingDocuments  = REQUIRED_DOCUMENT_TYPES.filter((dt) => !submittedTypeIds.has(dt.id));
-    const approvedDocs      = (records?.documents ?? []).filter((d) => d.status === "APPROVED").length;
-    const totalDocs         = (records?.documents ?? []).length;
-    const compliantCount    = (records?.compliance ?? []).filter((c) => c.status === "COMPLIANT").length;
-    const totalCompliance   = (records?.compliance ?? []).length;
+    const missingDocuments = REQUIRED_DOCUMENT_TYPES.filter(
+        (dt) => !submittedTypeIds.has(dt.id),
+    );
+    const approvedDocs = (records?.documents ?? []).filter(
+        (d) => d.status === "APPROVED",
+    ).length;
+    const totalDocs = (records?.documents ?? []).length;
+    const compliantCount = (records?.compliance ?? []).filter(
+        (c) => c.status === "COMPLIANT",
+    ).length;
+    const totalCompliance = (records?.compliance ?? []).length;
 
     async function handlePing(documentTypeName: string, docId?: string) {
         const id = docId ?? `missing-${documentTypeName}`;
         setPingingId(id);
         try {
             await pingTeacherDocument(teacherId, documentTypeName);
-            toast.success(`Notification sent to teacher about ${documentTypeName}.`);
+            toast.success(
+                `Notification sent to teacher about ${documentTypeName}.`,
+            );
         } catch {
             toast.error("Failed to send notification.");
         } finally {
@@ -217,17 +222,36 @@ export default function TeacherRecordsSheet({
                         {loading ? (
                             <div className="p-6 space-y-3">
                                 {[...Array(4)].map((_, i) => (
-                                    <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                                    <Skeleton
+                                        key={i}
+                                        className="h-14 w-full rounded-lg"
+                                    />
                                 ))}
                             </div>
                         ) : (
                             <Tabs defaultValue="overview" className="w-full">
                                 <TabsList className="w-full rounded-none border-b border-border/60 bg-transparent h-auto p-0 justify-start overflow-x-auto flex-nowrap">
                                     {[
-                                        { value: "overview",         label: "Overview",   icon: LayoutDashboard },
-                                        { value: "documents",        label: "Documents",  icon: FileText        },
-                                        { value: "responsibilities", label: "Duties",     icon: BookMarked      },
-                                        { value: "compliance",       label: "Compliance", icon: ShieldCheck     },
+                                        {
+                                            value: "overview",
+                                            label: "Overview",
+                                            icon: LayoutDashboard,
+                                        },
+                                        {
+                                            value: "documents",
+                                            label: "Documents",
+                                            icon: FileText,
+                                        },
+                                        {
+                                            value: "responsibilities",
+                                            label: "Duties",
+                                            icon: BookMarked,
+                                        },
+                                        {
+                                            value: "compliance",
+                                            label: "Compliance",
+                                            icon: ShieldCheck,
+                                        },
                                     ].map(({ value, label, icon: Icon }) => (
                                         <TabsTrigger
                                             key={value}
@@ -241,73 +265,118 @@ export default function TeacherRecordsSheet({
                                 </TabsList>
 
                                 {/* ── Overview ── */}
-                                <TabsContent value="overview" className="p-4 space-y-3 mt-0">
+                                <TabsContent
+                                    value="overview"
+                                    className="p-4 space-y-3 mt-0"
+                                >
                                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
                                         Quick Summary
                                     </p>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="rounded-lg border border-border/50 bg-muted/10 p-3">
-                                            <p className="text-[11px] text-muted-foreground">Documents</p>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Documents
+                                            </p>
                                             <p className="text-xl font-bold mt-0.5">
                                                 {approvedDocs}
-                                                <span className="text-xs text-muted-foreground font-normal">/{totalDocs} approved</span>
+                                                <span className="text-xs text-muted-foreground font-normal">
+                                                    /{totalDocs} approved
+                                                </span>
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-border/50 bg-muted/10 p-3">
-                                            <p className="text-[11px] text-muted-foreground">Missing Docs</p>
-                                            <p className={`text-xl font-bold mt-0.5 ${missingDocuments.length > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Missing Docs
+                                            </p>
+                                            <p
+                                                className={`text-xl font-bold mt-0.5 ${missingDocuments.length > 0 ? "text-rose-400" : "text-emerald-400"}`}
+                                            >
                                                 {missingDocuments.length}
-                                                <span className="text-xs text-muted-foreground font-normal">/{REQUIRED_DOCUMENT_TYPES.length} required</span>
+                                                <span className="text-xs text-muted-foreground font-normal">
+                                                    /
+                                                    {
+                                                        REQUIRED_DOCUMENT_TYPES.length
+                                                    }{" "}
+                                                    required
+                                                </span>
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-border/50 bg-muted/10 p-3">
-                                            <p className="text-[11px] text-muted-foreground">Compliance</p>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Compliance
+                                            </p>
                                             <p className="text-xl font-bold mt-0.5">
                                                 {compliantCount}
-                                                <span className="text-xs text-muted-foreground font-normal">/{totalCompliance} compliant</span>
+                                                <span className="text-xs text-muted-foreground font-normal">
+                                                    /{totalCompliance} compliant
+                                                </span>
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-border/50 bg-muted/10 p-3">
-                                            <p className="text-[11px] text-muted-foreground">Responsibilities</p>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Responsibilities
+                                            </p>
                                             <p className="text-xl font-bold mt-0.5">
-                                                {records?.responsibilities?.length ?? 0}
-                                                <span className="text-xs text-muted-foreground font-normal"> assigned</span>
+                                                {records?.responsibilities
+                                                    ?.length ?? 0}
+                                                <span className="text-xs text-muted-foreground font-normal">
+                                                    {" "}
+                                                    assigned
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
 
-                                    {missingDocuments.length > 0 && (
-                                        <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
-                                            <div className="flex items-center gap-1.5 mb-2">
-                                                <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-                                                <p className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">
-                                                    Missing Required Documents
-                                                </p>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                {missingDocuments.map((dt) => (
-                                                    <div key={dt.id} className="flex items-center justify-between gap-2">
-                                                        <p className="text-xs text-foreground">{dt.name}</p>
-                                                        {!isArchived && (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="h-6 text-[10px] px-2 gap-1 border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
-                                                                onClick={() => handlePing(dt.name)}
-                                                                disabled={pingingId === `missing-${dt.name}`}
+                                    {missingDocuments.length > 0 &&
+                                        !isArchived && (
+                                            <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
+                                                <div className="flex items-center gap-1.5 mb-2">
+                                                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                                                    <p className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">
+                                                        Missing Required
+                                                        Documents
+                                                    </p>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    {missingDocuments.map(
+                                                        (dt) => (
+                                                            <div
+                                                                key={dt.id}
+                                                                className="flex items-center justify-between gap-2"
                                                             >
-                                                                {pingingId === `missing-${dt.name}`
-                                                                    ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                                                    : <Bell className="h-2.5 w-2.5" />
-                                                                }
-                                                                Notify
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                                <p className="text-xs text-foreground">
+                                                                    {dt.name}
+                                                                </p>
+                                                                {!isArchived && (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="h-6 text-[10px] px-2 gap-1 border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
+                                                                        onClick={() =>
+                                                                            handlePing(
+                                                                                dt.name,
+                                                                            )
+                                                                        }
+                                                                        disabled={
+                                                                            pingingId ===
+                                                                            `missing-${dt.name}`
+                                                                        }
+                                                                    >
+                                                                        {pingingId ===
+                                                                        `missing-${dt.name}` ? (
+                                                                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                                        ) : (
+                                                                            <Bell className="h-2.5 w-2.5" />
+                                                                        )}
+                                                                        Notify
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
                                     {totalCompliance > 0 && (
                                         <div className="rounded-lg border border-border/50 bg-muted/10 p-3 space-y-2">
@@ -317,15 +386,21 @@ export default function TeacherRecordsSheet({
                                             {records?.compliance?.map((c) => (
                                                 <div key={c.id}>
                                                     <div className="flex items-center justify-between mb-1">
-                                                        <p className="text-xs text-foreground truncate">{c.policyName}</p>
-                                                        <span className={`text-[10px] font-semibold ${c.status === "COMPLIANT" ? "text-emerald-400" : "text-rose-400"}`}>
+                                                        <p className="text-xs text-foreground truncate">
+                                                            {c.policyName}
+                                                        </p>
+                                                        <span
+                                                            className={`text-[10px] font-semibold ${c.status === "COMPLIANT" ? "text-emerald-400" : "text-rose-400"}`}
+                                                        >
                                                             {c.approvedHours}hrs
                                                         </span>
                                                     </div>
                                                     <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                                                         <div
                                                             className={`h-1.5 rounded-full transition-all ${c.status === "COMPLIANT" ? "bg-emerald-400" : "bg-rose-400"}`}
-                                                            style={{ width: `${Math.min(100, (c.approvedHours / (c.requiredHours || 1)) * 100)}%` }}
+                                                            style={{
+                                                                width: `${Math.min(100, (c.approvedHours / (c.requiredHours || 1)) * 100)}%`,
+                                                            }}
                                                         />
                                                     </div>
                                                 </div>
@@ -335,71 +410,115 @@ export default function TeacherRecordsSheet({
                                 </TabsContent>
 
                                 {/* ── Documents ── */}
-                                <TabsContent value="documents" className="p-4 space-y-3 mt-0">
+                                <TabsContent
+                                    value="documents"
+                                    className="p-4 space-y-3 mt-0"
+                                >
                                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
                                         Submitted Documents
                                     </p>
                                     {!records?.documents?.length ? (
-                                        <p className="text-sm text-muted-foreground text-center py-4">No documents submitted.</p>
+                                        <p className="text-sm text-muted-foreground text-center py-4">
+                                            No documents submitted.
+                                        </p>
                                     ) : (
                                         <div className="space-y-2">
                                             {records.documents.map((d) => {
-                                                const expiring = isExpiringSoon(d.expiresAt);
-                                                const expired  = isExpired(d.expiresAt);
+                                                const expiring = isExpiringSoon(
+                                                    d.expiresAt,
+                                                );
+                                                const expired = isExpired(
+                                                    d.expiresAt,
+                                                );
                                                 return (
                                                     <div
                                                         key={d.id}
                                                         className={`rounded-lg border border-border/50 bg-muted/10 p-3 transition-colors ${d.fileUrl ? "cursor-pointer hover:bg-muted/20" : ""}`}
-                                                        onClick={() => d.fileUrl && setViewer({
-                                                            fileUrl:  d.fileUrl,
-                                                            mimeType: d.mimeType ?? "image/jpeg",
-                                                            title:    d.documentType,
-                                                        })}
+                                                        onClick={() =>
+                                                            d.fileUrl &&
+                                                            setViewer({
+                                                                fileUrl:
+                                                                    d.fileUrl,
+                                                                mimeType:
+                                                                    d.mimeType ??
+                                                                    "image/jpeg",
+                                                                title: d.documentType,
+                                                            })
+                                                        }
                                                     >
                                                         <div className="flex items-start justify-between gap-2">
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="text-sm font-medium truncate">{d.documentType}</p>
+                                                                <p className="text-sm font-medium truncate">
+                                                                    {
+                                                                        d.documentType
+                                                                    }
+                                                                </p>
                                                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                                    <DocStatusBadge status={d.status} />
+                                                                    <DocStatusBadge
+                                                                        status={
+                                                                            d.status
+                                                                        }
+                                                                    />
                                                                     <span className="text-[11px] text-muted-foreground font-mono">
-                                                                        {fmtDate(d.submittedAt)}
+                                                                        {fmtDate(
+                                                                            d.submittedAt,
+                                                                        )}
                                                                     </span>
                                                                     {expired && (
                                                                         <Badge className="bg-rose-500/15 text-rose-400 border-rose-500/30 text-[10px]">
                                                                             Expired
                                                                         </Badge>
                                                                     )}
-                                                                    {!expired && expiring && (
-                                                                        <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-[10px]">
-                                                                            Expiring soon
-                                                                        </Badge>
-                                                                    )}
+                                                                    {!expired &&
+                                                                        expiring && (
+                                                                            <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-[10px]">
+                                                                                Expiring
+                                                                                soon
+                                                                            </Badge>
+                                                                        )}
                                                                 </div>
                                                                 {d.expiresAt && (
                                                                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                                                                        Expires: {fmtDate(d.expiresAt)}
+                                                                        Expires:{" "}
+                                                                        {fmtDate(
+                                                                            d.expiresAt,
+                                                                        )}
                                                                     </p>
                                                                 )}
                                                             </div>
                                                             <div className="flex items-center gap-1.5 shrink-0">
-                                                                {(expired || expiring || d.status === "REJECTED") && !isArchived && (
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="h-6 text-[10px] px-2 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handlePing(d.documentType, d.id);
-                                                                        }}
-                                                                        disabled={pingingId === d.id}
-                                                                    >
-                                                                        {pingingId === d.id
-                                                                            ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                                                            : <Bell className="h-2.5 w-2.5" />
-                                                                        }
-                                                                        Notify
-                                                                    </Button>
-                                                                )}
+                                                                {(expired ||
+                                                                    expiring ||
+                                                                    d.status ===
+                                                                        "REJECTED") &&
+                                                                    !isArchived && (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            className="h-6 text-[10px] px-2 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                                                                            onClick={(
+                                                                                e,
+                                                                            ) => {
+                                                                                e.stopPropagation();
+                                                                                handlePing(
+                                                                                    d.documentType,
+                                                                                    d.id,
+                                                                                );
+                                                                            }}
+                                                                            disabled={
+                                                                                pingingId ===
+                                                                                d.id
+                                                                            }
+                                                                        >
+                                                                            {pingingId ===
+                                                                            d.id ? (
+                                                                                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                                            ) : (
+                                                                                <Bell className="h-2.5 w-2.5" />
+                                                                            )}
+                                                                            Notify
+                                                                        </Button>
+                                                                    )}
                                                                 {d.fileUrl && (
                                                                     <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                                                 )}
@@ -411,86 +530,142 @@ export default function TeacherRecordsSheet({
                                         </div>
                                     )}
 
-                                    {missingDocuments.length > 0 && (
-                                        <>
-                                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest pt-2">
-                                                Missing Documents
-                                            </p>
-                                            <div className="space-y-2">
-                                                {missingDocuments.map((dt) => (
-                                                    <div key={dt.id} className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3 flex items-center justify-between gap-2">
-                                                        <div className="flex items-center gap-2 min-w-0">
-                                                            <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-                                                            <p className="text-sm text-foreground truncate">{dt.name}</p>
-                                                        </div>
-                                                        {!isArchived && (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="h-7 text-[10px] px-2.5 gap-1 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 shrink-0"
-                                                                onClick={() => handlePing(dt.name)}
-                                                                disabled={pingingId === `missing-${dt.name}`}
+                                    {missingDocuments.length > 0 &&
+                                        !isArchived && (
+                                            <>
+                                                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest pt-2">
+                                                    Missing Documents
+                                                </p>
+                                                <div className="space-y-2">
+                                                    {missingDocuments.map(
+                                                        (dt) => (
+                                                            <div
+                                                                key={dt.id}
+                                                                className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3 flex items-center justify-between gap-2"
                                                             >
-                                                                {pingingId === `missing-${dt.name}`
-                                                                    ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                                                    : <Bell className="h-2.5 w-2.5" />
-                                                                }
-                                                                Notify
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                                                                    <p className="text-sm text-foreground truncate">
+                                                                        {
+                                                                            dt.name
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                                {!isArchived && (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="h-7 text-[10px] px-2.5 gap-1 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 shrink-0"
+                                                                        onClick={() =>
+                                                                            handlePing(
+                                                                                dt.name,
+                                                                            )
+                                                                        }
+                                                                        disabled={
+                                                                            pingingId ===
+                                                                            `missing-${dt.name}`
+                                                                        }
+                                                                    >
+                                                                        {pingingId ===
+                                                                        `missing-${dt.name}` ? (
+                                                                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                                        ) : (
+                                                                            <Bell className="h-2.5 w-2.5" />
+                                                                        )}
+                                                                        Notify
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
                                 </TabsContent>
 
                                 {/* ── Responsibilities ── */}
-                                <TabsContent value="responsibilities" className="p-4 space-y-2 mt-0">
+                                <TabsContent
+                                    value="responsibilities"
+                                    className="p-4 space-y-2 mt-0"
+                                >
                                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
                                         Assigned Responsibilities
                                     </p>
                                     {!records?.responsibilities?.length ? (
-                                        <p className="text-sm text-muted-foreground text-center py-8">No responsibilities assigned.</p>
-                                    ) : records.responsibilities.map((r) => (
-                                        <div key={r.id} className="rounded-lg border border-border/50 bg-muted/10 p-3">
-                                            <p className="text-sm font-medium">{r.title}</p>
-                                            <p className="text-[11px] text-muted-foreground mt-0.5">{r.schoolYear}</p>
-                                        </div>
-                                    ))}
+                                        <p className="text-sm text-muted-foreground text-center py-8">
+                                            No responsibilities assigned.
+                                        </p>
+                                    ) : (
+                                        records.responsibilities.map((r) => (
+                                            <div
+                                                key={r.id}
+                                                className="rounded-lg border border-border/50 bg-muted/10 p-3"
+                                            >
+                                                <p className="text-sm font-medium">
+                                                    {r.title}
+                                                </p>
+                                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                    {r.schoolYear}
+                                                </p>
+                                            </div>
+                                        ))
+                                    )}
                                 </TabsContent>
 
                                 {/* ── Compliance ── */}
-                                <TabsContent value="compliance" className="p-4 space-y-2 mt-0">
+                                <TabsContent
+                                    value="compliance"
+                                    className="p-4 space-y-2 mt-0"
+                                >
                                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
                                         Training Compliance
                                     </p>
                                     {!records?.compliance?.length ? (
-                                        <p className="text-sm text-muted-foreground text-center py-8">No compliance records.</p>
-                                    ) : records.compliance.map((c) => (
-                                        <div key={c.id} className="rounded-lg border border-border/50 bg-muted/10 p-3 space-y-2">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="text-sm font-medium truncate">{c.policyName}</p>
-                                                <Badge className={
-                                                    c.status === "COMPLIANT"
-                                                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] shrink-0"
-                                                        : "bg-rose-500/15 text-rose-400 border-rose-500/30 text-[10px] shrink-0"
-                                                }>
-                                                    {c.status}
-                                                </Badge>
+                                        <p className="text-sm text-muted-foreground text-center py-8">
+                                            No compliance records.
+                                        </p>
+                                    ) : (
+                                        records.compliance.map((c) => (
+                                            <div
+                                                key={c.id}
+                                                className="rounded-lg border border-border/50 bg-muted/10 p-3 space-y-2"
+                                            >
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className="text-sm font-medium truncate">
+                                                        {c.policyName}
+                                                    </p>
+                                                    <Badge
+                                                        className={
+                                                            c.status ===
+                                                            "COMPLIANT"
+                                                                ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] shrink-0"
+                                                                : "bg-rose-500/15 text-rose-400 border-rose-500/30 text-[10px] shrink-0"
+                                                        }
+                                                    >
+                                                        {c.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                                    <span>
+                                                        {c.approvedHours}hrs
+                                                        approved
+                                                    </span>
+                                                    <span>
+                                                        {c.requiredHours}hrs
+                                                        required
+                                                    </span>
+                                                </div>
+                                                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                                    <div
+                                                        className={`h-1.5 rounded-full transition-all ${c.status === "COMPLIANT" ? "bg-emerald-400" : "bg-rose-400"}`}
+                                                        style={{
+                                                            width: `${Math.min(100, (c.approvedHours / (c.requiredHours || 1)) * 100)}%`,
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                                                <span>{c.approvedHours}hrs approved</span>
-                                                <span>{c.requiredHours}hrs required</span>
-                                            </div>
-                                            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                                                <div
-                                                    className={`h-1.5 rounded-full transition-all ${c.status === "COMPLIANT" ? "bg-emerald-400" : "bg-rose-400"}`}
-                                                    style={{ width: `${Math.min(100, (c.approvedHours / (c.requiredHours || 1)) * 100)}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    )}
                                 </TabsContent>
                             </Tabs>
                         )}

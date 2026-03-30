@@ -45,7 +45,8 @@ export default async function ArchivedProfilePage({
 
     const { data: trainings } = await admin
         .from("Attendance")
-        .select(`
+        .select(
+            `
             id,
             status,
             submitted_at,
@@ -55,14 +56,15 @@ export default async function ArchivedProfilePage({
                 start_date, end_date,
                 total_hours, sponsor, venue
             )
-        `)
+        `,
+        )
         .eq("teacher_id", teacherId);
 
     const mergedProfile = {
         ...profile,
         ...hr,
-        children:    [],
-        trainings:   trainings ?? [],
+        children: [],
+        trainings: trainings ?? [],
     };
 
     return (
@@ -71,7 +73,6 @@ export default async function ArchivedProfilePage({
             <ArchiveProfileBanner
                 archivedAt={archivedUser.archivedAt}
                 archiveReason={archivedUser.archiveReason}
-                
             />
 
             <PublicProfileView
@@ -81,6 +82,7 @@ export default async function ArchivedProfilePage({
                 viewerRole="ADMIN"
                 hasSession={true}
                 showRecordButton={true}
+                isArchived={true}
             />
         </div>
     );

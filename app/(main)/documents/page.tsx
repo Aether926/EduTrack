@@ -14,7 +14,9 @@ export default async function DocumentsPage() {
     const items = await getMyDocumentChecklist();
 
     const totalItems = items.length;
-    const requiredItems = items.filter((it: any) => !!it?.documentType?.required);
+    const requiredItems = items.filter(
+        (it: any) => !!it?.documentType?.required,
+    );
     const requiredTotal = requiredItems.length;
     const completed = requiredItems.filter((it: any) => {
         const s = String(it?.submission?.status ?? "").toUpperCase();
@@ -39,7 +41,8 @@ export default async function DocumentsPage() {
                                     My 201 File
                                 </h1>
                                 <p className="text-[13px] text-muted-foreground mt-0.5">
-                                    Manage and submit your required document checklist.
+                                    Manage and submit your required document
+                                    checklist.
                                 </p>
                             </div>
                         </div>
@@ -51,8 +54,12 @@ export default async function DocumentsPage() {
                                     <FileText className="h-3.5 w-3.5 text-orange-400" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] text-muted-foreground leading-none">Items</div>
-                                    <div className="text-xl font-bold text-orange-400 tabular-nums mt-0.5">{totalItems}</div>
+                                    <div className="text-[11px] text-muted-foreground leading-none">
+                                        Items
+                                    </div>
+                                    <div className="text-xl font-bold text-orange-400 tabular-nums mt-0.5">
+                                        {totalItems}
+                                    </div>
                                 </div>
                             </div>
 
@@ -61,8 +68,12 @@ export default async function DocumentsPage() {
                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] text-muted-foreground leading-none">Completed</div>
-                                    <div className="text-xl font-bold text-emerald-400 tabular-nums mt-0.5">{completed}</div>
+                                    <div className="text-[11px] text-muted-foreground leading-none">
+                                        Completed
+                                    </div>
+                                    <div className="text-xl font-bold text-emerald-400 tabular-nums mt-0.5">
+                                        {completed}
+                                    </div>
                                 </div>
                             </div>
 
@@ -71,8 +82,12 @@ export default async function DocumentsPage() {
                                     <Clock className="h-3.5 w-3.5 text-amber-400" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-[11px] text-muted-foreground leading-none">Pending</div>
-                                    <div className="text-xl font-bold text-amber-400 tabular-nums mt-0.5">{pending}</div>
+                                    <div className="text-[11px] text-muted-foreground leading-none">
+                                        Pending
+                                    </div>
+                                    <div className="text-xl font-bold text-amber-400 tabular-nums mt-0.5">
+                                        {pending}
+                                    </div>
                                 </div>
                             </div>
                         </div>

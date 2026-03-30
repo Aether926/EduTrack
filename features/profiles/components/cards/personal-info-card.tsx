@@ -171,8 +171,6 @@ function InputField(props: {
     );
 }
 
-// ── DatePickerField ────────────────────────────────────────────────────────────
-
 function DatePickerField(props: {
     label: string;
     value: Date | undefined;
@@ -180,8 +178,10 @@ function DatePickerField(props: {
     isEditing: boolean;
     onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
     required?: boolean;
+    maxDate?: Date;
 }) {
-    const { label, value, field, isEditing, onDateChange, required } = props;
+    const { label, value, field, isEditing, onDateChange, required, maxDate } =
+        props;
     const [open, setOpen] = React.useState(false);
     return (
         <div className="space-y-1.5">
@@ -216,6 +216,10 @@ function DatePickerField(props: {
                             mode="single"
                             selected={value}
                             captionLayout="dropdown"
+                            disabled={(date) =>
+                                maxDate ? date > maxDate : false
+                            }
+                            toDate={maxDate}
                             onSelect={(date) => {
                                 onDateChange(field, date);
                                 setOpen(false);
@@ -337,9 +341,6 @@ function AddressBlock(props: {
     const labelClass =
         "text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block";
 
-    const stored = (data[f("Province")] as string) ?? "";
-    const [] = stored.includes("|") ? stored.split("|") : ["", stored];
-
     const locationValue: LocationValue = {
         country: (data[f("Country")] as string) ?? "PH",
         regionCode: (data[f("Region")] as string) ?? "",
@@ -368,7 +369,6 @@ function AddressBlock(props: {
             </div>
 
             <div className="flex flex-col gap-3">
-                {/* Location dropdowns */}
                 {isEditing && !disabled ? (
                     <LocationSelect
                         value={locationValue}
@@ -424,7 +424,6 @@ function AddressBlock(props: {
                     </div>
                 )}
 
-                {/* Manual fields */}
                 <div className="grid grid-cols-2 max-[480px]:grid-cols-1 gap-3 items-end">
                     {fields.map((field) => (
                         <div
@@ -442,7 +441,6 @@ function AddressBlock(props: {
                                         const isPH =
                                             (data[f("Country")] as string) ===
                                             "PH";
-
                                         const val = isZip
                                             ? isPH
                                                 ? e.target.value
@@ -450,7 +448,6 @@ function AddressBlock(props: {
                                                       .slice(0, 4)
                                                 : e.target.value.slice(0, 10)
                                             : e.target.value;
-
                                         onInputChange(f(field.key), val);
                                     }}
                                     inputMode={
@@ -477,8 +474,6 @@ function AddressBlock(props: {
     );
 }
 
-// ── PersonalInfoForm ───────────────────────────────────────────────────────────
-
 function PersonalInfoForm({
     data,
     isEditing,
@@ -491,6 +486,7 @@ function PersonalInfoForm({
     onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
 }) {
     const isDualCitizen = data.citizenship === "Dual Citizenship";
+    const today = new Date();
 
     const handleSameAsResidential = (checked: boolean) => {
         onInputChange(
@@ -638,13 +634,17 @@ function PersonalInfoForm({
                         )}
                     </div>
                 </div>
+
+                {/* ── Date of Birth — no future dates ── */}
                 <DatePickerField
                     label="Date of Birth"
                     value={data.dateOfBirth}
                     field="dateOfBirth"
                     isEditing={isEditing}
                     onDateChange={onDateChange}
+                    maxDate={today}
                 />
+
                 <InputField
                     label="Place of Birth"
                     value={data.placeOfBirth ?? ""}
@@ -686,7 +686,7 @@ function PersonalInfoForm({
 
             <SectionDivider label="Physical Information" />
 
-            {/* ── Physical ── */}
+            {/* ── Physical — no negative values ── */}
             <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1.5">
@@ -696,10 +696,14 @@ function PersonalInfoForm({
                         {isEditing ? (
                             <Input
                                 type="number"
+                                min="0"
+                                step="0.01"
                                 value={data.height ?? ""}
-                                onChange={(e) =>
-                                    onInputChange("height", e.target.value)
-                                }
+                                onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === "" || parseFloat(v) >= 0)
+                                        onInputChange("height", v);
+                                }}
                                 placeholder="e.g. 1.65"
                                 className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
                             />
@@ -714,10 +718,14 @@ function PersonalInfoForm({
                         {isEditing ? (
                             <Input
                                 type="number"
+                                min="0"
+                                step="0.1"
                                 value={data.weight ?? ""}
-                                onChange={(e) =>
-                                    onInputChange("weight", e.target.value)
-                                }
+                                onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === "" || parseFloat(v) >= 0)
+                                        onInputChange("weight", v);
+                                }}
                                 placeholder="e.g. 62.5"
                                 className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
                             />
@@ -902,7 +910,6 @@ export default function PersonalInfoCard({
         <>
             {/* ── Read-only Card ── */}
             <div className="border border-border/60 shadow-lg w-full overflow-hidden rounded-xl bg-card">
-                {/* Decorative header band */}
                 <div className="relative px-6 py-4 border-b border-border/60 bg-gradient-to-br from-card to-background">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
                     <div className="relative flex items-center justify-between">
@@ -954,9 +961,7 @@ export default function PersonalInfoCard({
                             : "w-[500px] sm:w-[540px]",
                     ].join(" ")}
                 >
-                    {/* Sticky header band */}
                     <SheetHeader className="px-5 py-4 border-b border-border/60 sticky top-0 bg-background z-10 shrink-0">
-                        {/* Decorative glow */}
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 pointer-events-none" />
                         <div className="relative flex items-center gap-2.5">
                             <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-1.5">
@@ -968,7 +973,6 @@ export default function PersonalInfoCard({
                         </div>
                     </SheetHeader>
 
-                    {/* Scrollable form */}
                     <div className="flex-1 overflow-y-auto px-5 py-5">
                         <PersonalInfoForm
                             data={data}
@@ -978,7 +982,6 @@ export default function PersonalInfoCard({
                         />
                     </div>
 
-                    {/* Sticky footer */}
                     <SheetFooter className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-4 flex flex-row gap-2 shrink-0">
                         <Button
                             onClick={onSave}

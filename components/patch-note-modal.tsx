@@ -33,7 +33,7 @@ const PATCH_NOTES = [
             "fillUp form now collects employment information.",
             "Account approval sheet shows full user details.",
             "Teacher directory now filters approved teachers only.",
-            "Loading skeleton for pages"
+            "Loading skeleton for pages",
         ],
     },
     {

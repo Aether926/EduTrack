@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Shield, Edit2, Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { ProfileState } from "@/features/profiles/types/profile";
+import { GovIdInput } from "@/components/formatter/gov-id-format";
 
 // ── Display value ──────────────────────────────────────────────────────────────
 
@@ -32,7 +32,7 @@ function IDRow({
     isEditing,
     onInputChange,
 }: {
-    fields: { label: string; key: keyof ProfileState }[];
+    fields: { label: string; key: keyof ProfileState; placeholder?: string }[];
     data: ProfileState;
     isEditing: boolean;
     onInputChange: (field: keyof ProfileState, value: string) => void;
@@ -46,12 +46,10 @@ function IDRow({
                         {f.label}
                     </label>
                     {isEditing ? (
-                        <Input
+                        <GovIdInput
                             value={(data[f.key] as string) ?? ""}
-                            onChange={(e) =>
-                                onInputChange(f.key, e.target.value)
-                            }
-                            placeholder="(optional)"
+                            onChange={(v) => onInputChange(f.key, v)}
+                            placeholder={f.placeholder ?? "(optional)"}
                             className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
                         />
                     ) : (
@@ -67,22 +65,46 @@ function IDRow({
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const ID_ROWS: { label: string; key: keyof ProfileState }[][] = [
+const ID_ROWS: {
+    label: string;
+    key: keyof ProfileState;
+    placeholder?: string;
+}[][] = [
     [
-        { label: "PAG-IBIG No.", key: "pagibigNo" },
-        { label: "PhilHealth No.", key: "philHealthNo" },
+        {
+            label: "PAG-IBIG No.",
+            key: "pagibigNo",
+            placeholder: "e.g. 1234-5678-9012",
+        },
+        {
+            label: "PhilHealth No.",
+            key: "philHealthNo",
+            placeholder: "e.g. 1234-5678-9012",
+        },
     ],
     [
-        { label: "GSIS No.", key: "gsisNo" },
-        { label: "TIN No.", key: "tinNo" },
+        { label: "GSIS No.", key: "gsisNo", placeholder: "e.g. 0000000000" },
+        { label: "TIN No.", key: "tinNo", placeholder: "e.g. 000-000-000" },
     ],
     [
-        { label: "SSS No.", key: "sssNo" },
-        { label: "UMID No.", key: "umidNo" },
+        { label: "SSS No.", key: "sssNo", placeholder: "e.g. 00-0000000-0" },
+        {
+            label: "UMID No.",
+            key: "umidNo",
+            placeholder: "e.g. 0000-0000000-0",
+        },
     ],
     [
-        { label: "PhilSys No. (PSN)", key: "philSysNo" },
-        { label: "Agency Employee No.", key: "agencyEmployeeNo" },
+        {
+            label: "PhilSys No. (PSN)",
+            key: "philSysNo",
+            placeholder: "e.g. 0000-0000-0000-0000",
+        },
+        {
+            label: "Agency Employee No.",
+            key: "agencyEmployeeNo",
+            placeholder: "e.g. 1234567",
+        },
     ],
 ];
 

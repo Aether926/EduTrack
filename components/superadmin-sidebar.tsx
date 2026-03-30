@@ -39,7 +39,7 @@ import { logSignOut } from "@/app/actions/auth-log-actions";
 const NAV_ITEMS = [
     { title: "Dashboard", url: "/superadmin/dashboard", icon: LayoutDashboard },
     { title: "User Management", url: "/superadmin/users", icon: Users },
-    { title: "Archive",         url: "/superadmin/archive",   icon: Archive },
+    { title: "Archive", url: "/superadmin/archive", icon: Archive },
 ];
 
 type SuperadminSidebarProps = {
@@ -71,13 +71,12 @@ export default function SuperadminSidebar({
 
     const child = {
         hidden: { opacity: 0, x: -10 },
-        show:   { opacity: 1, x: 0 },
+        show: { opacity: 1, x: 0 },
     };
 
     return (
         <Sidebar collapsible="offcanvas" variant="sidebar">
             <SidebarContent className="relative flex h-full flex-col">
-
                 {/* ── Header ── */}
                 <div className="px-3 pt-3">
                     <div className="flex items-center justify-between gap-2">
@@ -122,7 +121,9 @@ export default function SuperadminSidebar({
                                         className="space-y-1"
                                     >
                                         {NAV_ITEMS.map((item) => {
-                                            const active = pathname.startsWith(item.url);
+                                            const active = pathname.startsWith(
+                                                item.url,
+                                            );
                                             const Icon = item.icon;
                                             return (
                                                 <SidebarMenuItem key={item.url}>
@@ -207,7 +208,9 @@ export default function SuperadminSidebar({
                             className="w-56"
                         >
                             <DropdownMenuItem
-                                onClick={() => router.push("/superadmin/settings")}
+                                onClick={() =>
+                                    router.push("/superadmin/settings")
+                                }
                             >
                                 Settings
                             </DropdownMenuItem>

@@ -351,11 +351,11 @@ export async function requestDelete(
             {
                 actor_id: auth.user.id,
                 target_user_id: auth.user.id,
-                action: "DOC_RESUBMIT_REQUESTED",
+                action: "DOC_DELETE_REQUESTED",
                 entity_type: "DocumentRequest",
                 entity_id: req.id,
-                message: "You requested to resubmit a document.",
-                recipient_role: "actor", // ← add
+                message: "You requested to delete a document.",
+                recipient_role: "actor",
                 meta: { docId, reason: reason.trim() },
             },
         ]);
