@@ -54,7 +54,7 @@ export default async function CompliancePage() {
             supabase
                 .from("Attendance")
                 .select(
-                    "id, status, result, training_id, approved_hours, ProfessionalDevelopment(title, type, start_date, end_date, total_hours, sponsoring_agency)",
+                    "id, status, result, training_id, approved_hours, ProfessionalDevelopment(title, type, level, start_date, end_date, total_hours, sponsoring_agency)",
                 )
                 .eq("teacher_id", user.id)
                 .eq("status", "APPROVED")
