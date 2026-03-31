@@ -252,6 +252,8 @@ function validate(
     appointmentType: string,
     startDate: Date | undefined,
     endDate: Date | undefined,
+    schoolName: string,
+    schoolNameConfirmed: boolean,
 ): FormErrors {
     const errors: FormErrors = {};
     if (!teacherId) errors.teacher_id = "Please select a teacher.";
@@ -261,6 +263,8 @@ function validate(
     if (!startDate) errors.start_date = "Start date is required.";
     if (startDate && endDate && endDate < startDate)
         errors.end_date = "End date cannot be before start date.";
+    if (schoolName && !schoolNameConfirmed)
+        errors.school_name = "Please select a school from the list.";
     return errors;
 }
 
@@ -294,6 +298,7 @@ export function AppointmentDetailSheet({
     const [position, setPosition] = useState("");
     const [appointmentType, setAppointmentType] = useState("");
     const [schoolName, setSchoolName] = useState("");
+    const [schoolNameConfirmed, setSchoolNameConfirmed] = useState(true);
     const [startDate, setStartDate] = useState<Date | undefined>();
     const [endDate, setEndDate] = useState<Date | undefined>();
     const [memoNo, setMemoNo] = useState("");
@@ -320,6 +325,7 @@ export function AppointmentDetailSheet({
         setPosition(row.position ?? "");
         setAppointmentType(row.appointment_type ?? "");
         setSchoolName((row as any).school_name ?? "");
+        setSchoolNameConfirmed(true);
         setStartDate(row.start_date ? new Date(row.start_date) : undefined);
         setEndDate(row.end_date ? new Date(row.end_date) : undefined);
         setMemoNo(row.memo_no ?? "");
@@ -357,6 +363,8 @@ export function AppointmentDetailSheet({
             appointmentType,
             startDate,
             endDate,
+            schoolName,
+            schoolNameConfirmed,
         );
         if (Object.keys(errs).length > 0) {
             setErrors(errs);
@@ -654,11 +662,27 @@ export function AppointmentDetailSheet({
                         <div>
                             <FieldLabel optional>School Name</FieldLabel>
                             {isEdit ? (
-                                <SchoolInput
-                                    value={schoolName}
-                                    onChange={setSchoolName}
-                                    placeholder="e.g. Ormoc City National High School"
-                                />
+                                <>
+                                    <SchoolInput
+                                        value={schoolName}
+                                        onChange={(v) => {
+                                            setSchoolName(v);
+                                            if (!v)
+                                                setSchoolNameConfirmed(true);
+                                        }}
+                                        onConfirmedChange={(c) => {
+                                            setSchoolNameConfirmed(c);
+                                            if (c)
+                                                setErrors((e) => {
+                                                    const n = { ...e };
+                                                    delete n.school_name;
+                                                    return n;
+                                                });
+                                        }}
+                                        placeholder="e.g. Ormoc City National High School"
+                                    />
+                                    <FieldError message={errors.school_name} />
+                                </>
                             ) : (
                                 <ReadOnlyField
                                     label=""

@@ -8,6 +8,7 @@ import type { SchoolResult } from "@/app/api/schools/route";
 interface SchoolInputProps {
     value: string;
     onChange: (value: string) => void;
+    onConfirmedChange?: (confirmed: boolean) => void;
     placeholder?: string;
     disabled?: boolean;
     className?: string;
@@ -17,6 +18,7 @@ interface SchoolInputProps {
 export function SchoolInput({
     value,
     onChange,
+    onConfirmedChange,
     placeholder = "e.g. Valencia National High School",
     disabled,
     className,
@@ -83,7 +85,8 @@ export function SchoolInput({
 
     function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
         const q = e.target.value;
-        confirmedRef.current = false; // user is typing, not yet confirmed
+        confirmedRef.current = false;
+        onConfirmedChange?.(false);
         setQuery(q);
         onChange(q); // pass raw input up immediately
 
@@ -96,6 +99,7 @@ export function SchoolInput({
             ? `${school.name}, ${school.city}`
             : school.name;
         confirmedRef.current = true;
+        onConfirmedChange?.(true);
         setQuery(label);
         onChange(label);
         setOpen(false);
@@ -105,6 +109,8 @@ export function SchoolInput({
     function handleClear() {
         setQuery("");
         onChange("");
+        confirmedRef.current = false;
+        onConfirmedChange?.(false);
         setResults([]);
         setOpen(false);
         inputRef.current?.focus();

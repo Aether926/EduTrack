@@ -203,6 +203,7 @@ function validate(
     form: AddAppointmentForm,
     startDate: Date | undefined,
     endDate: Date | undefined,
+    schoolNameConfirmed: boolean,
 ): FormErrors {
     const errors: FormErrors = {};
     if (!form.teacher_id) errors.teacher_id = "Please select a teacher.";
@@ -212,6 +213,8 @@ function validate(
     if (!startDate) errors.start_date = "Start date is required.";
     if (startDate && endDate && endDate < startDate)
         errors.end_date = "End date cannot be before start date.";
+    if (form.school_name && !schoolNameConfirmed)
+        errors.school_name = "Please select a school from the list.";
     return errors;
 }
 
@@ -233,6 +236,8 @@ export function AddAppointmentSheet(props: {
     const [pickerOpen, setPickerOpen] = useState(false);
     const [selectedTeacher, setSelectedTeacher] =
         useState<TeacherOption | null>(null);
+    // true when empty (optional) or confirmed from dropdown
+    const [schoolNameConfirmed, setSchoolNameConfirmed] = useState(true);
 
     const set = (key: keyof AddAppointmentForm) => (val: string) => {
         setForm((f) => ({ ...f, [key]: val }));
@@ -258,7 +263,7 @@ export function AddAppointmentSheet(props: {
     };
 
     const handleSubmit = async () => {
-        const errs = validate(form, startDate, endDate);
+        const errs = validate(form, startDate, endDate, schoolNameConfirmed);
         if (Object.keys(errs).length > 0) {
             setErrors(errs);
             return;
@@ -410,9 +415,22 @@ export function AddAppointmentSheet(props: {
                             <FieldLabel optional>School Name</FieldLabel>
                             <SchoolInput
                                 value={form.school_name}
-                                onChange={(v) => set("school_name")(v)}
+                                onChange={(v) => {
+                                    set("school_name")(v);
+                                    if (!v) setSchoolNameConfirmed(true);
+                                }}
+                                onConfirmedChange={(c) => {
+                                    setSchoolNameConfirmed(c);
+                                    if (c)
+                                        setErrors((e) => {
+                                            const n = { ...e };
+                                            delete n.school_name;
+                                            return n;
+                                        });
+                                }}
                                 placeholder="e.g. Ormoc City National High School"
                             />
+                            <FieldError message={errors.school_name} />
                         </div>
 
                         {/* Dates — shadcn Calendar */}

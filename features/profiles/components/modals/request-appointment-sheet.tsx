@@ -215,6 +215,8 @@ export function RequestAppointmentModal(props: {
     const isMobile = useIsMobile();
 
     const [form, setForm] = useState<AppointmentRequestForm>(EMPTY_FORM);
+    const [schoolNameConfirmed, setSchoolNameConfirmed] = useState(true);
+    const [schoolNameError, setSchoolNameError] = useState<string | null>(null);
 
     // Reset form each time sheet opens
     React.useEffect(() => {
@@ -225,9 +227,15 @@ export function RequestAppointmentModal(props: {
         setForm((f) => ({ ...f, [key]: val }));
 
     const handleSubmit = async () => {
+        if (form.school_name && !schoolNameConfirmed) {
+            setSchoolNameError("Please select a school from the list.");
+            return;
+        }
         const success = await onSubmit(form);
         if (success) {
             setForm(EMPTY_FORM);
+            setSchoolNameConfirmed(true);
+            setSchoolNameError(null);
             onOpenChange(false);
         }
     };
@@ -321,9 +329,24 @@ export function RequestAppointmentModal(props: {
                         />
                         <SchoolInput
                             value={form.school_name}
-                            onChange={(v) => set("school_name")(v)}
+                            onChange={(v) => {
+                                set("school_name")(v);
+                                if (!v) {
+                                    setSchoolNameConfirmed(true);
+                                    setSchoolNameError(null);
+                                }
+                            }}
+                            onConfirmedChange={(c) => {
+                                setSchoolNameConfirmed(c);
+                                if (c) setSchoolNameError(null);
+                            }}
                             placeholder="e.g. Ormoc City National High School"
                         />
+                        {schoolNameError && (
+                            <p className="text-xs text-rose-400">
+                                {schoolNameError}
+                            </p>
+                        )}
                     </div>
 
                     {/* Dates */}
