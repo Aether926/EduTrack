@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
     Loader2,
     Plus,
@@ -14,6 +14,8 @@ import {
     ChevronRight,
     ChevronUp,
     ChevronDown,
+    Search,
+    Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -42,7 +44,16 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
+import {
+    TypeBadge,
+    LevelBadge,
+    StatusBadge,
+} from "@/components/ui-elements/badges";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import {
+    PAGE_SIZES,
+    resolvePageSize,
+} from "@/components/ui-elements/pagination/page-sizes";
 import { MONTHS, MONTHS_SHORT, DAYS } from "@/enums/date";
 import { TrainingLevel } from "@/enums/level";
 
@@ -60,6 +71,13 @@ export type FormData = {
     description: string;
 };
 
+export type AssignedUser = {
+    id: string;
+    name: string;
+    profileImage?: string | null;
+    attendanceStatus?: string | null;
+};
+
 interface PdFormSheetProps {
     open: boolean;
     onOpenChange: (v: boolean) => void;
@@ -72,6 +90,8 @@ interface PdFormSheetProps {
     onEdit?: () => void;
     onDelete?: () => void;
     onAssign?: () => void;
+    assignedUsers?: AssignedUser[];
+    loadingAssigned?: boolean;
 }
 
 const modeConfig = {
@@ -113,15 +133,24 @@ const modeConfig = {
 function FieldLabel({
     children,
     optional,
+    required,
+    isReadOnly,
 }: {
     children: React.ReactNode;
     optional?: boolean;
+    required?: boolean;
+    isReadOnly?: boolean;
 }) {
     return (
         <div className="flex items-center gap-1.5 mb-1.5">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 {children}
             </span>
+            {required && !isReadOnly && (
+                <span className="text-rose-500 text-[11px] leading-none">
+                    *
+                </span>
+            )}
             {optional && (
                 <span className="text-[10px] text-muted-foreground/50 normal-case tracking-normal">
                     optional
@@ -134,7 +163,6 @@ function FieldLabel({
 const YEAR_RANGE_BACK = 10;
 const YEAR_RANGE_FORWARD = 5;
 
-// Derive ordered string arrays from numeric enums (strips reverse-mapping keys)
 const MONTHS_LIST = Object.keys(MONTHS).filter((k) =>
     isNaN(Number(k)),
 ) as string[];
@@ -339,30 +367,34 @@ function RangeDatePicker({
 
     if (disabled) {
         return (
-            <div className="rounded-lg border bg-muted/20 px-3 py-2 text-sm text-foreground font-mono space-y-1">
-                <div>
-                    <span className="text-muted-foreground text-xs uppercase tracking-wider mr-2">
+            <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border bg-muted/20 px-3 py-2.5 space-y-0.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Start
-                    </span>
-                    {startDate
-                        ? startDate.toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                          })
-                        : "—"}
+                    </p>
+                    <p className="text-sm font-medium text-foreground">
+                        {startDate
+                            ? startDate.toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                              })
+                            : "\u2014"}
+                    </p>
                 </div>
-                <div>
-                    <span className="text-muted-foreground text-xs uppercase tracking-wider mr-2">
+                <div className="rounded-lg border bg-muted/20 px-3 py-2.5 space-y-0.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                         End
-                    </span>
-                    {endDate
-                        ? endDate.toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                          })
-                        : "—"}
+                    </p>
+                    <p className="text-sm font-medium text-foreground">
+                        {endDate
+                            ? endDate.toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                              })
+                            : "\u2014"}
+                    </p>
                 </div>
             </div>
         );
@@ -370,45 +402,12 @@ function RangeDatePicker({
 
     return (
         <div className="space-y-2">
-            <div className="flex items-center gap-2">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm flex-1 min-w-0">
-                    <div className="flex items-center justify-between sm:contents">
+            <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 space-y-0.5">
+                    <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                             Start
                         </span>
-                        <div className="sm:hidden">
-                            {startDate ? (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        onChange(undefined, undefined)
-                                    }
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <X className="h-3 w-3" />
-                                </button>
-                            ) : (
-                                <span className="w-3 h-3 block" />
-                            )}
-                        </div>
-                    </div>
-                    <span
-                        className={cn(
-                            "flex-1",
-                            startDate
-                                ? "text-foreground font-medium"
-                                : "text-muted-foreground",
-                        )}
-                    >
-                        {startDate
-                            ? startDate.toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                              })
-                            : "—"}
-                    </span>
-                    <div className="hidden sm:flex w-4 shrink-0 items-center justify-center">
                         {startDate && (
                             <button
                                 type="button"
@@ -419,48 +418,28 @@ function RangeDatePicker({
                             </button>
                         )}
                     </div>
-                </div>
-                <span className="text-muted-foreground text-xs shrink-0">
-                    →
-                </span>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm flex-1 min-w-0">
-                    <div className="flex items-center justify-between sm:contents">
-                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            End
-                        </span>
-                        <div className="sm:hidden">
-                            {endDate ? (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        onChange(startDate, undefined)
-                                    }
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <X className="h-3 w-3" />
-                                </button>
-                            ) : (
-                                <span className="w-3 h-3 block" />
-                            )}
-                        </div>
-                    </div>
-                    <span
+                    <p
                         className={cn(
-                            "flex-1",
-                            endDate
-                                ? "text-foreground font-medium"
+                            "text-sm font-medium",
+                            startDate
+                                ? "text-foreground"
                                 : "text-muted-foreground",
                         )}
                     >
-                        {endDate
-                            ? endDate.toLocaleDateString("en-US", {
+                        {startDate
+                            ? startDate.toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
                               })
-                            : "optional"}
-                    </span>
-                    <div className="hidden sm:flex w-4 shrink-0 items-center justify-center">
+                            : "\u2014"}
+                    </p>
+                </div>
+                <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 space-y-0.5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            End
+                        </span>
                         {endDate && (
                             <button
                                 type="button"
@@ -471,6 +450,22 @@ function RangeDatePicker({
                             </button>
                         )}
                     </div>
+                    <p
+                        className={cn(
+                            "text-sm font-medium",
+                            endDate
+                                ? "text-foreground"
+                                : "text-muted-foreground",
+                        )}
+                    >
+                        {endDate
+                            ? endDate.toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                              })
+                            : "optional"}
+                    </p>
                 </div>
             </div>
 
@@ -617,6 +612,240 @@ function RangeDatePicker({
     );
 }
 
+// ── Assigned Users Table ──────────────────────────────────────────────────────
+
+function getInitials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const AVATAR_COLORS = [
+    "bg-blue-500/20 text-blue-300",
+    "bg-violet-500/20 text-violet-300",
+    "bg-teal-500/20 text-teal-300",
+    "bg-amber-500/20 text-amber-300",
+    "bg-rose-500/20 text-rose-300",
+    "bg-emerald-500/20 text-emerald-300",
+    "bg-sky-500/20 text-sky-300",
+    "bg-pink-500/20 text-pink-300",
+];
+
+function avatarColor(name: string): string {
+    const code = name.charCodeAt(0) || 0;
+    return AVATAR_COLORS[code % AVATAR_COLORS.length];
+}
+
+function UserAvatar({ name, src }: { name: string; src?: string | null }) {
+    if (src) {
+        return (
+            <img
+                src={src}
+                alt={name}
+                className="h-7 w-7 rounded-full object-cover shrink-0"
+            />
+        );
+    }
+    return (
+        <span
+            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold border border-white/10 ${avatarColor(name)}`}
+        >
+            {getInitials(name)}
+        </span>
+    );
+}
+
+const STATUS_ORDER: Record<string, number> = {
+    APPROVED: 0,
+    ENROLLED: 1,
+    SUBMITTED: 2,
+};
+
+type SortCol = "name" | "status";
+type SortDir = "asc" | "desc";
+
+function SortHeader({
+    label,
+    active,
+    dir,
+    onClick,
+}: {
+    label: string;
+    active: boolean;
+    dir: SortDir;
+    onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider transition-colors select-none",
+                active
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+            )}
+        >
+            {label}
+            <span className="flex flex-col leading-[0]">
+                <ChevronUp
+                    className={cn(
+                        "h-2.5 w-2.5 -mb-0.5",
+                        active && dir === "asc"
+                            ? "text-foreground"
+                            : "text-muted-foreground/40",
+                    )}
+                />
+                <ChevronDown
+                    className={cn(
+                        "h-2.5 w-2.5",
+                        active && dir === "desc"
+                            ? "text-foreground"
+                            : "text-muted-foreground/40",
+                    )}
+                />
+            </span>
+        </button>
+    );
+}
+
+function AssignedUsersTable({
+    users,
+    loading,
+}: {
+    users: AssignedUser[];
+    loading?: boolean;
+}) {
+    const [q, setQ] = useState("");
+    const [page, setPage] = useState(1);
+    const [sortCol, setSortCol] = useState<SortCol>("status");
+    const [sortDir, setSortDir] = useState<SortDir>("asc");
+    const PAGE_SIZE = resolvePageSize(PAGE_SIZES.pdAssignedUsers);
+
+    const toggleSort = (col: SortCol) => {
+        if (sortCol === col) {
+            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        } else {
+            setSortCol(col);
+            setSortDir("asc");
+        }
+        setPage(1);
+    };
+
+    const filtered = useMemo(() => {
+        const s = q.trim().toLowerCase();
+        const base = s
+            ? users.filter((u) => u.name.toLowerCase().includes(s))
+            : [...users];
+        return base.sort((a, b) => {
+            let cmp = 0;
+            if (sortCol === "name") {
+                cmp = a.name.localeCompare(b.name);
+            } else {
+                const aO =
+                    STATUS_ORDER[a.attendanceStatus?.toUpperCase() ?? ""] ?? 99;
+                const bO =
+                    STATUS_ORDER[b.attendanceStatus?.toUpperCase() ?? ""] ?? 99;
+                cmp = aO - bO;
+            }
+            return sortDir === "asc" ? cmp : -cmp;
+        });
+    }, [users, q, sortCol, sortDir]);
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const shown = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    return (
+        <div className="space-y-2">
+            {/* Section header */}
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <Users className="h-3.5 w-3.5" />
+                    Assigned Teachers
+                    <span className="ml-1 rounded-full border border-border/50 bg-muted/40 px-1.5 py-px text-[10px] font-semibold normal-case tracking-normal">
+                        {users.length}
+                    </span>
+                </div>
+                <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                    <Input
+                        value={q}
+                        onChange={(e) => {
+                            setQ(e.target.value);
+                            setPage(1);
+                        }}
+                        placeholder="Search..."
+                        className="h-7 pl-6 pr-2 text-xs w-[140px]"
+                    />
+                </div>
+            </div>
+
+            {/* Table */}
+            <div className="rounded-lg border border-border/60 overflow-hidden">
+                {/* Column headers */}
+                {!loading && shown.length > 0 && (
+                    <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40 bg-muted/20">
+                        <SortHeader
+                            label="User"
+                            active={sortCol === "name"}
+                            dir={sortDir}
+                            onClick={() => toggleSort("name")}
+                        />
+                        <SortHeader
+                            label="Status"
+                            active={sortCol === "status"}
+                            dir={sortDir}
+                            onClick={() => toggleSort("status")}
+                        />
+                    </div>
+                )}
+                {loading ? (
+                    <div className="py-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Loading teachers...
+                    </div>
+                ) : shown.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-muted-foreground">
+                        {q ? "No matching teachers." : "No teachers assigned."}
+                    </div>
+                ) : (
+                    <div className="divide-y divide-border/40">
+                        {shown.map((u) => (
+                            <div
+                                key={u.id}
+                                className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/30 transition-colors"
+                            >
+                                <UserAvatar
+                                    name={u.name}
+                                    src={u.profileImage}
+                                />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-medium truncate">
+                                        {u.name}
+                                    </p>
+                                </div>
+                                {u.attendanceStatus && (
+                                    <StatusBadge
+                                        status={u.attendanceStatus}
+                                        size="xs"
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <PageNav
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+            />
+        </div>
+    );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function PdFormSheet({
@@ -631,6 +860,8 @@ export default function PdFormSheet({
     onEdit,
     onDelete,
     onAssign,
+    assignedUsers = [],
+    loadingAssigned = false,
 }: PdFormSheetProps) {
     const isMobile = useIsMobile();
     const isReadOnly = mode === "view";
@@ -647,7 +878,7 @@ export default function PdFormSheet({
             <SheetContent
                 side={isMobile ? "bottom" : "right"}
                 className={[
-                    "flex flex-col gap-0 p-0 overflow-y-auto",
+                    "flex flex-col gap-0 p-0 overflow-hidden",
                     isMobile
                         ? "h-[95vh] rounded-t-2xl"
                         : "w-[520px] sm:w-[560px]",
@@ -677,7 +908,6 @@ export default function PdFormSheet({
                                             Expired
                                         </span>
                                     )}
-                                    {/* TypeBadge + LevelBadge shown in view mode header */}
                                     {isReadOnly && (
                                         <>
                                             <TypeBadge
@@ -740,13 +970,21 @@ export default function PdFormSheet({
                 </SheetHeader>
 
                 {/* ── Form body ── */}
-                <form onSubmit={onSubmit} className="flex flex-col flex-1">
-                    <div className="flex-1 px-5 py-4 space-y-5">
+                <form
+                    onSubmit={onSubmit}
+                    className="flex flex-col flex-1 min-h-0"
+                >
+                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
                         {/* Type + Level — selects in create/edit only */}
                         {!isReadOnly && (
                             <div className="flex flex-wrap gap-4">
                                 <div>
-                                    <FieldLabel>Type</FieldLabel>
+                                    <FieldLabel
+                                        required
+                                        isReadOnly={isReadOnly}
+                                    >
+                                        Type
+                                    </FieldLabel>
                                     <Select
                                         value={formData.type}
                                         onValueChange={(
@@ -758,7 +996,7 @@ export default function PdFormSheet({
                                             })
                                         }
                                     >
-                                        <SelectTrigger className="w-[130px]">
+                                        <SelectTrigger className="w-[100px] sm:w-[140px]">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -772,9 +1010,14 @@ export default function PdFormSheet({
                                     </Select>
                                 </div>
                                 <div>
-                                    <FieldLabel>Level</FieldLabel>
+                                    <FieldLabel
+                                        required
+                                        isReadOnly={isReadOnly}
+                                    >
+                                        Level
+                                    </FieldLabel>
                                     <Select
-                                        value={formData.level}
+                                        value={formData.level || "local"}
                                         onValueChange={(
                                             value: keyof typeof TrainingLevel,
                                         ) =>
@@ -784,7 +1027,7 @@ export default function PdFormSheet({
                                             })
                                         }
                                     >
-                                        <SelectTrigger className="w-[175px]">
+                                        <SelectTrigger className="w-[160px] sm:w-[170px]">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -814,7 +1057,9 @@ export default function PdFormSheet({
 
                         {/* Title */}
                         <div>
-                            <FieldLabel>Title</FieldLabel>
+                            <FieldLabel required isReadOnly={isReadOnly}>
+                                Title
+                            </FieldLabel>
                             <Input
                                 value={formData.title}
                                 onChange={(e) =>
@@ -834,7 +1079,9 @@ export default function PdFormSheet({
                         {/* Sponsor + Hours */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <FieldLabel>Sponsoring Agency</FieldLabel>
+                                <FieldLabel required isReadOnly={isReadOnly}>
+                                    Sponsoring Agency
+                                </FieldLabel>
                                 <Input
                                     value={formData.sponsoring_agency}
                                     onChange={(e) =>
@@ -849,7 +1096,9 @@ export default function PdFormSheet({
                                 />
                             </div>
                             <div>
-                                <FieldLabel>Total Hours</FieldLabel>
+                                <FieldLabel required isReadOnly={isReadOnly}>
+                                    Total Hours
+                                </FieldLabel>
                                 <Input
                                     type="number"
                                     min="1"
@@ -871,7 +1120,7 @@ export default function PdFormSheet({
 
                         {/* Date Range — custom inline picker */}
                         <div>
-                            <FieldLabel>
+                            <FieldLabel required isReadOnly={isReadOnly}>
                                 Date Range{" "}
                                 {!isReadOnly && (
                                     <span className="normal-case tracking-normal text-muted-foreground/50 text-[10px] ml-1">
@@ -911,6 +1160,17 @@ export default function PdFormSheet({
                             />
                         </div>
 
+                        {/* ── Assigned Users — view mode only ── */}
+                        {isReadOnly && (
+                            <>
+                                <Separator />
+                                <AssignedUsersTable
+                                    users={assignedUsers}
+                                    loading={loadingAssigned}
+                                />
+                            </>
+                        )}
+
                         {/* Description */}
                         <div>
                             <FieldLabel optional>Description</FieldLabel>
@@ -930,7 +1190,7 @@ export default function PdFormSheet({
                     </div>
 
                     {/* ── Footer ── */}
-                    <div className="sticky bottom-0 bg-background border-t border-border/60 px-5 py-3 space-y-2">
+                    <div className="shrink-0 bg-background border-t border-border/60 px-5 py-3 space-y-2">
                         {mode === "view" && (onAssign || onDelete) && (
                             <div className="flex gap-2">
                                 {onAssign && (

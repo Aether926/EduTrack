@@ -37,6 +37,10 @@ import {
     deleteMultipleProfessionalDevelopment,
     updateProfessionalDevelopment,
 } from "@/app/actions/training";
+import {
+    getAssignedTeachersForTraining,
+    type AssignedTeacher,
+} from "@/lib/database/trainings";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,6 +71,11 @@ import {
 } from "@/components/ui/table";
 
 import PdFormSheet from "@/features/add-training-seminar/components/pd-form-sheet";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import {
+    PAGE_SIZES,
+    resolvePageSize,
+} from "@/components/ui-elements/pagination/page-sizes";
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
 import { TrainingLevel } from "@/enums/level";
 
@@ -109,6 +118,9 @@ export default function AddTrainingAndSeminar({
         null,
     );
 
+    const [assignedUsers, setAssignedUsers] = useState<AssignedTeacher[]>([]);
+    const [loadingAssigned, setLoadingAssigned] = useState(false);
+
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
@@ -138,11 +150,21 @@ export default function AddTrainingAndSeminar({
 
     const [formData, setFormData] = useState(emptyForm);
 
+    const LEVEL_NORMALIZE: Record<string, string> = {
+        REGIONAL: "regional",
+        NATIONAL: "national",
+        INTERNATIONAL: "international",
+        LOCAL: "local",
+        WITHININSTITUTION: "withinInstitution",
+        INTERINSTITUTIONAL: "interInstitutional",
+    };
+
     const fillForm = (pd: ProfessionalDevelopment) =>
         setFormData({
             title: pd.title ?? "",
             type: pd.type as "TRAINING" | "SEMINAR",
-            level: pd.level as keyof typeof TrainingLevel,
+            level: (LEVEL_NORMALIZE[pd.level ?? ""] ??
+                pd.level) as keyof typeof TrainingLevel,
             sponsoring_agency: pd.sponsoring_agency ?? "",
             total_hours: String(pd.total_hours ?? ""),
             start_date: pd.start_date ? new Date(pd.start_date) : undefined,
@@ -155,6 +177,7 @@ export default function AddTrainingAndSeminar({
         setMode("create");
         setSelected(null);
         setFormData(emptyForm);
+        setAssignedUsers([]);
         setIsOpen(true);
     };
 
@@ -162,7 +185,13 @@ export default function AddTrainingAndSeminar({
         setMode("view");
         setSelected(row);
         fillForm(row.raw);
+        setAssignedUsers([]);
         setIsOpen(true);
+        setLoadingAssigned(true);
+        getAssignedTeachersForTraining(row.id).then((teachers) => {
+            setAssignedUsers(teachers);
+            setLoadingAssigned(false);
+        });
     };
 
     const switchToEdit = () => {
@@ -240,12 +269,22 @@ export default function AddTrainingAndSeminar({
                 toast.error("Start date is required");
                 return;
             }
+            const parsedHours = parseInt(formData.total_hours, 10);
+            if (
+                !formData.total_hours ||
+                isNaN(parsedHours) ||
+                parsedHours < 1
+            ) {
+                toast.error("Total hours must be a valid number");
+                return;
+            }
+
             const payload = {
                 title: formData.title,
                 type: formData.type,
                 level: formData.level,
                 sponsoring_agency: formData.sponsoring_agency,
-                total_hours: parseInt(formData.total_hours),
+                total_hours: parsedHours,
                 start_date: format(formData.start_date, "yyyy-MM-dd"),
                 end_date: formData.end_date
                     ? format(formData.end_date, "yyyy-MM-dd")
@@ -447,7 +486,11 @@ export default function AddTrainingAndSeminar({
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
-        initialState: { pagination: { pageSize: 10 } },
+        initialState: {
+            pagination: {
+                pageSize: resolvePageSize(PAGE_SIZES.trainingSeminarTable),
+            },
+        },
     });
 
     const selectedRows = table
@@ -796,30 +839,15 @@ export default function AddTrainingAndSeminar({
             </div>
 
             {/* Pagination */}
-            <div className="bg-card flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-t border-border/60">
-                <div className="text-xs text-muted-foreground">
-                    {filteredCount} result{filteredCount === 1 ? "" : "s"} •
-                    Page {table.getState().pagination.pageIndex + 1} of{" "}
-                    {pageCount || 1}
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Prev
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
+            <div className="bg-card px-5 py-3.5 border-t border-border/60 relative">
+                <PageNav
+                    page={table.getState().pagination.pageIndex + 1}
+                    totalPages={pageCount || 1}
+                    onPageChange={(p) => table.setPageIndex(p - 1)}
+                />
+                <span className="absolute right-5 top-3.5 text-xs text-muted-foreground">
+                    {filteredCount} result{filteredCount === 1 ? "" : "s"}
+                </span>
             </div>
 
             {/* ── Sheet ── */}
@@ -838,6 +866,8 @@ export default function AddTrainingAndSeminar({
                 onEdit={mode === "view" ? switchToEdit : undefined}
                 onDelete={mode === "view" ? triggerDelete : undefined}
                 onAssign={mode === "view" ? handleAssign : undefined}
+                assignedUsers={assignedUsers}
+                loadingAssigned={loadingAssigned}
             />
 
             {/* ── Delete dialog ── */}

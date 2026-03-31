@@ -95,7 +95,14 @@ export function LevelBadge({
     size?: "sm" | "xs";
 }) {
     return (
-        <Pill cls={LEVEL[(level ?? "").toLowerCase()] ?? fallback} size={size}>
+        <Pill
+            cls={
+                LEVEL[level ?? ""] ??
+                LEVEL[(level ?? "").toLowerCase()] ??
+                fallback
+            }
+            size={size}
+        >
             {level}
         </Pill>
     );
