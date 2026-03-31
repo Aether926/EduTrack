@@ -15,7 +15,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -25,29 +24,25 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
+import { StatusBadge, RoleBadge } from "@/components/ui-elements/badges";
 import {
     CheckCircle2,
     XCircle,
     ShieldX,
     ShieldCheck,
-    Trash2,
     Loader2,
     Mail,
     Phone,
     Briefcase,
     Hash,
-    AlertTriangle,
     ArrowUpCircle,
 } from "lucide-react";
 import type { SuperadminUser } from "../types";
 import SuspendReasonDialog from "./suspend-reason-dialog";
+import { fmtFullName } from "@/components/formatter/name-format";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-function fullName(u: SuperadminUser) {
-    return `${u.firstName ?? ""} ${u.middleInitial ? u.middleInitial + ". " : ""}${u.lastName ?? ""}`.trim();
-}
 
 function fmtDate(dt: string) {
     try {
@@ -105,46 +100,6 @@ function SectionLabel({ label }: { label: string }) {
     );
 }
 
-// ── Status badge ───────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: string }) {
-    const s = status.toUpperCase();
-    const styles: Record<string, string> = {
-        APPROVED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-        PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-        REJECTED: "bg-rose-500/15 text-rose-400 border-rose-500/30",
-        SUSPENDED: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    };
-    return (
-        <Badge
-            className={
-                styles[s] ??
-                "bg-slate-500/15 text-slate-400 border-slate-500/30"
-            }
-        >
-            {status}
-        </Badge>
-    );
-}
-
-// ── Role badge ─────────────────────────────────────────────────────────────────
-
-function RoleBadge({ role }: { role: string }) {
-    const styles: Record<string, string> = {
-        TEACHER: "bg-teal-500/10 text-teal-400 border-teal-500/30",
-        ADMIN: "bg-violet-500/10 text-violet-400 border-violet-500/30",
-        SUPERADMIN: "bg-rose-500/10 text-rose-400 border-rose-500/30",
-    };
-    return (
-        <Badge
-            variant="outline"
-            className={`text-[11px] ${styles[role] ?? ""}`}
-        >
-            {role}
-        </Badge>
-    );
-}
-
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface UserActionSheetProps {
@@ -187,7 +142,13 @@ export default function UserActionSheet({
 
     if (!user) return null;
 
-    const name = fullName(user) || "(no name)";
+    const name =
+        fmtFullName({
+            firstName: user.firstName,
+            middleInitial: user.middleInitial,
+            lastName: user.lastName,
+        }) || "(no name)";
+
     const isSuperadmin = user.role === "SUPERADMIN";
 
     async function handle(key: string, fn: () => Promise<void>) {
@@ -200,7 +161,6 @@ export default function UserActionSheet({
         }
     }
 
-    // Role change options based on current role
     const roleOptions: {
         value: string;
         label: string;
@@ -223,7 +183,7 @@ export default function UserActionSheet({
             reason:
                 user.role === "TEACHER" &&
                 promotionQuota.teacherPromotionsLeft === 0
-                    ? `No promotions left this window`
+                    ? "No promotions left this window"
                     : undefined,
         },
         {
@@ -266,8 +226,8 @@ export default function UserActionSheet({
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <StatusBadge status={user.status} />
-                                <RoleBadge role={user.role} />
+                                <StatusBadge status={user.status} size="xs" />
+                                <RoleBadge role={user.role} size="xs" />
                                 <span className="text-[11px] text-muted-foreground ml-auto">
                                     Registered {fmtDate(user.createdAt)}
                                 </span>
@@ -416,7 +376,6 @@ export default function UserActionSheet({
                     {/* Footer actions */}
                     {!isSuperadmin && (
                         <div className="px-6 py-4 border-t border-border/60 space-y-2 shrink-0">
-                            {/* PENDING */}
                             {user.status === "PENDING" && (
                                 <div className="flex gap-2">
                                     <Button
@@ -446,7 +405,6 @@ export default function UserActionSheet({
                                 </div>
                             )}
 
-                            {/* APPROVED */}
                             {user.status === "APPROVED" && (
                                 <Button
                                     className="w-full gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20"
@@ -458,7 +416,6 @@ export default function UserActionSheet({
                                 </Button>
                             )}
 
-                            {/* SUSPENDED */}
                             {user.status === "SUSPENDED" && (
                                 <Button
                                     className="w-full gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
@@ -478,7 +435,6 @@ export default function UserActionSheet({
                                 </Button>
                             )}
 
-                            {/* REJECTED */}
                             {user.status === "REJECTED" && (
                                 <Button
                                     className="w-full gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
@@ -502,7 +458,6 @@ export default function UserActionSheet({
                 </SheetContent>
             </Sheet>
 
-            {/* Suspend reason dialog */}
             <SuspendReasonDialog
                 user={user}
                 open={suspendOpen}

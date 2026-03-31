@@ -51,9 +51,12 @@ import {
     NATIONALITIES,
     RELIGIONS,
 } from "@/components/constant-data";
+import {
+    NameInput,
+    MiddleInitialInput,
+} from "@/components/formatter/name-format";
 
 import type { ProfileState } from "@/features/profiles/types/profile";
-import { formatName } from "@/app/util/helper";
 import { LocationSelect, LocationValue } from "@/components/ui/location-select";
 import { provinces, regions } from "ph-locations";
 import { Country } from "country-state-city";
@@ -106,7 +109,6 @@ function InputField(props: {
     rows?: number;
     isEditing: boolean;
     onInputChange: (field: keyof ProfileState, value: string) => void;
-    onBlur?: (field: keyof ProfileState) => void;
     required?: boolean;
     placeholder?: string;
 }) {
@@ -120,7 +122,6 @@ function InputField(props: {
         rows,
         isEditing,
         onInputChange,
-        onBlur,
         required,
         placeholder,
     } = props;
@@ -158,7 +159,6 @@ function InputField(props: {
                         type={type}
                         value={value}
                         onChange={(e) => onInputChange(field, e.target.value)}
-                        onBlur={() => onBlur?.(field)}
                         placeholder={placeholder || ""}
                         required={Boolean(required)}
                         className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
@@ -235,8 +235,6 @@ function DatePickerField(props: {
         </div>
     );
 }
-
-// ── SelectField ────────────────────────────────────────────────────────────────
 
 function SelectField(props: {
     label: string;
@@ -486,6 +484,8 @@ function PersonalInfoForm({
     onDateChange: (field: keyof ProfileState, date: Date | undefined) => void;
 }) {
     const isDualCitizen = data.citizenship === "Dual Citizenship";
+    const inputCls =
+        "bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20";
     const today = new Date();
 
     const handleSameAsResidential = (checked: boolean) => {
@@ -510,23 +510,25 @@ function PersonalInfoForm({
         <div className="space-y-6">
             {/* ── Name ── */}
             <div className="space-y-4">
-                <InputField
-                    label="First Name"
-                    value={data.firstName}
-                    field="firstName"
-                    icon={User}
-                    isEditing={isEditing}
-                    onInputChange={onInputChange}
-                    onBlur={(f) => {
-                        if (f === "firstName")
-                            onInputChange(
-                                "firstName",
-                                formatName(data.firstName),
-                            );
-                    }}
-                    required
-                />
+                {/* First Name — NameInput handles proper-case on blur */}
+                <div className="space-y-1.5">
+                    <FieldLabel icon={User as React.ElementType} required>
+                        First Name
+                    </FieldLabel>
+                    {isEditing ? (
+                        <NameInput
+                            value={data.firstName}
+                            onChange={(v) => onInputChange("firstName", v)}
+                            placeholder="First name"
+                            className={inputCls}
+                        />
+                    ) : (
+                        <DisplayValue value={data.firstName} />
+                    )}
+                </div>
+
                 <div className="grid grid-cols-3 gap-3">
+                    {/* Middle Initial — MiddleInitialInput handles letter + dot */}
                     <div className="space-y-1.5">
                         <FieldLabel>
                             <span className="hidden md:inline">
@@ -535,57 +537,35 @@ function PersonalInfoForm({
                             <span className="inline md:hidden">M.I.</span>
                         </FieldLabel>
                         {isEditing ? (
-                            <Input
+                            <MiddleInitialInput
                                 value={data.middleInitial}
-                                onChange={(e) => {
-                                    const raw = e.target.value.replace(
-                                        /[^a-zA-Z.]/g,
-                                        "",
-                                    );
-                                    const letter = raw
-                                        .replace(/\./g, "")
-                                        .slice(0, 1)
-                                        .toUpperCase();
-                                    onInputChange(
-                                        "middleInitial",
-                                        letter ? `${letter}.` : "",
-                                    );
-                                }}
-                                onKeyDown={(e) => {
-                                    if (
-                                        (e.key === "Backspace" ||
-                                            e.key === "Delete") &&
-                                        data.middleInitial
-                                    ) {
-                                        e.preventDefault();
-                                        onInputChange("middleInitial", "");
-                                    }
-                                }}
+                                onChange={(v) =>
+                                    onInputChange("middleInitial", v)
+                                }
                                 placeholder="Optional"
-                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                className={inputCls}
                             />
                         ) : (
                             <DisplayValue value={data.middleInitial} />
                         )}
                     </div>
-                    <div className="col-span-2">
-                        <InputField
-                            label="Last Name"
-                            value={data.lastName}
-                            field="lastName"
-                            isEditing={isEditing}
-                            onInputChange={onInputChange}
-                            onBlur={(f) => {
-                                if (f === "lastName")
-                                    onInputChange(
-                                        "lastName",
-                                        formatName(data.lastName),
-                                    );
-                            }}
-                            required
-                        />
+
+                    {/* Last Name — NameInput handles proper-case on blur */}
+                    <div className="col-span-2 space-y-1.5">
+                        <FieldLabel required>Last Name</FieldLabel>
+                        {isEditing ? (
+                            <NameInput
+                                value={data.lastName}
+                                onChange={(v) => onInputChange("lastName", v)}
+                                placeholder="Last name"
+                                className={inputCls}
+                            />
+                        ) : (
+                            <DisplayValue value={data.lastName} />
+                        )}
                     </div>
                 </div>
+
                 <SelectField
                     label="Name Extension"
                     value={data.nameExtension ?? ""}
@@ -705,7 +685,7 @@ function PersonalInfoForm({
                                         onInputChange("height", v);
                                 }}
                                 placeholder="e.g. 1.65"
-                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                className={inputCls}
                             />
                         ) : (
                             <DisplayValue value={data.height} />
@@ -727,7 +707,7 @@ function PersonalInfoForm({
                                         onInputChange("weight", v);
                                 }}
                                 placeholder="e.g. 62.5"
-                                className="bg-white/5 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                className={inputCls}
                             />
                         ) : (
                             <DisplayValue value={data.weight} />

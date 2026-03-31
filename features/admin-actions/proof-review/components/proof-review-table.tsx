@@ -18,7 +18,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import { StatusBadge } from "@/components/ui-elements/badges";
 import { ReviewButton } from "@/components/action-button";
 import ProofReviewSheet from "@/features/admin-actions/proof-review/components/proof-review-sheet";

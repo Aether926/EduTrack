@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/server";
+import { TrainingLevel } from "@/enums/level";
 
 export interface User {
     id: string;
@@ -53,7 +54,7 @@ export type ProfessionalDevelopment = {
   id: string;
   title: string;
   type: 'TRAINING' | 'SEMINAR';
-  level: 'REGIONAL' | 'NATIONAL' | 'INTERNATIONAL';
+  level: keyof typeof TrainingLevel;
   sponsoring_agency: string;
   total_hours: number;
   start_date: string;
@@ -69,7 +70,7 @@ export type TrainingSeminarTableRow = {
   id: string;
   title: string;
   type: "TRAINING" | "SEMINAR";
-  level: "REGIONAL" | "NATIONAL" | "INTERNATIONAL";
+  level: keyof typeof TrainingLevel;
   date: string;
   totalHours: number;
   sponsor: string;
@@ -80,7 +81,7 @@ export type TrainingSeminarTableRow = {
 export type CreateProfessionalDevelopmentInput = {
   title: string;
   type: 'TRAINING' | 'SEMINAR';
-  level: 'REGIONAL' | 'NATIONAL' | 'INTERNATIONAL';
+  level: keyof typeof TrainingLevel;
   sponsoring_agency: string;
   total_hours: number;
   start_date: string;

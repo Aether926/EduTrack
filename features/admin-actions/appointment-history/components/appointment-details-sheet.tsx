@@ -63,11 +63,12 @@ import {
 } from "@/components/teacher-picker-modal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import { AppointmentTypeBadge } from "@/components/ui-elements/badges";
 import { PositionSelect } from "@/components/formatter/position-select";
 import { APPOINTMENT_REMARKS } from "@/components/constant-data";
 import { APPOINTMENT_TYPES } from "@/components/constant-data";
+import { SchoolInput } from "@/components/ui-elements/school-input";
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -586,11 +587,9 @@ export function AppointmentDetailSheet({
                         <div>
                             <FieldLabel optional>School Name</FieldLabel>
                             {isEdit ? (
-                                <Input
+                                <SchoolInput
                                     value={schoolName}
-                                    onChange={(e) =>
-                                        setSchoolName(e.target.value)
-                                    }
+                                    onChange={setSchoolName}
                                     placeholder="e.g. Ormoc City National High School"
                                 />
                             ) : (

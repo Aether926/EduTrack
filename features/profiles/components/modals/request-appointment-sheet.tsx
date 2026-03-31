@@ -13,6 +13,7 @@ import {
 import { ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SchoolInput } from "@/components/ui-elements/school-input";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
     Popover,
@@ -277,9 +278,9 @@ export function RequestAppointmentModal(props: {
                             label="School Name"
                             optional
                         />
-                        <Input
+                        <SchoolInput
                             value={form.school_name}
-                            onChange={(e) => set("school_name")(e.target.value)}
+                            onChange={(v) => set("school_name")(v)}
                             placeholder="e.g. Ormoc City National High School"
                         />
                     </div>

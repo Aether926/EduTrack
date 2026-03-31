@@ -19,6 +19,8 @@ import { StatusBadge } from "@/components/ui-elements/badges";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
 import {
     Bell,
     Filter,
@@ -31,8 +33,6 @@ import {
     LayoutGrid,
     ShieldCheck,
     Inbox,
-    ChevronLeft,
-    ChevronRight,
 } from "lucide-react";
 import router from "next/router";
 
@@ -54,7 +54,6 @@ function classify(r: FeedRow) {
     return "all";
 }
 
-// Semantic color — only for the left border and icon tint, nothing else
 function accentBorder(kind: ReturnType<typeof classify>) {
     if (kind === "approved") return "border-l-[3px] border-l-emerald-500/40";
     if (kind === "rejected") return "border-l-[3px] border-l-rose-500/40";
@@ -183,10 +182,11 @@ export default function ActivityFeed({
 }) {
     const [q, setQ] = useState("");
     const [filter, setFilter] = useState<FilterKey>("all");
-    const PAGE_SIZE = 8;
     const [page, setPage] = useState(1);
     const [searchOpen, setSearchOpen] = useState(false);
     const router = useRouter();
+
+    const PAGE_SIZE: number = PAGE_SIZES.activityFeed.default;
 
     const enriched = useMemo(
         () => rows.map((r) => ({ ...r, _kind: classify(r) })),
@@ -422,76 +422,18 @@ export default function ActivityFeed({
                     )}
 
                     {totalPages > 1 && (
-                        <div className="flex flex-col items-center gap-2 mt-1 px-1">
-                            <div className="flex items-center justify-between w-full">
-                                <span className="text-[11px] text-muted-foreground">
-                                    Page {page} of {totalPages}
-                                </span>
-                                <span className="text-[11px] text-muted-foreground">
-                                    {filtered.length} items
-                                </span>
-                            </div>
-                            <div className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto w-full pb-1">
-                                <button
-                                    onClick={() =>
-                                        setPage((p) => Math.max(1, p - 1))
-                                    }
-                                    disabled={page === 1}
-                                    className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                >
-                                    <ChevronLeft className="h-3.5 w-3.5" />
-                                </button>
-                                {(() => {
-                                    const delta = 1;
-                                    const range: (number | "…")[] = [];
-                                    const left = Math.max(2, page - delta);
-                                    const right = Math.min(
-                                        totalPages - 1,
-                                        page + delta,
-                                    );
-                                    range.push(1);
-                                    if (left > 2) range.push("…");
-                                    for (let i = left; i <= right; i++)
-                                        range.push(i);
-                                    if (right < totalPages - 1) range.push("…");
-                                    if (totalPages > 1) range.push(totalPages);
-                                    return range.map((p, idx) =>
-                                        p === "…" ? (
-                                            <span
-                                                key={`ellipsis-${idx}`}
-                                                className="inline-flex h-6 w-6 items-center justify-center text-[11px] text-muted-foreground"
-                                            >
-                                                …
-                                            </span>
-                                        ) : (
-                                            <button
-                                                key={p}
-                                                onClick={() => setPage(p)}
-                                                className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] font-medium transition ${
-                                                    p === page
-                                                        ? "border-blue-500/40 bg-blue-500/20 text-blue-400"
-                                                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                                                }`}
-                                            >
-                                                {p}
-                                            </button>
-                                        ),
-                                    );
-                                })()}
-                                <button
-                                    onClick={() =>
-                                        setPage((p) =>
-                                            Math.min(totalPages, p + 1),
-                                        )
-                                    }
-                                    disabled={page === totalPages}
-                                    className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                >
-                                    <ChevronRight className="h-3.5 w-3.5" />
-                                </button>
-                            </div>
+                        <div className="flex items-center justify-between px-1 pt-1">
+                            <span className="text-[11px] text-muted-foreground">
+                                {filtered.length} items
+                            </span>
                         </div>
                     )}
+
+                    <PageNav
+                        page={page}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                    />
                 </div>
             </CardContent>
         </Card>

@@ -1,17 +1,11 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import {
-    History,
-    Clock,
-    ChevronDown,
-    ChevronUp,
-    ChevronLeft,
-    ChevronRight,
-    Plus,
-} from "lucide-react";
+import { History, Clock, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
 import { Button } from "@/components/ui/button";
-import { RequestAppointmentModal } from "@/features/profiles/components/modals/request-appointment-modal";
+import { RequestAppointmentModal } from "@/features/profiles/components/modals/request-appointment-sheet";
 import { useAppointment } from "@/features/profiles/appointment/hooks/use-appointment";
 import type { AppointmentHistory } from "@/features/profiles/appointment/types/appointment";
 
@@ -129,7 +123,7 @@ export default function AppointmentHistoryCard(props: {
 }) {
     const { teacherId, isOwnProfile = false, from = "profile" } = props;
     const [modalOpen, setModalOpen] = useState(false);
-    const PAGE_SIZE = 6;
+    const PAGE_SIZE = PAGE_SIZES.appointmentHistory;
     const [page, setPage] = useState(1);
 
     const {
@@ -166,8 +160,9 @@ export default function AppointmentHistoryCard(props: {
         return true;
     };
 
-    const totalPages = Math.ceil(history.length / PAGE_SIZE);
-    const paginated = history.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const pageSize = PAGE_SIZES.appointmentHistory.default;
+    const totalPages = Math.ceil(history.length / pageSize);
+    const paginated = history.slice((page - 1) * pageSize, page * pageSize);
 
     return (
         <>
@@ -247,86 +242,23 @@ export default function AppointmentHistoryCard(props: {
                                 ))}
                             </div>
                             {totalPages > 1 && (
-                                <div className="flex flex-col items-center gap-2 mt-3 px-1">
-                                    <div className="flex items-center justify-between w-full">
-                                        <span className="text-[11px] text-muted-foreground">
-                                            Page {page} of {totalPages}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto w-full pb-1">
-                                        <button
-                                            onClick={() =>
-                                                setPage((p) =>
-                                                    Math.max(1, p - 1),
-                                                )
-                                            }
-                                            disabled={page === 1}
-                                            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                        >
-                                            <ChevronLeft className="h-3.5 w-3.5" />
-                                        </button>
-                                        {(() => {
-                                            const delta = 1;
-                                            const range: (number | "…")[] = [];
-                                            const left = Math.max(
-                                                2,
-                                                page - delta,
-                                            );
-                                            const right = Math.min(
-                                                totalPages - 1,
-                                                page + delta,
-                                            );
-
-                                            range.push(1);
-                                            if (left > 2) range.push("…");
-                                            for (let i = left; i <= right; i++)
-                                                range.push(i);
-                                            if (right < totalPages - 1)
-                                                range.push("…");
-                                            if (totalPages > 1)
-                                                range.push(totalPages);
-
-                                            return range.map((p, idx) =>
-                                                p === "…" ? (
-                                                    <span
-                                                        key={`ellipsis-${idx}`}
-                                                        className="inline-flex h-6 w-6 items-center justify-center text-[11px] text-muted-foreground"
-                                                    >
-                                                        …
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        key={p}
-                                                        onClick={() =>
-                                                            setPage(p)
-                                                        }
-                                                        className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] font-medium transition ${
-                                                            p === page
-                                                                ? "border-blue-500/40 bg-blue-500/20 text-blue-400"
-                                                                : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                                                        }`}
-                                                    >
-                                                        {p}
-                                                    </button>
-                                                ),
-                                            );
-                                        })()}
-                                        <button
-                                            onClick={() =>
-                                                setPage((p) =>
-                                                    Math.min(totalPages, p + 1),
-                                                )
-                                            }
-                                            disabled={page === totalPages}
-                                            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-1.5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                        >
-                                            <ChevronRight className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-                                </div>
+                                <PageNav
+                                    page={page}
+                                    totalPages={totalPages}
+                                    onPageChange={setPage}
+                                />
                             )}
                         </>
                     )}
+                    <p className="text-[11px] text-muted-foreground/60 leading-relaxed pt-2 border-t border-white/8">
+                        This section keeps a record of all positions held. Use
+                        the{" "}
+                        <span className="text-muted-foreground font-medium">
+                            Add Appointment
+                        </span>{" "}
+                        button to log a past or current appointment for accurate
+                        employment history.
+                    </p>
                 </div>
             </div>
 

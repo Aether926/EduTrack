@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +29,31 @@ function fixOnSpace(str: string): string {
             return word;
         })
         .join(" ");
+}
+
+// ── fmtFullName ───────────────────────────────────────────────────────────────
+
+/**
+ * Formats a full name from parts.
+ * Safely handles middleInitial that may or may not already end with a dot
+ * (e.g. "O." stored in DB → renders as "O.", never "O..").
+ */
+export function fmtFullName({
+    firstName,
+    middleInitial,
+    lastName,
+}: {
+    firstName?: string | null;
+    middleInitial?: string | null;
+    lastName?: string | null;
+}): string {
+    const mi = middleInitial?.trim().replace(/\.+$/, ""); // strip any trailing dots
+    const parts = [
+        firstName?.trim(),
+        mi ? `${mi}.` : undefined,
+        lastName?.trim(),
+    ].filter(Boolean);
+    return parts.join(" ");
 }
 
 // ── NameInput ─────────────────────────────────────────────────────────────────

@@ -159,7 +159,7 @@ export default function ServiceRecordCard(props: { data: ProfileState }) {
                         most recent promotion.
                     </p>
                     <p>
-                        <span className="text-rose-400/90 font-semibold">
+                        <span className="text-blue-400/90 font-semibold">
                             Loyalty Award
                         </span>{" "}
                         — countdown to the next loyalty milestone (10 years

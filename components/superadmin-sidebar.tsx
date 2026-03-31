@@ -33,7 +33,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/ui-elements/theme-toggle";
 import { logSignOut } from "@/app/actions/auth-log-actions";
 
 const NAV_ITEMS = [

@@ -40,7 +40,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
 import {
     TeacherPickerModal,
     type TeacherOption,

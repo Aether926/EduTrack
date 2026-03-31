@@ -28,7 +28,7 @@ import {
     Clock,
     CheckCircle2,
 } from "lucide-react";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
 import { toast } from "sonner";
 import {
     adminFinalizeDeleteAccount,

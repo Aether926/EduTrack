@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { toast } from "sonner";
+'use server';
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 export type MyTrainingSeminarRow = {
   id: string;
@@ -10,7 +10,7 @@ export type MyTrainingSeminarRow = {
   startDate: string;
   endDate: string;
   totalHours: string;
-  approvedHours: string | null; // ← add
+  approvedHours: string | null;
   sponsor: string;
   status: string;
   proofUrl: string | null;
@@ -36,30 +36,40 @@ type PDRow = {
   sponsoring_agency: string | null;
 };
 
+export type AssignedTeacher = {
+  id: string;
+  name: string;
+  profileImage: string | null;
+  attendanceStatus: string | null; // APPROVED, ENROLLED, etc. from Attendance table
+};
+
+const STATUS_SORT_ORDER: Record<string, number> = {
+  APPROVED: 0,
+  ENROLLED: 1,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingSeminarRow[]> {
   const supabase = await createClient();
-
   const { data: attendance, error: aErr } = await supabase
     .from("Attendance")
     .select("id, training_id, status, created_at, approved_hours, proof_url")
     .eq("teacher_id", userId)
     .order("created_at", { ascending: false });
-
   if (aErr) {
+    console.error("getMyTrainingSeminars:attendance", aErr);
     return [];
   }
-
   if (!attendance || attendance.length === 0) return [];
-
   const attendanceRows = attendance as AttendanceRow[];
   const trainingIds = Array.from(new Set(attendanceRows.map((r) => r.training_id)));
-
   const { data: trainings, error: pErr } = await supabase
     .from("ProfessionalDevelopment")
     .select("id, type, title, level, start_date, end_date, total_hours, sponsoring_agency")
     .in("id", trainingIds);
-
   if (pErr) {
+    console.error("getMyTrainingSeminars:PD", pErr);
     return attendanceRows.map((r) => ({
       id: String(r.id),
       trainingId: String(r.training_id),
@@ -75,10 +85,8 @@ export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingS
       proofUrl: null,
     }));
   }
-
   const pdMap = new Map<string, PDRow>();
   (trainings as PDRow[] | null)?.forEach((t) => pdMap.set(String(t.id), t));
-
   return attendanceRows.map((r) => {
     const pd = pdMap.get(String(r.training_id));
     return {
@@ -97,3 +105,61 @@ export async function getMyTrainingSeminars(userId: string): Promise<MyTrainingS
     };
   });
 }
+
+export async function getAssignedTeachersForTraining(trainingId: string): Promise<AssignedTeacher[]> {
+  const supabase = createAdminClient();
+
+  // Step 1: Get teacher_ids AND their attendance status
+  const { data: attendanceRows, error: aErr } = await supabase
+    .from("Attendance")
+    .select("teacher_id, status")
+    .eq("training_id", trainingId);
+
+  if (aErr) {
+    console.error("getAssignedTeachersForTraining:attendance", aErr);
+    return [];
+  }
+  if (!attendanceRows || attendanceRows.length === 0) {
+    return [];
+  }
+
+  // Build a map of teacherId → attendanceStatus
+  const attendanceStatusMap = new Map<string, string>();
+  attendanceRows.forEach((r: { teacher_id: string; status: string }) => {
+    attendanceStatusMap.set(r.teacher_id, r.status);
+  });
+
+  const teacherIds: string[] = attendanceRows
+    .map((r: { teacher_id: string }) => r.teacher_id)
+    .filter(Boolean);
+
+  // Step 2: Fetch profiles
+  const { data: profiles, error: pErr } = await supabase
+    .from("Profile")
+    .select("id, firstName, lastName, profileImage")
+    .in("id", teacherIds);
+
+  if (pErr) {
+    console.error("getAssignedTeachersForTraining:profile", pErr);
+    return [];
+  }
+
+  const result = (profiles ?? []).map((p: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImage: string | null;
+  }) => ({
+    id: p.id,
+    name: `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim(),
+    profileImage: p.profileImage ?? null,
+    attendanceStatus: attendanceStatusMap.get(p.id) ?? null,
+  }));
+
+  // Sort: APPROVED first, ENROLLED second, others last
+  return result.sort((a, b) => {
+    const aOrder = STATUS_SORT_ORDER[a.attendanceStatus?.toUpperCase() ?? ""] ?? 99;
+    const bOrder = STATUS_SORT_ORDER[b.attendanceStatus?.toUpperCase() ?? ""] ?? 99;
+    return aOrder - bOrder;
+  });
+}   

@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldCheck, ShieldAlert, ShieldX, Clock } from "lucide-react";
+import { RiskStatusBadge } from "@/components/ui-elements/badges";
 import type {
     TeacherTrainingCompliance,
     ComplianceStatus,
@@ -15,54 +16,38 @@ const STATUS_CONFIG: Record<
         icon: React.ReactNode;
         barColor: string;
         cardBorder: string;
-        badgeBg: string;
-        badgeBorder: string;
-        badgeText: string;
-        badgeDot: string;
-        badgeLabel: string;
         hintBg: string;
         hintBorder: string;
         hintText: string;
+        remainingColor: string;
     }
 > = {
     COMPLIANT: {
         icon: <ShieldCheck className="h-4 w-4 text-emerald-400" />,
         barColor: "rgba(16, 185, 129, 0.5)",
         cardBorder: "rgba(16, 185, 129, 0.18)",
-        badgeBg: "rgba(16, 185, 129, 0.1)",
-        badgeBorder: "rgba(16, 185, 129, 0.3)",
-        badgeText: "rgb(52, 211, 153)",
-        badgeDot: "rgb(52, 211, 153)",
-        badgeLabel: "Compliant",
         hintBg: "rgba(16, 185, 129, 0.06)",
         hintBorder: "rgba(16, 185, 129, 0.18)",
         hintText: "rgb(167, 243, 208)",
+        remainingColor: "rgb(52, 211, 153)",
     },
     AT_RISK: {
         icon: <ShieldAlert className="h-4 w-4 text-amber-400" />,
         barColor: "rgba(245, 158, 11, 0.55)",
         cardBorder: "rgba(245, 158, 11, 0.18)",
-        badgeBg: "rgba(245, 158, 11, 0.1)",
-        badgeBorder: "rgba(245, 158, 11, 0.3)",
-        badgeText: "rgb(251, 191, 36)",
-        badgeDot: "rgb(251, 191, 36)",
-        badgeLabel: "At Risk",
         hintBg: "rgba(245, 158, 11, 0.06)",
         hintBorder: "rgba(245, 158, 11, 0.18)",
         hintText: "rgb(253, 230, 138)",
+        remainingColor: "rgb(251, 191, 36)",
     },
     NON_COMPLIANT: {
         icon: <ShieldX className="h-4 w-4 text-rose-400" />,
         barColor: "rgba(244, 63, 94, 0.5)",
         cardBorder: "rgba(244, 63, 94, 0.18)",
-        badgeBg: "rgba(244, 63, 94, 0.1)",
-        badgeBorder: "rgba(244, 63, 94, 0.3)",
-        badgeText: "rgb(251, 113, 133)",
-        badgeDot: "rgb(251, 113, 133)",
-        badgeLabel: "Non-Compliant",
         hintBg: "rgba(244, 63, 94, 0.06)",
         hintBorder: "rgba(244, 63, 94, 0.18)",
         hintText: "rgb(254, 205, 211)",
+        remainingColor: "rgb(251, 113, 133)",
     },
 };
 
@@ -141,7 +126,9 @@ export function ComplianceSummaryCard(props: {
 
     // Remaining: green when zero, status tint when still owed
     const remainingColor =
-        compliance.remaining_hours <= 0 ? "rgb(52, 211, 153)" : cfg.badgeText;
+        compliance.remaining_hours <= 0
+            ? "rgb(52, 211, 153)"
+            : cfg.remainingColor;
 
     return (
         <Card
@@ -150,29 +137,29 @@ export function ComplianceSummaryCard(props: {
         >
             {/* ── Header ── */}
             <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-2">
+                {/* Desktop: title + SY left, badge right */}
+                <div className="hidden sm:flex items-center justify-between gap-2">
                     <CardTitle className="text-sm font-semibold flex items-center gap-2 min-w-0">
                         <span className="shrink-0">{cfg.icon}</span>
                         <span className="leading-snug truncate">
                             Training Compliance — {schoolYear}
                         </span>
                     </CardTitle>
+                    <RiskStatusBadge status={status.toLowerCase()} />
+                </div>
 
-                    {/* Inline status badge — matches your pill pattern */}
-                    <span
-                        className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shrink-0"
-                        style={{
-                            backgroundColor: cfg.badgeBg,
-                            borderColor: cfg.badgeBorder,
-                            color: cfg.badgeText,
-                        }}
-                    >
-                        <span
-                            className="h-1.5 w-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: cfg.badgeDot }}
-                        />
-                        {cfg.badgeLabel}
-                    </span>
+                {/* Mobile: stacked column */}
+                <div className="flex flex-col gap-1 sm:hidden">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                        <span className="shrink-0">{cfg.icon}</span>
+                        Training Compliance
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground pl-6">
+                        {schoolYear}
+                    </p>
+                    <div className="pl-6 pt-0.5">
+                        <RiskStatusBadge status={status.toLowerCase()} />
+                    </div>
                 </div>
             </CardHeader>
 

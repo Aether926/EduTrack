@@ -28,7 +28,7 @@ import {
     AlertTriangle,
 } from "lucide-react";
 
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import {
     SalaryStatusBadge,
     PositionBadge,

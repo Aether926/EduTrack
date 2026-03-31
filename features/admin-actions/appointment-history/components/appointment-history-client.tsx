@@ -49,13 +49,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import {
     AppointmentTypeBadge,
     PositionBadge,
 } from "@/components/ui-elements/badges";
 
-import { AddAppointmentSheet } from "@/features/admin-actions/appointment-history/components/add-appointment-modal";
+import { AddAppointmentSheet } from "@/features/admin-actions/appointment-history/components/add-appointment-sheet";
 import { AppointmentDetailSheet } from "@/features/admin-actions/appointment-history/components/appointment-details-sheet";
 import type { AppointmentHistoryRow } from "@/features/admin-actions/appointment-history/types/appointment-history";
 
@@ -96,28 +96,38 @@ async function exportToXLSX(rows: any[]) {
 
     // ── Palette ──────────────────────────────────────────────────────────────
     const C = {
-        white:       "FFFFFFFF",
-        offWhite:    "FFF9F9F9",
-        rowAlt:      "FFFFFFFF",
-        headerBg:    "FF1A3C6E",
-        headerFg:    "FFFFFFFF",
-        subBg:       "FFE8EDF5",
-        subFg:       "FF1A3C6E",
-        borderMed:   "FFAAAAAA",
+        white: "FFFFFFFF",
+        offWhite: "FFF9F9F9",
+        rowAlt: "FFFFFFFF",
+        headerBg: "FF1A3C6E",
+        headerFg: "FFFFFFFF",
+        subBg: "FFE8EDF5",
+        subFg: "FF1A3C6E",
+        borderMed: "FFAAAAAA",
         borderLight: "FFBBBBBB",
-        textDark:    "FF1A1A1A",
-        textMid:     "FF444444",
-        textMuted:   "FF888888",
+        textDark: "FF1A1A1A",
+        textMid: "FF444444",
+        textMuted: "FF888888",
     };
 
-    const solid = (argb: string) =>
-        ({ type: "pattern" as const, pattern: "solid" as const, fgColor: { argb } });
+    const solid = (argb: string) => ({
+        type: "pattern" as const,
+        pattern: "solid" as const,
+        fgColor: { argb },
+    });
 
-    const fnt = (size = 10, bold = false, argb = C.textDark, italic = false) =>
-        ({ name: "Arial", size, bold, italic, color: { argb } });
+    const fnt = (
+        size = 10,
+        bold = false,
+        argb = C.textDark,
+        italic = false,
+    ) => ({ name: "Arial", size, bold, italic, color: { argb } });
 
-    const aln = (h: string = "left", v: string = "middle", wrap = false) =>
-        ({ horizontal: h, vertical: v, wrapText: wrap });
+    const aln = (h: string = "left", v: string = "middle", wrap = false) => ({
+        horizontal: h,
+        vertical: v,
+        wrapText: wrap,
+    });
 
     const hairBorder = () => {
         const s = { style: "thin" as const, color: { argb: C.borderLight } };
@@ -125,10 +135,10 @@ async function exportToXLSX(rows: any[]) {
     };
 
     const colCount = 9;
-    const lastCol  = "I";
+    const lastCol = "I";
 
     ws.columns = [
-        { width: 6  }, // A — No.
+        { width: 6 }, // A — No.
         { width: 28 }, // B — Teacher Name
         { width: 14 }, // C — Employee ID
         { width: 16 }, // D — Type
@@ -141,49 +151,55 @@ async function exportToXLSX(rows: any[]) {
 
     // ── Letterhead ────────────────────────────────────────────────────────────
     const merge = (r: number) => ws.mergeCells(`A${r}:${lastCol}${r}`);
-    const lc    = (r: number) => ws.getCell(`A${r}`);
+    const lc = (r: number) => ws.getCell(`A${r}`);
 
     ws.getRow(1).height = 13;
     merge(1);
-    lc(1).value     = "Republic of the Philippines";
-    lc(1).font      = fnt(9, false, C.textMuted, true) as any;
+    lc(1).value = "Republic of the Philippines";
+    lc(1).font = fnt(9, false, C.textMuted, true) as any;
     lc(1).alignment = aln("center") as any;
 
     ws.getRow(2).height = 20;
     merge(2);
-    lc(2).value     = "Department of Education";
-    lc(2).font      = fnt(14, true, C.textDark) as any;
+    lc(2).value = "Department of Education";
+    lc(2).font = fnt(14, true, C.textDark) as any;
     lc(2).alignment = aln("center") as any;
 
     ws.getRow(3).height = 15;
     merge(3);
-    lc(3).value     = "Valencia National High School";
-    lc(3).font      = fnt(11, true, C.textDark) as any;
+    lc(3).value = "Valencia National High School";
+    lc(3).font = fnt(11, true, C.textDark) as any;
     lc(3).alignment = aln("center") as any;
 
     // thin rule — white (invisible divider, keeps row spacing)
     ws.getRow(4).height = 3;
-    for (let col = 1; col <= colCount; col++) ws.getCell(4, col).fill = solid(C.white);
+    for (let col = 1; col <= colCount; col++)
+        ws.getCell(4, col).fill = solid(C.white);
 
     // title bar — plain white, dark text
     ws.getRow(5).height = 22;
     merge(5);
-    lc(5).value     = "APPOINTMENT HISTORY REPORT";
-    lc(5).font      = fnt(12, true, C.textDark) as any;
-    lc(5).fill      = solid(C.white);
+    lc(5).value = "APPOINTMENT HISTORY REPORT";
+    lc(5).font = fnt(12, true, C.textDark) as any;
+    lc(5).fill = solid(C.white);
     lc(5).alignment = aln("center") as any;
 
     // thin rule — white
     ws.getRow(6).height = 3;
-    for (let col = 1; col <= colCount; col++) ws.getCell(6, col).fill = solid(C.white);
+    for (let col = 1; col <= colCount; col++)
+        ws.getCell(6, col).fill = solid(C.white);
 
     // meta row
     ws.getRow(7).height = 15;
     merge(7);
-    const dateStr = new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
-    lc(7).value     = `Date Generated: ${dateStr}`;
-    lc(7).font      = fnt(9, false, C.textMuted) as any;
-    lc(7).fill      = solid(C.offWhite);
+    const dateStr = new Date().toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+    lc(7).value = `Date Generated: ${dateStr}`;
+    lc(7).font = fnt(9, false, C.textMuted) as any;
+    lc(7).fill = solid(C.offWhite);
     lc(7).alignment = aln("center") as any;
 
     // spacer
@@ -191,30 +207,50 @@ async function exportToXLSX(rows: any[]) {
 
     // outer border around letterhead
     for (let col = 1; col <= colCount; col++) {
-        ws.getCell(1, col).border = { top: { style: "thin", color: { argb: C.borderMed } } };
-        ws.getCell(7, col).border = { bottom: { style: "thin", color: { argb: C.borderMed } } };
+        ws.getCell(1, col).border = {
+            top: { style: "thin", color: { argb: C.borderMed } },
+        };
+        ws.getCell(7, col).border = {
+            bottom: { style: "thin", color: { argb: C.borderMed } },
+        };
     }
     for (let row = 1; row <= 7; row++) {
-        const left  = ws.getCell(row, 1);
+        const left = ws.getCell(row, 1);
         const right = ws.getCell(row, colCount);
-        left.border  = { ...left.border,  left:  { style: "thin", color: { argb: C.borderMed } } };
-        right.border = { ...right.border, right: { style: "thin", color: { argb: C.borderMed } } };
+        left.border = {
+            ...left.border,
+            left: { style: "thin", color: { argb: C.borderMed } },
+        };
+        right.border = {
+            ...right.border,
+            right: { style: "thin", color: { argb: C.borderMed } },
+        };
     }
 
     // ── Column headers (row 9) ────────────────────────────────────────────────
     ws.getRow(9).height = 26;
-    const headers = ["No.", "Teacher Name", "Employee ID", "Type", "Position", "Start Date", "End Date", "Memo No.", "Remarks"];
+    const headers = [
+        "No.",
+        "Teacher Name",
+        "Employee ID",
+        "Type",
+        "Position",
+        "Start Date",
+        "End Date",
+        "Memo No.",
+        "Remarks",
+    ];
     headers.forEach((h, i) => {
-        const cell     = ws.getCell(9, i + 1);
-        cell.value     = h;
-        cell.font      = fnt(10, true, C.textDark) as any;
-        cell.fill      = solid(C.subBg);
+        const cell = ws.getCell(9, i + 1);
+        cell.value = h;
+        cell.font = fnt(10, true, C.textDark) as any;
+        cell.fill = solid(C.subBg);
         cell.alignment = aln("center", "middle", true) as any;
-        cell.border    = {
-            top:    { style: "medium", color: { argb: C.borderMed } },
+        cell.border = {
+            top: { style: "medium", color: { argb: C.borderMed } },
             bottom: { style: "medium", color: { argb: C.borderMed } },
-            left:   { style: "thin",   color: { argb: C.borderLight } },
-            right:  { style: "thin",   color: { argb: C.borderLight } },
+            left: { style: "thin", color: { argb: C.borderLight } },
+            right: { style: "thin", color: { argb: C.borderLight } },
         };
     });
 
@@ -222,28 +258,28 @@ async function exportToXLSX(rows: any[]) {
     const DATA_START = 10;
     rows.forEach((r, idx) => {
         const rowNum = DATA_START + idx;
-        const bg     = idx % 2 === 0 ? C.white : C.rowAlt;
+        const bg = idx % 2 === 0 ? C.white : C.rowAlt;
         ws.getRow(rowNum).height = 18;
 
         const values: [any, string][] = [
-            [idx + 1,                     "center"],
-            [r.teacherName ?? "—",        "left"  ],
-            [r.teacher?.employeeId ?? "—","center"],
-            [r.appointment_type ?? "—",   "center"],
-            [r.position ?? "—",           "left"  ],
-            [fmtExport(r.start_date),     "center"],
-            [fmtExport(r.end_date),       "center"],
-            [r.memo_no ?? "—",            "center"],
-            [r.remarks ?? "—",            "left"  ],
+            [idx + 1, "center"],
+            [r.teacherName ?? "—", "left"],
+            [r.teacher?.employeeId ?? "—", "center"],
+            [r.appointment_type ?? "—", "center"],
+            [r.position ?? "—", "left"],
+            [fmtExport(r.start_date), "center"],
+            [fmtExport(r.end_date), "center"],
+            [r.memo_no ?? "—", "center"],
+            [r.remarks ?? "—", "left"],
         ];
 
         values.forEach(([val, h], ci) => {
-            const cell     = ws.getCell(rowNum, ci + 1);
-            cell.value     = val;
-            cell.font      = fnt(10, false, C.textDark) as any;
-            cell.fill      = solid(bg);
+            const cell = ws.getCell(rowNum, ci + 1);
+            cell.value = val;
+            cell.font = fnt(10, false, C.textDark) as any;
+            cell.fill = solid(bg);
             cell.alignment = aln(h, "middle") as any;
-            cell.border    = hairBorder();
+            cell.border = hairBorder();
         });
     });
 
@@ -251,61 +287,71 @@ async function exportToXLSX(rows: any[]) {
     const TOTAL_ROW = DATA_START + rows.length;
     ws.getRow(TOTAL_ROW).height = 20;
     ws.mergeCells(`A${TOTAL_ROW}:${lastCol}${TOTAL_ROW}`);
-    const tc     = ws.getCell(`A${TOTAL_ROW}`);
-    tc.value     = `TOTAL — ${rows.length} Record(s)`;
-    tc.font      = fnt(10, true, C.textDark) as any;
-    tc.fill      = solid(C.white);
+    const tc = ws.getCell(`A${TOTAL_ROW}`);
+    tc.value = `TOTAL — ${rows.length} Record(s)`;
+    tc.font = fnt(10, true, C.textDark) as any;
+    tc.fill = solid(C.white);
     tc.alignment = aln("center", "middle") as any;
     const thickS = { style: "medium" as const, color: { argb: C.borderMed } };
-    tc.border    = { top: thickS, bottom: thickS, left: thickS, right: thickS };
+    tc.border = { top: thickS, bottom: thickS, left: thickS, right: thickS };
 
     // ── Signature footer ──────────────────────────────────────────────────────
     const fs = TOTAL_ROW + 2;
     ws.getRow(fs).height = 16;
     ws.mergeCells(`A${fs}:D${fs}`);
     ws.getCell(`A${fs}`).value = "Prepared by:";
-    ws.getCell(`A${fs}`).font  = fnt(9, true, C.textMuted) as any;
+    ws.getCell(`A${fs}`).font = fnt(9, true, C.textMuted) as any;
     ws.mergeCells(`F${fs}:${lastCol}${fs}`);
     ws.getCell(`F${fs}`).value = "Noted by:";
-    ws.getCell(`F${fs}`).font  = fnt(9, true, C.textMuted) as any;
+    ws.getCell(`F${fs}`).font = fnt(9, true, C.textMuted) as any;
 
     ws.getRow(fs + 1).height = 22;
     ws.getRow(fs + 2).height = 16;
     ws.mergeCells(`A${fs + 2}:D${fs + 2}`);
-    ws.getCell(`A${fs + 2}`).value     = "________________________________";
-    ws.getCell(`A${fs + 2}`).font      = fnt(10) as any;
+    ws.getCell(`A${fs + 2}`).value = "________________________________";
+    ws.getCell(`A${fs + 2}`).font = fnt(10) as any;
     ws.getCell(`A${fs + 2}`).alignment = aln("center") as any;
     ws.mergeCells(`F${fs + 2}:${lastCol}${fs + 2}`);
-    ws.getCell(`F${fs + 2}`).value     = "________________________________";
-    ws.getCell(`F${fs + 2}`).font      = fnt(10) as any;
+    ws.getCell(`F${fs + 2}`).value = "________________________________";
+    ws.getCell(`F${fs + 2}`).font = fnt(10) as any;
     ws.getCell(`F${fs + 2}`).alignment = aln("center") as any;
 
     ws.getRow(fs + 3).height = 14;
     ws.mergeCells(`A${fs + 3}:D${fs + 3}`);
-    ws.getCell(`A${fs + 3}`).value     = "School Records Officer / Registrar";
-    ws.getCell(`A${fs + 3}`).font      = fnt(9, false, C.textMuted, true) as any;
+    ws.getCell(`A${fs + 3}`).value = "School Records Officer / Registrar";
+    ws.getCell(`A${fs + 3}`).font = fnt(9, false, C.textMuted, true) as any;
     ws.getCell(`A${fs + 3}`).alignment = aln("center") as any;
     ws.mergeCells(`F${fs + 3}:${lastCol}${fs + 3}`);
-    ws.getCell(`F${fs + 3}`).value     = "School Principal";
-    ws.getCell(`F${fs + 3}`).font      = fnt(9, false, C.textMuted, true) as any;
+    ws.getCell(`F${fs + 3}`).value = "School Principal";
+    ws.getCell(`F${fs + 3}`).font = fnt(9, false, C.textMuted, true) as any;
     ws.getCell(`F${fs + 3}`).alignment = aln("center") as any;
 
     // ── Page setup ────────────────────────────────────────────────────────────
-    ws.pageSetup.orientation    = "landscape";
-    ws.pageSetup.paperSize      = 5;
-    ws.pageSetup.fitToPage      = true;
-    ws.pageSetup.fitToWidth     = 1;
-    ws.pageSetup.fitToHeight    = 0;
+    ws.pageSetup.orientation = "landscape";
+    ws.pageSetup.paperSize = 5;
+    ws.pageSetup.fitToPage = true;
+    ws.pageSetup.fitToWidth = 1;
+    ws.pageSetup.fitToHeight = 0;
     ws.pageSetup.printTitlesRow = "1:9";
-    ws.views = [{ state: "frozen", ySplit: 9, xSplit: 0, topLeftCell: "A10", activeCell: "A10" }];
+    ws.views = [
+        {
+            state: "frozen",
+            ySplit: 9,
+            xSplit: 0,
+            topLeftCell: "A10",
+            activeCell: "A10",
+        },
+    ];
 
     // ── Download ──────────────────────────────────────────────────────────────
     const buffer = await wb.xlsx.writeBuffer();
-    const blob   = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const url    = URL.createObjectURL(blob);
-    const a      = document.createElement("a");
-    a.href       = url;
-    a.download   = `appointment-history-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `appointment-history-${new Date().toISOString().slice(0, 10)}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
 }

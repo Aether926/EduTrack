@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSuperadminUsers } from "../hooks/use-superadmin-users";
 import { fetchPromotionQuota } from "../actions/fetch-actions";
 import UserActionSheet from "./user-action-sheet";
@@ -14,7 +14,6 @@ import {
     CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
     Select,
@@ -31,15 +30,12 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
+import { StatusBadge, RoleBadge } from "@/components/ui-elements/badges";
+import { fmtFullName } from "@/components/formatter/name-format";
 import { Search, Users } from "lucide-react";
-import { useEffect } from "react";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-function fullName(u: SuperadminUser) {
-    return `${u.firstName ?? ""} ${u.middleInitial ? u.middleInitial + ". " : ""}${u.lastName ?? ""}`.trim();
-}
 
 function fmtDate(dt: string) {
     try {
@@ -53,54 +49,11 @@ function fmtDate(dt: string) {
     }
 }
 
-// ── Status badge ───────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        APPROVED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-        PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-        REJECTED: "bg-rose-500/15 text-rose-400 border-rose-500/30",
-        SUSPENDED: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    };
-    return (
-        <Badge
-            className={`inline-flex items-center gap-1.5 ${styles[status.toUpperCase()] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30"} hover:opacity-100`}
-        >
-            <span className="h-1.5 w-1.5 rounded-full bg-current" />
-            {status}
-        </Badge>
-    );
-}
-
-// ── Role chip ──────────────────────────────────────────────────────────────────
-
-function RoleChip({ role }: { role: string }) {
-    const styles: Record<string, string> = {
-        TEACHER: "bg-teal-500/10 text-teal-400 border-teal-500/40",
-        ADMIN: "bg-violet-500/10 text-violet-400 border-violet-500/40",
-        SUPERADMIN: "bg-rose-500/10 text-rose-400 border-rose-500/40",
-    };
-    return (
-        <span
-            className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${styles[role] ?? "bg-slate-500/10 text-slate-400 border-slate-500/40"}`}
-        >
-            {role}
-        </span>
-    );
-}
-
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function UserManagementTable({ actorId }: { actorId: string }) {
-    const {
-        users,
-        loading,
-        approve,
-        reject,
-        suspend,
-        unsuspend,
-        changeRole,
-    } = useSuperadminUsers();
+    const { users, loading, approve, reject, suspend, unsuspend, changeRole } =
+        useSuperadminUsers();
 
     const [q, setQ] = useState("");
     const [roleFilter, setRoleFilter] = useState("ALL");
@@ -116,17 +69,21 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
         superadminCount: 0,
     });
 
-    // Fetch promotion quota
     useEffect(() => {
         fetchPromotionQuota(actorId).then(setQuota);
-    }, [actorId, users]); // refetch when users change
+    }, [actorId, users]);
 
     const filtered = useMemo(() => {
         const s = q.trim().toLowerCase();
         return users.filter((u) => {
+            const name = fmtFullName({
+                firstName: u.firstName,
+                middleInitial: u.middleInitial,
+                lastName: u.lastName,
+            });
             const matchesSearch =
                 !s ||
-                fullName(u).toLowerCase().includes(s) ||
+                name.toLowerCase().includes(s) ||
                 (u.email ?? "").toLowerCase().includes(s) ||
                 (u.employeeId ?? "").toLowerCase().includes(s);
 
@@ -156,7 +113,6 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
 
                     {/* Filters */}
                     <div className="flex flex-wrap items-center gap-2">
-                        {/* Search */}
                         <div className="relative">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                             <Input
@@ -167,7 +123,6 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                             />
                         </div>
 
-                        {/* Role filter */}
                         <Select
                             value={roleFilter}
                             onValueChange={setRoleFilter}
@@ -185,7 +140,6 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                             </SelectContent>
                         </Select>
 
-                        {/* Status filter */}
                         <Select
                             value={statusFilter}
                             onValueChange={setStatusFilter}
@@ -255,8 +209,12 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                                     ) : (
                                         filtered.map((u) => {
                                             const name =
-                                                fullName(u).trim() ||
-                                                "(no name)";
+                                                fmtFullName({
+                                                    firstName: u.firstName,
+                                                    middleInitial:
+                                                        u.middleInitial,
+                                                    lastName: u.lastName,
+                                                }) || "(no name)";
                                             return (
                                                 <TableRow
                                                     key={u.id}
@@ -270,7 +228,9 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                                                         <div className="flex items-center gap-2.5">
                                                             <InitialAvatar
                                                                 name={name}
-                                                                src={u.profileImage}
+                                                                src={
+                                                                    u.profileImage
+                                                                }
                                                                 className="h-8 w-8 shrink-0"
                                                             />
                                                             <div className="leading-tight">
@@ -285,14 +245,16 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                                                     </TableCell>
 
                                                     <TableCell className="hidden md:table-cell">
-                                                        <RoleChip
+                                                        <RoleBadge
                                                             role={u.role}
+                                                            size="xs"
                                                         />
                                                     </TableCell>
 
                                                     <TableCell>
                                                         <StatusBadge
                                                             status={u.status}
+                                                            size="xs"
                                                         />
                                                     </TableCell>
 
@@ -310,7 +272,6 @@ export default function UserManagementTable({ actorId }: { actorId: string }) {
                 </CardContent>
             </Card>
 
-            {/* Action sheet */}
             <UserActionSheet
                 user={selectedUser}
                 open={sheetOpen}

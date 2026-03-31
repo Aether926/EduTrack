@@ -15,7 +15,7 @@ import {
     ShieldCheck,
     X,
 } from "lucide-react";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import { RiskStatusBadge } from "@/components/ui-elements/badges";
 import { toast } from "sonner";
 
@@ -71,18 +71,22 @@ export function AdminComplianceClient(props: {
     const { downloading, download } = useComplianceReport(schoolYear);
 
     const counts = {
-        NON_COMPLIANT: compliance.filter((c) => c.status === "NON_COMPLIANT").length,
-        AT_RISK:        compliance.filter((c) => c.status === "AT_RISK").length,
-        COMPLIANT:      compliance.filter((c) => c.status === "COMPLIANT").length,
+        NON_COMPLIANT: compliance.filter((c) => c.status === "NON_COMPLIANT")
+            .length,
+        AT_RISK: compliance.filter((c) => c.status === "AT_RISK").length,
+        COMPLIANT: compliance.filter((c) => c.status === "COMPLIANT").length,
     };
 
     const sorted = useMemo(() => {
         const q = query.trim().toLowerCase();
         return [...compliance]
             .filter((c: any) => {
-                const matchStatus = filterStatus ? c.status === filterStatus : true;
+                const matchStatus = filterStatus
+                    ? c.status === filterStatus
+                    : true;
                 if (!q) return matchStatus;
-                const name  = `${c.teacher?.firstName ?? ""} ${c.teacher?.lastName ?? ""}`.toLowerCase();
+                const name =
+                    `${c.teacher?.firstName ?? ""} ${c.teacher?.lastName ?? ""}`.toLowerCase();
                 const email = String(c.teacher?.email ?? "").toLowerCase();
                 return matchStatus && (name.includes(q) || email.includes(q));
             })
@@ -100,7 +104,9 @@ export function AdminComplianceClient(props: {
             toast.success("Compliance recalculated.");
             router.refresh();
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Failed to recalculate.");
+            toast.error(
+                e instanceof Error ? e.message : "Failed to recalculate.",
+            );
         } finally {
             setRecalculating(false);
         }
@@ -188,10 +194,18 @@ export function AdminComplianceClient(props: {
                                     <SelectValue placeholder="All statuses" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value={ALL_STATUS}>All statuses</SelectItem>
-                                    <SelectItem value="NON_COMPLIANT">Non-Compliant</SelectItem>
-                                    <SelectItem value="AT_RISK">At Risk</SelectItem>
-                                    <SelectItem value="COMPLIANT">Compliant</SelectItem>
+                                    <SelectItem value={ALL_STATUS}>
+                                        All statuses
+                                    </SelectItem>
+                                    <SelectItem value="NON_COMPLIANT">
+                                        Non-Compliant
+                                    </SelectItem>
+                                    <SelectItem value="AT_RISK">
+                                        At Risk
+                                    </SelectItem>
+                                    <SelectItem value="COMPLIANT">
+                                        Compliant
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -259,7 +273,9 @@ export function AdminComplianceClient(props: {
                             <ShieldCheck className="h-4 w-4 text-blue-400" />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold">Compliance list</p>
+                            <p className="text-sm font-semibold">
+                                Compliance list
+                            </p>
                             <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mt-0.5">
                                 Sorted by risk (non-compliant → compliant)
                             </p>
@@ -322,7 +338,11 @@ export function AdminComplianceClient(props: {
                                                             ? `${c.teacher.firstName} ${c.teacher.lastName}`
                                                             : "?"
                                                     }
-                                                    src={(c.teacher as any)?.profileImage ?? null}
+                                                    src={
+                                                        (c.teacher as any)
+                                                            ?.profileImage ??
+                                                        null
+                                                    }
                                                     className="h-8 w-8 shrink-0"
                                                 />
                                                 <div className="min-w-0">
@@ -332,21 +352,26 @@ export function AdminComplianceClient(props: {
                                                             : "Unknown"}
                                                     </p>
                                                     <p className="text-[11px] text-muted-foreground font-mono">
-                                                        {c.teacher?.email ?? "—"}
+                                                        {c.teacher?.email ??
+                                                            "—"}
                                                     </p>
                                                     <div className="md:hidden flex items-center gap-2 mt-1.5">
                                                         <span className="text-[11px] font-mono text-muted-foreground">
-                                                            {c.total_hours}h / {c.required_hours}h
+                                                            {c.total_hours}h /{" "}
+                                                            {c.required_hours}h
                                                         </span>
                                                         <span
                                                             className="text-[11px] font-semibold"
                                                             style={{
-                                                                color: c.remaining_hours > 0
-                                                                    ? "rgb(251,113,133)"
-                                                                    : "rgb(52,211,153)",
+                                                                color:
+                                                                    c.remaining_hours >
+                                                                    0
+                                                                        ? "rgb(251,113,133)"
+                                                                        : "rgb(52,211,153)",
                                                             }}
                                                         >
-                                                            {c.remaining_hours}h remaining
+                                                            {c.remaining_hours}h
+                                                            remaining
                                                         </span>
                                                     </div>
                                                 </div>
@@ -354,17 +379,21 @@ export function AdminComplianceClient(props: {
                                         </TableCell>
 
                                         <TableCell className="md:hidden text-center pr-4 align-middle">
-                                            <RiskStatusBadge status={c.status.toLowerCase()} />
+                                            <RiskStatusBadge
+                                                status={c.status.toLowerCase()}
+                                            />
                                         </TableCell>
 
                                         <TableCell className="hidden md:table-cell text-center font-semibold tabular-nums text-sm">
                                             <span
                                                 style={{
-                                                    color: c.status === "COMPLIANT"
-                                                        ? "rgb(52,211,153)"
-                                                        : c.status === "AT_RISK"
-                                                          ? "rgb(251,191,36)"
-                                                          : "rgb(251,113,133)",
+                                                    color:
+                                                        c.status === "COMPLIANT"
+                                                            ? "rgb(52,211,153)"
+                                                            : c.status ===
+                                                                "AT_RISK"
+                                                              ? "rgb(251,191,36)"
+                                                              : "rgb(251,113,133)",
                                                 }}
                                             >
                                                 {c.total_hours}h
@@ -378,9 +407,10 @@ export function AdminComplianceClient(props: {
                                         <TableCell className="hidden md:table-cell text-center font-semibold tabular-nums text-sm">
                                             <span
                                                 style={{
-                                                    color: c.remaining_hours > 0
-                                                        ? "rgb(251,113,133)"
-                                                        : "rgb(52,211,153)",
+                                                    color:
+                                                        c.remaining_hours > 0
+                                                            ? "rgb(251,113,133)"
+                                                            : "rgb(52,211,153)",
                                                 }}
                                             >
                                                 {c.remaining_hours}h
@@ -388,7 +418,9 @@ export function AdminComplianceClient(props: {
                                         </TableCell>
 
                                         <TableCell className="hidden md:table-cell text-center">
-                                            <RiskStatusBadge status={c.status.toLowerCase()} />
+                                            <RiskStatusBadge
+                                                status={c.status.toLowerCase()}
+                                            />
                                         </TableCell>
                                     </motion.tr>
                                 ))

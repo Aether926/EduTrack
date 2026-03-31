@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import InitialAvatar from "@/components/ui-elements/avatars/avatar-color";
+import { InitialAvatar } from "@/components/ui-elements/user-avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { fetchTeacherOptions } from "@/features/admin-actions/responsibilities/actions/teacher-picker-actions";
 

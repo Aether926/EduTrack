@@ -3,7 +3,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { CreateProfessionalDevelopmentInput } from '@/lib/user';
-import { toast } from 'sonner';
+import { TrainingLevel } from '@/enums/level';
 
 const ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
 
@@ -11,7 +11,7 @@ type UpdatePayload = {
   id: string;
   title: string;
   type: "TRAINING" | "SEMINAR";
-  level: "REGIONAL" | "NATIONAL" | "INTERNATIONAL";
+  level: keyof typeof TrainingLevel;
   sponsoring_agency: string;
   total_hours: number;
   start_date: string;
@@ -70,7 +70,6 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
       .single();
 
     if (trainingError) {
-      toast.error('Error creating training');
       return { success: false, error: trainingError.message };
     }
 
@@ -95,7 +94,6 @@ export async function createProfessionalDevelopment(input: CreateProfessionalDev
     revalidatePath('/dashboard');
     return { success: true, data: training };
   } catch {
-    toast.error('Unexpected error creating training');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -109,7 +107,6 @@ export async function deleteProfessionalDevelopment(id: string) {
     const { error } = await adminSupabase.from('ProfessionalDevelopment').delete().eq('id', id);
 
     if (error) {
-      toast.error('Error deleting');
       return { success: false, error: error.message };
     }
 
@@ -124,7 +121,6 @@ export async function deleteProfessionalDevelopment(id: string) {
     revalidatePath('/dashboard');
     return { success: true };
   } catch {
-    toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -138,7 +134,6 @@ export async function deleteMultipleProfessionalDevelopment(ids: string[]) {
     const { error } = await adminSupabase.from('ProfessionalDevelopment').delete().in('id', ids);
 
     if (error) {
-      toast.error('Error deleting');
       return { success: false, error: error.message };
     }
 
@@ -153,7 +148,6 @@ export async function deleteMultipleProfessionalDevelopment(ids: string[]) {
     revalidatePath('/dashboard');
     return { success: true, count: ids.length };
   } catch {
-    toast.error('Unexpected error');
     return { success: false, error: 'An unexpected error occurred' };
   }
 }

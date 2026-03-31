@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import type { PendingUser } from "@/features/account-approval/types";
 import { fmtDate, fullName } from "@/features/account-approval/lib/utils";
-import UserAvatar from "@/components/ui-elements/avatars/user-avatar";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import { StatusBadge, RoleBadge } from "@/components/ui-elements/badges";
 import {
     ApproveButton,

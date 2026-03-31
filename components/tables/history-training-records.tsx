@@ -33,7 +33,9 @@ import {
     useReactTable,
     VisibilityState,
 } from "@tanstack/react-table";
-import PaginationBar from "@/components/pagination";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
+import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
 import { useRouter } from "next/navigation";
 
 export type TrainingSeminarHistory = {
@@ -115,7 +117,9 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
                 <ArrowUpDown />
             </Button>
         ),
-        cell: ({ row }) => <div>{row.getValue("type")}</div>,
+        cell: ({ row }) => (
+            <TypeBadge type={row.getValue("type") as string} size="xs" />
+        ),
         size: 120,
     },
     {
@@ -148,7 +152,9 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("level")}</div>
+            <div className="flex justify-center">
+                <LevelBadge level={row.getValue("level") as string} size="xs" />
+            </div>
         ),
         size: 120,
     },
@@ -166,7 +172,7 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">
+            <div className="text-center w-full font-mono text-xs text-muted-foreground">
                 {row.getValue("startDate")}
             </div>
         ),
@@ -186,7 +192,9 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">{row.getValue("endDate")}</div>
+            <div className="text-center w-full font-mono text-xs text-muted-foreground">
+                {row.getValue("endDate")}
+            </div>
         ),
         size: 130,
     },
@@ -204,8 +212,8 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
             </Button>
         ),
         cell: ({ row }) => (
-            <div className="text-center w-full">
-                {row.getValue("totalHours")}
+            <div className="text-center w-full tabular-nums text-sm">
+                {row.getValue("totalHours")}h
             </div>
         ),
         size: 120,
@@ -223,7 +231,11 @@ const dataColumns: ColumnDef<TrainingSeminarHistory>[] = [
                 <ArrowUpDown />
             </Button>
         ),
-        cell: ({ row }) => <div>{row.getValue("sponsor")}</div>,
+        cell: ({ row }) => (
+            <div className="text-sm text-muted-foreground">
+                {row.getValue("sponsor")}
+            </div>
+        ),
         size: 180,
     },
 ];
@@ -293,7 +305,11 @@ export default function TrainingHistory({
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-        initialState: { pagination: { pageSize: 8 } },
+        initialState: {
+            pagination: {
+                pageSize: PAGE_SIZES.historyTrainingRecords.default,
+            },
+        },
         state: { sorting, columnFilters, columnVisibility, rowSelection },
     });
 
@@ -301,9 +317,7 @@ export default function TrainingHistory({
         .getFilteredSelectedRowModel()
         .rows.map((row) => row.original);
 
-    const handleDelete = () => {
-        
-    };
+    const handleDelete = () => {};
 
     return (
         <div className="w-full min-h-screen flex flex-col">
@@ -328,7 +342,6 @@ export default function TrainingHistory({
                             />
                         </div>
 
-                        {/* Delete button: show when at least 1 row selected - available for all users */}
                         {selectedRows.length >= 1 && (
                             <Button
                                 onClick={handleDelete}
@@ -377,7 +390,7 @@ export default function TrainingHistory({
                                                 : flexRender(
                                                       header.column.columnDef
                                                           .header,
-                                                      header.getContext()
+                                                      header.getContext(),
                                                   )}
                                         </TableHead>
                                     ))}
@@ -397,7 +410,7 @@ export default function TrainingHistory({
                                             <TableCell key={cell.id}>
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
-                                                    cell.getContext()
+                                                    cell.getContext(),
                                                 )}
                                             </TableCell>
                                         ))}
@@ -426,7 +439,11 @@ export default function TrainingHistory({
                         selected.
                     </div>
                     <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-                        <PaginationBar table={table} />
+                        <PageNav
+                            page={table.getState().pagination.pageIndex + 1}
+                            totalPages={table.getPageCount()}
+                            onPageChange={(p) => table.setPageIndex(p - 1)}
+                        />
                     </div>
                 </div>
             </div>
