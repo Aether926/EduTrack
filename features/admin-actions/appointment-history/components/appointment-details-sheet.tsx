@@ -65,6 +65,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import UserAvatar from "@/components/ui-elements/user-avatar";
 import { AppointmentTypeBadge } from "@/components/ui-elements/badges";
+import { SchoolInput } from "@/components/ui-elements/school-input";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -653,11 +654,9 @@ export function AppointmentDetailSheet({
                         <div>
                             <FieldLabel optional>School Name</FieldLabel>
                             {isEdit ? (
-                                <Input
+                                <SchoolInput
                                     value={schoolName}
-                                    onChange={(e) =>
-                                        setSchoolName(e.target.value)
-                                    }
+                                    onChange={setSchoolName}
                                     placeholder="e.g. Ormoc City National High School"
                                 />
                             ) : (

@@ -55,7 +55,7 @@ import {
     PositionBadge,
 } from "@/components/ui-elements/badges";
 
-import { AddAppointmentSheet } from "@/features/admin-actions/appointment-history/components/add-appointment-modal";
+import { AddAppointmentSheet } from "@/features/admin-actions/appointment-history/components/add-appointment-sheet";
 import { AppointmentDetailSheet } from "@/features/admin-actions/appointment-history/components/appointment-details-sheet";
 import type { AppointmentHistoryRow } from "@/features/admin-actions/appointment-history/types/appointment-history";
 

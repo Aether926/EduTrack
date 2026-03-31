@@ -6,6 +6,7 @@ import { Send, ClipboardCheck, CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SchoolInput } from "@/components/ui-elements/school-input";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -407,11 +408,9 @@ export function AddAppointmentSheet(props: {
                         {/* School Name */}
                         <div>
                             <FieldLabel optional>School Name</FieldLabel>
-                            <Input
+                            <SchoolInput
                                 value={form.school_name}
-                                onChange={(e) =>
-                                    set("school_name")(e.target.value)
-                                }
+                                onChange={(v) => set("school_name")(v)}
                                 placeholder="e.g. Ormoc City National High School"
                             />
                         </div>
