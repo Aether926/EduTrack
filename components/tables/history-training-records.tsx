@@ -34,7 +34,10 @@ import {
     VisibilityState,
 } from "@tanstack/react-table";
 import { PageNav } from "@/components/ui-elements/pagination/page-nav";
-import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
+import {
+    PAGE_SIZES,
+    resolvePageSize,
+} from "@/components/ui-elements/pagination/page-sizes";
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
 import { useRouter } from "next/navigation";
 
@@ -306,7 +309,9 @@ export default function TrainingHistory({
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
         initialState: {
-            pagination: { pageSize: PAGE_SIZES.historyTrainingRecords },
+            pagination: {
+                pageSize: resolvePageSize(PAGE_SIZES.historyTrainingRecords),
+            },
         },
         state: { sorting, columnFilters, columnVisibility, rowSelection },
     });

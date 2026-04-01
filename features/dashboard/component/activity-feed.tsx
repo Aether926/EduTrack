@@ -18,7 +18,10 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui-elements/badges";
 import { Separator } from "@/components/ui/separator";
 import { PageNav } from "@/components/ui-elements/pagination/page-nav";
-import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
+import {
+    PAGE_SIZES,
+    resolvePageSize,
+} from "@/components/ui-elements/pagination/page-sizes";
 import {
     Bell,
     Filter,
@@ -182,7 +185,7 @@ export default function ActivityFeed({
     const [page, setPage] = useState(1);
     const [searchOpen, setSearchOpen] = useState(false);
 
-    const PAGE_SIZE = PAGE_SIZES.activityFeed;
+    const PAGE_SIZE = resolvePageSize(PAGE_SIZES.activityFeed);
 
     const enriched = useMemo(
         () => rows.map((r) => ({ ...r, _kind: classify(r) })),

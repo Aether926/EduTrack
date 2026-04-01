@@ -13,7 +13,10 @@ import type { TrainingRow } from "@/features/profiles/types/trainings";
 import type { ViewerRole } from "@/features/profiles/types/viewer-role";
 import { fmtDateRange } from "@/features/profiles/lib/date";
 import { PageNav } from "@/components/ui-elements/pagination/page-nav";
-import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
+import {
+    PAGE_SIZES,
+    resolvePageSize,
+} from "@/components/ui-elements/pagination/page-sizes";
 import { TypeBadge } from "@/components/ui-elements/badges";
 
 // ── Main export ────────────────────────────────────────────────────────────────
@@ -29,7 +32,7 @@ export default function TrainingsCard(props: {
     );
     const showProof = viewerRole === "ADMIN";
 
-    const PAGE_SIZE = PAGE_SIZES.trainingsCard;
+    const PAGE_SIZE = resolvePageSize(PAGE_SIZES.trainingsCard);
     const [page, setPage] = useState(1);
     const totalPages = Math.ceil(trainings.length / PAGE_SIZE);
     const safePage = Math.min(page, totalPages || 1);

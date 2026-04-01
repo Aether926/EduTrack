@@ -50,6 +50,7 @@ import {
     StatusBadge,
 } from "@/components/ui-elements/badges";
 import { PageNav } from "@/components/ui-elements/pagination/page-nav";
+import UserAvatar from "@/components/ui-elements/user-avatar";
 import {
     PAGE_SIZES,
     resolvePageSize,
@@ -613,48 +614,6 @@ function RangeDatePicker({
 }
 
 // ── Assigned Users Table ──────────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "?";
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-const AVATAR_COLORS = [
-    "bg-blue-500/20 text-blue-300",
-    "bg-violet-500/20 text-violet-300",
-    "bg-teal-500/20 text-teal-300",
-    "bg-amber-500/20 text-amber-300",
-    "bg-rose-500/20 text-rose-300",
-    "bg-emerald-500/20 text-emerald-300",
-    "bg-sky-500/20 text-sky-300",
-    "bg-pink-500/20 text-pink-300",
-];
-
-function avatarColor(name: string): string {
-    const code = name.charCodeAt(0) || 0;
-    return AVATAR_COLORS[code % AVATAR_COLORS.length];
-}
-
-function UserAvatar({ name, src }: { name: string; src?: string | null }) {
-    if (src) {
-        return (
-            <img
-                src={src}
-                alt={name}
-                className="h-7 w-7 rounded-full object-cover shrink-0"
-            />
-        );
-    }
-    return (
-        <span
-            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold border border-white/10 ${avatarColor(name)}`}
-        >
-            {getInitials(name)}
-        </span>
-    );
-}
 
 const STATUS_ORDER: Record<string, number> = {
     APPROVED: 0,

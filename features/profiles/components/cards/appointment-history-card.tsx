@@ -3,9 +3,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { History, Clock, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { PageNav } from "@/components/ui-elements/pagination/page-nav";
-import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
+import {
+    PAGE_SIZES,
+    resolvePageSize,
+} from "@/components/ui-elements/pagination/page-sizes";
 import { Button } from "@/components/ui/button";
-import { RequestAppointmentModal } from "@/features/profiles/components/modals/request-appointment-modal";
+import { RequestAppointmentModal } from "@/features/profiles/components/modals/request-appointment-sheet";
 import { useAppointment } from "@/features/profiles/appointment/hooks/use-appointment";
 import type { AppointmentHistory } from "@/features/profiles/appointment/types/appointment";
 
@@ -123,7 +126,7 @@ export default function AppointmentHistoryCard(props: {
 }) {
     const { teacherId, isOwnProfile = false, from = "profile" } = props;
     const [modalOpen, setModalOpen] = useState(false);
-    const PAGE_SIZE = PAGE_SIZES.appointmentHistory;
+    const PAGE_SIZE = resolvePageSize(PAGE_SIZES.appointmentHistory);
     const [page, setPage] = useState(1);
 
     const {

@@ -602,7 +602,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                                                     {submission.mime_type?.startsWith(
                                                         "image/",
                                                     ) ? (
-                                                        // eslint-disable-next-line @next/next/no-img-element
                                                         <div className="rounded-lg border overflow-hidden bg-muted/20">
                                                             <img
                                                                 src={previewUrl}
@@ -979,7 +978,6 @@ export function DocumentsChecklistCard({ items }: { items: ChecklistItem[] }) {
                     </button>
 
                     {submission?.mime_type?.startsWith("image/") ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                             src={previewUrl}
                             alt="Fullscreen preview"
