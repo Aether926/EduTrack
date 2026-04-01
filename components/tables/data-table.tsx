@@ -1,6 +1,6 @@
 "use client";
 
-import PaginationBar from "@/components/ui-elements/pagination/page-nav";
+import { PageNav } from "@/components/ui-elements/pagination/page-nav";
 import { useRouter } from "next/navigation";
 
 import * as React from "react";
@@ -308,7 +308,11 @@ export function DataTable<T>({
                         selected.
                     </div>
                     <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-                        <PaginationBar table={table} />
+                        <PageNav
+                            page={table.getState().pagination.pageIndex + 1}
+                            totalPages={table.getPageCount()}
+                            onPageChange={(p) => table.setPageIndex(p - 1)}
+                        />
                     </div>
                 </div>
             </div>

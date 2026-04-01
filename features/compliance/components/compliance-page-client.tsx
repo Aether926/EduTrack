@@ -22,7 +22,10 @@ import {
 } from "@/components/ui/table";
 import { PageNav } from "@/components/ui-elements/pagination/page-nav";
 import { TypeBadge, LevelBadge } from "@/components/ui-elements/badges";
-import { PAGE_SIZES } from "@/components/ui-elements/pagination/page-sizes";
+import {
+    PAGE_SIZES,
+    resolvePageSize,
+} from "@/components/ui-elements/pagination/page-sizes";
 
 import {
     BookOpen,
@@ -90,7 +93,7 @@ function TrainingTable({
     emptyMessage: string;
 }) {
     const [page, setPage] = useState(1);
-    const pageSize = PAGE_SIZES.trainingsCard; // 6
+    const pageSize = resolvePageSize(PAGE_SIZES.trainingsCard);
     const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
 
     const paged = useMemo(() => {
@@ -286,7 +289,8 @@ function TableCardHeader({ count, muted }: { count: number; muted?: boolean }) {
                     </p>
                     <p className="text-[11px] text-muted-foreground">
                         {count} result{count === 1 ? "" : "s"} ·{" "}
-                        {PAGE_SIZES.trainingsCard} per page
+                        {resolvePageSize(PAGE_SIZES.trainingsCard)} per
+                        page{" "}
                     </p>
                 </div>
             </div>
